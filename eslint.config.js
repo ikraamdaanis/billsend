@@ -6,7 +6,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-const eslintConfig = defineConfig([
+export default defineConfig([
   ...tanstackConfig,
   ...tseslint.configs.recommended,
   eslint.configs.recommended,
@@ -21,7 +21,9 @@ const eslintConfig = defineConfig([
       "no-relative-import-paths/no-relative-import-paths": "error",
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
+      "import/order": "off",
       "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/array-type": "off",
       "@typescript-eslint/no-explicit-any": [
         "warn",
         {
@@ -50,5 +52,3 @@ const eslintConfig = defineConfig([
   },
   globalIgnores(["build/**", "dist/**", "**/node_modules/", "**/*.js"])
 ]);
-
-export default eslintConfig;
