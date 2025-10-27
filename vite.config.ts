@@ -5,17 +5,19 @@ import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import viteTsConfigPaths from "vite-tsconfig-paths";
 
-const config = defineConfig({
+export default defineConfig({
   plugins: [
-    // this is the plugin that enables path aliases
     viteTsConfigPaths({
       projects: ["./tsconfig.json"]
     }),
     tailwindcss(),
-    tanstackStart(),
+    tanstackStart({
+      srcDirectory: "./app",
+      router: {
+        routesDirectory: "./routes"
+      }
+    }),
     netlify(),
     viteReact()
   ]
 });
-
-export default config;
