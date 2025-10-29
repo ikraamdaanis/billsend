@@ -14,6 +14,14 @@ export default defineConfig([
   react.configs.flat["jsx-runtime"],
   reactHooks.configs.flat.recommended,
   {
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        window: "readonly",
+        document: "readonly",
+        console: "readonly"
+      }
+    },
     plugins: {
       "no-relative-import-paths": noRelativeImportPaths
     },
