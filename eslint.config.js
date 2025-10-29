@@ -22,6 +22,7 @@ export default defineConfig([
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
       "import/order": "off",
+      "sort-imports": "off",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/array-type": "off",
       "@typescript-eslint/no-explicit-any": [
