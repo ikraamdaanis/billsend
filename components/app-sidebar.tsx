@@ -1,3 +1,4 @@
+import { useRouter } from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
@@ -9,6 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "components/ui/sidebar";
+import { authClient } from "lib/auth-client";
 import {
   DollarSign,
   FileCheck,
@@ -20,6 +22,13 @@ import {
 } from "lucide-react";
 
 export function AppSidebar() {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await authClient.signOut();
+    router.navigate({ to: "/signup" });
+  }
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -87,6 +96,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               size="lg"
               className="text-red-600 hover:bg-red-50 hover:text-red-700"
+              onClick={handleLogout}
             >
               <LogOut />
               <span>Log out</span>

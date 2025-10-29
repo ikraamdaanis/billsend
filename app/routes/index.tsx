@@ -70,15 +70,15 @@ function HomePage() {
                   </a>
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <Link to="/dashboard">
-                  <button className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900">
-                    Sign in
-                  </button>
+              <div className="flex items-center gap-4">
+                <Link to="/login">
+                  <Button variant="outline" className="cursor-pointer">
+                    Login
+                  </Button>
                 </Link>
-                <button className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700">
-                  Sign up
-                </button>
+                <Link to="/signup">
+                  <Button className="cursor-pointer">Sign up</Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -187,10 +187,12 @@ function HomePage() {
           </div>
           {/* CTA Buttons */}
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Button className="bg-brand-400 hover:bg-brand-500 flex h-[unset] items-center justify-center rounded-lg px-8 py-4 text-lg font-semibold text-white transition-colors">
-              Try for free
-              <ArrowRight className="h-5 w-5" />
-            </Button>
+            <Link to="/signup">
+              <Button className="bg-brand-400 hover:bg-brand-500 flex h-[unset] items-center justify-center rounded-lg px-8 py-4 text-lg font-semibold text-white transition-colors">
+                Try for free
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

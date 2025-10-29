@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SidebarTrigger } from "components/ui/sidebar";
+import { fetchAuth } from "features/auth/fetch-auth";
 import {
   Bell,
   CheckCircle,
@@ -14,9 +15,22 @@ import {
   TrendingUp
 } from "lucide-react";
 
-export const Route = createFileRoute("/dashboard/")({ component: Dashboard });
+export const Route = createFileRoute("/dashboard/")({
+  component: Dashboard,
+  beforeLoad: async () => {
+    const { userId } = await fetchAuth();
+
+    if (!userId) throw redirect({ to: "/signup" });
+  },
+  loader: async () => {
+    const { userId, user } = await fetchAuth();
+    return { userId, user };
+  }
+});
 
 function Dashboard() {
+  const { user } = Route.useLoaderData();
+
   return (
     <div className="flex flex-1 flex-col bg-gray-50">
       {/* Header */}
@@ -26,7 +40,7 @@ function Dashboard() {
             <SidebarTrigger />
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Welcome back, ikraam!
+                Welcome back, {user?.name || user?.email || "User"}!
               </h2>
               <p className="text-sm text-gray-500">
                 Monday, 03-01-2024 | Sunny day in London
