@@ -21,6 +21,7 @@ function HomePage() {
     function handleScroll() {
       const scrollPosition = window.scrollY;
       const threshold = 32; // 1rem = 16px
+
       setIsScrolled(scrollPosition > threshold);
     }
 
@@ -40,34 +41,6 @@ function HomePage() {
               <div className="flex items-center">
                 <div className="flex items-center space-x-2">
                   <h1 className="text-brand-500 text-xl font-bold">billsend</h1>
-                </div>
-              </div>
-              <div className="hidden md:block">
-                <div className="ml-10 flex items-baseline space-x-8">
-                  <a
-                    href="#features"
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                  >
-                    Product
-                  </a>
-                  <a
-                    href="#pricing"
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                  >
-                    Pricing
-                  </a>
-                  <a
-                    href="#resources"
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                  >
-                    Resources
-                  </a>
-                  <a
-                    href="#blog"
-                    className="text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                  >
-                    Blog
-                  </a>
                 </div>
               </div>
               <div className="flex items-center gap-4">
