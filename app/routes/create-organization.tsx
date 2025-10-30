@@ -1,7 +1,6 @@
-import { useConvexMutation } from "@convex-dev/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, redirect, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import {
   Form,
@@ -13,19 +12,11 @@ import {
   FormMessage
 } from "components/ui/form";
 import { Input } from "components/ui/input";
-import { api } from "convex/_generated/api";
-import { fetchAuth } from "features/auth/fetch-auth";
-import { authClient } from "lib/auth-client";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export const Route = createFileRoute("/create-organization")({
-  component: CreateOrganization,
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth();
-
-    if (!userId) throw redirect({ to: "/login" });
-  }
+  component: CreateOrganization
 });
 
 const organizationSchema = z.object({
@@ -37,48 +28,13 @@ const organizationSchema = z.object({
 
 function CreateOrganization() {
   const router = useRouter();
-  const initializeSettings = useConvexMutation(
-    api.organizations.initializeOrganizationSettings
-  );
-
   const form = useForm({
     resolver: zodResolver(organizationSchema),
     defaultValues: { name: "" }
   });
 
   const createOrgMutation = useMutation({
-    mutationFn: async (name: string) => {
-      const auth = await fetchAuth();
-
-      if (!auth.userId) throw new Error("User not authenticated");
-
-      // Generate slug from name (required field)
-      const slug = name
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
-
-      const result = await authClient.organization.create({
-        userId: auth.userId,
-        name,
-        slug,
-        keepCurrentActiveOrganization: true
-      });
-
-      console.log("RESULT", result);
-
-      if (!result.data) {
-        throw new Error(
-          result.error.message || "Failed to create organization"
-        );
-      }
-
-      // Initialize organization settings in Convex
-      await initializeSettings({ organizationId: result.data.id });
-
-      return result.data;
-    },
+    mutationFn: async (name: string) => {},
     onSuccess: () => {
       router.navigate({ to: "/dashboard" });
     }

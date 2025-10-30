@@ -1,10 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useRouter
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -15,7 +10,6 @@ import {
 } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
-import { fetchAuth } from "features/auth/fetch-auth";
 import { authClient } from "lib/auth-client";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -27,12 +21,7 @@ const loginSchema = z.object({
 });
 
 export const Route = createFileRoute("/login")({
-  component: LoginPage,
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth();
-    // If user is already logged in, redirect to dashboard
-    if (userId) throw redirect({ to: "/dashboard" });
-  }
+  component: LoginPage
 });
 
 function LoginPage() {

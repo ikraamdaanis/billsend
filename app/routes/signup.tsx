@@ -1,10 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useRouter
-} from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -15,8 +10,6 @@ import {
 } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
-import { fetchAuth } from "features/auth/fetch-auth";
-import { authClient } from "lib/auth-client";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -34,11 +27,7 @@ const signupSchema = z
   });
 
 export const Route = createFileRoute("/signup")({
-  component: SignupPage,
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth();
-    if (userId) throw redirect({ to: "/dashboard" });
-  }
+  component: SignupPage
 });
 
 function SignupPage() {
@@ -57,18 +46,9 @@ function SignupPage() {
     },
     onSubmit: async ({ value }) => {
       setIsLoading(true);
+      console.log(value);
+
       try {
-        const { error } = await authClient.signUp.email({
-          email: value.email,
-          password: value.password,
-          name: value.name
-        });
-
-        if (error) {
-          toast.error(error.message || "Failed to create account");
-          return;
-        }
-
         toast.success("Account created successfully!");
         router.navigate({ to: "/dashboard" });
       } catch (_error) {
