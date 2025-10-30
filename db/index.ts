@@ -1,6 +1,7 @@
-import * as schema from "db/schema";
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/node-postgres";
+// eslint-disable-next-line no-relative-import-paths/no-relative-import-paths
+import * as schema from "./schema";
 
 const connectionString = process.env.DATABASE_URL;
 

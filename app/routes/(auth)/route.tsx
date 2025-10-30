@@ -1,7 +1,27 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  redirect
+} from "@tanstack/react-router";
+import { sessionQuery } from "feature/auth/queries/session-query";
 
 export const Route = createFileRoute("/(auth)")({
-  component: AuthLayout
+  component: AuthLayout,
+  beforeLoad: async ({ context, location }) => {
+    const REDIRECT_URL = "/dashboard";
+
+    const user = await context.queryClient.ensureQueryData({
+      ...sessionQuery(),
+      revalidateIfStale: true
+    });
+
+    const isCreateOrganisation = location.pathname === "/create-organisation";
+
+    if (user && !isCreateOrganisation) throw redirect({ to: "/dashboard" });
+
+    return { user, redirectUrl: REDIRECT_URL };
+  }
 });
 
 function AuthLayout() {

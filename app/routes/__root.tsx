@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import type { ReactNode } from "react";
+import { Toaster } from "sonner";
 import appCss from "styles/globals.css?url";
 
 export const Route = createRootRouteWithContext<{
@@ -32,8 +33,8 @@ export const Route = createRootRouteWithContext<{
       }
     ]
   }),
-
-  shellComponent: RootDocument
+  shellComponent: RootDocument,
+  notFoundComponent: () => <div>Not Found</div>
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
@@ -44,6 +45,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster richColors />
         <TanStackDevtools
           config={{
             position: "bottom-right"

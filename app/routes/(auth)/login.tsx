@@ -1,10 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useRouter
-} from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -17,7 +12,7 @@ import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { authClient } from "lib/auth-client";
 import { getErrorMessage } from "lib/get-error-message";
-import { useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -27,18 +22,13 @@ const loginSchema = z.object({
 });
 
 export const Route = createFileRoute("/(auth)/login")({
-  beforeLoad: async () => {
-    const sessionData = await authClient.getSession();
-
-    if (sessionData.data?.session.id) throw redirect({ to: "/dashboard" });
-  },
   component: LoginPage
 });
 
 function LoginPage() {
-  const router = useRouter();
+  const { redirectUrl } = Route.useRouteContext();
 
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   const form = useForm({
     defaultValues: {
@@ -48,23 +38,25 @@ function LoginPage() {
     validators: {
       onSubmit: loginSchema
     },
-    onSubmit: ({ value }) => {
-      startTransition(async () => {
-        try {
-          const { error } = await authClient.signIn.email({
-            email: value.email,
-            password: value.password
-          });
+    onSubmit: async ({ value }) => {
+      setPending(true);
 
-          if (error) throw new Error(error.message);
+      await authClient.signIn.email(
+        {
+          email: value.email,
+          password: value.password,
+          callbackURL: redirectUrl
+        },
+        {
+          onError: error => {
+            setPending(false);
 
-          await router.navigate({ to: "/dashboard" });
-        } catch (error) {
-          toast.error(
-            getErrorMessage(error, "An error occurred while signing in")
-          );
+            toast.error(
+              getErrorMessage(error, "An error occurred while signing in")
+            );
+          }
         }
-      });
+      );
     }
   });
 

@@ -1,4 +1,4 @@
-import { useRouter } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +10,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "components/ui/sidebar";
-import { authClient } from "lib/auth-client";
+import { useLogout } from "feature/auth/hooks/use-logout";
+import { cn } from "lib/utils";
 import {
   DollarSign,
   FileCheck,
@@ -22,12 +23,7 @@ import {
 } from "lucide-react";
 
 export function AppSidebar() {
-  const router = useRouter();
-
-  async function handleLogout() {
-    await authClient.signOut();
-    router.navigate({ to: "/login" });
-  }
+  const logout = useLogout();
 
   return (
     <Sidebar>
@@ -45,10 +41,12 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton size="lg">
-                  <Home />
-                  <span>Dashboard</span>
-                </SidebarMenuButton>
+                <Link to="/dashboard">
+                  <SidebarMenuButton size="lg">
+                    <Home />
+                    <span>Dashboard</span>
+                  </SidebarMenuButton>
+                </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg">
@@ -87,19 +85,25 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg">
-              <Settings />
-              <span>Settings</span>
-            </SidebarMenuButton>
+            <Link to="/dashboard/settings">
+              <SidebarMenuButton size="lg">
+                <Settings />
+                <span>Settings</span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="text-red-600 hover:bg-red-50 hover:text-red-700"
-              onClick={handleLogout}
+              onClick={async () => await logout.mutateAsync()}
+              disabled={logout.isPending}
+              className={cn(
+                "text-red-600 hover:bg-red-50 hover:text-red-700",
+                logout.isPending && "opacity-50"
+              )}
             >
               <LogOut />
-              <span>Log out</span>
+              <span>{logout.isPending ? "Logging out..." : "Log out"}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
