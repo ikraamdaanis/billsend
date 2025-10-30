@@ -26,7 +26,7 @@ export function AppSidebar() {
 
   async function handleLogout() {
     await authClient.signOut();
-    router.navigate({ to: "/signup" });
+    router.navigate({ to: "/login" });
   }
 
   return (

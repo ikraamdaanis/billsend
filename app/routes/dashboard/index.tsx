@@ -1,6 +1,5 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SidebarTrigger } from "components/ui/sidebar";
-import { fetchAuth } from "features/auth/fetch-auth";
 import {
   Bell,
   CheckCircle,
@@ -16,20 +15,14 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/")({
-  component: Dashboard,
-  beforeLoad: async () => {
-    const { userId } = await fetchAuth();
-
-    if (!userId) throw redirect({ to: "/signup" });
-  },
-  loader: async () => {
-    const { userId, user } = await fetchAuth();
-    return { userId, user };
-  }
+  component: Dashboard
 });
 
 function Dashboard() {
-  const { user } = Route.useLoaderData();
+  const user = {
+    name: "John Doe",
+    email: "john.doe@example.com"
+  };
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50">
