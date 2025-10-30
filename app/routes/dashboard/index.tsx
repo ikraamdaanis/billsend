@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { SidebarTrigger } from "components/ui/sidebar";
+import { authClient } from "lib/auth-client";
 import {
   Bell,
   CheckCircle,
@@ -15,14 +16,20 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/")({
+  beforeLoad: async () => {
+    const sessionData = await authClient.getSession();
+
+    if (!sessionData.data?.session.id) throw redirect({ to: "/login" });
+
+    return {
+      user: sessionData.data?.user
+    };
+  },
   component: Dashboard
 });
 
 function Dashboard() {
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com"
-  };
+  const { user } = Route.useRouteContext();
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50">
@@ -50,7 +57,6 @@ function Dashboard() {
                 className="rounded-lg border border-gray-300 py-2 pr-4 pl-10 focus:border-transparent focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
             <button className="p-2 text-gray-400 hover:text-gray-600">
               <Bell className="h-5 w-5" />
             </button>
@@ -66,7 +72,6 @@ function Dashboard() {
           </div>
         </div>
       </header>
-
       {/* Dashboard Content */}
       <main className="flex-1 space-y-6 p-6">
         {/* Summary Cards */}
@@ -86,7 +91,6 @@ function Dashboard() {
             </div>
             <p className="mt-1 text-xs text-gray-500">Last month</p>
           </div>
-
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -101,7 +105,6 @@ function Dashboard() {
             </div>
             <p className="mt-1 text-xs text-gray-500">Last month</p>
           </div>
-
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -115,7 +118,6 @@ function Dashboard() {
             </div>
             <p className="mt-1 text-xs text-gray-500">Last month</p>
           </div>
-
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -130,7 +132,6 @@ function Dashboard() {
             <p className="mt-1 text-xs text-gray-500">Last month</p>
           </div>
         </div>
-
         {/* Charts and Tables Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Revenue Chart */}
@@ -150,7 +151,6 @@ function Dashboard() {
                 <option>Weekly</option>
               </select>
             </div>
-
             {/* Simple Bar Chart */}
             <div className="space-y-3">
               {[
@@ -190,7 +190,6 @@ function Dashboard() {
               </div>
             </div>
           </div>
-
           {/* Recent Invoices */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
@@ -201,7 +200,6 @@ function Dashboard() {
                 View All →
               </a>
             </div>
-
             <div className="space-y-3">
               {[
                 {
@@ -279,7 +277,6 @@ function Dashboard() {
             </div>
           </div>
         </div>
-
         {/* Client Details Table */}
         <div className="rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 px-6 py-4">
@@ -302,7 +299,6 @@ function Dashboard() {
               </div>
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
