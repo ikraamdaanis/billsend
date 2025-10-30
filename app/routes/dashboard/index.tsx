@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SidebarTrigger } from "components/ui/sidebar";
 import { authClient } from "lib/auth-client";
 import {
@@ -16,20 +16,13 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/")({
-  beforeLoad: async () => {
-    const sessionData = await authClient.getSession();
-
-    if (!sessionData.data?.session.id) throw redirect({ to: "/login" });
-
-    return {
-      user: sessionData.data?.user
-    };
-  },
   component: Dashboard
 });
 
 function Dashboard() {
   const { user } = Route.useRouteContext();
+
+  const { data: activeOrganization } = authClient.useActiveOrganization();
 
   return (
     <div className="flex flex-1 flex-col bg-gray-50">
@@ -40,14 +33,13 @@ function Dashboard() {
             <SidebarTrigger />
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Welcome back, {user?.name || user?.email || "User"}!
+                Welcome back, {user.name || user.email || "User"}!
               </h2>
               <p className="text-sm text-gray-500">
-                Monday, 03-01-2024 | Sunny day in London
+                {activeOrganization?.name}
               </p>
             </div>
           </div>
-
           <div className="flex items-center space-x-4">
             <div className="relative">
               <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-gray-400" />

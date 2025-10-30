@@ -1,10 +1,6 @@
 import { useForm } from "@tanstack/react-form";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useRouter
-} from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -15,9 +11,10 @@ import {
 } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
+import { sessionQuery } from "feature/auth/queries/session-query";
 import { authClient } from "lib/auth-client";
 import { getErrorMessage } from "lib/get-error-message";
-import { useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -34,18 +31,14 @@ const signupSchema = z
   });
 
 export const Route = createFileRoute("/(auth)/signup")({
-  beforeLoad: async () => {
-    const sessionData = await authClient.getSession();
-
-    if (sessionData.data?.session.id) throw redirect({ to: "/dashboard" });
-  },
   component: SignupPage
 });
 
 function SignupPage() {
-  const router = useRouter();
+  const [pending, setPending] = useState(false);
 
-  const [pending, startTransition] = useTransition();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const form = useForm({
     defaultValues: {
@@ -57,24 +50,31 @@ function SignupPage() {
     validators: {
       onSubmit: signupSchema
     },
-    onSubmit: ({ value }) => {
-      startTransition(async () => {
-        try {
-          const { error } = await authClient.signUp.email({
-            email: value.email,
-            password: value.password,
-            name: value.name
-          });
+    onSubmit: async ({ value }) => {
+      setPending(true);
 
-          if (error) throw new Error(error.message);
+      await authClient.signUp.email(
+        {
+          email: value.email,
+          password: value.password,
+          name: value.name,
+          callbackURL: "/create-organisation"
+        },
+        {
+          onError: error => {
+            setPending(false);
 
-          await router.navigate({ to: "/dashboard" });
-        } catch (error) {
-          toast.error(
-            getErrorMessage(error, "An error occurred while signing up")
-          );
+            toast.error(
+              getErrorMessage(error, "An error occurred while signing up")
+            );
+          },
+          onSuccess: () => {
+            queryClient.removeQueries({ queryKey: sessionQuery().queryKey });
+
+            navigate({ to: "/create-organisation" });
+          }
         }
-      });
+      );
     }
   });
 
