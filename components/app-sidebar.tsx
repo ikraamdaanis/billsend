@@ -37,6 +37,11 @@ export function AppSidebar() {
       label: "Clients",
       href: "/dashboard/clients",
       icon: Users
+    },
+    {
+      label: "Invoices",
+      href: "/dashboard/invoices",
+      icon: FileCheck
     }
   ];
 
@@ -71,12 +76,6 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg">
-                  <FileCheck />
-                  <span>Invoices</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg">
                   <FileText />

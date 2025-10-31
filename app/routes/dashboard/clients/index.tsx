@@ -32,6 +32,7 @@ function ClientsList() {
         );
       },
       cell: ({ row }) => {
+        const client = row.original;
         const name = row.getValue<string>("name");
         const initials = name
           .split(" ")
@@ -39,16 +40,21 @@ function ClientsList() {
           .join("")
           .toUpperCase();
         return (
-          <div className="flex items-center">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
-              <span className="text-sm font-medium text-gray-600">
-                {initials}
-              </span>
+          <Link
+            to="/dashboard/clients/$clientId"
+            params={{ clientId: client.id }}
+          >
+            <div className="flex items-center hover:text-blue-600">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
+                <span className="text-sm font-medium text-gray-600">
+                  {initials}
+                </span>
+              </div>
+              <div className="ml-3">
+                <div className="text-sm font-medium text-gray-900">{name}</div>
+              </div>
             </div>
-            <div className="ml-3">
-              <div className="text-sm font-medium text-gray-900">{name}</div>
-            </div>
-          </div>
+          </Link>
         );
       }
     },
