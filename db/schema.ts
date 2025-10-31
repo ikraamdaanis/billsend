@@ -1,4 +1,11 @@
-import { boolean, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  jsonb,
+  numeric,
+  pgTable,
+  text,
+  timestamp
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -123,6 +130,38 @@ export const client = pgTable("client", {
   organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => /* @__PURE__ */ new Date())
+    .notNull()
+}).enableRLS();
+
+export const invoice = pgTable("invoice", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  clientId: text("client_id")
+    .notNull()
+    .references(() => client.id, { onDelete: "cascade" }),
+  invoiceNumber: text("invoice_number").notNull(),
+  invoiceDate: timestamp("invoice_date").notNull(),
+  dueDate: timestamp("due_date").notNull(),
+  status: text("status").default("draft").notNull(),
+  lineItems: jsonb("line_items").$type<
+    {
+      description: string;
+      quantity: number;
+      unitPrice: number;
+      total: number;
+    }[]
+  >(),
+  subtotal: numeric("subtotal").notNull(),
+  tax: numeric("tax").default("0").notNull(),
+  total: numeric("total").notNull(),
+  currency: text("currency").default("GBP").notNull(),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()

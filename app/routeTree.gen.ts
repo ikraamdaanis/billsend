@@ -17,8 +17,12 @@ import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settin
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authCreateOrganisationRouteImport } from './routes/(auth)/create-organisation'
+import { Route as DashboardInvoicesIndexRouteImport } from './routes/dashboard/invoices/index'
 import { Route as DashboardClientsIndexRouteImport } from './routes/dashboard/clients/index'
+import { Route as DashboardInvoicesCreateRouteImport } from './routes/dashboard/invoices/create'
+import { Route as DashboardInvoicesInvoiceIdRouteImport } from './routes/dashboard/invoices/$invoiceId'
 import { Route as DashboardClientsCreateRouteImport } from './routes/dashboard/clients/create'
+import { Route as DashboardClientsClientIdRouteImport } from './routes/dashboard/clients/$clientId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
@@ -60,16 +64,38 @@ const authCreateOrganisationRoute = authCreateOrganisationRouteImport.update({
   path: '/create-organisation',
   getParentRoute: () => authRouteRoute,
 } as any)
+const DashboardInvoicesIndexRoute = DashboardInvoicesIndexRouteImport.update({
+  id: '/invoices/',
+  path: '/invoices/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardClientsIndexRoute = DashboardClientsIndexRouteImport.update({
   id: '/clients/',
   path: '/clients/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardInvoicesCreateRoute = DashboardInvoicesCreateRouteImport.update({
+  id: '/invoices/create',
+  path: '/invoices/create',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInvoicesInvoiceIdRoute =
+  DashboardInvoicesInvoiceIdRouteImport.update({
+    id: '/invoices/$invoiceId',
+    path: '/invoices/$invoiceId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardClientsCreateRoute = DashboardClientsCreateRouteImport.update({
   id: '/clients/create',
   path: '/clients/create',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardClientsClientIdRoute =
+  DashboardClientsClientIdRouteImport.update({
+    id: '/clients/$clientId',
+    path: '/clients/$clientId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -85,8 +111,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/clients/$clientId': typeof DashboardClientsClientIdRoute
   '/dashboard/clients/create': typeof DashboardClientsCreateRoute
+  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdRoute
+  '/dashboard/invoices/create': typeof DashboardInvoicesCreateRoute
   '/dashboard/clients': typeof DashboardClientsIndexRoute
+  '/dashboard/invoices': typeof DashboardInvoicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -96,8 +126,12 @@ export interface FileRoutesByTo {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/clients/$clientId': typeof DashboardClientsClientIdRoute
   '/dashboard/clients/create': typeof DashboardClientsCreateRoute
+  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdRoute
+  '/dashboard/invoices/create': typeof DashboardInvoicesCreateRoute
   '/dashboard/clients': typeof DashboardClientsIndexRoute
+  '/dashboard/invoices': typeof DashboardInvoicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -110,8 +144,12 @@ export interface FileRoutesById {
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/dashboard/clients/$clientId': typeof DashboardClientsClientIdRoute
   '/dashboard/clients/create': typeof DashboardClientsCreateRoute
+  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdRoute
+  '/dashboard/invoices/create': typeof DashboardInvoicesCreateRoute
   '/dashboard/clients/': typeof DashboardClientsIndexRoute
+  '/dashboard/invoices/': typeof DashboardInvoicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -124,8 +162,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/'
     | '/api/auth/$'
+    | '/dashboard/clients/$clientId'
     | '/dashboard/clients/create'
+    | '/dashboard/invoices/$invoiceId'
+    | '/dashboard/invoices/create'
     | '/dashboard/clients'
+    | '/dashboard/invoices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -135,8 +177,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard'
     | '/api/auth/$'
+    | '/dashboard/clients/$clientId'
     | '/dashboard/clients/create'
+    | '/dashboard/invoices/$invoiceId'
+    | '/dashboard/invoices/create'
     | '/dashboard/clients'
+    | '/dashboard/invoices'
   id:
     | '__root__'
     | '/'
@@ -148,8 +194,12 @@ export interface FileRouteTypes {
     | '/dashboard/settings'
     | '/dashboard/'
     | '/api/auth/$'
+    | '/dashboard/clients/$clientId'
     | '/dashboard/clients/create'
+    | '/dashboard/invoices/$invoiceId'
+    | '/dashboard/invoices/create'
     | '/dashboard/clients/'
+    | '/dashboard/invoices/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -217,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authCreateOrganisationRouteImport
       parentRoute: typeof authRouteRoute
     }
+    '/dashboard/invoices/': {
+      id: '/dashboard/invoices/'
+      path: '/invoices'
+      fullPath: '/dashboard/invoices'
+      preLoaderRoute: typeof DashboardInvoicesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/clients/': {
       id: '/dashboard/clients/'
       path: '/clients'
@@ -224,11 +281,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardClientsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/invoices/create': {
+      id: '/dashboard/invoices/create'
+      path: '/invoices/create'
+      fullPath: '/dashboard/invoices/create'
+      preLoaderRoute: typeof DashboardInvoicesCreateRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/invoices/$invoiceId': {
+      id: '/dashboard/invoices/$invoiceId'
+      path: '/invoices/$invoiceId'
+      fullPath: '/dashboard/invoices/$invoiceId'
+      preLoaderRoute: typeof DashboardInvoicesInvoiceIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/clients/create': {
       id: '/dashboard/clients/create'
       path: '/clients/create'
       fullPath: '/dashboard/clients/create'
       preLoaderRoute: typeof DashboardClientsCreateRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/clients/$clientId': {
+      id: '/dashboard/clients/$clientId'
+      path: '/clients/$clientId'
+      fullPath: '/dashboard/clients/$clientId'
+      preLoaderRoute: typeof DashboardClientsClientIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/api/auth/$': {
@@ -260,15 +338,23 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 interface DashboardRouteRouteChildren {
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardClientsClientIdRoute: typeof DashboardClientsClientIdRoute
   DashboardClientsCreateRoute: typeof DashboardClientsCreateRoute
+  DashboardInvoicesInvoiceIdRoute: typeof DashboardInvoicesInvoiceIdRoute
+  DashboardInvoicesCreateRoute: typeof DashboardInvoicesCreateRoute
   DashboardClientsIndexRoute: typeof DashboardClientsIndexRoute
+  DashboardInvoicesIndexRoute: typeof DashboardInvoicesIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardClientsClientIdRoute: DashboardClientsClientIdRoute,
   DashboardClientsCreateRoute: DashboardClientsCreateRoute,
+  DashboardInvoicesInvoiceIdRoute: DashboardInvoicesInvoiceIdRoute,
+  DashboardInvoicesCreateRoute: DashboardInvoicesCreateRoute,
   DashboardClientsIndexRoute: DashboardClientsIndexRoute,
+  DashboardInvoicesIndexRoute: DashboardInvoicesIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
