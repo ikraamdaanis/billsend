@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "components/ui/sidebar";
-import { useLogout } from "feature/auth/hooks/use-logout";
+import { useLogout } from "features/auth/hooks/use-logout";
 import { cn } from "lib/utils";
 import {
   DollarSign,
@@ -24,6 +24,21 @@ import {
 
 export function AppSidebar() {
   const logout = useLogout();
+
+  const pathname = useLocation().pathname;
+
+  const items = [
+    {
+      label: "Dashboard",
+      href: "/dashboard",
+      icon: Home
+    },
+    {
+      label: "Clients",
+      href: "/dashboard/clients",
+      icon: Users
+    }
+  ];
 
   return (
     <Sidebar>
@@ -40,20 +55,22 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <Link to="/dashboard">
-                  <SidebarMenuButton size="lg">
-                    <Home />
-                    <span>Dashboard</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg">
-                  <Users />
-                  <span>Clients</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {items.map(item => (
+                <SidebarMenuItem key={item.href}>
+                  <Link to={item.href}>
+                    <SidebarMenuButton
+                      size="lg"
+                      className={cn(
+                        pathname === item.href &&
+                          "text-brand-500 hover:text-brand-600 bg-zinc-100"
+                      )}
+                    >
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              ))}
               <SidebarMenuItem>
                 <SidebarMenuButton size="lg">
                   <FileCheck />

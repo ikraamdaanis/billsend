@@ -14,8 +14,6 @@ export const fetchSession = createServerFn({ method: "GET" }).handler(
       headers: getRequest().headers
     });
 
-    console.log("organizations from fetch-session", organizations);
-
     return { ...session.user, organizations };
   }
 );

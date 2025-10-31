@@ -1,5 +1,5 @@
 import { queryOptions } from "@tanstack/react-query";
-import { fetchSession } from "feature/auth/api/fetch-session";
+import { fetchSession } from "features/auth/api/fetch-session";
 
 export function sessionQuery() {
   return queryOptions({

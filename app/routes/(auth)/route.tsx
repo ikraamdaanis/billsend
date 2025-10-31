@@ -4,7 +4,7 @@ import {
   Outlet,
   redirect
 } from "@tanstack/react-router";
-import { sessionQuery } from "feature/auth/queries/session-query";
+import { sessionQuery } from "features/auth/queries/session-query";
 
 export const Route = createFileRoute("/(auth)")({
   component: AuthLayout,

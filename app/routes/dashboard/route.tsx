@@ -1,7 +1,7 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppSidebar } from "components/app-sidebar";
 import { SidebarProvider } from "components/ui/sidebar";
-import { sessionQuery } from "feature/auth/queries/session-query";
+import { sessionQuery } from "features/auth/queries/session-query";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,

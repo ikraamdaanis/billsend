@@ -11,7 +11,7 @@ import {
 } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
-import { sessionQuery } from "feature/auth/queries/session-query";
+import { sessionQuery } from "features/auth/queries/session-query";
 import { authClient } from "lib/auth-client";
 import { getErrorMessage } from "lib/get-error-message";
 import { useTransition } from "react";

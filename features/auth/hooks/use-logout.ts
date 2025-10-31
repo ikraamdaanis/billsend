@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { sessionQuery } from "feature/auth/queries/session-query";
+import { sessionQuery } from "features/auth/queries/session-query";
 import { authClient } from "lib/auth-client";
 
 export function useLogout() {

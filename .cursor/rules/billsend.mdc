@@ -1,0 +1,144 @@
+---
+alwaysApply: true
+---
+
+# BillSend.io - Invoice Generator
+
+## Project Overview
+
+A modern invoice generator web app. Users can create invoices, manage clients, and export to PDF with fully customisable templates.
+
+## Tech Stack
+
+- React 19+, TanStack Start with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- shadcn/ui for UI components
+
+## Code Style & Conventions
+
+### TypeScript
+
+- Use TypeScript strictly - no `any` types unless absolutely necessary
+- Define interfaces for all data structures
+- Use proper type exports from separate types files
+- Prefer `interface` over `type` for object shapes
+
+### React
+
+- Use functional components with hooks only
+- Prefer named exports over default exports
+- Use `const` for components
+- Keep components small and focused (single responsibility)
+- Extract reusable logic into custom hooks
+- Use React Hook Form for all forms
+
+### Naming Conventions
+
+- Components: PascalCase (e.g., `InvoiceForm.tsx`)
+- Files: kebab-case for non-components (e.g., `use-invoice-store.ts`)
+- Interfaces: PascalCase with descriptive names (e.g., `Invoice`, `InvoiceTemplate`)
+- Hooks: camelCase starting with "use" (e.g., `useInvoiceForm`)
+- Constants: UPPER_SNAKE_CASE (e.g., `DEFAULT_TEMPLATE`)
+
+### Component Structure
+
+```typescript
+// Imports (grouped: React, third-party, local)
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import { useInvoiceStore } from "@/lib/stores/invoice-store"
+
+// Component
+export function ComponentName({ prop }: { prop: string }) {
+  // Hooks first
+  const form = useForm()
+
+  // State
+  const [state, setState] = useState()
+
+  // Handlers
+  function handleSubmit() {
+    // ...
+  }
+
+  // Render
+  return (
+    <div>
+      {/* ... */}
+    </div>
+  )
+}
+```
+
+### Styling
+
+- Use Tailwind CSS utility classes
+- Follow shadcn/ui patterns for component styling
+- Use `cn()` utility for conditional classes
+- Prefer composition over custom CSS
+- Mobile-first responsive design (but desktop is primary)
+
+### State Management
+
+- Use component state for UI-only state
+- Avoid prop drilling - use stores for shared state
+
+### Forms
+
+- Always use TanStack Form with Zod validation
+- Use shadcn/ui form components
+- Show validation errors inline
+- Disable submit while submitting
+- Auto-calculate computed fields (totals, amounts)
+
+### Error Handling
+
+- Show user-friendly error messages
+- Use toast notifications for feedback
+- Validate on blur and submit
+- Handle edge cases gracefully
+
+### Performance
+
+- Debounce search/filter inputs
+- Keep re-renders minimal
+
+### Accessibility
+
+- Use semantic HTML
+- Include proper ARIA labels
+- Ensure keyboard navigation works
+- Use proper heading hierarchy
+- Test with screen readers when possible
+
+### Comments
+
+- Use JSDoc for complex functions
+- Comment "why" not "what"
+- Keep comments up to date
+- Remove commented-out code
+
+## Common Pitfalls to Avoid
+
+- Don't mix Tailwind with custom CSS
+- Don't use inline styles (use Tailwind classes)
+- Don't forget to handle empty states
+- Don't make API calls in components (use stores)
+- Don't forget loading and error states
+- Don't skip TypeScript types
+- Always use British English spelling in UI text
+
+## When Generating Code
+
+- Always include proper TypeScript types
+- Use shadcn/ui components where possible
+- Follow the file structure above
+- Include error handling
+- Add empty states for lists
+- Make forms accessible
+- Use lucide-react icons
+- Keep components focused and small
+- Extract reusable logic
+- Use Tailwind for all styling
