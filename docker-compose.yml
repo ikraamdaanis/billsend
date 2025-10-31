@@ -1,0 +1,19 @@
+services:
+  db-billsend:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: password123
+      POSTGRES_USER: user
+      POSTGRES_DB: billsend
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_billsend:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d billsend"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_billsend:
