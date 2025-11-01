@@ -27,7 +27,10 @@ import { Suspense } from "react";
 export const Route = createFileRoute("/dashboard/invoices/$invoiceId")({
   component: InvoiceDetailPage,
   notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent
+  errorComponent: ErrorComponent,
+  loader: ({ context, params }) => {
+    return context.queryClient.prefetchQuery(invoiceQuery(params.invoiceId));
+  }
 });
 
 function NotFoundComponent() {
