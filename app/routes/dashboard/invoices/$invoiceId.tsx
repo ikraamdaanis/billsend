@@ -293,9 +293,9 @@ function InvoiceDetailPage() {
                 )}
               </CardContent>
             </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="ml-auto w-full max-w-sm space-y-2">
+            <Card className="ml-auto w-full min-w-[300px] sm:w-fit">
+              <CardContent className="">
+                <div className="ml-auto w-full space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">Subtotal</span>
                     <span className="font-medium">

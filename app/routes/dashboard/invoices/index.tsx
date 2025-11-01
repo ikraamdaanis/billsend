@@ -25,11 +25,12 @@ function InvoicesList() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="table-header"
+            size="table-header"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Invoice Number
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="size-4 shrink-0" />
           </Button>
         );
       },
@@ -53,11 +54,12 @@ function InvoicesList() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="table-header"
+            size="table-header"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Client
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="size-4 shrink-0" />
           </Button>
         );
       },
@@ -84,11 +86,12 @@ function InvoicesList() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="table-header"
+            size="table-header"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Invoice Date
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="size-4 shrink-0" />
           </Button>
         );
       },
@@ -106,11 +109,12 @@ function InvoicesList() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="table-header"
+            size="table-header"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Due Date
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="size-4 shrink-0" />
           </Button>
         );
       },
@@ -128,11 +132,12 @@ function InvoicesList() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="table-header"
+            size="table-header"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Status
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="size-4 shrink-0" />
           </Button>
         );
       },
@@ -146,11 +151,12 @@ function InvoicesList() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant="table-header"
+            size="table-header"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
             Total
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className="size-4 shrink-0" />
           </Button>
         );
       },
