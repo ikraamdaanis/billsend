@@ -14,7 +14,8 @@
     "db:push": "bunx drizzle-kit push",
     "db:studio": "drizzle-kit studio --config=./drizzle.config.ts",
     "db:start": "docker compose -f docker-compose.yml up -d",
-    "db:stop": "docker compose -f docker-compose.yml down"
+    "db:stop": "docker compose -f docker-compose.yml down",
+    "db:seed": "bunx tsx scripts/seed.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^10.0.0",
@@ -58,6 +59,7 @@
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@netlify/vite-plugin-tanstack-start": "^1.1.6",
+    "@noble/hashes": "^2.0.1",
     "@tanstack/eslint-config": "^0.3.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
@@ -66,6 +68,7 @@
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "chalk": "^5.6.2",
     "drizzle-kit": "^0.31.6",
     "eslint-plugin-no-relative-import-paths": "^1.6.1",
     "eslint-plugin-react": "^7.37.5",
