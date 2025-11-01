@@ -31,27 +31,13 @@ export const Route = createFileRoute("/dashboard/clients/$clientId")({
   component: ClientDetailPage,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
-  loader: async ({ context, params }) => {
-    try {
-      return await Promise.all([
-        context.queryClient.ensureQueryData(clientQuery(params.clientId)),
-        context.queryClient.ensureQueryData(
-          clientInvoicesQuery(params.clientId)
-        )
-      ]);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-
-      if (
-        errorMessage.toLowerCase().includes("not found") ||
-        errorMessage.toLowerCase().includes("doesn't exist")
-      ) {
-        throw notFound();
-      }
-
-      throw error;
-    }
+  loader: ({ context, params }) => {
+    return Promise.all([
+      context.queryClient.prefetchQuery(clientQuery(params.clientId)),
+      context.queryClient.prefetchQuery(
+        clientInvoicesQuery(params.clientId)
+      )
+    ]);
   }
 });
 

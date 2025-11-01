@@ -12,7 +12,7 @@ import { Suspense } from "react";
 export const Route = createFileRoute("/dashboard/clients/")({
   component: ClientsList,
   loader: ({ context }) => {
-    return context.queryClient.ensureQueryData(clientsQuery());
+    return context.queryClient.prefetchQuery(clientsQuery());
   }
 });
 
@@ -98,6 +98,7 @@ function ClientsTableContent() {
           <Link
             to="/dashboard/clients/$clientId"
             params={{ clientId: client.id }}
+            preload="render"
           >
             <div className="flex items-center hover:text-blue-600">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300">
