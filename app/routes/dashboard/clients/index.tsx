@@ -3,9 +3,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "components/table";
 import { Button } from "components/ui/button";
+import { Skeleton } from "components/ui/skeleton";
 import type { ClientsQueryResult } from "features/clients/queries/clients-query";
 import { clientsQuery } from "features/clients/queries/clients-query";
 import { ArrowUpDown, Plus } from "lucide-react";
+import { Suspense } from "react";
 
 export const Route = createFileRoute("/dashboard/clients/")({
   component: ClientsList,
@@ -14,7 +16,60 @@ export const Route = createFileRoute("/dashboard/clients/")({
   }
 });
 
+function ClientsTableSkeleton() {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-5 flex-1" />
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-64" />
+        </div>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-5 flex-1" />
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-64" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ClientsList() {
+  return (
+    <div className="flex flex-1 flex-col bg-gray-50">
+      <header className="border-b border-gray-200 bg-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Clients</h2>
+            <p className="text-sm text-gray-500">
+              Manage your organisation&#39;s clients
+            </p>
+          </div>
+          <Link to="/dashboard/clients/create">
+            <Button>
+              <Plus className="h-4 w-4" />
+              Add Client
+            </Button>
+          </Link>
+        </div>
+      </header>
+      <main className="flex-1 p-6">
+        <Suspense fallback={<ClientsTableSkeleton />}>
+          <ClientsTableContent />
+        </Suspense>
+      </main>
+    </div>
+  );
+}
+
+function ClientsTableContent() {
   const { data: clients } = useSuspenseQuery(clientsQuery());
 
   const columns: ColumnDef<ClientsQueryResult[number]>[] = [
@@ -124,40 +179,22 @@ function ClientsList() {
   ];
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Clients</h2>
-            <p className="text-sm text-gray-500">
-              Manage your organisation&#39;s clients
-            </p>
-          </div>
-          <Link to="/dashboard/clients/create">
+    <>
+      {clients.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-12">
+          <p className="text-sm text-gray-600">No clients found</p>
+          <Link to="/dashboard/clients/create" className="mt-4">
             <Button>
-              <Plus className="h-4 w-4" />
-              Add Client
+              <Plus className="mr-2 h-4 w-4" />
+              Create your first client
             </Button>
           </Link>
         </div>
-      </header>
-      <main className="flex-1 p-6">
-        {clients.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-12">
-            <p className="text-sm text-gray-600">No clients found</p>
-            <Link to="/dashboard/clients/create" className="mt-4">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create your first client
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <DataTable data={clients} columns={columns} />
-          </div>
-        )}
-      </main>
-    </div>
+      ) : (
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <DataTable data={clients} columns={columns} />
+        </div>
+      )}
+    </>
   );
 }
