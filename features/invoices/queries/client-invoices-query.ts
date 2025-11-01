@@ -4,7 +4,8 @@ import { fetchInvoicesByClientId } from "features/invoices/api/fetch-invoices-by
 export function clientInvoicesQuery(clientId: string) {
   return queryOptions({
     queryKey: ["invoices", "client", clientId],
-    queryFn: () => fetchInvoicesByClientId({ data: { clientId } })
+    queryFn: () => fetchInvoicesByClientId({ data: { clientId } }),
+    placeholderData: prev => prev
   });
 }
 

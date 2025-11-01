@@ -5,7 +5,8 @@ import { z } from "zod";
 export function clientQuery(clientId: string) {
   return queryOptions({
     queryKey: ["client", clientId],
-    queryFn: () => fetchClientById({ data: { clientId } })
+    queryFn: () => fetchClientById({ data: { clientId } }),
+    placeholderData: prev => prev
   });
 }
 

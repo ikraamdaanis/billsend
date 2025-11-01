@@ -5,7 +5,8 @@ export function clientsQuery() {
   return queryOptions({
     queryKey: ["clients"],
     queryFn: fetchClients,
-    staleTime: 30 * 1000 // 30 seconds
+    staleTime: 30 * 1000, // 30 seconds
+    placeholderData: prev => prev
   });
 }
 

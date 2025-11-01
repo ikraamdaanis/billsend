@@ -4,10 +4,12 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { StatusBadge } from "components/status-badge";
 import { DataTable } from "components/table";
 import { Button } from "components/ui/button";
+import { Skeleton } from "components/ui/skeleton";
 import type { InvoicesQueryResult } from "features/invoices/queries/invoices-query";
 import { invoicesQuery } from "features/invoices/queries/invoices-query";
 import type { InvoiceStatus } from "features/invoices/types";
 import { ArrowUpDown, Plus } from "lucide-react";
+import { Suspense } from "react";
 
 export const Route = createFileRoute("/dashboard/invoices/")({
   component: InvoicesList,
@@ -16,7 +18,62 @@ export const Route = createFileRoute("/dashboard/invoices/")({
   }
 });
 
+function InvoicesTableSkeleton() {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-24" />
+          <Skeleton className="h-5 w-24" />
+        </div>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-24" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function InvoicesList() {
+  return (
+    <div className="flex flex-1 flex-col bg-gray-50">
+      <header className="border-b border-gray-200 bg-white px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Invoices</h2>
+            <p className="text-sm text-gray-500">
+              Manage your organisation&#39;s invoices
+            </p>
+          </div>
+          <Link to="/dashboard/invoices/create">
+            <Button>
+              <Plus className="size-5 shrink-0" />
+              Add Invoice
+            </Button>
+          </Link>
+        </div>
+      </header>
+      <main className="flex-1 p-6">
+        <Suspense fallback={<InvoicesTableSkeleton />}>
+          <InvoicesTableContent />
+        </Suspense>
+      </main>
+    </div>
+  );
+}
+
+function InvoicesTableContent() {
   const { data: invoices } = useSuspenseQuery(invoicesQuery());
 
   const columns: ColumnDef<InvoicesQueryResult[number]>[] = [
@@ -173,40 +230,22 @@ function InvoicesList() {
   ];
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Invoices</h2>
-            <p className="text-sm text-gray-500">
-              Manage your organisation&#39;s invoices
-            </p>
-          </div>
-          <Link to="/dashboard/invoices/create">
+    <>
+      {invoices.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-12">
+          <p className="text-sm text-gray-600">No invoices found</p>
+          <Link to="/dashboard/invoices/create" className="mt-4">
             <Button>
               <Plus className="size-5 shrink-0" />
-              Add Invoice
+              Create your first invoice
             </Button>
           </Link>
         </div>
-      </header>
-      <main className="flex-1 p-6">
-        {invoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-12">
-            <p className="text-sm text-gray-600">No invoices found</p>
-            <Link to="/dashboard/invoices/create" className="mt-4">
-              <Button>
-                <Plus className="size-5 shrink-0" />
-                Create your first invoice
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <DataTable data={invoices} columns={columns} />
-          </div>
-        )}
-      </main>
-    </div>
+      ) : (
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <DataTable data={invoices} columns={columns} />
+        </div>
+      )}
+    </>
   );
 }

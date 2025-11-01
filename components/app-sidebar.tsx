@@ -12,15 +12,7 @@ import {
 } from "components/ui/sidebar";
 import { useLogout } from "features/auth/hooks/use-logout";
 import { cn } from "lib/utils";
-import {
-  DollarSign,
-  FileCheck,
-  FileText,
-  Home,
-  LogOut,
-  Settings,
-  Users
-} from "lucide-react";
+import { FileCheck, Home, LogOut, Settings, Users } from "lucide-react";
 
 export function AppSidebar() {
   const logout = useLogout();
@@ -62,7 +54,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map(item => (
                 <SidebarMenuItem key={item.href}>
-                  <Link to={item.href}>
+                  <Link to={item.href} preload="viewport">
                     <SidebarMenuButton
                       size="lg"
                       className={cn(
@@ -76,24 +68,6 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg">
-                  <FileText />
-                  <span>Reports</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg">
-                  <DollarSign />
-                  <span>Payments</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton size="lg">
-                  <FileText />
-                  <span>Templates</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -101,7 +75,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link to="/dashboard/settings">
+            <Link to="/dashboard/settings" preload="viewport">
               <SidebarMenuButton size="lg">
                 <Settings />
                 <span>Settings</span>
