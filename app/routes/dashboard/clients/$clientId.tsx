@@ -42,12 +42,14 @@ export const Route = createFileRoute("/dashboard/clients/$clientId")({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
+
       if (
         errorMessage.toLowerCase().includes("not found") ||
         errorMessage.toLowerCase().includes("doesn't exist")
       ) {
         throw notFound();
       }
+
       throw error;
     }
   }

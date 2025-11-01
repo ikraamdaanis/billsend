@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { StatusBadge } from "components/status-badge";
 import { Button } from "components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   CardTitle
 } from "components/ui/card";
 import { Separator } from "components/ui/separator";
+import { Skeleton } from "components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -21,28 +22,12 @@ import {
 import { invoiceQuery } from "features/invoices/queries/invoice-query";
 import type { InvoiceStatus } from "features/invoices/types";
 import { AlertCircle, ArrowLeft, FileX } from "lucide-react";
+import { Suspense } from "react";
 
 export const Route = createFileRoute("/dashboard/invoices/$invoiceId")({
   component: InvoiceDetailPage,
   notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
-  loader: async ({ context, params }) => {
-    try {
-      return await context.queryClient.ensureQueryData(
-        invoiceQuery(params.invoiceId)
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      if (
-        errorMessage.toLowerCase().includes("not found") ||
-        errorMessage.toLowerCase().includes("doesn't exist")
-      ) {
-        throw notFound();
-      }
-      throw error;
-    }
-  }
+  errorComponent: ErrorComponent
 });
 
 function NotFoundComponent() {
@@ -122,8 +107,128 @@ function ErrorComponent() {
   );
 }
 
+function InvoiceDetailSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col bg-gray-50">
+      <header className="border-b border-gray-200 bg-white px-6 py-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="flex flex-1 items-center justify-between">
+            <div>
+              <Skeleton className="mb-2 h-7 w-40" />
+              <Skeleton className="h-5 w-32" />
+            </div>
+            <Skeleton className="h-6 w-24 rounded-full" />
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 p-6">
+        <div className="mx-auto max-w-4xl">
+          <div className="flex flex-col gap-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="mb-2 h-6 w-40" />
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <div>
+                    <Skeleton className="mb-2 h-4 w-24" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <div>
+                    <Skeleton className="mb-2 h-4 w-20" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Separator className="my-2" />
+                  <div>
+                    <Skeleton className="mb-2 h-4 w-16" />
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <Skeleton className="mb-2 h-6 w-40" />
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <div className="flex flex-col gap-2">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-28" />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <Skeleton className="mb-2 h-3 w-16" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-3 w-48" />
+                      <Skeleton className="h-3 w-32" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <Card>
+              <CardHeader>
+                <Skeleton className="mb-2 h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-4">
+                      <Skeleton className="h-4 w-48" />
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="ml-auto w-full min-w-[300px] sm:w-fit">
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-5 w-12" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function InvoiceDetailPage() {
   const { invoiceId } = Route.useParams();
+
+  return (
+    <Suspense fallback={<InvoiceDetailSkeleton />}>
+      <InvoiceDetailContent invoiceId={invoiceId} />
+    </Suspense>
+  );
+}
+
+function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
   const { data: invoice } = useSuspenseQuery(invoiceQuery(invoiceId));
 
   const lineItems = invoice.lineItems || [];
