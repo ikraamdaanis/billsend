@@ -6,6 +6,23 @@ import { sessionQuery } from "features/auth/queries/session-query";
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
   beforeLoad: async ({ context }) => {
+    // Check cache first - if session is already cached, use it immediately
+    // This makes subsequent navigations instant (non-blocking)
+    const cachedUser = context.queryClient.getQueryData(
+      sessionQuery().queryKey
+    );
+
+    if (cachedUser) {
+      // Fast path: use cached session (instant)
+      const orgLength = cachedUser.organizations.length;
+
+      if (orgLength === 0) throw redirect({ to: "/create-organisation" });
+
+      return { user: cachedUser };
+    }
+
+    // Slow path: fetch session (only happens on first load/refresh)
+    // We must await here for security - can't allow unauthorized access
     const user = await context.queryClient.ensureQueryData({
       ...sessionQuery()
     });
