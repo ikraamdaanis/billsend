@@ -29,9 +29,7 @@ export const Route = createFileRoute("/(auth)/create-organisation")({
 
     if (!user) throw redirect({ to: "/login" });
 
-    const organizationCount = user.organizations.length;
-
-    if (organizationCount > 0) throw redirect({ to: "/dashboard" });
+    if (user.activeOrganization) throw redirect({ to: "/dashboard" });
   }
 });
 
@@ -49,12 +47,19 @@ function CreateOrganisationPage() {
     onSubmit: ({ value }) => {
       startTransition(async () => {
         try {
-          const { error } = await authClient.organization.create({
+          const { data, error } = await authClient.organization.create({
             name: value.name,
             slug: value.name.toLowerCase().replace(/ /g, "-")
           });
 
           if (error) throw new Error(error.message);
+
+          if (data.id) {
+            // Set the created organization as active
+            await authClient.organization.setActive({
+              organizationId: data.id
+            });
+          }
 
           // Invalidate and remove the cached session data to force a fresh fetch
           queryClient.removeQueries({

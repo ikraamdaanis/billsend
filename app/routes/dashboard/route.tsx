@@ -14,9 +14,9 @@ export const Route = createFileRoute("/dashboard")({
 
     if (cachedUser) {
       // Fast path: use cached session (instant)
-      const orgLength = cachedUser.organizations.length;
-
-      if (orgLength === 0) throw redirect({ to: "/create-organisation" });
+      if (!cachedUser.activeOrganization) {
+        throw redirect({ to: "/create-organisation" });
+      }
 
       return { user: cachedUser };
     }
@@ -29,9 +29,9 @@ export const Route = createFileRoute("/dashboard")({
 
     if (!user) throw redirect({ to: "/login" });
 
-    const orgLength = user.organizations.length;
-
-    if (orgLength === 0) throw redirect({ to: "/create-organisation" });
+    if (!user.activeOrganization) {
+      throw redirect({ to: "/create-organisation" });
+    }
 
     return { user };
   }
