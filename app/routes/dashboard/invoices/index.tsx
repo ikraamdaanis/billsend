@@ -14,7 +14,7 @@ import { Suspense } from "react";
 export const Route = createFileRoute("/dashboard/invoices/")({
   component: InvoicesList,
   loader: ({ context }) => {
-    return context.queryClient.ensureQueryData(invoicesQuery());
+    return context.queryClient.prefetchQuery(invoicesQuery());
   }
 });
 
