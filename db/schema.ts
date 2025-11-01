@@ -32,7 +32,8 @@ export const session = pgTable("session", {
   userAgent: text("user_agent"),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" })
+    .references(() => user.id, { onDelete: "cascade" }),
+  activeOrganizationId: text("active_organization_id")
 }).enableRLS();
 
 export const account = pgTable("account", {

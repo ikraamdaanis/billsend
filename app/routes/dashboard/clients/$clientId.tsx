@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
 import { StatusBadge } from "components/status-badge";
 import { DataTable } from "components/table";
@@ -34,9 +34,7 @@ export const Route = createFileRoute("/dashboard/clients/$clientId")({
   loader: ({ context, params }) => {
     return Promise.all([
       context.queryClient.prefetchQuery(clientQuery(params.clientId)),
-      context.queryClient.prefetchQuery(
-        clientInvoicesQuery(params.clientId)
-      )
+      context.queryClient.prefetchQuery(clientInvoicesQuery(params.clientId))
     ]);
   }
 });

@@ -14,6 +14,21 @@ export const fetchSession = createServerFn({ method: "GET" }).handler(
       headers: getRequest().headers
     });
 
-    return { ...session.user, organizations };
+    const activeOrganization =
+      organizations.length > 0 ? organizations[0] : null;
+
+    if (activeOrganization) {
+      await auth.api.setActiveOrganization({
+        headers: getRequest().headers,
+        body: {
+          organizationId: activeOrganization.id
+        }
+      });
+    }
+
+    return {
+      ...session.user,
+      activeOrganization
+    };
   }
 );
