@@ -45,12 +45,12 @@ function HomePage() {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <Link to="/login">
+                <Link to="/login" preload="viewport">
                   <Button variant="outline" className="cursor-pointer">
                     Login
                   </Button>
                 </Link>
-                <Link to="/signup">
+                <Link to="/signup" preload="viewport">
                   <Button className="cursor-pointer">Sign up</Button>
                 </Link>
               </div>
@@ -161,7 +161,7 @@ function HomePage() {
           </div>
           {/* CTA Buttons */}
           <div className="flex flex-col justify-center gap-4 sm:flex-row">
-            <Link to="/signup">
+            <Link to="/signup" preload="viewport">
               <Button className="bg-brand-400 hover:bg-brand-500 flex h-[unset] items-center justify-center rounded-lg px-8 py-4 text-lg font-semibold text-white transition-colors">
                 Try for free
                 <ArrowRight className="h-5 w-5" />
