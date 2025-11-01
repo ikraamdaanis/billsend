@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { AppSidebar } from "components/app-sidebar";
-import { SidebarProvider } from "components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "components/ui/sidebar";
 import { sessionQuery } from "features/auth/queries/session-query";
 
 export const Route = createFileRoute("/dashboard")({
@@ -25,9 +25,11 @@ function RouteComponent() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="flex flex-1 flex-col">
-        <Outlet />
-      </main>
+      <SidebarInset>
+        <main className="flex flex-1 flex-col">
+          <Outlet />
+        </main>
+      </SidebarInset>
     </SidebarProvider>
   );
 }
