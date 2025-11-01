@@ -4,7 +4,8 @@ import { fetchClients } from "features/clients/api/fetch-clients";
 export function clientsQuery() {
   return queryOptions({
     queryKey: ["clients"],
-    queryFn: fetchClients
+    queryFn: fetchClients,
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 

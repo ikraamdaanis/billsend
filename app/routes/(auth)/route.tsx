@@ -12,8 +12,7 @@ export const Route = createFileRoute("/(auth)")({
     const REDIRECT_URL = "/dashboard";
 
     const user = await context.queryClient.ensureQueryData({
-      ...sessionQuery(),
-      revalidateIfStale: true
+      ...sessionQuery()
     });
 
     const isCreateOrganisation = location.pathname === "/create-organisation";

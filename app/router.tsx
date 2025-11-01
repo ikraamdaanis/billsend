@@ -10,6 +10,8 @@ export function getRouter() {
     createRouter({
       routeTree,
       defaultPreload: "intent",
+      defaultPreloadDelay: 0,
+      defaultPendingMinMs: 150,
       scrollRestoration: true,
       context: { queryClient }
     }),

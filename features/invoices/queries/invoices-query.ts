@@ -4,7 +4,8 @@ import { fetchInvoices } from "features/invoices/api/fetch-invoices";
 export function invoicesQuery() {
   return queryOptions({
     queryKey: ["invoices"],
-    queryFn: fetchInvoices
+    queryFn: fetchInvoices,
+    staleTime: 30 * 1000 // 30 seconds
   });
 }
 

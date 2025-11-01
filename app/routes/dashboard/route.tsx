@@ -7,8 +7,7 @@ export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
   beforeLoad: async ({ context }) => {
     const user = await context.queryClient.ensureQueryData({
-      ...sessionQuery(),
-      revalidateIfStale: true
+      ...sessionQuery()
     });
 
     if (!user) throw redirect({ to: "/login" });
