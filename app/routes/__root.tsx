@@ -48,9 +48,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <Toaster richColors />
         {process.env.NODE_ENV !== "production" ? (
           <TanStackDevtools
-            config={{
-              position: "bottom-right"
-            }}
+            config={{ position: "bottom-right" }}
             plugins={[
               {
                 name: "Tanstack Router",

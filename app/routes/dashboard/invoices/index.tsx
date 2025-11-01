@@ -98,6 +98,7 @@ function InvoicesTableContent() {
           <Link
             to="/dashboard/invoices/$invoiceId"
             params={{ invoiceId: invoice.id }}
+            preload="render"
           >
             <div className="text-sm font-medium text-gray-900 hover:text-blue-600">
               {invoiceNumber}
