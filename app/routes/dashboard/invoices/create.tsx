@@ -1,6 +1,13 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useCanGoBack,
+  useNavigate,
+  useRouter
+} from "@tanstack/react-router";
+import { DashboardHeader } from "components/dashboard-header";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -58,7 +65,11 @@ function getDefaultDueDate() {
 
 function CreateInvoicePage() {
   const router = useRouter();
+  const navigate = useNavigate();
+  const canGoBack = useCanGoBack();
+
   const queryClient = useQueryClient();
+
   const { data: clients } = useSuspenseQuery(clientsQuery());
 
   const [pending, startTransition] = useTransition();
@@ -125,7 +136,7 @@ function CreateInvoicePage() {
 
           toast.success("Invoice created successfully");
 
-          await router.navigate({ to: "/dashboard/invoices" });
+          await navigate({ to: "/dashboard/invoices" });
         } catch (error) {
           toast.error(
             getErrorMessage(error, "An error occurred while creating invoice")
@@ -136,24 +147,27 @@ function CreateInvoicePage() {
   });
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link to="/dashboard/invoices">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Create Invoice
-            </h2>
-            <p className="text-sm text-gray-500">
-              Add a new invoice to your organisation
-            </p>
-          </div>
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader className="pl-1">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              if (canGoBack) {
+                router.history.back();
+              } else {
+                navigate({ to: "/dashboard/invoices" });
+              }
+            }}
+          >
+            <ArrowLeft className="size-4 shrink-0" />
+          </Button>
+          <h2 className="text-base font-medium text-gray-900">
+            Create Invoice
+          </h2>
         </div>
-      </header>
+      </DashboardHeader>
       <main className="flex-1 p-4">
         <div className="mx-auto max-w-4xl">
           <Card>
