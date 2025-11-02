@@ -29,17 +29,20 @@ export function AppSidebar() {
     {
       label: "Dashboard",
       href: "/dashboard",
-      icon: IoHome
+      icon: IoHome,
+      iconClassName: "bg-blue-400"
     },
     {
       label: "Clients",
       href: "/dashboard/clients",
-      icon: FaUser
+      icon: FaUser,
+      iconClassName: "bg-green-400"
     },
     {
       label: "Invoices",
       href: "/dashboard/invoices",
-      icon: FaFileInvoiceDollar
+      icon: FaFileInvoiceDollar,
+      iconClassName: "bg-purple-400"
     }
   ];
 
@@ -69,12 +72,19 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       size="lg"
                       className={cn(
-                        pathname === item.href &&
-                          "text-brand-500 hover:text-brand-600 bg-zinc-100"
+                        "flex items-center gap-2 font-medium",
+                        pathname === item.href && "bg-zinc-100"
                       )}
                     >
-                      <item.icon />
-                      <span>{item.label}</span>
+                      <span
+                        className={cn(
+                          "grid size-6 place-content-center rounded-sm",
+                          item.iconClassName
+                        )}
+                      >
+                        <item.icon className="text-white" />
+                      </span>
+                      {item.label}
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
@@ -93,8 +103,16 @@ export function AppSidebar() {
                 if (isMobile) setOpenMobile(false);
               }}
             >
-              <SidebarMenuButton size="lg">
-                <IoCog className="size-5!" />
+              <SidebarMenuButton
+                size="lg"
+                className={cn(
+                  "font-medium",
+                  pathname === "/dashboard/settings" && "bg-zinc-100"
+                )}
+              >
+                <span className="grid size-6 place-content-center rounded-sm bg-zinc-400">
+                  <IoCog className="size-5! text-white" />
+                </span>
                 Settings
               </SidebarMenuButton>
             </Link>
@@ -104,12 +122,11 @@ export function AppSidebar() {
               size="lg"
               onClick={async () => await logout.mutateAsync()}
               disabled={logout.isPending}
-              className={cn(
-                "text-red-600 hover:bg-red-50 hover:text-red-700",
-                logout.isPending && "opacity-50"
-              )}
+              className={cn("font-medium", logout.isPending && "opacity-50")}
             >
-              <MdLogout className="size-5!" />
+              <span className="grid size-6 place-content-center rounded-sm bg-rose-500">
+                <MdLogout className="size-3.5! text-white" />
+              </span>
               Log out
             </SidebarMenuButton>
           </SidebarMenuItem>

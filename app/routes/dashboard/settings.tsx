@@ -31,9 +31,7 @@ const updateOrganizationSchema = z.object({
 
 export const Route = createFileRoute("/dashboard/settings")({
   component: SettingsPage,
-  loader: ({ context }) => {
-    return context.queryClient.prefetchQuery(sessionQuery());
-  }
+  loader: ({ context }) => context.queryClient.prefetchQuery(sessionQuery())
 });
 
 function SettingsPage() {

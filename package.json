@@ -45,6 +45,7 @@
     "drizzle-orm": "^0.44.7",
     "lucide-react": "^0.548.0",
     "pg": "^8.16.3",
+    "plur": "^6.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.65.0",

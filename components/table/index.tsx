@@ -59,7 +59,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <Input
           placeholder="Search all columns..."
           value={globalFilter}

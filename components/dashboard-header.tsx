@@ -8,7 +8,7 @@ export function DashboardHeader({
   ...props
 }: ComponentProps<"div">) {
   return (
-    <header className="border-border sticky top-0 z-10 h-10 border-b bg-white/70 pr-4 pl-2 backdrop-blur-sm">
+    <header className="border-border sticky top-0 z-10 border-b bg-white/70 py-4 pr-4 pl-2 backdrop-blur-sm">
       <nav className="flex h-full items-center">
         <SidebarTrigger className="size-8 lg:hidden" />
         <div
