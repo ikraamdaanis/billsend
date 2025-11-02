@@ -19,7 +19,7 @@ function CardHeader({ className, ...props }: ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start p-4 has-data-[slot=card-action]:grid-cols-[1fr_auto]",
+        "@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start p-4 pb-0 has-data-[slot=card-action]:grid-cols-[1fr_auto]",
         className
       )}
       {...props}

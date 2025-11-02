@@ -234,20 +234,9 @@ function ClientDetailPage() {
 function ClientHeader({ clientId }: { clientId: string }) {
   const { data: client } = useSuspenseQuery(clientQuery(clientId));
 
-  const initials = client.name
-    .split(" ")
-    .map(n => n[0])
-    .join("")
-    .toUpperCase();
-
   return (
     <div className="flex items-center gap-3">
-      <div className="flex size-7 items-center justify-center rounded-full bg-gray-300">
-        <span className="text-xs font-medium text-gray-600">{initials}</span>
-      </div>
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">{client.name}</h2>
-      </div>
+      <h2 className="text-lg font-semibold text-gray-900">{client.name}</h2>
     </div>
   );
 }
