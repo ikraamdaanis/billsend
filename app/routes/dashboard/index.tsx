@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { DashboardHeader } from "components/dashboard-header";
 import { StatusBadge } from "components/status-badge";
+import { Button } from "components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,7 +15,6 @@ import { dashboardStatsQuery } from "features/dashboard/queries/dashboard-stats-
 import {
   CheckCircle,
   Clock,
-  Download,
   FileText,
   Plus,
   TrendingDown,
@@ -41,64 +41,12 @@ function Dashboard() {
           </h2>
         </div>
       </DashboardHeader>
-      <main className="flex flex-1 flex-col gap-4 p-4">
+      <main className="lg:hs-[calc(100dvh-4rem)] flex flex-col gap-4 p-4">
         <Suspense fallback={<DashboardSkeleton />}>
           <DashboardContent />
         </Suspense>
       </main>
     </div>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <>
-      {/* Summary Cards Skeleton */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-lg border border-gray-200 bg-white p-4"
-          >
-            <Skeleton className="mb-2 h-4 w-24" />
-            <Skeleton className="mb-4 h-8 w-20" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        ))}
-      </div>
-      {/* Charts and Tables Row Skeleton */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <Skeleton className="mb-4 h-6 w-40" />
-          <div className="space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-6 w-full" />
-            ))}
-          </div>
-        </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <Skeleton className="mb-4 h-6 w-32" />
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
-      {/* Client Table Skeleton */}
-      <div className="rounded-lg border border-gray-200 bg-white">
-        <div className="border-b border-gray-200 px-6 py-4">
-          <Skeleton className="h-6 w-32" />
-        </div>
-        <div className="p-4">
-          <div className="space-y-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </div>
-      </div>
-    </>
   );
 }
 
@@ -269,8 +217,8 @@ function DashboardContent() {
         </Card>
       </div>
       {/* Charts and Tables Row */}
+
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* Revenue Chart */}
         <Card className="flex flex-col">
           <CardHeader>
             <CardTitle>Revenue History</CardTitle>
@@ -279,7 +227,6 @@ function DashboardContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex h-full flex-col pt-0">
-            {/* Simple Bar Chart */}
             {stats.monthlyRevenue.length > 0 ? (
               <>
                 <div className="flex flex-1 flex-col justify-between space-y-3">
@@ -335,7 +282,6 @@ function DashboardContent() {
                     );
                   })}
                 </div>
-
                 <div className="mt-4 flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
                     <div className="h-3 w-3 rounded bg-blue-600"></div>
@@ -354,7 +300,6 @@ function DashboardContent() {
             )}
           </CardContent>
         </Card>
-        {/* Recent Invoices */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -377,7 +322,7 @@ function DashboardContent() {
                     to="/dashboard/invoices/$invoiceId"
                     params={{ invoiceId: invoice.id }}
                     preload="intent"
-                    className="flex items-center justify-between rounded-lg py-2 transition-colors hover:bg-gray-50"
+                    className="flex items-center justify-between rounded-lg px-2 py-2 transition-colors hover:bg-gray-50"
                   >
                     <div className="flex items-center space-x-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
@@ -418,7 +363,7 @@ function DashboardContent() {
           </CardContent>
         </Card>
       </div>
-      {/* Client Details Table */}
+
       <Card className="overflow-hidden">
         <CardHeader className="border-b">
           <div className="flex h-full items-center justify-between">
@@ -429,21 +374,11 @@ function DashboardContent() {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Link
-                to="/dashboard/clients"
-                className="flex items-center gap-2 rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-100"
-                preload="intent"
-              >
-                <Download className="h-4 w-4" />
-                <span className="text-sm">Export</span>
-              </Link>
-              <Link
-                to="/dashboard/clients/create"
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                preload="intent"
-              >
-                <Plus className="h-4 w-4" />
-                <span className="text-sm">Add Client</span>
+              <Link to="/dashboard/clients/create" preload="intent">
+                <Button>
+                  <Plus className="h-4 w-4" />
+                  Add Client
+                </Button>
               </Link>
             </div>
           </div>
@@ -547,6 +482,58 @@ function DashboardContent() {
           )}
         </CardContent>
       </Card>
+    </>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <>
+      {/* Summary Cards Skeleton */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-lg border border-gray-200 bg-white p-4"
+          >
+            <Skeleton className="mb-2 h-4 w-24" />
+            <Skeleton className="mb-4 h-8 w-20" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        ))}
+      </div>
+      {/* Charts and Tables Row Skeleton */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <Skeleton className="mb-4 h-6 w-40" />
+          <div className="space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4">
+          <Skeleton className="mb-4 h-6 w-32" />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Client Table Skeleton */}
+      <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <Skeleton className="h-6 w-32" />
+        </div>
+        <div className="p-4">
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </div>
+      </div>
     </>
   );
 }

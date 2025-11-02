@@ -1,7 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { DashboardHeader } from "components/dashboard-header";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -12,6 +11,7 @@ import {
 } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
+import { SidebarTrigger } from "components/ui/sidebar";
 import { sessionQuery } from "features/auth/queries/session-query";
 import { authClient } from "lib/auth-client";
 import { getErrorMessage } from "lib/get-error-message";
@@ -40,18 +40,15 @@ function SettingsPage() {
   const { user } = Route.useRouteContext();
 
   return (
-    <div className="flex flex-1 flex-col bg-white">
-      <DashboardHeader>
-        <div>
-          <h2 className="text-base font-medium text-gray-900">Settings</h2>
+    <main className="flex flex-1 flex-col bg-white">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-2 p-4 lg:gap-4 lg:pt-12">
+        <div className="flex items-center gap-2">
+          <SidebarTrigger className="size-8 lg:hidden" />
+          <h2 className="text-lg font-medium lg:text-2xl">Settings</h2>
         </div>
-      </DashboardHeader>
-      <main className="flex-1 p-4">
-        <div className="mx-auto flex max-w-4xl flex-col gap-4">
-          <SettingsContent user={user} organization={user.activeOrganization} />
-        </div>
-      </main>
-    </div>
+        <SettingsContent user={user} organization={user.activeOrganization} />
+      </div>
+    </main>
   );
 }
 
