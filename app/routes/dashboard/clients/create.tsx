@@ -119,7 +119,7 @@ function CreateClientPage() {
           </div>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-2xl">
           <Card>
             <CardHeader>
@@ -135,7 +135,7 @@ function CreateClientPage() {
                   e.stopPropagation();
                   form.handleSubmit();
                 }}
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-4"
               >
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="name">

@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { DashboardHeader } from "components/dashboard-header";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -11,12 +12,9 @@ import {
 } from "components/ui/card";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
-import { Separator } from "components/ui/separator";
-import { SidebarTrigger } from "components/ui/sidebar";
 import { sessionQuery } from "features/auth/queries/session-query";
 import { authClient } from "lib/auth-client";
 import { getErrorMessage } from "lib/get-error-message";
-import { Building2, User } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -42,20 +40,14 @@ function SettingsPage() {
   const { user } = Route.useRouteContext();
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center space-x-4">
-          <SidebarTrigger />
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Settings</h2>
-            <p className="text-sm text-gray-500">
-              Manage your account and organization
-            </p>
-          </div>
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader>
+        <div>
+          <h2 className="text-base font-medium text-gray-900">Settings</h2>
         </div>
-      </header>
-      <main className="flex-1 p-6">
-        <div className="mx-auto max-w-4xl space-y-6">
+      </DashboardHeader>
+      <main className="flex-1 p-4">
+        <div className="mx-auto flex max-w-4xl flex-col gap-4">
           <SettingsContent user={user} organization={user.activeOrganization} />
         </div>
       </main>
@@ -89,13 +81,6 @@ function SettingsContent({
           const { error } = await authClient.updateUser({
             name: value.name
           });
-
-          // Email update might require separate API call - Better Auth might not support email updates via updateUser
-          if (value.email !== user.email) {
-            // You may need to use a separate email update endpoint if Better Auth supports it
-            // For now, keeping it simple with just name update
-            toast.info("Email updates may require separate verification");
-          }
 
           if (error) throw new Error(error.message);
 
@@ -161,10 +146,7 @@ function SettingsContent({
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-2">
-            <User className="h-5 w-5 text-gray-500" />
-            <CardTitle>Account Settings</CardTitle>
-          </div>
+          <CardTitle>Account Settings</CardTitle>
           <CardDescription>
             Update your personal account information
           </CardDescription>
@@ -225,10 +207,7 @@ function SettingsContent({
       </Card>
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-2">
-            <Building2 className="h-5 w-5 text-gray-500" />
-            <CardTitle>Organization Settings</CardTitle>
-          </div>
+          <CardTitle>Organization Settings</CardTitle>
           <CardDescription>
             Update your organization information
           </CardDescription>
@@ -272,11 +251,7 @@ function SettingsContent({
               {field => (
                 <div className="space-y-2">
                   <Label>Organization Slug</Label>
-                  <Input
-                    value={field.state.value}
-                    disabled
-                    className="bg-gray-50"
-                  />
+                  <Input value={field.state.value} disabled />
                   {field.state.meta.errors.length > 0 && (
                     <p className="text-sm text-red-600">
                       {field.state.meta.errors[0]?.message ||
@@ -286,7 +261,6 @@ function SettingsContent({
                 </div>
               )}
             </organizationForm.Field>
-            <Separator />
             <Button type="submit" disabled={orgPending}>
               Update Organization
             </Button>

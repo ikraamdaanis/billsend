@@ -76,7 +76,7 @@ function HomePage() {
             <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
               {/* Left Column - Small Stats */}
               <div className="space-y-4">
-                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 backdrop-blur-sm">
                   <div className="mb-2 text-3xl font-bold text-[#FA695C]">
                     68%
                   </div>
@@ -84,7 +84,7 @@ function HomePage() {
                     Payment success rate this year
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 backdrop-blur-sm">
                   <div className="mb-2 text-3xl font-bold text-green-600">
                     48%
                   </div>
@@ -94,7 +94,7 @@ function HomePage() {
                 </div>
               </div>
               {/* Center Column - Quick Actions */}
-              <div className="rounded-2xl border border-gray-200 bg-white/90 p-8 shadow-sm backdrop-blur-sm">
+              <div className="rounded-2xl border border-gray-200 bg-white/90 p-8 backdrop-blur-sm">
                 <div className="mb-6 flex items-center">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-r from-[#FA695C] to-purple-600">
                     <Plus className="h-5 w-5 text-white" />
@@ -117,7 +117,7 @@ function HomePage() {
               </div>
               {/* Right Column - Revenue Stats */}
               <div className="space-y-4">
-                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 backdrop-blur-sm">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm text-gray-600">Total Revenue</span>
                     <TrendingUp className="h-4 w-4 text-green-500" />
@@ -129,7 +129,7 @@ function HomePage() {
                     +12.5% from last month
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 backdrop-blur-sm">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm text-gray-600">Outstanding</span>
                     <Clock className="h-4 w-4 text-orange-500" />
@@ -141,7 +141,7 @@ function HomePage() {
                     23 invoices pending
                   </div>
                 </div>
-                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
+                <div className="rounded-2xl border border-gray-200 bg-white/80 p-6 backdrop-blur-sm">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm text-gray-600">
                       Target Progress

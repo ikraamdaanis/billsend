@@ -8,11 +8,14 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem
+  SidebarMenuItem,
+  SidebarTrigger
 } from "components/ui/sidebar";
 import { useLogout } from "features/auth/hooks/use-logout";
 import { cn } from "lib/utils";
-import { FileCheck, Home, LogOut, Settings, Users } from "lucide-react";
+import { FaFileInvoiceDollar, FaUser } from "react-icons/fa";
+import { IoCog, IoHome } from "react-icons/io5";
+import { MdLogout } from "react-icons/md";
 
 export function AppSidebar() {
   const logout = useLogout();
@@ -23,29 +26,30 @@ export function AppSidebar() {
     {
       label: "Dashboard",
       href: "/dashboard",
-      icon: Home
+      icon: IoHome
     },
     {
       label: "Clients",
       href: "/dashboard/clients",
-      icon: Users
+      icon: FaUser
     },
     {
       label: "Invoices",
       href: "/dashboard/invoices",
-      icon: FileCheck
+      icon: FaFileInvoiceDollar
     }
   ];
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
-        <SidebarMenu>
+        <SidebarMenu className="flex flex-row items-center justify-between gap-2">
           <SidebarMenuItem className="flex items-center pl-2">
             <h1 className="text-brand-500 truncate text-xl font-bold">
               billsend
             </h1>
           </SidebarMenuItem>
+          <SidebarTrigger className="lg:hidden" />
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="pt-4">
@@ -77,8 +81,8 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <Link to="/dashboard/settings" preload="viewport">
               <SidebarMenuButton size="lg">
-                <Settings />
-                <span>Settings</span>
+                <IoCog className="size-5!" />
+                Settings
               </SidebarMenuButton>
             </Link>
           </SidebarMenuItem>
@@ -92,8 +96,8 @@ export function AppSidebar() {
                 logout.isPending && "opacity-50"
               )}
             >
-              <LogOut />
-              <span>{logout.isPending ? "Logging out..." : "Log out"}</span>
+              <MdLogout className="size-5!" />
+              Log out
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
