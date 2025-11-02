@@ -20,6 +20,7 @@ import {
   TrendingDown,
   TrendingUp
 } from "lucide-react";
+import plur from "plur";
 import { Suspense } from "react";
 
 export const Route = createFileRoute("/dashboard/")({
@@ -103,7 +104,7 @@ function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Invoices
+                  Total invoices
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.totalInvoices}
@@ -135,7 +136,7 @@ function DashboardContent() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">
-                  Total Revenue
+                  Total revenue
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(stats.totalRevenue)}
@@ -190,7 +191,7 @@ function DashboardContent() {
               )}
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              {stats.pending} invoices pending
+              {stats.pending} {plur("invoice", stats.pending)} pending
             </p>
           </CardContent>
         </Card>
@@ -205,7 +206,7 @@ function DashboardContent() {
               </div>
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              Invoices awaiting payment
+              {plur("Invoice", stats.pending)} awaiting payment
             </p>
           </CardContent>
         </Card>
@@ -359,15 +360,12 @@ function DashboardContent() {
         <CardHeader className="border-b">
           <div className="flex h-full items-center justify-between">
             <div className="flex items-center gap-2">
-              <CardTitle>Client Details</CardTitle>
-              <span className="text-sm text-gray-500">
-                {stats.recentClients.length} Clients
-              </span>
+              <CardTitle>Recent clients</CardTitle>
             </div>
             <div className="flex items-center gap-2">
               <Link to="/dashboard/clients/create" preload="intent">
                 <Button>
-                  <Plus className="h-4 w-4" />
+                  <Plus className="size-4 shrink-0" />
                   Add Client
                 </Button>
               </Link>
@@ -466,7 +464,7 @@ function DashboardContent() {
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                 preload="intent"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="size-4 shrink-0" />
                 <span>Create your first client</span>
               </Link>
             </div>
@@ -481,16 +479,31 @@ function DashboardSkeleton() {
   return (
     <main className="lg:hs-[calc(100dvh-4rem)] flex flex-col gap-4 p-4">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
+        {Array.from([
+          { title: "Total invoices", footer: "All time" },
+          { title: "Total revenue", footer: "From paid invoices" },
+          {
+            title: "Outstanding",
+            footer: (
+              <span className="flex items-center gap-1 text-xs text-gray-500">
+                <Skeleton className="inline-block h-3 w-2 rounded-xs" />
+                <span className="text-xs text-gray-500">invoices pending</span>
+              </span>
+            )
+          },
+          { title: "Pending", footer: "Invoices awaiting payment" }
+        ]).map((item, i) => (
           <Card key={i}>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
-                  <Skeleton className="mb-2 h-4 w-24" />
-                  <Skeleton className="mb-1 h-8 w-28" />
+                  <p className="text-sm font-medium text-gray-600">
+                    {item.title}
+                  </p>
+                  <Skeleton className="mb-1 h-[30px] w-28" />
                 </div>
               </div>
-              <Skeleton className="mt-1 h-3 w-20" />
+              <div className="mt-0.5 text-xs text-gray-500">{item.footer}</div>
             </CardContent>
           </Card>
         ))}
@@ -498,30 +511,28 @@ function DashboardSkeleton() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>
-              <Skeleton className="h-6 w-32" />
-            </CardTitle>
+            <CardTitle>Revenue History</CardTitle>
             <CardDescription>
-              <Skeleton className="mt-1 h-4 w-64" />
+              Check out the total revenue and outstanding amount
             </CardDescription>
           </CardHeader>
           <CardContent className="flex h-full flex-col pt-0">
-            <div className="flex flex-1 flex-col justify-between gap-3">
+            <div className="flex flex-1 flex-col justify-between space-y-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-6 flex-1" />
+                  <Skeleton className="h-4 w-6 rounded-xs" />
+                  <Skeleton className="h-6 flex-1 rounded-xs" />
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-3 w-3 rounded" />
-                <Skeleton className="h-4 w-12" />
+            <div className="mt-4 flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="h-3 w-3 rounded bg-blue-600"></div>
+                <span className="text-sm text-gray-600">Paid</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-3 w-3 rounded" />
-                <Skeleton className="h-4 w-20" />
+              <div className="flex items-center space-x-2">
+                <div className="h-3 w-3 rounded bg-blue-200"></div>
+                <span className="text-sm text-gray-600">Outstanding</span>
               </div>
             </div>
           </CardContent>
@@ -529,14 +540,18 @@ function DashboardSkeleton() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>
-                <Skeleton className="h-6 w-32" />
-              </CardTitle>
-              <Skeleton className="h-4 w-20" />
+              <CardTitle>Recent Invoices</CardTitle>
+              <Link
+                to="/dashboard/invoices"
+                className="text-sm text-blue-600 hover:text-blue-800"
+                preload="intent"
+              >
+                View All →
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="flex flex-col gap-3">
+            <div className="space-y-[18px]">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
@@ -563,12 +578,18 @@ function DashboardSkeleton() {
         <CardHeader className="border-b">
           <div className="flex h-full items-center justify-between">
             <div className="flex items-center gap-2">
-              <CardTitle>
-                <Skeleton className="h-6 w-28" />
-              </CardTitle>
-              <Skeleton className="h-4 w-16" />
+              <CardTitle>Recent clients</CardTitle>
             </div>
-            <Skeleton className="h-9 w-28" />
+            <Link
+              to="/dashboard/clients/create"
+              className="text-sm text-blue-600 hover:text-blue-800"
+              preload="intent"
+            >
+              <Button>
+                <Plus className="size-4 shrink-0" />
+                Add Client
+              </Button>
+            </Link>
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">

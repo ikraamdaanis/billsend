@@ -11,7 +11,7 @@ export function getRouter() {
       routeTree,
       defaultPreload: "intent",
       defaultPreloadDelay: 0,
-      defaultPendingMinMs: 0, // Show skeletons immediately, no delay
+      defaultPendingMinMs: 0,
       scrollRestoration: true,
       context: { queryClient }
     }),
