@@ -110,7 +110,7 @@ function NotFoundComponent() {
           </Link>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-md">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -147,7 +147,7 @@ function ErrorComponent() {
           </Link>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-md">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -202,7 +202,7 @@ function ClientDetailPage() {
           </Suspense>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-1">

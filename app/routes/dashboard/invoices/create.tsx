@@ -154,7 +154,7 @@ function CreateInvoicePage() {
           </div>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-4xl">
           <Card>
             <CardHeader>
@@ -170,7 +170,7 @@ function CreateInvoicePage() {
                   e.stopPropagation();
                   form.handleSubmit();
                 }}
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-4"
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">

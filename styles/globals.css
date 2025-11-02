@@ -31,6 +31,7 @@
 }
 
 body {
+  @apply font-geist;
   @apply m-0;
   font-family:
     var(--font-geist),

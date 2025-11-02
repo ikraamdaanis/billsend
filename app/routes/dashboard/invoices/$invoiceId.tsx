@@ -45,7 +45,7 @@ function NotFoundComponent() {
           </Link>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-md">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -82,7 +82,7 @@ function ErrorComponent() {
           </Link>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-md">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -125,9 +125,9 @@ function InvoiceDetailSkeleton() {
           </div>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-4xl">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <div className="grid gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>
@@ -266,9 +266,9 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
           </div>
         </div>
       </header>
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-4">
         <div className="mx-auto max-w-4xl">
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             <div className="grid gap-6 lg:grid-cols-2">
               <Card>
                 <CardHeader>

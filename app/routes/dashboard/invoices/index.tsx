@@ -1,6 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
+import { DashboardHeader } from "components/dashboard-header";
 import { StatusBadge } from "components/status-badge";
 import { DataTable } from "components/table";
 import { Button } from "components/ui/button";
@@ -20,7 +21,7 @@ export const Route = createFileRoute("/dashboard/invoices/")({
 
 function InvoicesTableSkeleton() {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6">
+    <div className="rounded-lg border border-gray-200 bg-white p-4">
       <div className="space-y-4">
         <div className="flex items-center gap-4">
           <Skeleton className="h-5 w-32" />
@@ -47,24 +48,19 @@ function InvoicesTableSkeleton() {
 
 function InvoicesList() {
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Invoices</h2>
-            <p className="text-sm text-gray-500">
-              Manage your organisation&#39;s invoices
-            </p>
-          </div>
-          <Link to="/dashboard/invoices/create">
-            <Button>
-              <Plus className="size-5 shrink-0" />
-              Add Invoice
-            </Button>
-          </Link>
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader>
+        <div>
+          <h2 className="text-base font-medium text-gray-900">Invoices</h2>
         </div>
-      </header>
-      <main className="flex-1 p-6">
+        <Link to="/dashboard/invoices/create" className="ml-auto">
+          <Button size="sm">
+            <Plus className="size-3 shrink-0" />
+            Add Invoice
+          </Button>
+        </Link>
+      </DashboardHeader>
+      <main className="flex-1 p-4">
         <Suspense fallback={<InvoicesTableSkeleton />}>
           <InvoicesTableContent />
         </Suspense>
@@ -243,9 +239,7 @@ function InvoicesTableContent() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-lg border border-gray-200 bg-white p-6">
-          <DataTable data={invoices} columns={columns} />
-        </div>
+        <DataTable data={invoices} columns={columns} />
       )}
     </>
   );
