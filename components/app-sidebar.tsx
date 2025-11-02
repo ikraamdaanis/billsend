@@ -9,7 +9,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger
+  SidebarTrigger,
+  useSidebar
 } from "components/ui/sidebar";
 import { useLogout } from "features/auth/hooks/use-logout";
 import { cn } from "lib/utils";
@@ -21,6 +22,8 @@ export function AppSidebar() {
   const logout = useLogout();
 
   const pathname = useLocation().pathname;
+
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const items = [
     {
@@ -58,7 +61,11 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map(item => (
                 <SidebarMenuItem key={item.href}>
-                  <Link to={item.href} preload="viewport">
+                  <Link
+                    to={item.href}
+                    preload="viewport"
+                    onClick={() => setOpenMobile(false)}
+                  >
                     <SidebarMenuButton
                       size="lg"
                       className={cn(
@@ -79,7 +86,13 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <Link to="/dashboard/settings" preload="viewport">
+            <Link
+              to="/dashboard/settings"
+              preload="viewport"
+              onClick={() => {
+                if (isMobile) setOpenMobile(false);
+              }}
+            >
               <SidebarMenuButton size="lg">
                 <IoCog className="size-5!" />
                 Settings

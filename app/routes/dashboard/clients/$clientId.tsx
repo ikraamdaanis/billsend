@@ -1,6 +1,13 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useCanGoBack,
+  useNavigate,
+  useRouter
+} from "@tanstack/react-router";
 import type { ColumnDef } from "@tanstack/react-table";
+import { DashboardHeader } from "components/dashboard-header";
 import { StatusBadge } from "components/status-badge";
 import { DataTable } from "components/table";
 import { Button } from "components/ui/button";
@@ -178,30 +185,32 @@ function ErrorComponent() {
 function ClientDetailPage() {
   const { clientId } = Route.useParams();
 
+  const router = useRouter();
+  const navigate = useNavigate();
+  const canGoBack = useCanGoBack();
+
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link to="/dashboard/clients">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Suspense
-            fallback={
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-12 w-12 rounded-full" />
-                <div>
-                  <Skeleton className="mb-2 h-7 w-48" />
-                  <Skeleton className="h-5 w-32" />
-                </div>
-              </div>
-            }
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader className="pl-1">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              if (canGoBack) {
+                router.history.back();
+              } else {
+                navigate({ to: "/dashboard/clients" });
+              }
+            }}
           >
+            <ArrowLeft className="size-4 shrink-0" />
+          </Button>
+          <Suspense fallback={<Skeleton className="h-12 w-12 rounded-full" />}>
             <ClientHeader clientId={clientId} />
           </Suspense>
         </div>
-      </header>
+      </DashboardHeader>
       <main className="flex-1 p-4">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-6 lg:grid-cols-3">
@@ -233,12 +242,11 @@ function ClientHeader({ clientId }: { clientId: string }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
-        <span className="text-lg font-medium text-gray-600">{initials}</span>
+      <div className="flex size-7 items-center justify-center rounded-full bg-gray-300">
+        <span className="text-xs font-medium text-gray-600">{initials}</span>
       </div>
       <div>
         <h2 className="text-lg font-semibold text-gray-900">{client.name}</h2>
-        <p className="text-sm text-gray-500">Client details</p>
       </div>
     </div>
   );

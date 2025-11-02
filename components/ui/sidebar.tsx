@@ -321,7 +321,7 @@ export function SidebarInset({ className, ...props }: ComponentProps<"main">) {
       data-slot="sidebar-inset"
       className={cn(
         "bg-background relative flex h-[calc(100dvh-1rem)] w-[calc(100vw-var(--sidebar-width))] flex-1 flex-col overflow-hidden overflow-y-auto",
-        "lg:peer-data-[variant=inset]:m-2 lg:peer-data-[variant=inset]:ml-0 lg:peer-data-[variant=inset]:rounded-sm lg:peer-data-[variant=inset]:border lg:peer-data-[variant=inset]:border-zinc-200 lg:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
+        "lg:peer-data-[variant=inset]:border-border lg:peer-data-[variant=inset]:m-2 lg:peer-data-[variant=inset]:ml-0 lg:peer-data-[variant=inset]:rounded-sm lg:peer-data-[variant=inset]:border lg:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",
         className
       )}
       {...props}

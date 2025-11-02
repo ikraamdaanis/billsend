@@ -1,6 +1,13 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useCanGoBack,
+  useNavigate,
+  useRouter
+} from "@tanstack/react-router";
+import { DashboardHeader } from "components/dashboard-header";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -40,6 +47,9 @@ export const Route = createFileRoute("/dashboard/clients/create")({
 
 function CreateClientPage() {
   const router = useRouter();
+  const navigate = useNavigate();
+  const canGoBack = useCanGoBack();
+
   const queryClient = useQueryClient();
 
   const [pending, startTransition] = useTransition();
@@ -101,24 +111,29 @@ function CreateClientPage() {
   });
 
   return (
-    <div className="flex flex-1 flex-col bg-gray-50">
-      <header className="border-b border-gray-200 bg-white px-6 py-4">
-        <div className="flex items-center gap-4">
-          <Link to="/dashboard/clients">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              Create Client
-            </h2>
-            <p className="text-sm text-gray-500">
-              Add a new client to your organisation
-            </p>
-          </div>
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader className="pl-1">
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => {
+              if (canGoBack) {
+                router.history.back();
+              } else {
+                navigate({ to: "/dashboard/clients" });
+              }
+            }}
+          >
+            <ArrowLeft className="size-4 shrink-0" />
+          </Button>
+          <h2 className="text-base font-medium text-gray-900">Create Client</h2>
+          <p className="text-sm text-gray-500">
+            Add a new client to your organisation
+          </p>
         </div>
-      </header>
+      </DashboardHeader>
       <main className="flex-1 p-4">
         <div className="mx-auto max-w-2xl">
           <Card>
