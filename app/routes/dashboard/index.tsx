@@ -219,7 +219,7 @@ function DashboardContent() {
               Check out the total revenue and outstanding amount
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex h-full flex-col pt-0">
+          <CardContent className="flex h-full flex-col">
             {stats.monthlyRevenue.length > 0 ? (
               <>
                 <div className="flex flex-1 flex-col justify-between space-y-3">
@@ -294,17 +294,15 @@ function DashboardContent() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Invoices</CardTitle>
-              <Link
-                to="/dashboard/invoices"
-                className="text-sm text-blue-600 hover:text-blue-800"
-                preload="intent"
-              >
-                View All →
-              </Link>
-            </div>
+          <CardHeader className="flex items-center justify-between pb-4">
+            <CardTitle>Recent Invoices</CardTitle>
+            <Link
+              to="/dashboard/invoices"
+              className="text-sm text-blue-600 hover:text-blue-800"
+              preload="intent"
+            >
+              View All →
+            </Link>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-3">
@@ -357,20 +355,14 @@ function DashboardContent() {
         </Card>
       </div>
       <Card className="overflow-hidden">
-        <CardHeader className="border-b">
-          <div className="flex h-full items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle>Recent clients</CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link to="/dashboard/clients/create" preload="intent">
-                <Button>
-                  <Plus className="size-4 shrink-0" />
-                  Add Client
-                </Button>
-              </Link>
-            </div>
-          </div>
+        <CardHeader className="flex items-center justify-between border-b pb-4">
+          <CardTitle>Recent clients</CardTitle>
+          <Link to="/dashboard/clients/create" preload="intent">
+            <Button>
+              <Plus className="size-4 shrink-0" />
+              Add Client
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           {stats.recentClients.length > 0 ? (
@@ -510,7 +502,7 @@ function DashboardSkeleton() {
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="flex flex-col">
-          <CardHeader>
+          <CardHeader className="pb-4">
             <CardTitle>Revenue History</CardTitle>
             <CardDescription>
               Check out the total revenue and outstanding amount
@@ -538,17 +530,15 @@ function DashboardSkeleton() {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Recent Invoices</CardTitle>
-              <Link
-                to="/dashboard/invoices"
-                className="text-sm text-blue-600 hover:text-blue-800"
-                preload="intent"
-              >
-                View All →
-              </Link>
-            </div>
+          <CardHeader className="flex items-center justify-between pb-4">
+            <CardTitle>Recent Invoices</CardTitle>
+            <Link
+              to="/dashboard/invoices"
+              className="text-sm text-blue-600 hover:text-blue-800"
+              preload="intent"
+            >
+              View All →
+            </Link>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-[18px]">
@@ -575,22 +565,20 @@ function DashboardSkeleton() {
         </Card>
       </div>
       <Card className="overflow-hidden">
-        <CardHeader className="border-b">
-          <div className="flex h-full items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle>Recent clients</CardTitle>
-            </div>
-            <Link
-              to="/dashboard/clients/create"
-              className="text-sm text-blue-600 hover:text-blue-800"
-              preload="intent"
-            >
-              <Button>
-                <Plus className="size-4 shrink-0" />
-                Add Client
-              </Button>
-            </Link>
+        <CardHeader className="flex items-center justify-between border-b pb-4">
+          <div className="flex items-center gap-2">
+            <CardTitle>Recent clients</CardTitle>
           </div>
+          <Link
+            to="/dashboard/clients/create"
+            className="text-sm text-blue-600 hover:text-blue-800"
+            preload="intent"
+          >
+            <Button>
+              <Plus className="size-4 shrink-0" />
+              Add Client
+            </Button>
+          </Link>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           <table className="w-full">
