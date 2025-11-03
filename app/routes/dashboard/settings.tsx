@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import {
   Card,
@@ -58,6 +58,7 @@ function SettingsContent({
   organization?: { name: string; slug: string; id: string } | null;
 }) {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const [userPending, startUserTransition] = useTransition();
   const [orgPending, startOrgTransition] = useTransition();
@@ -82,6 +83,8 @@ function SettingsContent({
           queryClient.invalidateQueries({
             queryKey: sessionQuery().queryKey
           });
+
+          await router.invalidate();
 
           toast.success("Account updated successfully");
         } catch (error) {
@@ -123,6 +126,8 @@ function SettingsContent({
           queryClient.invalidateQueries({
             queryKey: sessionQuery().queryKey
           });
+
+          await router.invalidate();
 
           toast.success("Organization updated successfully");
         } catch (error) {
