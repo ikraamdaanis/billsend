@@ -19,10 +19,10 @@ import type { InvoiceStatus } from "features/invoices/types";
 import { useDocumentTitle } from "hooks/use-document-title";
 import { useGoBack } from "hooks/use-go-back";
 import { getErrorMessage } from "lib/get-error-message";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Palette } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/invoices/$invoiceId")({
+export const Route = createFileRoute("/dashboard/invoices/$invoiceId/")({
   component: InvoiceDetailPage,
   errorComponent: ErrorComponent,
   loader: ({ context, params }) => {
@@ -77,6 +77,17 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
             Invoice # {invoice.invoiceNumber}
           </h2>
           <StatusBadge status={invoice.status as InvoiceStatus} />
+          <div className="ml-auto">
+            <Link
+              to="/invoices/$invoiceId/design"
+              params={{ invoiceId }}
+            >
+              <Button variant="outline" size="sm" className="gap-2">
+                <Palette className="size-4" />
+                Design Invoice
+              </Button>
+            </Link>
+          </div>
         </div>
       </DashboardHeader>
       <main className="flex-1 sm:p-4">
