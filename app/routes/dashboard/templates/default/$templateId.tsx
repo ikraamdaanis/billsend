@@ -1,0 +1,117 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { DashboardHeader } from "components/dashboard-header";
+import { Button } from "components/ui/button";
+import { Skeleton } from "components/ui/skeleton";
+import { InvoicePreview } from "features/invoices/components/invoice-preview";
+import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
+import { createMockInvoice } from "features/invoices/utils/mock-invoice";
+import { useGoBack } from "hooks/use-go-back";
+import { ArrowLeft } from "lucide-react";
+import { Suspense } from "react";
+
+export const Route = createFileRoute(
+  "/dashboard/templates/default/$templateId"
+)({
+  component: DefaultTemplatePage,
+  head: () => ({
+    meta: [
+      {
+        title: "Template preview - billsend"
+      }
+    ]
+  })
+});
+
+function DefaultTemplatePage() {
+  const { templateId } = Route.useParams();
+
+  return (
+    <Suspense fallback={<TemplateSkeleton />}>
+      <DefaultTemplateContent templateId={templateId} />
+    </Suspense>
+  );
+}
+
+function DefaultTemplateContent({ templateId }: { templateId: string }) {
+  const { goBack } = useGoBack({ to: "/dashboard/templates" });
+  const isDefaultTemplate = Object.keys(INVOICE_TEMPLATES).includes(templateId);
+
+  const template = isDefaultTemplate
+    ? INVOICE_TEMPLATES[templateId as keyof typeof INVOICE_TEMPLATES]
+    : undefined;
+
+  if (!template) {
+    return (
+      <div className="flex flex-1 flex-col bg-white">
+        <DashboardHeader>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon-sm" onClick={goBack}>
+              <ArrowLeft className="size-4 shrink-0" />
+            </Button>
+            <h2 className="text-base font-medium text-gray-900">
+              Template not found
+            </h2>
+          </div>
+        </DashboardHeader>
+        <main className="flex-1 p-4">
+          <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-12">
+            <p className="text-sm text-gray-600">Template not found</p>
+            <Link to="/dashboard/templates" className="mt-4">
+              <Button>Back to Templates</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const mockInvoice = createMockInvoice();
+  const mockOrganization = {
+    name: "Your Company",
+    logo: null
+  };
+
+  return (
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon-sm" onClick={goBack}>
+            <ArrowLeft className="size-4 shrink-0" />
+          </Button>
+          <h2 className="text-base font-medium text-gray-900">
+            {template.name} Template Preview
+          </h2>
+        </div>
+      </DashboardHeader>
+      <main className="flex flex-1 flex-col overflow-hidden bg-gray-50">
+        <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-8 sm:pt-8">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="invoice-preview-container w-full bg-white shadow-sm">
+              <div className="p-4 pb-12 sm:p-8">
+                <InvoicePreview
+                  invoice={mockInvoice}
+                  organization={mockOrganization}
+                  template={template}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="no-print h-8 shrink-0" />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function TemplateSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader>
+        <Skeleton className="h-5 w-48" />
+      </DashboardHeader>
+      <main className="flex-1 p-4">
+        <Skeleton className="mx-auto h-[800px] w-full max-w-3xl" />
+      </main>
+    </div>
+  );
+}

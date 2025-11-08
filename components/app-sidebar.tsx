@@ -17,6 +17,7 @@ import { cn } from "lib/utils";
 import { FaFileInvoiceDollar, FaUser } from "react-icons/fa";
 import { IoCog, IoHome } from "react-icons/io5";
 import { MdLogout } from "react-icons/md";
+import { TbTemplate } from "react-icons/tb";
 
 export function AppSidebar() {
   const logout = useLogout();
@@ -43,6 +44,12 @@ export function AppSidebar() {
       href: "/dashboard/invoices",
       icon: FaFileInvoiceDollar,
       iconClassName: "bg-purple-400"
+    },
+    {
+      label: "Templates",
+      href: "/dashboard/templates",
+      icon: TbTemplate,
+      iconClassName: "bg-orange-400"
     }
   ];
 
@@ -73,7 +80,11 @@ export function AppSidebar() {
                       size="lg"
                       className={cn(
                         "flex items-center gap-2 font-medium",
-                        pathname === item.href && "bg-zinc-100"
+                        (item.href === "/dashboard"
+                          ? pathname === item.href
+                          : pathname === item.href ||
+                            pathname.startsWith(item.href + "/")) &&
+                          "bg-zinc-100"
                       )}
                     >
                       <span
