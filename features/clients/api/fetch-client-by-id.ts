@@ -31,7 +31,7 @@ export const fetchClientById = createServerFn({
 
     if (!organizationId) throw new Error("No organization found");
 
-    const [clientData] = await db
+    const clientData = await db
       .select()
       .from(client)
       .where(
@@ -42,8 +42,7 @@ export const fetchClientById = createServerFn({
       )
       .limit(1);
 
-    if (!clientData) throw new Error("Client not found");
+    if (clientData.length === 0) throw new Error("Client not found");
 
-    return clientData;
+    return clientData[0];
   });
-
