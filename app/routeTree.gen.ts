@@ -19,11 +19,12 @@ import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authCreateOrganisationRouteImport } from './routes/(auth)/create-organisation'
 import { Route as DashboardInvoicesIndexRouteImport } from './routes/dashboard/invoices/index'
 import { Route as DashboardClientsIndexRouteImport } from './routes/dashboard/clients/index'
+import { Route as InvoicesInvoiceIdDesignRouteImport } from './routes/invoices/$invoiceId/design'
 import { Route as DashboardInvoicesCreateRouteImport } from './routes/dashboard/invoices/create'
-import { Route as DashboardInvoicesInvoiceIdRouteImport } from './routes/dashboard/invoices/$invoiceId'
 import { Route as DashboardClientsCreateRouteImport } from './routes/dashboard/clients/create'
 import { Route as DashboardClientsClientIdRouteImport } from './routes/dashboard/clients/$clientId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as DashboardInvoicesInvoiceIdIndexRouteImport } from './routes/dashboard/invoices/$invoiceId/index'
 
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
@@ -74,17 +75,16 @@ const DashboardClientsIndexRoute = DashboardClientsIndexRouteImport.update({
   path: '/clients/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const InvoicesInvoiceIdDesignRoute = InvoicesInvoiceIdDesignRouteImport.update({
+  id: '/invoices/$invoiceId/design',
+  path: '/invoices/$invoiceId/design',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardInvoicesCreateRoute = DashboardInvoicesCreateRouteImport.update({
   id: '/invoices/create',
   path: '/invoices/create',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardInvoicesInvoiceIdRoute =
-  DashboardInvoicesInvoiceIdRouteImport.update({
-    id: '/invoices/$invoiceId',
-    path: '/invoices/$invoiceId',
-    getParentRoute: () => DashboardRouteRoute,
-  } as any)
 const DashboardClientsCreateRoute = DashboardClientsCreateRouteImport.update({
   id: '/clients/create',
   path: '/clients/create',
@@ -101,6 +101,12 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardInvoicesInvoiceIdIndexRoute =
+  DashboardInvoicesInvoiceIdIndexRouteImport.update({
+    id: '/invoices/$invoiceId/',
+    path: '/invoices/$invoiceId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -113,10 +119,11 @@ export interface FileRoutesByFullPath {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/clients/$clientId': typeof DashboardClientsClientIdRoute
   '/dashboard/clients/create': typeof DashboardClientsCreateRoute
-  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdRoute
   '/dashboard/invoices/create': typeof DashboardInvoicesCreateRoute
+  '/invoices/$invoiceId/design': typeof InvoicesInvoiceIdDesignRoute
   '/dashboard/clients': typeof DashboardClientsIndexRoute
   '/dashboard/invoices': typeof DashboardInvoicesIndexRoute
+  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -128,10 +135,11 @@ export interface FileRoutesByTo {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/clients/$clientId': typeof DashboardClientsClientIdRoute
   '/dashboard/clients/create': typeof DashboardClientsCreateRoute
-  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdRoute
   '/dashboard/invoices/create': typeof DashboardInvoicesCreateRoute
+  '/invoices/$invoiceId/design': typeof InvoicesInvoiceIdDesignRoute
   '/dashboard/clients': typeof DashboardClientsIndexRoute
   '/dashboard/invoices': typeof DashboardInvoicesIndexRoute
+  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,10 +154,11 @@ export interface FileRoutesById {
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/dashboard/clients/$clientId': typeof DashboardClientsClientIdRoute
   '/dashboard/clients/create': typeof DashboardClientsCreateRoute
-  '/dashboard/invoices/$invoiceId': typeof DashboardInvoicesInvoiceIdRoute
   '/dashboard/invoices/create': typeof DashboardInvoicesCreateRoute
+  '/invoices/$invoiceId/design': typeof InvoicesInvoiceIdDesignRoute
   '/dashboard/clients/': typeof DashboardClientsIndexRoute
   '/dashboard/invoices/': typeof DashboardInvoicesIndexRoute
+  '/dashboard/invoices/$invoiceId/': typeof DashboardInvoicesInvoiceIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,10 +173,11 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/clients/$clientId'
     | '/dashboard/clients/create'
-    | '/dashboard/invoices/$invoiceId'
     | '/dashboard/invoices/create'
+    | '/invoices/$invoiceId/design'
     | '/dashboard/clients'
     | '/dashboard/invoices'
+    | '/dashboard/invoices/$invoiceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -179,10 +189,11 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/clients/$clientId'
     | '/dashboard/clients/create'
-    | '/dashboard/invoices/$invoiceId'
     | '/dashboard/invoices/create'
+    | '/invoices/$invoiceId/design'
     | '/dashboard/clients'
     | '/dashboard/invoices'
+    | '/dashboard/invoices/$invoiceId'
   id:
     | '__root__'
     | '/'
@@ -196,10 +207,11 @@ export interface FileRouteTypes {
     | '/api/auth/$'
     | '/dashboard/clients/$clientId'
     | '/dashboard/clients/create'
-    | '/dashboard/invoices/$invoiceId'
     | '/dashboard/invoices/create'
+    | '/invoices/$invoiceId/design'
     | '/dashboard/clients/'
     | '/dashboard/invoices/'
+    | '/dashboard/invoices/$invoiceId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   authRouteRoute: typeof authRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  InvoicesInvoiceIdDesignRoute: typeof InvoicesInvoiceIdDesignRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -281,18 +294,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardClientsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/invoices/$invoiceId/design': {
+      id: '/invoices/$invoiceId/design'
+      path: '/invoices/$invoiceId/design'
+      fullPath: '/invoices/$invoiceId/design'
+      preLoaderRoute: typeof InvoicesInvoiceIdDesignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/invoices/create': {
       id: '/dashboard/invoices/create'
       path: '/invoices/create'
       fullPath: '/dashboard/invoices/create'
       preLoaderRoute: typeof DashboardInvoicesCreateRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/invoices/$invoiceId': {
-      id: '/dashboard/invoices/$invoiceId'
-      path: '/invoices/$invoiceId'
-      fullPath: '/dashboard/invoices/$invoiceId'
-      preLoaderRoute: typeof DashboardInvoicesInvoiceIdRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/clients/create': {
@@ -315,6 +328,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/auth/$'
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/invoices/$invoiceId/': {
+      id: '/dashboard/invoices/$invoiceId/'
+      path: '/invoices/$invoiceId'
+      fullPath: '/dashboard/invoices/$invoiceId'
+      preLoaderRoute: typeof DashboardInvoicesInvoiceIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
   }
 }
@@ -340,10 +360,10 @@ interface DashboardRouteRouteChildren {
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardClientsClientIdRoute: typeof DashboardClientsClientIdRoute
   DashboardClientsCreateRoute: typeof DashboardClientsCreateRoute
-  DashboardInvoicesInvoiceIdRoute: typeof DashboardInvoicesInvoiceIdRoute
   DashboardInvoicesCreateRoute: typeof DashboardInvoicesCreateRoute
   DashboardClientsIndexRoute: typeof DashboardClientsIndexRoute
   DashboardInvoicesIndexRoute: typeof DashboardInvoicesIndexRoute
+  DashboardInvoicesInvoiceIdIndexRoute: typeof DashboardInvoicesInvoiceIdIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
@@ -351,10 +371,10 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardClientsClientIdRoute: DashboardClientsClientIdRoute,
   DashboardClientsCreateRoute: DashboardClientsCreateRoute,
-  DashboardInvoicesInvoiceIdRoute: DashboardInvoicesInvoiceIdRoute,
   DashboardInvoicesCreateRoute: DashboardInvoicesCreateRoute,
   DashboardClientsIndexRoute: DashboardClientsIndexRoute,
   DashboardInvoicesIndexRoute: DashboardInvoicesIndexRoute,
+  DashboardInvoicesInvoiceIdIndexRoute: DashboardInvoicesInvoiceIdIndexRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
@@ -366,6 +386,7 @@ const rootRouteChildren: RootRouteChildren = {
   authRouteRoute: authRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  InvoicesInvoiceIdDesignRoute: InvoicesInvoiceIdDesignRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -174,3 +174,32 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+@page {
+  size: A4;
+  margin: 16mm;
+}
+
+@media print {
+  html,
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  @page {
+    margin: 16mm;
+  }
+  .invoice-page {
+    page-break-after: always;
+  }
+  .avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .invoice-preview-container {
+    box-shadow: none !important;
+  }
+}
