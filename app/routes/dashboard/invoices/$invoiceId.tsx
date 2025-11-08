@@ -81,7 +81,7 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
       </DashboardHeader>
       <main className="flex-1 sm:p-4">
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
-          <div className="divide-border grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <Card className="sm:border-border border-transparent">
               <CardHeader>
                 <CardTitle>Invoice Information</CardTitle>
@@ -140,9 +140,7 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
                 </Link>
                 {invoice.client.address && (
                   <div className="mt-4">
-                    <p className="mb-2 text-xs font-medium text-gray-500">
-                      Address
-                    </p>
+                    <p className="text-sm font-medium text-gray-500">Address</p>
                     <div className="text-xs text-gray-900">
                       {invoice.client.address.line1 && (
                         <div>{invoice.client.address.line1}</div>
@@ -229,7 +227,7 @@ function SkeletonComponent() {
       </DashboardHeader>
       <main className="flex-1 sm:p-4">
         <div className="mx-auto flex max-w-4xl flex-col gap-4">
-          <div className="divide-border grid gap-4 lg:grid-cols-2">
+          <div className="divide-border grid gap-4 sm:grid-cols-2">
             <Card className="sm:border-border border-transparent">
               <CardHeader>
                 <CardTitle>Invoice Information</CardTitle>
@@ -246,7 +244,7 @@ function SkeletonComponent() {
                   <Skeleton className="inline-block h-4 w-24" />
                 </div>
                 <Separator className="hidden sm:block" />
-                <div>
+                <div className="flex flex-col gap-1">
                   <p className="text-sm font-medium text-gray-500">Notes</p>
                   <Skeleton className="h-4 w-48" />
                 </div>
@@ -265,9 +263,7 @@ function SkeletonComponent() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <p className="mb-2 text-xs font-medium text-gray-500">
-                    Address
-                  </p>
+                  <p className="text-sm font-medium text-gray-500">Address</p>
                   <div className="text-xs text-gray-900">
                     <Skeleton className="mb-1 h-3 w-48" />
                     <Skeleton className="mb-1 h-3 w-36" />

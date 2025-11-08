@@ -31,10 +31,10 @@ export const fetchInvoiceById = createServerFn({
 
     if (!organizationId) throw new Error("No organization found");
 
-    const [invoiceData] = await db
+    const invoiceData = await db
       .select({
-        invoice: invoice,
-        client: client
+        invoice,
+        client
       })
       .from(invoice)
       .innerJoin(client, eq(invoice.clientId, client.id))
@@ -46,11 +46,10 @@ export const fetchInvoiceById = createServerFn({
       )
       .limit(1);
 
-    if (!invoiceData) throw new Error("Invoice not found");
+    if (!invoiceData.length) throw new Error("Invoice not found");
 
     return {
-      ...invoiceData.invoice,
-      client: invoiceData.client
+      ...invoiceData[0].invoice,
+      client: invoiceData[0].client
     };
   });
-
