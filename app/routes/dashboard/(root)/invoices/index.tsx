@@ -12,7 +12,7 @@ import type { InvoiceStatus } from "features/invoices/types";
 import { ArrowUpDown, Plus } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/invoices/")({
+export const Route = createFileRoute("/dashboard/(root)/invoices/")({
   component: InvoicesList,
   loader: ({ context }) => {
     return context.queryClient.prefetchQuery(invoicesQuery());

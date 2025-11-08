@@ -29,7 +29,7 @@ const updateOrganizationSchema = z.object({
   slug: z.string().min(1, "Organization slug is required")
 });
 
-export const Route = createFileRoute("/dashboard/settings")({
+export const Route = createFileRoute("/dashboard/(root)/settings")({
   component: SettingsPage,
   loader: ({ context }) => context.queryClient.prefetchQuery(sessionQuery())
 });
@@ -268,5 +268,5 @@ function SettingsContent({
         </CardContent>
       </Card>
     </>
-  );
+  )
 }

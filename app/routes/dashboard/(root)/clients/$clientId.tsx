@@ -24,7 +24,7 @@ import { getErrorMessage } from "lib/get-error-message";
 import { ArrowLeft, ArrowUpDown, Mail, Phone } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/clients/$clientId")({
+export const Route = createFileRoute("/dashboard/(root)/clients/$clientId")({
   component: ClientDetailPage,
   errorComponent: ErrorComponent,
   loader: ({ context, params }) => {

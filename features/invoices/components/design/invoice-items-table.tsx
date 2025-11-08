@@ -1,5 +1,8 @@
 import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
-import { getBorderColorClass, textSizeStyles } from "features/invoices/components/design/utils";
+import {
+  getBorderColorClass,
+  textSizeStyles
+} from "features/invoices/utils/utils";
 import { cn } from "lib/utils";
 
 export function InvoiceItemsTable({
@@ -16,7 +19,6 @@ export function InvoiceItemsTable({
   currency: string;
   tokens: InvoiceTemplateTokens;
 }) {
-  const accentColorStyle = { color: tokens.accentColorHex };
   const textSize = tokens.baseTextSize;
   const borderColorClass = getBorderColorClass(tokens.borderStyle);
 
@@ -41,37 +43,33 @@ export function InvoiceItemsTable({
           >
             <th
               className={cn(
-                "px-4 py-3 font-bold tracking-wide uppercase",
+                "px-4 py-3 font-bold tracking-wide text-(--accent-color) uppercase",
                 textSizeStyles.tableHeader[textSize]
               )}
-              style={accentColorStyle}
             >
               Description
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-right font-bold tracking-wide uppercase",
+                "px-4 py-3 text-right font-bold tracking-wide text-(--accent-color) uppercase",
                 textSizeStyles.tableHeader[textSize]
               )}
-              style={accentColorStyle}
             >
               Quantity
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-right font-bold tracking-wide uppercase",
+                "px-4 py-3 text-right font-bold tracking-wide text-(--accent-color) uppercase",
                 textSizeStyles.tableHeader[textSize]
               )}
-              style={accentColorStyle}
             >
               Unit Price
             </th>
             <th
               className={cn(
-                "px-4 py-3 text-right font-bold tracking-wide uppercase",
+                "px-4 py-3 text-right font-bold tracking-wide text-(--accent-color) uppercase",
                 textSizeStyles.tableHeader[textSize]
               )}
-              style={accentColorStyle}
             >
               Total
             </th>
@@ -104,4 +102,3 @@ export function InvoiceItemsTable({
     </div>
   );
 }
-

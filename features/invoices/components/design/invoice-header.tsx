@@ -1,5 +1,5 @@
 import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
-import { textSizeStyles } from "features/invoices/components/design/utils";
+import { textSizeStyles } from "features/invoices/utils/utils";
 import { cn } from "lib/utils";
 
 export function InvoiceHeader({
@@ -22,7 +22,6 @@ export function InvoiceHeader({
     companyDetails: boolean;
   };
 }) {
-  const accentColorStyle = { color: tokens.accentColorHex };
   const textSize = tokens.baseTextSize;
   const borderColorClass =
     tokens.borderStyle === "subtle"
@@ -44,17 +43,15 @@ export function InvoiceHeader({
           )}
           <h1
             className={cn(
-              "font-bold tracking-tight",
+              "font-bold tracking-tight text-(--accent-color)",
               textSizeStyles.logoTop[textSize]
             )}
-            style={accentColorStyle}
           >
             {organization.name}
           </h1>
         </div>
       )}
-      {(tokens.logoPosition === "left" ||
-        tokens.logoPosition === "right") && (
+      {(tokens.logoPosition === "left" || tokens.logoPosition === "right") && (
         <div
           className={cn(
             "avoid-break mb-6 flex flex-col",
@@ -70,10 +67,9 @@ export function InvoiceHeader({
           )}
           <h1
             className={cn(
-              "font-bold tracking-tight",
+              "font-bold tracking-tight text-(--accent-color)",
               textSizeStyles.logoSide[textSize]
             )}
-            style={accentColorStyle}
           >
             {organization.name}
           </h1>
@@ -96,10 +92,10 @@ export function InvoiceHeader({
         <div className="flex flex-col">
           <h2
             className={cn(
-              "mb-3 font-bold tracking-tight",
+              "mb-3 font-bold tracking-tight text-(--accent-color)",
               textSizeStyles.invoiceHeading[textSize]
             )}
-            style={{ ...accentColorStyle, letterSpacing: "-0.02em" }}
+            style={{ letterSpacing: "-0.02em" }}
           >
             INVOICE
           </h2>
@@ -112,7 +108,7 @@ export function InvoiceHeader({
           )}
         </div>
         <div className="flex flex-col gap-1 text-right text-sm">
-          <div className="mb-2 text-lg font-bold" style={accentColorStyle}>
+          <div className="mb-2 text-lg font-bold text-(--accent-color)">
             Invoice #{invoice.invoiceNumber}
           </div>
           <div className="text-gray-600">
@@ -136,4 +132,3 @@ export function InvoiceHeader({
     </>
   );
 }
-

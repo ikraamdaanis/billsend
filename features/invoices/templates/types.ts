@@ -1,5 +1,3 @@
-export type InvoiceTemplateId = "classic" | "modern" | "minimal";
-
 export interface InvoiceSectionVisibility {
   companyDetails: boolean;
   clientDetails: boolean;
@@ -22,7 +20,7 @@ export interface InvoiceTemplateTokens {
 }
 
 export interface InvoiceTemplate {
-  id: InvoiceTemplateId;
+  id: string;
   name: string;
   description: string;
   defaultTokens: InvoiceTemplateTokens;
@@ -30,7 +28,7 @@ export interface InvoiceTemplate {
 }
 
 export interface InvoiceDesignOverrides {
-  templateId: InvoiceTemplateId;
+  templateId: string;
   tokens?: Partial<InvoiceTemplateTokens>;
   visibility?: Partial<InvoiceSectionVisibility>;
 }

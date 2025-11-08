@@ -1,5 +1,5 @@
 import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
-import { textSizeStyles } from "features/invoices/components/design/utils";
+import { textSizeStyles } from "features/invoices/utils/utils";
 import { cn } from "lib/utils";
 
 export function InvoiceSummary({
@@ -21,7 +21,6 @@ export function InvoiceSummary({
   };
 }) {
   const textSize = tokens.baseTextSize;
-  const accentColorStyle = { color: tokens.accentColorHex };
 
   return (
     <div className="avoid-break flex justify-end">
@@ -48,19 +47,16 @@ export function InvoiceSummary({
         {visibility.discountRow && (
           <div className="flex justify-between py-1">
             <span className="text-gray-600">Discount</span>
-            <span className="font-semibold text-gray-900">
-              {currency} 0.00
-            </span>
+            <span className="font-semibold text-gray-900">{currency} 0.00</span>
           </div>
         )}
         <div
           className={cn(
-            "mt-2 flex justify-between border-t-2 pt-3 font-bold",
+            "mt-2 flex justify-between border-t-2 pt-3 font-bold text-(--accent-color)",
             textSizeStyles.total[textSize]
           )}
           style={{
-            borderColor: tokens.accentColorHex,
-            color: tokens.accentColorHex
+            borderColor: "var(--accent-color)"
           }}
         >
           <span>Total</span>
@@ -72,4 +68,3 @@ export function InvoiceSummary({
     </div>
   );
 }
-

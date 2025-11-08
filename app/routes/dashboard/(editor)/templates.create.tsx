@@ -4,39 +4,29 @@ import {
   createFileRoute,
   Link,
   redirect,
-  useCanGoBack,
   useNavigate,
   useRouter
 } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger
-} from "components/ui/sheet";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Skeleton } from "components/ui/skeleton";
-import { DesignControls } from "features/invoices/components/design-controls";
-import { InvoicePreview } from "features/invoices/components/invoice-preview";
-import { TemplatePicker } from "features/invoices/components/template-picker";
+import { sessionQuery } from "features/auth/queries/session-query";
 import { createTemplate } from "features/invoices/api/templates";
+import { DesignControls } from "features/invoices/components/design-controls";
+import { EditorLayout } from "features/invoices/components/editor-layout";
+import { InvoicePreviewContainer } from "features/invoices/components/invoice-preview-container";
+import { TemplatePicker } from "features/invoices/components/template-picker";
+import { useDesignState } from "features/invoices/hooks/use-design-state";
 import { templatesQuery } from "features/invoices/queries/templates-query";
 import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
-import type {
-  InvoiceDesignOverrides,
-  InvoiceTemplateId
-} from "features/invoices/templates/types";
+import type { InvoiceTemplate } from "features/invoices/templates/types";
 import { createMockInvoice } from "features/invoices/utils/mock-invoice";
-import { sessionQuery } from "features/auth/queries/session-query";
 import { getErrorMessage } from "lib/get-error-message";
-import { ArrowLeft, Settings } from "lucide-react";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/templates/create")({
+export const Route = createFileRoute("/dashboard/(editor)/templates/create")({
   component: CreateTemplatePage,
   beforeLoad: async ({ context }) => {
     const cachedUser = context.queryClient.getQueryData(
@@ -88,20 +78,30 @@ function CreateTemplatePage() {
 function CreateTemplateContent() {
   const router = useRouter();
   const navigate = useNavigate();
-  const canGoBack = useCanGoBack();
   const queryClient = useQueryClient();
 
   const { data: session } = useSuspenseQuery(sessionQuery());
 
-  const previewRef = useRef<HTMLDivElement | null>(null);
   const [selectedTemplateId, setSelectedTemplateId] =
-    useState<InvoiceTemplateId>("classic");
-  const [designOverrides, setDesignOverrides] = useState<
-    InvoiceDesignOverrides | undefined
-  >(undefined);
+    useState<string>("classic");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const previewRef = useRef<HTMLDivElement | null>(null);
 
-  const template = INVOICE_TEMPLATES[selectedTemplateId];
+  const selectedTemplate =
+    INVOICE_TEMPLATES[selectedTemplateId as keyof typeof INVOICE_TEMPLATES];
+
+  const {
+    designTokens,
+    designVisibility,
+    setDesignTokens,
+    setDesignVisibility,
+    handleDesignChange
+  } = useDesignState(
+    selectedTemplate.defaultTokens,
+    selectedTemplate.defaultVisibility,
+    previewRef
+  );
+
   const mockInvoice = createMockInvoice();
   const mockOrganization = {
     name: session?.activeOrganization?.name || "Your Company",
@@ -113,14 +113,8 @@ function CreateTemplateContent() {
       name: "",
       description: "",
       baseTemplateId: selectedTemplateId,
-      tokens: {
-        ...template.defaultTokens,
-        ...designOverrides?.tokens
-      },
-      visibility: {
-        ...template.defaultVisibility,
-        ...designOverrides?.visibility
-      }
+      tokens: designTokens,
+      visibility: designVisibility
     },
     onSubmit: async ({ value }) => {
       try {
@@ -128,10 +122,10 @@ function CreateTemplateContent() {
           data: {
             name: value.name,
             description: value.description || undefined,
-            baseTemplateId: value.baseTemplateId,
-            tokens: value.tokens,
-            visibility: value.visibility,
-            logoPosition: value.tokens.logoPosition
+            baseTemplateId: selectedTemplateId,
+            tokens: designTokens,
+            visibility: designVisibility,
+            logoPosition: designTokens.logoPosition
           }
         });
 
@@ -150,61 +144,31 @@ function CreateTemplateContent() {
     }
   });
 
-  useEffect(() => {
-    const newTokens = {
-      ...template.defaultTokens,
-      ...designOverrides?.tokens
-    };
-    const newVisibility = {
-      ...template.defaultVisibility,
-      ...designOverrides?.visibility
-    };
+  const handleTemplateChange = (templateId: string) => {
+    const newTemplate =
+      INVOICE_TEMPLATES[templateId as keyof typeof INVOICE_TEMPLATES];
 
-    form.setFieldValue("baseTemplateId", selectedTemplateId);
-    form.setFieldValue("tokens", newTokens);
-    form.setFieldValue("visibility", newVisibility);
-  }, [
-    selectedTemplateId,
-    template.defaultTokens,
-    template.defaultVisibility,
-    designOverrides?.tokens,
-    designOverrides?.visibility,
-    form
-  ]);
-
-  const handleTemplateChange = (templateId: InvoiceTemplateId) => {
+    setDesignTokens(newTemplate.defaultTokens);
+    setDesignVisibility(newTemplate.defaultVisibility);
     setSelectedTemplateId(templateId);
-    setDesignOverrides(undefined);
+
+    form.setFieldValue("baseTemplateId", templateId);
+    form.setFieldValue("tokens", newTemplate.defaultTokens);
+    form.setFieldValue("visibility", newTemplate.defaultVisibility);
   };
 
-  const handleDesignChange = (overrides: InvoiceDesignOverrides) => {
-    setDesignOverrides(overrides);
-    const newTokens = {
-      ...template.defaultTokens,
-      ...overrides.tokens
-    };
-    const newVisibility = {
-      ...template.defaultVisibility,
-      ...overrides.visibility
-    };
-    form.setFieldValue("tokens", newTokens);
-    form.setFieldValue("visibility", newVisibility);
+  const handleBack = () => {
+    router.history.back();
   };
 
-  const templateForPreview = {
-    ...template,
-    defaultTokens: {
-      ...template.defaultTokens,
-      ...designOverrides?.tokens
-    },
-    defaultVisibility: {
-      ...template.defaultVisibility,
-      ...designOverrides?.visibility
-    }
+  const templateForPreview: InvoiceTemplate = {
+    ...selectedTemplate,
+    defaultTokens: designTokens,
+    defaultVisibility: designVisibility
   };
 
   const settingsContent = (
-    <div className="flex flex-col gap-8 p-6">
+    <div className="flex flex-col gap-8 p-4 pb-0">
       <form
         onSubmit={e => {
           e.preventDefault();
@@ -231,6 +195,8 @@ function CreateTemplateContent() {
                   onBlur={field.handleBlur}
                   onChange={e => field.handleChange(e.target.value)}
                   autoComplete="off"
+                  data-1p-ignore
+                  data-lpignore="true"
                 />
                 {field.state.meta.errors.length > 0 && (
                   <p className="text-sm text-red-600">
@@ -259,7 +225,9 @@ function CreateTemplateContent() {
           </form.Field>
         </div>
         <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-gray-900">Templates</h3>
+          <h3 className="text-sm font-semibold text-gray-900">
+            Start with a Template
+          </h3>
           <TemplatePicker
             selectedTemplateId={selectedTemplateId}
             onSelect={handleTemplateChange}
@@ -268,14 +236,19 @@ function CreateTemplateContent() {
         <div className="flex flex-col gap-4">
           <h3 className="text-sm font-semibold text-gray-900">Customise</h3>
           <DesignControls
-            defaultTokens={template.defaultTokens}
-            defaultVisibility={template.defaultVisibility}
+            defaultTokens={selectedTemplate.defaultTokens}
+            defaultVisibility={selectedTemplate.defaultVisibility}
             templateId={selectedTemplateId}
-            overrides={designOverrides}
+            overrides={{
+              templateId: selectedTemplateId,
+              tokens: designTokens,
+              visibility: designVisibility
+            }}
             onChange={handleDesignChange}
+            previewRef={previewRef}
           />
         </div>
-        <div className="flex gap-4">
+        <div className="border-border sticky bottom-0 z-10 flex gap-4 border-t bg-white py-4">
           <Link to="/dashboard/templates" className="flex-1">
             <Button type="button" variant="outline" className="w-full">
               Cancel
@@ -294,87 +267,33 @@ function CreateTemplateContent() {
   );
 
   return (
-    <div className="flex h-screen flex-col bg-white">
-      <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-4 sm:px-6">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => {
-              if (canGoBack) {
-                router.history.back();
-              } else {
-                navigate({ to: "/dashboard/templates" });
-              }
-            }}
-          >
-            <ArrowLeft className="size-4 shrink-0" />
-          </Button>
-          <h2 className="text-sm font-medium text-gray-900 sm:text-base">
-            Create Template
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="lg:hidden">
-                <Settings className="size-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Template Settings</SheetTitle>
-              </SheetHeader>
-              {settingsContent}
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="hidden w-80 shrink-0 overflow-y-auto border-r border-gray-200 bg-white lg:block">
-          {settingsContent}
-        </aside>
-        <main className="flex flex-1 flex-col overflow-hidden bg-gray-50">
-          <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-8 sm:pt-8">
-            <div className="mx-auto w-full max-w-3xl">
-              <div
-                ref={previewRef}
-                className="invoice-preview-container w-full bg-white shadow-sm"
-                data-page-size={template.defaultTokens.pageSize}
-              >
-                <div className="p-4 pb-12 sm:p-8">
-                  <InvoicePreview
-                    invoice={mockInvoice}
-                    organization={mockOrganization}
-                    template={templateForPreview}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="no-print h-8 shrink-0" />
-          </div>
-        </main>
-      </div>
-    </div>
+    <EditorLayout
+      title="Create Template"
+      onBack={handleBack}
+      settingsContent={settingsContent}
+      settingsOpen={settingsOpen}
+      onSettingsOpenChange={setSettingsOpen}
+    >
+      <InvoicePreviewContainer
+        previewRef={previewRef}
+        invoice={mockInvoice}
+        organization={mockOrganization}
+        template={templateForPreview}
+        overrides={{
+          templateId: selectedTemplateId,
+          tokens: designTokens,
+          visibility: designVisibility
+        }}
+      />
+    </EditorLayout>
   );
 }
 
 function CreateTemplateSkeleton() {
-  const navigate = useNavigate();
-
   return (
     <div className="flex h-screen flex-col bg-white">
       <div className="flex h-16 shrink-0 items-center border-b border-gray-200 px-6">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => navigate({ to: "/dashboard/templates" })}
-          >
-            <ArrowLeft className="size-4 shrink-0" />
-          </Button>
-          <Skeleton className="h-5 w-48" />
-        </div>
+        <Skeleton className="h-5 w-48" />
       </div>
       <div className="flex flex-1 overflow-hidden">
         <Skeleton className="h-full w-80" />

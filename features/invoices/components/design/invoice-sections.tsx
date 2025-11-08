@@ -1,5 +1,5 @@
 import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
-import { getBorderClass, textSizeStyles } from "features/invoices/components/design/utils";
+import { getBorderClass, textSizeStyles } from "features/invoices/utils/utils";
 import { cn } from "lib/utils";
 
 export function InvoiceSections({
@@ -30,7 +30,6 @@ export function InvoiceSections({
     footer: boolean;
   };
 }) {
-  const accentColorStyle = { color: tokens.accentColorHex };
   const textSize = tokens.baseTextSize;
   const borderClass = getBorderClass(tokens);
 
@@ -47,10 +46,9 @@ export function InvoiceSections({
         >
           <div
             className={cn(
-              "mb-3 font-bold tracking-wide uppercase",
+              "mb-3 font-bold tracking-wide text-(--accent-color) uppercase",
               textSizeStyles.sectionHeader[textSize]
             )}
-            style={accentColorStyle}
           >
             Bill To:
           </div>
@@ -87,10 +85,9 @@ export function InvoiceSections({
         <div className="avoid-break pt-2">
           <div
             className={cn(
-              "mb-2 font-bold tracking-wide uppercase",
+              "mb-2 font-bold tracking-wide text-(--accent-color) uppercase",
               textSizeStyles.sectionHeader[textSize]
             )}
-            style={accentColorStyle}
           >
             Notes:
           </div>
@@ -108,10 +105,9 @@ export function InvoiceSections({
         <div className="avoid-break pt-2">
           <div
             className={cn(
-              "mb-2 font-bold tracking-wide uppercase",
+              "mb-2 font-bold tracking-wide text-(--accent-color) uppercase",
               textSizeStyles.sectionHeader[textSize]
             )}
-            style={accentColorStyle}
           >
             Terms & Conditions:
           </div>
@@ -136,10 +132,9 @@ export function InvoiceSections({
         >
           <div
             className={cn(
-              "mb-3 font-bold tracking-wide uppercase",
+              "mb-3 font-bold tracking-wide text-(--accent-color) uppercase",
               textSizeStyles.sectionHeader[textSize]
             )}
-            style={accentColorStyle}
           >
             Payment Details:
           </div>
@@ -166,4 +161,3 @@ export function InvoiceSections({
     </>
   );
 }
-
