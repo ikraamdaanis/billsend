@@ -1,6 +1,6 @@
+import { TemplateCard } from "features/invoices/components/template-card";
 import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
 import type { InvoiceTemplate } from "features/invoices/templates/types";
-import { TemplateCard } from "features/invoices/components/template-card";
 
 export function TemplateList({
   customTemplates
@@ -27,7 +27,7 @@ export function TemplateList({
               <TemplateCard
                 key={template.id}
                 template={template}
-                href={`/dashboard/templates/default/${template.id}`}
+                href={`/dashboard/templates/${template.id}`}
                 isDefault={false}
               />
             ))}
@@ -36,9 +36,7 @@ export function TemplateList({
       )}
       {customTemplates.length > 0 && (
         <div className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            My Templates
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">My Templates</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {customTemplates.map(template => {
               const templateForCard: InvoiceTemplate = {
@@ -52,7 +50,7 @@ export function TemplateList({
                 <TemplateCard
                   key={template.id}
                   template={templateForCard}
-                  href={`/dashboard/templates/custom/${template.id}`}
+                  href={`/dashboard/templates/${template.id}`}
                   isDefault={false}
                 />
               );
@@ -68,4 +66,3 @@ export function TemplateList({
     </div>
   );
 }
-

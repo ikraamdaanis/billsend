@@ -4,23 +4,25 @@ import { Label } from "components/ui/label";
 import type {
   InvoiceDesignOverrides,
   InvoiceSectionVisibility,
-  InvoiceTemplateId,
   InvoiceTemplateTokens
 } from "features/invoices/templates/types";
-import { useEffect } from "react";
+import type React from "react";
+import { useEffect, useRef } from "react";
 
 export function DesignControls({
   defaultTokens,
   defaultVisibility,
   templateId,
   overrides,
-  onChange
+  onChange,
+  previewRef
 }: {
   defaultTokens: InvoiceTemplateTokens;
   defaultVisibility: InvoiceSectionVisibility;
   templateId: string;
   overrides?: InvoiceDesignOverrides;
   onChange: (overrides: InvoiceDesignOverrides) => void;
+  previewRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const form = useForm({
     defaultValues: {
@@ -35,7 +37,7 @@ export function DesignControls({
     },
     onSubmit: ({ value }) => {
       onChange({
-        templateId: templateId as InvoiceTemplateId,
+        templateId: templateId,
         tokens: value.tokens,
         visibility: value.visibility
       });
@@ -64,7 +66,25 @@ export function DesignControls({
   ]);
 
   const handleChange = () => {
-    form.handleSubmit();
+    const currentTokens = form.state.values.tokens;
+    const currentVisibility = form.state.values.visibility;
+
+    onChange({
+      templateId,
+      tokens: currentTokens,
+      visibility: currentVisibility
+    });
+  };
+
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedHandleChange = () => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      handleChange();
+    }, 100);
   };
 
   return (
@@ -125,20 +145,55 @@ export function DesignControls({
                     id="accentColorHex"
                     type="color"
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={e => {
-                      field.handleChange(e.target.value);
+                    onBlur={_e => {
+                      field.handleBlur();
                       handleChange();
+                    }}
+                    onChange={e => {
+                      const newColor = e.target.value;
+                      field.handleChange(newColor);
+
+                      if (previewRef?.current) {
+                        const invoicePage =
+                          previewRef.current.querySelector(".invoice-page");
+                        if (invoicePage) {
+                          (invoicePage as HTMLElement).style.setProperty(
+                            "--accent-color",
+                            newColor
+                          );
+                        }
+                      }
+
+                      debouncedHandleChange();
                     }}
                     className="h-9 w-20 cursor-pointer"
                   />
                   <Input
                     type="text"
                     value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={e => {
-                      field.handleChange(e.target.value);
+                    onBlur={_e => {
+                      field.handleBlur();
                       handleChange();
+                    }}
+                    onChange={e => {
+                      const newColor = e.target.value;
+                      field.handleChange(newColor);
+
+                      if (
+                        previewRef?.current &&
+                        /^#[0-9A-F]{6}$/i.test(newColor)
+                      ) {
+                        const invoicePage =
+                          previewRef.current.querySelector(".invoice-page");
+                        if (invoicePage) {
+                          (invoicePage as HTMLElement).style.setProperty(
+                            "--accent-color",
+                            newColor
+                          );
+                        }
+                      }
+
+                      debouncedHandleChange();
                     }}
                     placeholder="#0ea5e9"
                     className="flex-1"

@@ -41,7 +41,7 @@ const createClientSchema = z.object({
     .optional()
 });
 
-export const Route = createFileRoute("/dashboard/clients/create")({
+export const Route = createFileRoute("/dashboard/(root)/clients/create")({
   component: CreateClientPage
 });
 

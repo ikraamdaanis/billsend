@@ -3,7 +3,7 @@ import { AppSidebar } from "components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "components/ui/sidebar";
 import { sessionQuery } from "features/auth/queries/session-query";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/dashboard/(root)")({
   component: RouteComponent,
   beforeLoad: async ({ context }) => {
     // Check cache first - if session is already cached, use it immediately

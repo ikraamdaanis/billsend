@@ -1,8 +1,5 @@
+import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
 import type { CSSProperties } from "react";
-import type {
-  InvoiceSectionVisibility,
-  InvoiceTemplateTokens
-} from "features/invoices/templates/types";
 
 export function getFontFamilyClass(fontFamily: string): string {
   switch (fontFamily) {
@@ -116,4 +113,3 @@ export function getBorderStyle(
     borderBottomWidth: tokens.borderStyle === "strong" ? "2px" : "1px"
   };
 }
-

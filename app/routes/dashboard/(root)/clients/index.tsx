@@ -10,7 +10,7 @@ import { clientsQuery } from "features/clients/queries/clients-query";
 import { ArrowUpDown, Plus } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/clients/")({
+export const Route = createFileRoute("/dashboard/(root)/clients/")({
   component: ClientsList,
   loader: ({ context }) => {
     return context.queryClient.prefetchQuery(clientsQuery());

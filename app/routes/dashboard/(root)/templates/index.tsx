@@ -8,7 +8,7 @@ import { templatesQuery } from "features/invoices/queries/templates-query";
 import { Plus } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/templates/")({
+export const Route = createFileRoute("/dashboard/(root)/templates/")({
   component: TemplatesPage,
   loader: ({ context }) => {
     return context.queryClient.prefetchQuery(templatesQuery());
@@ -39,7 +39,7 @@ function TemplatesContent() {
         <div>
           <h2 className="text-base font-medium text-gray-900">Templates</h2>
         </div>
-        <Link to="/templates/create" className="ml-auto">
+        <Link to="/dashboard/templates/create" className="ml-auto">
           <Button size="sm">
             <Plus className="size-3 shrink-0" />
             Create Template

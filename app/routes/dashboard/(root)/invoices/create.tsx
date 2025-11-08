@@ -50,7 +50,7 @@ const createInvoiceSchema = z.object({
   notes: z.string().optional()
 });
 
-export const Route = createFileRoute("/dashboard/invoices/create")({
+export const Route = createFileRoute("/dashboard/(root)/invoices/create")({
   component: CreateInvoicePage,
   loader: ({ context }) => {
     return context.queryClient.prefetchQuery(clientsQuery());

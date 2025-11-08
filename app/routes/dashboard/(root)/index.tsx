@@ -23,7 +23,7 @@ import {
 import plur from "plur";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/")({
+export const Route = createFileRoute("/dashboard/(root)/")({
   component: Dashboard
 });
 

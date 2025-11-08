@@ -22,7 +22,7 @@ import { getErrorMessage } from "lib/get-error-message";
 import { ArrowLeft, Palette } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/invoices/$invoiceId/")({
+export const Route = createFileRoute("/dashboard/(root)/invoices/$invoiceId/")({
   component: InvoiceDetailPage,
   errorComponent: ErrorComponent,
   loader: ({ context, params }) => {
@@ -79,7 +79,7 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
           <StatusBadge status={invoice.status as InvoiceStatus} />
           <div className="ml-auto">
             <Link
-              to="/invoices/$invoiceId/design"
+              to="/dashboard/invoices/$invoiceId/design"
               params={{ invoiceId }}
             >
               <Button variant="outline" size="sm" className="gap-2">

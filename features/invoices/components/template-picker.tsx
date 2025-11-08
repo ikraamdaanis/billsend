@@ -1,13 +1,12 @@
 import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
-import type { InvoiceTemplateId } from "features/invoices/templates/types";
 import { cn } from "lib/utils";
 
 export function TemplatePicker({
   selectedTemplateId,
   onSelect
 }: {
-  selectedTemplateId: InvoiceTemplateId;
-  onSelect: (templateId: InvoiceTemplateId) => void;
+  selectedTemplateId: string;
+  onSelect: (templateId: string) => void;
 }) {
   const templates = Object.values(INVOICE_TEMPLATES);
 
