@@ -1,6 +1,5 @@
 import type {
   InvoiceSectionVisibility,
-  InvoiceTemplate,
   InvoiceTemplateTokens
 } from "features/invoices/templates/types";
 
@@ -67,7 +66,7 @@ const minimalVisibility: InvoiceSectionVisibility = {
   footer: false
 };
 
-export const INVOICE_TEMPLATES: Record<string, InvoiceTemplate> = {
+export const INVOICE_TEMPLATES = {
   classic: {
     id: "classic",
     name: "Classic",
@@ -92,4 +91,4 @@ export const INVOICE_TEMPLATES: Record<string, InvoiceTemplate> = {
     defaultTokens: minimalTokens,
     defaultVisibility: minimalVisibility
   }
-};
+} as const;

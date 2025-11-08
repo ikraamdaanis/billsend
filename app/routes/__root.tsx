@@ -22,17 +22,17 @@ export const Route = createRootRouteWithContext<{
         content: "width=device-width, initial-scale=1"
       },
       {
+        title: "billsend"
+      }
+    ],
+    links: [
+      {
         rel: "preload",
         href: geistFont,
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous"
       },
-      {
-        title: "billsend"
-      }
-    ],
-    links: [
       {
         rel: "stylesheet",
         href: appCss

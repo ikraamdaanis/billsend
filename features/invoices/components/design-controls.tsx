@@ -68,13 +68,7 @@ export function DesignControls({
   };
 
   return (
-    <form
-      onSubmit={e => {
-        e.preventDefault();
-        form.handleSubmit();
-      }}
-      className="flex flex-col gap-6"
-    >
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <h3 className="text-sm font-semibold text-gray-900">Style Settings</h3>
         <div className="flex flex-col gap-3">
@@ -300,6 +294,6 @@ export function DesignControls({
           })}
         </div>
       </div>
-    </form>
+    </div>
   );
 }
