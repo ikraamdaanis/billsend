@@ -1,4 +1,6 @@
 import { Button } from "components/ui/button";
+import type { InvoiceQueryResult } from "features/invoices/queries/invoice-query";
+import { generatePdfFilename } from "features/invoices/utils/pdf-filename";
 import { cn } from "lib/utils";
 import { Eye } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -7,15 +9,24 @@ import { toast } from "sonner";
 
 export function PrintButton({
   invoiceId,
+  invoice,
   className,
   ...props
-}: { invoiceId: string } & ComponentProps<typeof Button>) {
+}: {
+  invoiceId: string;
+  invoice: InvoiceQueryResult;
+} & ComponentProps<typeof Button>) {
   const [isPending, startTransition] = useTransition();
 
   function handleView() {
     startTransition(() => {
-      // Open PDF route in new tab - no popup blocker since it's a direct navigation
-      const pdfUrl = `/api/pdf/${invoiceId}`;
+      // Generate filename and include it in URL so browser uses it
+      const filename = generatePdfFilename(
+        invoice.invoiceDate,
+        invoice.client.name,
+        invoice.invoiceNumber
+      );
+      const pdfUrl = `/api/pdf/${invoiceId}/${filename}`;
       const newWindow = window.open(pdfUrl, "_blank");
 
       if (!newWindow) {

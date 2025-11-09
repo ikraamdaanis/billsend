@@ -256,7 +256,7 @@ function InvoiceDesignContent({ invoiceId }: { invoiceId: string }) {
       settingsContent={settingsContent}
       settingsOpen={settingsOpen}
       onSettingsOpenChange={setSettingsOpen}
-      actions={<PrintButton invoiceId={invoiceId} />}
+      actions={<PrintButton invoiceId={invoiceId} invoice={invoice} />}
     >
       <InvoicePreviewContainer
         previewRef={previewRef}
