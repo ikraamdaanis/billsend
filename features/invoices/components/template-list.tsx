@@ -16,7 +16,7 @@ export function TemplateList({
   const defaultTemplates = Object.values(INVOICE_TEMPLATES);
 
   return (
-    <div className="flex flex-col gap-12">
+    <div className="flex flex-col gap-6">
       {defaultTemplates.length > 0 && (
         <div className="flex flex-col gap-4">
           <h2 className="text-lg font-semibold text-gray-900">
