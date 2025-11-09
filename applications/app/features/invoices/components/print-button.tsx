@@ -32,20 +32,23 @@ export function PrintButton({
           throw new Error(errorText || "Failed to generate PDF");
         }
 
-        // Create blob URL and open in new tab once ready
+        // Create blob URL
         const blob = await response.blob();
         const blobUrl = window.URL.createObjectURL(blob);
-        const newWindow = window.open(blobUrl, "_blank");
 
-        if (!newWindow) {
+        // Create anchor element and click it programmatically (bypasses popup blocker)
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up blob URL after a delay (browser will have loaded it)
+        setTimeout(() => {
           window.URL.revokeObjectURL(blobUrl);
-          toast.error("Please allow popups to view PDF");
-        } else {
-          // Clean up blob URL after a delay (browser will have loaded it)
-          setTimeout(() => {
-            window.URL.revokeObjectURL(blobUrl);
-          }, 1000);
-        }
+        }, 1000);
       } catch (error) {
         if (process.env.NODE_ENV !== "production") {
           // eslint-disable-next-line no-console
