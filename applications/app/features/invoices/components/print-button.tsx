@@ -1,6 +1,4 @@
 import { Button } from "components/ui/button";
-import { generatePdf } from "features/invoices/api/generate-pdf";
-import { generatePrintToken } from "features/invoices/api/generate-print-token";
 import { cn } from "lib/utils";
 import { Eye } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -15,50 +13,13 @@ export function PrintButton({
   const [isPending, startTransition] = useTransition();
 
   function handleView() {
-    startTransition(async () => {
-      try {
-        // Generate token server-side (secret stays secure)
-        const { token, exp } = await generatePrintToken({
-          data: { invoiceId }
-        });
+    startTransition(() => {
+      // Open PDF route in new tab - no popup blocker since it's a direct navigation
+      const pdfUrl = `/api/pdf/${invoiceId}`;
+      const newWindow = window.open(pdfUrl, "_blank");
 
-        // Generate PDF server-side
-        const response = await generatePdf({
-          data: { invoiceId, token, exp }
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || "Failed to generate PDF");
-        }
-
-        // Create blob URL
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-
-        // Create anchor element and click it programmatically (bypasses popup blocker)
-        const link = document.createElement("a");
-        link.href = blobUrl;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        // Clean up blob URL after a delay (browser will have loaded it)
-        setTimeout(() => {
-          window.URL.revokeObjectURL(blobUrl);
-        }, 1000);
-      } catch (error) {
-        if (process.env.NODE_ENV !== "production") {
-          // eslint-disable-next-line no-console
-          console.error("PDF generation error:", error);
-        }
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to view PDF. Please try again."
-        );
+      if (!newWindow) {
+        toast.error("Please allow popups to view PDF");
       }
     });
   }
