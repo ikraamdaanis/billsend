@@ -1,4 +1,6 @@
 import { Button } from "components/ui/button";
+import { generatePdf } from "features/invoices/api/generate-pdf";
+import { generatePrintToken } from "features/invoices/api/generate-print-token";
 import { cn } from "lib/utils";
 import { Eye } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -15,43 +17,15 @@ export function PrintButton({
   function handleView() {
     startTransition(async () => {
       try {
-        const printRouteSecret = import.meta.env.VITE_PRINT_ROUTE_SECRET;
+        // Generate token server-side (secret stays secure)
+        const { token, exp } = await generatePrintToken({
+          data: { invoiceId }
+        });
 
-        if (!printRouteSecret) {
-          throw new Error("PDF service configuration missing");
-        }
-
-        // Generate secure token with expiry (5 minutes)
-        const exp = Date.now() + 5 * 60 * 1000; // 5 minutes from now
-        const message = `${invoiceId}.${exp}`;
-        const encoder = new TextEncoder();
-        const keyData = encoder.encode(printRouteSecret);
-        const messageData = encoder.encode(message);
-
-        // Import key for HMAC
-        const cryptoKey = await crypto.subtle.importKey(
-          "raw",
-          keyData,
-          { name: "HMAC", hash: "SHA-256" },
-          false,
-          ["sign"]
-        );
-
-        // Sign with HMAC
-        const signature = await crypto.subtle.sign(
-          "HMAC",
-          cryptoKey,
-          messageData
-        );
-        const signatureArray = Array.from(new Uint8Array(signature));
-        const token = btoa(String.fromCharCode(...signatureArray))
-          .replace(/\+/g, "-")
-          .replace(/\//g, "_")
-          .replace(/=/g, "");
-
-        // Fetch PDF first to ensure it's ready before opening
-        const viewUrl = `/api/pdf/view?invoiceId=${encodeURIComponent(invoiceId)}&token=${encodeURIComponent(token)}&exp=${exp}`;
-        const response = await fetch(viewUrl);
+        // Generate PDF server-side
+        const response = await generatePdf({
+          data: { invoiceId, token, exp }
+        });
 
         if (!response.ok) {
           const errorText = await response.text();

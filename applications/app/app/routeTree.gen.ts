@@ -18,7 +18,6 @@ import { Route as authCreateOrganisationRouteImport } from './routes/(auth)/crea
 import { Route as DashboardrootRouteRouteImport } from './routes/dashboard/(root)/route'
 import { Route as DashboardrootIndexRouteImport } from './routes/dashboard/(root)/index'
 import { Route as DashboardrootSettingsRouteImport } from './routes/dashboard/(root)/settings'
-import { Route as ApiPdfViewRouteImport } from './routes/api/pdf/view'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as DashboardrootTemplatesIndexRouteImport } from './routes/dashboard/(root)/templates/index'
 import { Route as DashboardrootInvoicesIndexRouteImport } from './routes/dashboard/(root)/invoices/index'
@@ -75,11 +74,6 @@ const DashboardrootSettingsRoute = DashboardrootSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => DashboardrootRouteRoute,
-} as any)
-const ApiPdfViewRoute = ApiPdfViewRouteImport.update({
-  id: '/api/pdf/view',
-  path: '/api/pdf/view',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
@@ -161,7 +155,6 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/print/$invoiceId': typeof PrintInvoiceIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/pdf/view': typeof ApiPdfViewRoute
   '/dashboard/settings': typeof DashboardrootSettingsRoute
   '/dashboard/': typeof DashboardrootIndexRoute
   '/dashboard/templates/create': typeof DashboardeditorTemplatesCreateRoute
@@ -183,7 +176,6 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/print/$invoiceId': typeof PrintInvoiceIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/pdf/view': typeof ApiPdfViewRoute
   '/dashboard/settings': typeof DashboardrootSettingsRoute
   '/dashboard': typeof DashboardrootIndexRoute
   '/dashboard/templates/create': typeof DashboardeditorTemplatesCreateRoute
@@ -208,7 +200,6 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/print/$invoiceId': typeof PrintInvoiceIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/pdf/view': typeof ApiPdfViewRoute
   '/dashboard/(root)/settings': typeof DashboardrootSettingsRoute
   '/dashboard/(root)/': typeof DashboardrootIndexRoute
   '/dashboard/(editor)/templates/create': typeof DashboardeditorTemplatesCreateRoute
@@ -233,7 +224,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/print/$invoiceId'
     | '/api/auth/$'
-    | '/api/pdf/view'
     | '/dashboard/settings'
     | '/dashboard/'
     | '/dashboard/templates/create'
@@ -255,7 +245,6 @@ export interface FileRouteTypes {
     | '/signup'
     | '/print/$invoiceId'
     | '/api/auth/$'
-    | '/api/pdf/view'
     | '/dashboard/settings'
     | '/dashboard'
     | '/dashboard/templates/create'
@@ -279,7 +268,6 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/print/$invoiceId'
     | '/api/auth/$'
-    | '/api/pdf/view'
     | '/dashboard/(root)/settings'
     | '/dashboard/(root)/'
     | '/dashboard/(editor)/templates/create'
@@ -301,7 +289,6 @@ export interface RootRouteChildren {
   DashboardrootRouteRoute: typeof DashboardrootRouteRouteWithChildren
   PrintInvoiceIdRoute: typeof PrintInvoiceIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiPdfViewRoute: typeof ApiPdfViewRoute
   DashboardeditorTemplatesCreateRoute: typeof DashboardeditorTemplatesCreateRoute
   DashboardeditorInvoicesInvoiceIdDesignRoute: typeof DashboardeditorInvoicesInvoiceIdDesignRoute
   DashboardeditorTemplatesTemplateIdEditRoute: typeof DashboardeditorTemplatesTemplateIdEditRoute
@@ -371,13 +358,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/settings'
       preLoaderRoute: typeof DashboardrootSettingsRouteImport
       parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/api/pdf/view': {
-      id: '/api/pdf/view'
-      path: '/api/pdf/view'
-      fullPath: '/api/pdf/view'
-      preLoaderRoute: typeof ApiPdfViewRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
       id: '/api/auth/$'
@@ -518,7 +498,6 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardrootRouteRoute: DashboardrootRouteRouteWithChildren,
   PrintInvoiceIdRoute: PrintInvoiceIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiPdfViewRoute: ApiPdfViewRoute,
   DashboardeditorTemplatesCreateRoute: DashboardeditorTemplatesCreateRoute,
   DashboardeditorInvoicesInvoiceIdDesignRoute:
     DashboardeditorInvoicesInvoiceIdDesignRoute,

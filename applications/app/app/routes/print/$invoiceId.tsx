@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  fetchInvoiceForPrint,
-  validatePrintToken
-} from "features/invoices/api/fetch-invoice-for-print";
+import { fetchInvoiceForPrint } from "features/invoices/api/fetch-invoice-for-print";
+import { validatePrintToken } from "features/invoices/api/validate-print-token";
 import { InvoicePreviewContainer } from "features/invoices/components/invoice-preview-container";
 import type { InvoiceQueryResult } from "features/invoices/queries/invoice-query";
 import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
