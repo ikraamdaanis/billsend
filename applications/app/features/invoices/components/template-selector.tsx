@@ -38,12 +38,7 @@ export function TemplateSelector({
             <SelectLabel>Default Templates</SelectLabel>
             {defaultTemplates.map(template => (
               <SelectItem key={template.id} value={template.id}>
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{template.name}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {template.description}
-                  </span>
-                </div>
+                {template.name}
               </SelectItem>
             ))}
           </SelectGroup>
@@ -53,14 +48,7 @@ export function TemplateSelector({
             <SelectLabel>My Templates</SelectLabel>
             {customTemplates.map(template => (
               <SelectItem key={template.id} value={template.id}>
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{template.name}</span>
-                  {template.description && (
-                    <span className="text-muted-foreground text-xs">
-                      {template.description}
-                    </span>
-                  )}
-                </div>
+                {template.name}
               </SelectItem>
             ))}
           </SelectGroup>

@@ -14,6 +14,7 @@ import {
 import { Separator } from "components/ui/separator";
 import { Skeleton } from "components/ui/skeleton";
 import { InvoiceLineItemsTable } from "features/invoices/components/invoice-line-items-table";
+import { PrintButton } from "features/invoices/components/print-button";
 import { invoiceQuery } from "features/invoices/queries/invoice-query";
 import type { InvoiceStatus } from "features/invoices/types";
 import { useDocumentTitle } from "hooks/use-document-title";
@@ -52,8 +53,6 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
 
   useDocumentTitle(`Invoice #${invoice.invoiceNumber} | billsend`);
 
-  const { goBack } = useGoBack({ to: "/dashboard/invoices" });
-
   const lineItems = invoice.lineItems || [];
   const subtotal = parseFloat(invoice.subtotal || "0");
   const tax = parseFloat(invoice.tax || "0");
@@ -68,26 +67,30 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
 
   return (
     <div className="flex flex-1 flex-col bg-white">
-      <DashboardHeader className="pl-1">
+      <DashboardHeader className="flex items-center justify-between gap-4 pl-1">
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon-sm" onClick={goBack}>
-            <ArrowLeft className="size-4 shrink-0" />
-          </Button>
+          <Link to="/dashboard/invoices">
+            <Button variant="ghost" size="icon-sm">
+              <ArrowLeft className="size-4 shrink-0" />
+            </Button>
+          </Link>
           <h2 className="text-base font-medium text-gray-900">
             Invoice # {invoice.invoiceNumber}
           </h2>
           <StatusBadge status={invoice.status as InvoiceStatus} />
-          <div className="ml-auto">
-            <Link
-              to="/dashboard/invoices/$invoiceId/design"
-              params={{ invoiceId }}
-            >
-              <Button variant="outline" size="sm" className="gap-2">
-                <Palette className="size-4" />
-                Design Invoice
-              </Button>
-            </Link>
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/dashboard/invoices/$invoiceId/design"
+            params={{ invoiceId }}
+            className="h-6"
+          >
+            <Button size="sm" variant="secondary" className="h-6 gap-2">
+              <Palette className="size-4" />
+              Design Invoice
+            </Button>
+          </Link>
+          <PrintButton invoiceId={invoiceId} className="ml-auto" />
         </div>
       </DashboardHeader>
       <main className="flex-1 sm:p-4">
