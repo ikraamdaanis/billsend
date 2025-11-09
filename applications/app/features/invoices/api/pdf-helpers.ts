@@ -1,7 +1,6 @@
 import { db } from "db";
-import { invoice as invoiceSchema } from "db/schema";
+import { client, invoice as invoiceSchema, organization } from "db/schema";
 import { and, eq } from "drizzle-orm";
-import { fetchInvoiceForPrint } from "features/invoices/api/fetch-invoice-for-print";
 import { generatePdfReact } from "features/invoices/api/generate-pdf-react";
 import { generatePdfFilename } from "features/invoices/utils/pdf-filename";
 import { auth } from "lib/auth";
@@ -50,9 +49,27 @@ export async function validateInvoiceAccess(
 export async function generatePdfForInvoice(
   invoiceId: string
 ): Promise<Response> {
-  // Fetch invoice data for filename generation
-  const loaderData = await fetchInvoiceForPrint({ data: { invoiceId } });
-  const { invoice } = loaderData;
+  // Fetch invoice data directly (we're already on the server)
+  const invoiceData = await db
+    .select({
+      invoice: invoiceSchema,
+      client,
+      organization
+    })
+    .from(invoiceSchema)
+    .innerJoin(client, eq(invoiceSchema.clientId, client.id))
+    .innerJoin(organization, eq(invoiceSchema.organizationId, organization.id))
+    .where(eq(invoiceSchema.id, invoiceId))
+    .limit(1);
+
+  if (!invoiceData.length) {
+    throw new Error("Invoice not found");
+  }
+
+  const invoice = {
+    ...invoiceData[0].invoice,
+    client: invoiceData[0].client
+  };
 
   // Generate PDF using react-pdf
   const pdfBuffer = await generatePdfReact(invoiceId);
