@@ -1,6 +1,13 @@
 import type { DocumentProps } from "@react-pdf/renderer";
 import { renderToBuffer } from "@react-pdf/renderer";
-import { fetchInvoiceForPrint } from "features/invoices/api/fetch-invoice-for-print";
+import { db } from "db";
+import {
+  client,
+  invoice as invoiceSchema,
+  invoiceTemplate,
+  organization
+} from "db/schema";
+import { and, eq } from "drizzle-orm";
 import { InvoicePdfDocument } from "features/invoices/components/pdf/invoice-pdf-document";
 import type { InvoiceQueryResult } from "features/invoices/queries/invoice-query";
 import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
@@ -10,10 +17,70 @@ import type { ReactElement } from "react";
 import { createElement } from "react";
 
 export async function generatePdfReact(invoiceId: string): Promise<Buffer> {
-  // Fetch invoice data
-  const loaderData = await fetchInvoiceForPrint({ data: { invoiceId } });
+  // Fetch invoice data directly (we're already on the server)
+  const invoiceData = await db
+    .select({
+      invoice: invoiceSchema,
+      client,
+      organization
+    })
+    .from(invoiceSchema)
+    .innerJoin(client, eq(invoiceSchema.clientId, client.id))
+    .innerJoin(organization, eq(invoiceSchema.organizationId, organization.id))
+    .where(eq(invoiceSchema.id, invoiceId))
+    .limit(1);
 
-  const { invoice, organization: org, customTemplates } = loaderData;
+  if (!invoiceData.length) {
+    throw new Error("Invoice not found");
+  }
+
+  const invoiceRecord = invoiceData[0].invoice;
+  const clientRecord = invoiceData[0].client;
+  const orgRecord = invoiceData[0].organization;
+
+  const invoice = {
+    ...invoiceRecord,
+    client: clientRecord
+  };
+
+  const org = {
+    name: orgRecord.name,
+    logo: orgRecord.logo
+  };
+
+  // Fetch custom templates if needed
+  let customTemplates: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    tokens: InvoiceTemplate["defaultTokens"];
+    visibility: InvoiceTemplate["defaultVisibility"];
+  }> = [];
+
+  if (invoiceRecord.designSnapshotTemplateId) {
+    const template = await db
+      .select()
+      .from(invoiceTemplate)
+      .where(
+        and(
+          eq(invoiceTemplate.id, invoiceRecord.designSnapshotTemplateId),
+          eq(invoiceTemplate.organizationId, invoiceRecord.organizationId)
+        )
+      )
+      .limit(1);
+
+    if (template.length > 0) {
+      customTemplates = [
+        {
+          id: template[0].id,
+          name: template[0].name,
+          description: template[0].description,
+          tokens: template[0].tokens,
+          visibility: template[0].visibility
+        }
+      ];
+    }
+  }
 
   // Get template (either from defaults or custom templates)
   const getTemplate = (templateId: string): InvoiceTemplate => {
@@ -61,13 +128,11 @@ export async function generatePdfReact(invoiceId: string): Promise<Buffer> {
       tokens: designTokens,
       visibility: designVisibility
     }
-  });
+  }) as ReactElement<DocumentProps>;
 
   // renderToBuffer expects a Document element, cast to satisfy type checker
   // InvoicePdfDocument returns a Document component, so this is safe at runtime
-  const pdfBuffer = (await renderToBuffer(
-    pdfElement as ReactElement<DocumentProps>
-  )) as Buffer;
+  const pdfBuffer = await renderToBuffer(pdfElement);
 
   return pdfBuffer;
 }
