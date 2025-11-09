@@ -43,10 +43,13 @@ export const Route = createFileRoute("/api/pdf/view")({
           // Validate PDF service URL format
           try {
             new URL(pdfServiceUrl);
-          } catch {
-            return new Response("Invalid PDF service configuration", {
-              status: 500
-            });
+          } catch (error) {
+            return new Response(
+              `Invalid PDF service configuration${error instanceof Error ? error.message : ""}`,
+              {
+                status: 500
+              }
+            );
           }
 
           // Call PDF service with timeout
