@@ -40,27 +40,59 @@ export const Route = createFileRoute("/api/pdf/view")({
               : `http://localhost:${process.env.PORT || 3000}`);
           const printUrl = `${appUrl}/print/${invoiceId}?token=${encodeURIComponent(token)}${exp ? `&exp=${exp}` : ""}`;
 
-          // Call PDF service
-          const response = await fetch(`${pdfServiceUrl}/generate-pdf`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${pdfServiceKey}`
-            },
-            body: JSON.stringify({
-              url: printUrl,
-              fileName: `invoice-${invoiceId}.pdf`,
-              disposition: "inline"
-            })
-          });
+          // Validate PDF service URL format
+          try {
+            new URL(pdfServiceUrl);
+          } catch {
+            return new Response("Invalid PDF service configuration", {
+              status: 500
+            });
+          }
+
+          // Call PDF service with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+          let response: Response;
+          try {
+            response = await fetch(`${pdfServiceUrl}/generate-pdf`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${pdfServiceKey}`
+              },
+              body: JSON.stringify({
+                url: printUrl,
+                fileName: `invoice-${invoiceId}.pdf`,
+                disposition: "inline"
+              }),
+              signal: controller.signal
+            });
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (
+              fetchError instanceof Error &&
+              fetchError.name === "AbortError"
+            ) {
+              return new Response("PDF generation timeout", { status: 504 });
+            }
+            throw fetchError;
+          } finally {
+            clearTimeout(timeoutId);
+          }
 
           if (!response.ok) {
             const error = await response.json().catch(() => ({
               error: "Failed to generate PDF"
             }));
 
-            return new Response(error.error || "Failed to generate PDF", {
-              status: response.status
+            const errorMessage =
+              process.env.NODE_ENV === "production"
+                ? "Failed to generate PDF"
+                : error.error || "Failed to generate PDF";
+
+            return new Response(errorMessage, {
+              status: response.status >= 500 ? 500 : response.status
             });
           }
 
@@ -74,7 +106,12 @@ export const Route = createFileRoute("/api/pdf/view")({
           });
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : "Internal server error";
+            process.env.NODE_ENV === "production"
+              ? "Internal server error"
+              : error instanceof Error
+                ? error.message
+                : "Internal server error";
+
           return new Response(errorMessage, { status: 500 });
         }
       }
