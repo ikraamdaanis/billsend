@@ -1,5 +1,6 @@
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
+import { existsSync } from "node:fs";
 import puppeteer, { Browser, Page } from "puppeteer";
 
 // Validate environment variables on startup
@@ -18,6 +19,22 @@ const MAX_CONCURRENT_REQUESTS = 5;
 let activeRequests = 0;
 const requestQueue: Array<() => void> = [];
 
+async function ensureChromeInstalled(): Promise<void> {
+  try {
+    const executablePath = puppeteer.executablePath();
+    if (!existsSync(executablePath)) {
+      console.log("Chrome not found, installing...");
+      const { execSync } = await import("node:child_process");
+      execSync("npx puppeteer browsers install chrome", {
+        stdio: "inherit"
+      });
+      console.log("Chrome installed successfully");
+    }
+  } catch (error) {
+    console.warn("Could not verify/install Chrome:", error);
+  }
+}
+
 async function getBrowser(): Promise<Browser> {
   if (browserInstance && browserInstance.isConnected()) {
     return browserInstance;
@@ -27,19 +44,29 @@ async function getBrowser(): Promise<Browser> {
     return browserPromise;
   }
 
-  // Get Chrome executable path (works for both local and Render)
+  // Ensure Chrome is installed before launching
+  await ensureChromeInstalled();
+
+  // Get Chrome executable path
   let executablePath: string | undefined;
   try {
     executablePath =
       process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath();
+
+    // Verify the path exists
+    if (executablePath && !existsSync(executablePath)) {
+      console.warn(
+        `Chrome not found at ${executablePath}, trying to find system Chrome`
+      );
+      executablePath = undefined;
+    }
   } catch (error) {
-    // If executablePath() fails, Puppeteer will try to find Chrome automatically
-    console.warn("Could not determine Chrome executable path, using default");
+    console.warn("Could not determine Chrome executable path:", error);
+    executablePath = undefined;
   }
 
-  browserPromise = puppeteer.launch({
+  const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
     headless: true,
-    ...(executablePath && { executablePath }),
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
@@ -48,7 +75,14 @@ async function getBrowser(): Promise<Browser> {
       "--disable-software-rasterizer",
       "--disable-extensions"
     ]
-  });
+  };
+
+  // Only set executablePath if we have a valid path
+  if (executablePath) {
+    launchOptions.executablePath = executablePath;
+  }
+
+  browserPromise = puppeteer.launch(launchOptions);
 
   browserInstance = await browserPromise;
   browserPromise = null;
