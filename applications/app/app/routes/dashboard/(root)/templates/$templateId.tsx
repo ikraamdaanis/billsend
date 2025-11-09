@@ -12,23 +12,29 @@ import { useGoBack } from "hooks/use-go-back";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { Suspense } from "react";
 
-export const Route = createFileRoute("/dashboard/(root)/templates/$templateId")({
-  component: TemplatePage,
-  loader: ({ context, params }) => {
-    const isDefaultTemplate = Object.keys(INVOICE_TEMPLATES).includes(params.templateId);
-    if (!isDefaultTemplate) {
-      return context.queryClient.prefetchQuery(templateByIdQuery(params.templateId));
-    }
-    return;
-  },
-  head: () => ({
-    meta: [
-      {
-        title: "Template Preview - billsend"
+export const Route = createFileRoute("/dashboard/(root)/templates/$templateId")(
+  {
+    component: TemplatePage,
+    loader: ({ context, params }) => {
+      const isDefaultTemplate = Object.keys(INVOICE_TEMPLATES).includes(
+        params.templateId
+      );
+      if (!isDefaultTemplate) {
+        return context.queryClient.prefetchQuery(
+          templateByIdQuery(params.templateId)
+        );
       }
-    ]
-  })
-});
+      return;
+    },
+    head: () => ({
+      meta: [
+        {
+          title: "Template Preview - billsend"
+        }
+      ]
+    })
+  }
+);
 
 function TemplatePage() {
   const { templateId } = Route.useParams();
@@ -45,46 +51,79 @@ function TemplateContent({ templateId }: { templateId: string }) {
 
   const isDefaultTemplate = Object.keys(INVOICE_TEMPLATES).includes(templateId);
 
-  const { data: dbTemplate } = isDefaultTemplate
-    ? { data: null }
-    : useSuspenseQuery(templateByIdQuery(templateId));
+  return isDefaultTemplate ? (
+    <DefaultTemplateView templateId={templateId} onGoBack={goBack} />
+  ) : (
+    <CustomTemplateView templateId={templateId} onGoBack={goBack} />
+  );
+}
 
-  const template: InvoiceTemplate | null = isDefaultTemplate
-    ? INVOICE_TEMPLATES[templateId as keyof typeof INVOICE_TEMPLATES]
-    : dbTemplate
-      ? {
-          id: dbTemplate.id,
-          name: dbTemplate.name,
-          description: dbTemplate.description || "",
-          defaultTokens: dbTemplate.tokens,
-          defaultVisibility: dbTemplate.visibility
-        }
-      : null;
+function DefaultTemplateView({
+  templateId,
+  onGoBack
+}: {
+  templateId: string;
+  onGoBack: () => void;
+}) {
+  const template =
+    INVOICE_TEMPLATES[templateId as keyof typeof INVOICE_TEMPLATES];
+  const mockInvoice = createMockInvoice();
+  const mockOrganization = {
+    name: "Your Company",
+    logo: null
+  };
 
-  if (!template) {
-    return (
-      <div className="flex flex-1 flex-col bg-white">
-        <DashboardHeader>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon-sm" onClick={goBack}>
-              <ArrowLeft className="size-4 shrink-0" />
-            </Button>
-            <h2 className="text-base font-medium text-gray-900">
-              Template not found
-            </h2>
+  return (
+    <div className="flex flex-1 flex-col bg-white">
+      <DashboardHeader>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon-sm" onClick={onGoBack}>
+            <ArrowLeft className="size-4 shrink-0" />
+          </Button>
+          <h2 className="text-base font-medium text-gray-900">
+            {template.name} Template Preview
+          </h2>
+        </div>
+        <div className="ml-auto text-sm text-gray-500">Default Template</div>
+      </DashboardHeader>
+      <main className="flex flex-1 flex-col overflow-hidden bg-gray-50">
+        <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-8 sm:pt-8">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="invoice-preview-container w-full bg-white shadow-sm">
+              <div className="p-4 pb-12 sm:p-8">
+                <InvoicePreview
+                  invoice={mockInvoice}
+                  organization={mockOrganization}
+                  template={template}
+                />
+              </div>
+            </div>
           </div>
-        </DashboardHeader>
-        <main className="flex-1 p-4">
-          <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-white p-12">
-            <p className="text-sm text-gray-600">Template not found</p>
-            <Link to="/dashboard/templates" className="mt-4">
-              <Button>Back to Templates</Button>
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
+          <div className="no-print h-8 shrink-0" />
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function CustomTemplateView({
+  templateId,
+  onGoBack
+}: {
+  templateId: string;
+  onGoBack: () => void;
+}) {
+  const { data: dbTemplate } = useSuspenseQuery(
+    templateByIdQuery(templateId, false)
+  );
+
+  const template: InvoiceTemplate = {
+    id: dbTemplate.id,
+    name: dbTemplate.name,
+    description: dbTemplate.description || "",
+    defaultTokens: dbTemplate.tokens,
+    defaultVisibility: dbTemplate.visibility
+  };
 
   const mockInvoice = createMockInvoice();
   const mockOrganization = {
@@ -96,25 +135,23 @@ function TemplateContent({ templateId }: { templateId: string }) {
     <div className="flex flex-1 flex-col bg-white">
       <DashboardHeader>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon-sm" onClick={goBack}>
+          <Button variant="ghost" size="icon-sm" onClick={onGoBack}>
             <ArrowLeft className="size-4 shrink-0" />
           </Button>
           <h2 className="text-base font-medium text-gray-900">
             {template.name} Template Preview
           </h2>
         </div>
-          {!isDefaultTemplate && (
-            <Link
-              to="/dashboard/templates/$templateId/edit"
-              params={{ templateId }}
-              className="ml-auto"
-            >
-              <Button size="sm">
-                <Pencil className="size-3 shrink-0" />
-                Edit
-              </Button>
-            </Link>
-          )}
+        <Link
+          to="/dashboard/templates/$templateId/edit"
+          params={{ templateId }}
+          className="ml-auto"
+        >
+          <Button size="sm">
+            <Pencil className="size-3 shrink-0" />
+            Edit
+          </Button>
+        </Link>
       </DashboardHeader>
       <main className="flex flex-1 flex-col overflow-hidden bg-gray-50">
         <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-4 sm:px-8 sm:pt-8">

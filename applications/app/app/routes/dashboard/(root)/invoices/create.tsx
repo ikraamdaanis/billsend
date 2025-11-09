@@ -97,6 +97,7 @@ function CreateInvoicePage() {
       startTransition(async () => {
         try {
           const lineItems = value.lineItems.map(item => ({
+            clientId: value.clientId,
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,

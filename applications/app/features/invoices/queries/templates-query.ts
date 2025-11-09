@@ -13,11 +13,15 @@ export function templatesQuery() {
   });
 }
 
-export function templateByIdQuery(templateId: string) {
+export function templateByIdQuery(
+  templateId: string,
+  isDefaultTemplate = false
+) {
   return queryOptions({
     queryKey: ["template", templateId],
     queryFn: () => getTemplateById({ data: { templateId } }),
-    placeholderData: prev => prev
+    placeholderData: prev => prev,
+    enabled: isDefaultTemplate === false
   });
 }
 

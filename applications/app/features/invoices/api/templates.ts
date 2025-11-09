@@ -42,6 +42,7 @@ export const getTemplateById = createServerFn({
     })
   )
   .handler(async ({ data }) => {
+    console.log("getTemplateById", data);
     const session = await auth.api.getSession({
       headers: getRequest().headers
     });
@@ -58,7 +59,7 @@ export const getTemplateById = createServerFn({
 
     if (!organizationId) throw new Error("No organization found");
 
-    const [template] = await db
+    const template = await db
       .select()
       .from(invoiceTemplate)
       .where(
@@ -69,9 +70,9 @@ export const getTemplateById = createServerFn({
       )
       .limit(1);
 
-    if (!template) throw new Error("Template not found");
+    if (template.length === 0) throw new Error("Template not found");
 
-    return template;
+    return template[0];
   });
 
 const createTemplateSchema = z.object({
@@ -121,7 +122,7 @@ export const createTemplate = createServerFn({
 
     if (!organizationId) throw new Error("No organization found");
 
-    const userId = session.user?.id;
+    const userId = session.user.id;
 
     const [newTemplate] = await db
       .insert(invoiceTemplate)
@@ -188,7 +189,7 @@ export const updateTemplate = createServerFn({
 
     if (!organizationId) throw new Error("No organization found");
 
-    const [updatedTemplate] = await db
+    const updatedTemplate = await db
       .update(invoiceTemplate)
       .set({
         name: data.name,
@@ -206,8 +207,7 @@ export const updateTemplate = createServerFn({
       )
       .returning();
 
-    if (!updatedTemplate) throw new Error("Template not found");
+    if (!updatedTemplate.length) throw new Error("Template not found");
 
     return updatedTemplate;
   });
-
