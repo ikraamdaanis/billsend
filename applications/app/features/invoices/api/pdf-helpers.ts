@@ -1,12 +1,15 @@
 import { db } from "db";
 import { invoice as invoiceSchema } from "db/schema";
 import { and, eq } from "drizzle-orm";
+import { fetchInvoiceForPrint } from "features/invoices/api/fetch-invoice-for-print";
+import { generatePdfReact } from "features/invoices/api/generate-pdf-react";
+import { generatePdfFilename } from "features/invoices/utils/pdf-filename";
 import { auth } from "lib/auth";
 
-export async function generatePrintTokenForInvoice(
+export async function validateInvoiceAccess(
   invoiceId: string,
   headers: Headers
-): Promise<{ token: string; exp: number }> {
+): Promise<void> {
   // Authenticate user
   const session = await auth.api.getSession({ headers });
 
@@ -42,117 +45,40 @@ export async function generatePrintTokenForInvoice(
   if (!invoiceData.length) {
     throw new Error("Invoice not found");
   }
-
-  const secret = process.env.PRINT_ROUTE_SECRET;
-
-  if (!secret) {
-    throw new Error("PRINT_ROUTE_SECRET not configured");
-  }
-
-  // Generate secure token with expiry (5 minutes)
-  const exp = Date.now() + 5 * 60 * 1000; // 5 minutes from now
-  const message = `${invoiceId}.${exp}`;
-
-  // Generate HMAC signature
-  const { createHmac } = await import("node:crypto");
-  const token = createHmac("sha256", secret)
-    .update(message)
-    .digest("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-
-  return { token, exp };
 }
 
 export async function generatePdfForInvoice(
-  invoiceId: string,
-  token: string,
-  exp: number | undefined,
-  requestHeaders: Headers
+  invoiceId: string
 ): Promise<Response> {
-  // Validate token first
-  const { validatePrintToken } = await import("features/invoices/api/validate-print-token");
-  await validatePrintToken({
-    data: {
-      invoiceId,
-      token,
-      exp
-    }
-  });
+  // Fetch invoice data for filename generation
+  const loaderData = await fetchInvoiceForPrint({ data: { invoiceId } });
+  const { invoice } = loaderData;
 
-  // Get PDF service configuration
-  const pdfServiceUrl = process.env.API_URL;
-  const pdfServiceKey = process.env.API_KEY;
+  // Generate PDF using react-pdf
+  const pdfBuffer = await generatePdfReact(invoiceId);
 
-  if (!pdfServiceUrl || !pdfServiceKey) {
-    throw new Error("PDF service not configured");
-  }
+  // Generate filename: YYYY-mm-dd-$clientname-kebab-case-$invoicenumber-kebab-case
+  const filename = generatePdfFilename(
+    invoice.invoiceDate,
+    invoice.client.name,
+    invoice.invoiceNumber
+  );
 
-  // Generate print URL with token
-  const appUrl =
-    process.env.APP_URL ||
-    (requestHeaders.get("host")
-      ? `${requestHeaders.get("x-forwarded-proto") || "http"}://${requestHeaders.get("host")}`
-      : `http://localhost:${process.env.PORT || 3000}`);
-  const printUrl = `${appUrl}/print/${invoiceId}?token=${encodeURIComponent(token)}${exp ? `&exp=${exp}` : ""}`;
+  // Encode filename for Content-Disposition header (RFC 5987)
+  // Use both filename (for compatibility) and filename* (for UTF-8)
+  const encodedFilename = encodeURIComponent(filename);
 
-  // Validate PDF service URL format
-  try {
-    new URL(pdfServiceUrl);
-  } catch {
-    throw new Error("Invalid PDF service configuration");
-  }
+  // Convert Buffer to Uint8Array for Response
+  const pdfArray = new Uint8Array(pdfBuffer);
 
-  // Call PDF service with timeout
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-
-  let response: Response;
-  try {
-    response = await fetch(`${pdfServiceUrl}/generate-pdf`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${pdfServiceKey}`
-      },
-      body: JSON.stringify({
-        url: printUrl,
-        fileName: `invoice-${invoiceId}.pdf`,
-        disposition: "inline"
-      }),
-      signal: controller.signal
-    });
-  } catch (fetchError) {
-    clearTimeout(timeoutId);
-    if (fetchError instanceof Error && fetchError.name === "AbortError") {
-      throw new Error("PDF generation timeout");
-    }
-    throw fetchError;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      error: "Failed to generate PDF"
-    }));
-
-    const errorMessage =
-      process.env.NODE_ENV === "production"
-        ? "Failed to generate PDF"
-        : error.error || "Failed to generate PDF";
-
-    throw new Error(errorMessage);
-  }
-
-  // Return PDF blob as Response
-  const pdfBlob = await response.blob();
-  return new Response(pdfBlob, {
+  // Return PDF as Response
+  return new Response(pdfArray, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="invoice-${invoiceId}.pdf"`
+      "Content-Disposition": `inline; filename="${filename}"; filename*=UTF-8''${encodedFilename}`,
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0"
     }
   });
 }
-

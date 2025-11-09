@@ -90,7 +90,7 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
               Design Invoice
             </Button>
           </Link>
-          <PrintButton invoiceId={invoiceId} className="ml-auto" />
+          <PrintButton invoiceId={invoiceId} invoice={invoice} className="ml-auto" />
         </div>
       </DashboardHeader>
       <main className="flex-1 sm:p-4">
