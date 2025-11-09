@@ -1,23 +1,24 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
 import { Skeleton } from "components/ui/skeleton";
 import { sessionQuery } from "features/auth/queries/session-query";
+import { updateInvoiceDesign } from "features/invoices/api/update-invoice-design";
 import { DesignControls } from "features/invoices/components/design-controls";
 import { EditorLayout } from "features/invoices/components/editor-layout";
 import { InvoicePreviewContainer } from "features/invoices/components/invoice-preview-container";
 import { PrintButton } from "features/invoices/components/print-button";
-import { TemplatePicker } from "features/invoices/components/template-picker";
+import { TemplateSelector } from "features/invoices/components/template-selector";
+import { useDesignState } from "features/invoices/hooks/use-design-state";
 import { invoiceQuery } from "features/invoices/queries/invoice-query";
+import { templatesQuery } from "features/invoices/queries/templates-query";
 import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
-import type { InvoiceDesignOverrides } from "features/invoices/templates/types";
-import {
-  loadDesign,
-  saveDesign
-} from "features/invoices/utils/designer-storage";
+import type { InvoiceTemplate } from "features/invoices/templates/types";
 import { useDocumentTitle } from "hooks/use-document-title";
+import { getErrorMessage } from "lib/get-error-message";
 import { ArrowLeft } from "lucide-react";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useRef, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute(
   "/dashboard/(editor)/invoices/$invoiceId/design"
@@ -50,6 +51,7 @@ export const Route = createFileRoute(
   loader: ({ context, params }) => {
     context.queryClient.prefetchQuery(invoiceQuery(params.invoiceId));
     context.queryClient.prefetchQuery(sessionQuery());
+    context.queryClient.prefetchQuery(templatesQuery());
   },
   head: () => ({
     meta: [
@@ -73,64 +75,136 @@ function InvoiceDesignPage() {
 function InvoiceDesignContent({ invoiceId }: { invoiceId: string }) {
   const { data: invoice } = useSuspenseQuery(invoiceQuery(invoiceId));
   const { data: session } = useSuspenseQuery(sessionQuery());
+  const { data: allTemplates } = useSuspenseQuery(templatesQuery());
 
   useDocumentTitle(`Design Invoice #${invoice.invoiceNumber} | billsend`);
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isPending, startTransition] = useTransition();
 
+  // Show all custom templates for now (client-specific filtering can be added later)
+  const customTemplates = allTemplates;
+
+  // Determine initial template from invoice snapshot or default
+  const initialTemplateId = invoice.designSnapshotTemplateId || "classic";
   const [selectedTemplateId, setSelectedTemplateId] =
-    useState<string>("classic");
-  const [designOverrides, setDesignOverrides] = useState<
-    InvoiceDesignOverrides | undefined
-  >(undefined);
+    useState(initialTemplateId);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  useEffect(() => {
-    const saved = loadDesign(invoiceId);
-    if (saved) {
-      setSelectedTemplateId(saved.templateId);
-      setDesignOverrides(saved);
+  // Get template (either from defaults or custom templates)
+  const getTemplate = (templateId: string): InvoiceTemplate => {
+    // Check if it's a default template
+    if (templateId in INVOICE_TEMPLATES) {
+      return INVOICE_TEMPLATES[templateId as keyof typeof INVOICE_TEMPLATES];
     }
-  }, [invoiceId]);
 
-  const debouncedSave = (overrides: InvoiceDesignOverrides) => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
+    // Check custom templates
+    const customTemplate = customTemplates.find(t => t.id === templateId);
+    if (customTemplate) {
+      return {
+        id: customTemplate.id,
+        name: customTemplate.name,
+        description: customTemplate.description || "",
+        defaultTokens: customTemplate.tokens,
+        defaultVisibility: customTemplate.visibility
+      };
     }
-    saveTimeoutRef.current = setTimeout(() => {
-      saveDesign(invoiceId, overrides);
-    }, 300);
+
+    // Fallback to classic template
+    return INVOICE_TEMPLATES.classic;
   };
+
+  const selectedTemplate = getTemplate(selectedTemplateId);
+
+  // Get initial tokens/visibility from invoice snapshot or template defaults
+  const getInitialTokens = () => {
+    if (invoice.designSnapshotTokens) {
+      return invoice.designSnapshotTokens;
+    }
+    return selectedTemplate.defaultTokens;
+  };
+
+  const getInitialVisibility = () => {
+    if (invoice.designSnapshotVisibility) {
+      return invoice.designSnapshotVisibility;
+    }
+    return selectedTemplate.defaultVisibility;
+  };
+
+  const {
+    designTokens,
+    designVisibility,
+    setDesignTokens,
+    setDesignVisibility,
+    handleDesignChange
+  } = useDesignState(getInitialTokens(), getInitialVisibility(), previewRef);
 
   const handleTemplateChange = (templateId: string) => {
     setSelectedTemplateId(templateId);
-    const newOverrides: InvoiceDesignOverrides = {
-      templateId
-    };
-    setDesignOverrides(newOverrides);
-    debouncedSave(newOverrides);
+    const template = getTemplate(templateId);
+    setDesignTokens(template.defaultTokens);
+    setDesignVisibility(template.defaultVisibility);
+    setHasUnsavedChanges(true);
   };
 
-  const handleDesignChange = (overrides: InvoiceDesignOverrides) => {
-    const newOverrides: InvoiceDesignOverrides = {
-      ...overrides,
-      templateId: selectedTemplateId
-    };
-    setDesignOverrides(newOverrides);
-    debouncedSave(newOverrides);
+  const handleDesignChangeWithUnsaved = (
+    overrides: Parameters<typeof handleDesignChange>[0]
+  ) => {
+    handleDesignChange(overrides);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleSave = () => {
+    startTransition(async () => {
+      try {
+        // Only save custom template IDs (UUIDs), not default template IDs
+        const isDefaultTemplate = selectedTemplateId in INVOICE_TEMPLATES;
+        const templateIdToSave = isDefaultTemplate ? null : selectedTemplateId;
+
+        await updateInvoiceDesign({
+          data: {
+            invoiceId,
+            designSnapshotTemplateId: templateIdToSave,
+            designSnapshotTokens: designTokens,
+            designSnapshotVisibility: designVisibility,
+            designSnapshotLogoPosition: designTokens.logoPosition
+          }
+        });
+
+        // Invalidate invoice query to refetch updated data
+        queryClient.invalidateQueries({
+          queryKey: invoiceQuery(invoiceId).queryKey
+        });
+
+        setHasUnsavedChanges(false);
+        toast.success("Invoice design saved successfully");
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Failed to save invoice design"));
+      }
+    });
   };
 
   const handleBack = () => {
+    if (hasUnsavedChanges) {
+      const confirmLeave = confirm(
+        "You have unsaved changes. Are you sure you want to leave?"
+      );
+      if (!confirmLeave) return;
+    }
     navigate({
       to: "/dashboard/invoices/$invoiceId",
       params: { invoiceId }
     });
   };
 
-  const template =
-    INVOICE_TEMPLATES[selectedTemplateId as keyof typeof INVOICE_TEMPLATES];
+  const templateForPreview: InvoiceTemplate = {
+    ...selectedTemplate,
+    defaultTokens: designTokens,
+    defaultVisibility: designVisibility
+  };
 
   const organization = session?.activeOrganization
     ? {
@@ -140,24 +214,37 @@ function InvoiceDesignContent({ invoiceId }: { invoiceId: string }) {
     : { name: "Your Company", logo: null };
 
   const settingsContent = (
-    <div className="flex flex-col gap-8 p-4 pb-0">
-      <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 p-4 pb-0">
+      <div className="flex flex-col gap-2">
         <h3 className="text-sm font-semibold text-gray-900">Templates</h3>
-        <TemplatePicker
+        <TemplateSelector
           selectedTemplateId={selectedTemplateId}
+          customTemplates={customTemplates}
           onSelect={handleTemplateChange}
         />
       </div>
       <div className="flex flex-col gap-4">
-        <h3 className="text-sm font-semibold text-gray-900">Customise</h3>
         <DesignControls
-          defaultTokens={template.defaultTokens}
-          defaultVisibility={template.defaultVisibility}
+          defaultTokens={selectedTemplate.defaultTokens}
+          defaultVisibility={selectedTemplate.defaultVisibility}
           templateId={selectedTemplateId}
-          overrides={designOverrides}
-          onChange={handleDesignChange}
+          overrides={{
+            templateId: selectedTemplateId,
+            tokens: designTokens,
+            visibility: designVisibility
+          }}
+          onChange={handleDesignChangeWithUnsaved}
           previewRef={previewRef}
         />
+      </div>
+      <div className="border-border sticky bottom-0 z-10 flex gap-4 border-t bg-white py-4">
+        <Button
+          onClick={handleSave}
+          disabled={!hasUnsavedChanges || isPending}
+          className="w-full"
+        >
+          {isPending ? "Saving..." : "Save Design"}
+        </Button>
       </div>
     </div>
   );
@@ -175,8 +262,12 @@ function InvoiceDesignContent({ invoiceId }: { invoiceId: string }) {
         previewRef={previewRef}
         invoice={invoice}
         organization={organization}
-        template={template}
-        overrides={designOverrides}
+        template={templateForPreview}
+        overrides={{
+          templateId: selectedTemplateId,
+          tokens: designTokens,
+          visibility: designVisibility
+        }}
       />
     </EditorLayout>
   );

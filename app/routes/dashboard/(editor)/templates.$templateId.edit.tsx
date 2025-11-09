@@ -231,7 +231,7 @@ function EditTemplateContent({ templateId }: { templateId: string }) {
             previewRef={previewRef}
           />
         </div>
-        <div className="border-border sticky bottom-0 z-10 flex gap-4 border-t bg-white p-4">
+        <div className="border-border sticky bottom-0 z-10 flex gap-4 border-t bg-white py-4">
           <Link
             to="/dashboard/templates/$templateId"
             params={{ templateId }}

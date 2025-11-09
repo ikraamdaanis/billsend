@@ -13,7 +13,7 @@ export function TemplateCard({
 }) {
   return (
     <Link to={href}>
-      <Card className="group flex h-full flex-col gap-3 p-6 transition-shadow hover:shadow-md">
+      <Card className="group flex h-full flex-col gap-3 p-6 transition hover:border-gray-300 hover:bg-zinc-50">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-1 flex-col gap-2">
             <div className="flex items-center gap-2">
@@ -32,14 +32,19 @@ export function TemplateCard({
           />
         </div>
         <div className="mt-auto flex items-center gap-2 text-sm text-gray-500">
-          <span className="capitalize">{template.defaultTokens.fontFamily}</span>
+          <span className="capitalize">
+            {template.defaultTokens.fontFamily}
+          </span>
           <span>•</span>
-          <span className="capitalize">{template.defaultTokens.baseTextSize}</span>
+          <span className="capitalize">
+            {template.defaultTokens.baseTextSize}
+          </span>
           <span>•</span>
-          <span className="capitalize">{template.defaultTokens.borderStyle}</span>
+          <span className="capitalize">
+            {template.defaultTokens.borderStyle}
+          </span>
         </div>
       </Card>
     </Link>
   );
 }
-
