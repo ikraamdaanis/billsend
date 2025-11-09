@@ -27,13 +27,26 @@ async function getBrowser(): Promise<Browser> {
     return browserPromise;
   }
 
+  // Get Chrome executable path (works for both local and Render)
+  let executablePath: string | undefined;
+  try {
+    executablePath =
+      process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath();
+  } catch (error) {
+    // If executablePath() fails, Puppeteer will try to find Chrome automatically
+    console.warn("Could not determine Chrome executable path, using default");
+  }
+
   browserPromise = puppeteer.launch({
     headless: true,
+    ...(executablePath && { executablePath }),
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
-      "--disable-gpu"
+      "--disable-gpu",
+      "--disable-software-rasterizer",
+      "--disable-extensions"
     ]
   });
 
