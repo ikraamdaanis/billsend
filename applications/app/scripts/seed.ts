@@ -292,14 +292,14 @@ seed()
     process.exit(0);
   });
 
-const config = {
-  N: 16384,
-  r: 16,
-  p: 1,
-  dkLen: 64
-};
-
 async function generateKey(password: string, salt: string) {
+  const config = {
+    N: 16384,
+    r: 16,
+    p: 1,
+    dkLen: 64
+  };
+
   return await scryptAsync(password.normalize("NFKC"), salt, {
     N: config.N,
     p: config.p,

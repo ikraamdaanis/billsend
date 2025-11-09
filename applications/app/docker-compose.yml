@@ -1,3 +1,5 @@
+name: billsend
+
 services:
   db-billsend:
     image: postgres:17
