@@ -2,11 +2,13 @@
 
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/bricolage-grotesque";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-geist: "Geist Variable", sans-serif;
+  --font-bricolage-grotesque: "Bricolage Grotesque Variable", sans-serif;
 
   --color-brand-50: #fef3f2;
   --color-brand-100: #ffe3e1;

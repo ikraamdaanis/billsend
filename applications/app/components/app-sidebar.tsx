@@ -58,7 +58,7 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu className="flex flex-row items-center justify-between gap-2">
           <SidebarMenuItem className="flex items-center pl-2">
-            <h1 className="text-brand-500 truncate text-xl font-bold">
+            <h1 className="text-brand-500 font-bricolage-grotesque truncate text-xl font-bold">
               billsend
             </h1>
           </SidebarMenuItem>
