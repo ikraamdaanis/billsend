@@ -1,3 +1,4 @@
+import bricolageGrotesqueFont from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-standard-normal.woff2?url";
 import geistFont from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
 import type { QueryClient } from "@tanstack/react-query";
 import {
@@ -29,6 +30,13 @@ export const Route = createRootRouteWithContext<{
       {
         rel: "preload",
         href: geistFont,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous"
+      },
+      {
+        rel: "preload",
+        href: bricolageGrotesqueFont,
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous"
