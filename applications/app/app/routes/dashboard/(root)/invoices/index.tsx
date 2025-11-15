@@ -6,6 +6,7 @@ import { StatusBadge } from "components/status-badge";
 import { DataTable } from "components/table";
 import { Button } from "components/ui/button";
 import { Skeleton } from "components/ui/skeleton";
+import dayjs from "dayjs";
 import type { InvoicesQueryResult } from "features/invoices/queries/invoices-query";
 import { invoicesQuery } from "features/invoices/queries/invoices-query";
 import type { InvoiceStatus } from "features/invoices/types";
@@ -153,7 +154,7 @@ function InvoicesTableContent() {
         const date = row.getValue<Date>("invoiceDate");
         return (
           <div className="text-sm text-gray-900">
-            {new Date(date).toLocaleDateString()}
+            {dayjs(date).format("YYYY-MM-DD")}
           </div>
         );
       }
@@ -176,7 +177,7 @@ function InvoicesTableContent() {
         const date = row.getValue<Date>("dueDate");
         return (
           <div className="text-sm text-gray-900">
-            {new Date(date).toLocaleDateString()}
+            {dayjs(date).format("YYYY-MM-DD")}
           </div>
         );
       }

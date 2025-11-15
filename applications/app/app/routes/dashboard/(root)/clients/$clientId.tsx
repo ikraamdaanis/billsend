@@ -14,6 +14,7 @@ import {
   CardTitle
 } from "components/ui/card";
 import { Skeleton } from "components/ui/skeleton";
+import dayjs from "dayjs";
 import { clientQuery } from "features/clients/queries/client-query";
 import type { ClientInvoicesQueryResult } from "features/invoices/queries/client-invoices-query";
 import { clientInvoicesQuery } from "features/invoices/queries/client-invoices-query";
@@ -218,7 +219,7 @@ function ClientInvoices({ clientId }: { clientId: string }) {
         const date = row.getValue<Date>("invoiceDate");
         return (
           <div className="text-sm text-gray-900">
-            {new Date(date).toLocaleDateString()}
+            {dayjs(date).format("YYYY-MM-DD")}
           </div>
         );
       }
@@ -240,7 +241,7 @@ function ClientInvoices({ clientId }: { clientId: string }) {
         const date = row.getValue<Date>("dueDate");
         return (
           <div className="text-sm text-gray-900">
-            {new Date(date).toLocaleDateString()}
+            {dayjs(date).format("YYYY-MM-DD")}
           </div>
         );
       }

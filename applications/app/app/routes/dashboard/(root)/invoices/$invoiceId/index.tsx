@@ -13,6 +13,7 @@ import {
 } from "components/ui/card";
 import { Separator } from "components/ui/separator";
 import { Skeleton } from "components/ui/skeleton";
+import dayjs from "dayjs";
 import { InvoiceLineItemsTable } from "features/invoices/components/invoice-line-items-table";
 import { PrintButton } from "features/invoices/components/print-button";
 import { invoiceQuery } from "features/invoices/queries/invoice-query";
@@ -90,7 +91,11 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
               Design Invoice
             </Button>
           </Link>
-          <PrintButton invoiceId={invoiceId} invoice={invoice} className="ml-auto" />
+          <PrintButton
+            invoiceId={invoiceId}
+            invoice={invoice}
+            className="ml-auto"
+          />
         </div>
       </DashboardHeader>
       <main className="flex-1 sm:p-4">
@@ -106,13 +111,13 @@ function InvoiceDetailContent({ invoiceId }: { invoiceId: string }) {
                     Invoice Date
                   </p>
                   <p className="text-sm text-gray-900">
-                    {new Date(invoice.invoiceDate).toLocaleDateString()}
+                    {dayjs(invoice.invoiceDate).format("YYYY-MM-DD")}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Due Date</p>
                   <p className="text-sm text-gray-900">
-                    {new Date(invoice.dueDate).toLocaleDateString()}
+                    {dayjs(invoice.dueDate).format("YYYY-MM-DD")}
                   </p>
                 </div>
                 {invoice.notes && (

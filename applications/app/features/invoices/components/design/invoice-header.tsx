@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
 import { textSizeStyles } from "features/invoices/utils/utils";
 import { cn } from "lib/utils";
@@ -113,19 +114,11 @@ export function InvoiceHeader({
           </div>
           <div className="text-gray-600">
             <span className="font-medium">Date:</span>{" "}
-            {new Date(invoice.invoiceDate).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "long",
-              year: "numeric"
-            })}
+            {dayjs(invoice.invoiceDate).format("YYYY-MM-DD")}
           </div>
           <div className="text-gray-600">
             <span className="font-medium">Due:</span>{" "}
-            {new Date(invoice.dueDate).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "long",
-              year: "numeric"
-            })}
+            {dayjs(invoice.dueDate).format("YYYY-MM-DD")}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
+import dayjs from "dayjs";
 import {
   ArrowRight,
   BarChart3,
@@ -245,7 +246,7 @@ function HomePage() {
               <h3 className="text-brand-500 text-xl font-bold">billsend</h3>
             </div>
             <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} billsend.io. All rights reserved.
+              © {dayjs().format("YYYY")} billsend.io. All rights reserved.
             </p>
           </div>
         </div>

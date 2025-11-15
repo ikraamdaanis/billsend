@@ -11,6 +11,7 @@ import {
   CardTitle
 } from "components/ui/card";
 import { Skeleton } from "components/ui/skeleton";
+import dayjs from "dayjs";
 import { dashboardStatsQuery } from "features/dashboard/queries/dashboard-stats-query";
 import {
   CheckCircle,
@@ -79,22 +80,17 @@ function DashboardContent() {
         100
       : 0;
 
-  const formatCurrency = (amount: string | number, currency = "GBP") => {
+  function formatCurrency(amount: string | number, currency = "GBP") {
     const num = typeof amount === "string" ? parseFloat(amount) : amount;
     return new Intl.NumberFormat("en-GB", {
       style: "currency",
       currency
     }).format(num);
-  };
+  }
 
-  const formatDate = (date: Date | string) => {
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric"
-    });
-  };
+  function formatDate(date: Date | string) {
+    return dayjs(date).format("YYYY-MM-DD");
+  }
 
   return (
     <main className="lg:hs-[calc(100dvh-4rem)] flex flex-col gap-4 p-4">

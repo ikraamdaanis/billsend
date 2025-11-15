@@ -1,4 +1,5 @@
 import { Image, Text, View } from "@react-pdf/renderer";
+import dayjs from "dayjs";
 import type { InvoiceTemplateTokens } from "features/invoices/templates/types";
 import type { PdfStyles } from "features/invoices/utils/pdf-styles";
 
@@ -24,14 +25,9 @@ export function InvoicePdfHeader({
   };
   styles: PdfStyles;
 }) {
-  const formatDate = (date: Date | string) => {
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-  };
+  function formatDate(date: Date | string) {
+    return dayjs(date).format("YYYY-MM-DD");
+  }
 
   return (
     <>
