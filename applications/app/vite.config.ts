@@ -18,6 +18,10 @@ export default defineConfig({
       }
     }),
     netlify(),
-    viteReact()
+    viteReact({
+      babel: {
+        plugins: ["babel-plugin-react-compiler"]
+      }
+    })
   ]
 });
