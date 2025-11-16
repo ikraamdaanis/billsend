@@ -1,30 +1,30 @@
-import { useForm } from "@tanstack/react-form";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import {
-  createFileRoute,
-  Link,
-  redirect,
-  useNavigate,
-  useRouter
-} from "@tanstack/react-router";
-import { Button } from "components/ui/button";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { Skeleton } from "components/ui/skeleton";
 import { sessionQuery } from "features/auth/queries/session-query";
-import { createTemplate } from "features/invoices/api/templates";
-import { DesignControls } from "features/invoices/components/design-controls";
-import { EditorLayout } from "features/invoices/components/editor-layout";
-import { InvoicePreviewContainer } from "features/invoices/components/invoice-preview-container";
-import { TemplatePicker } from "features/invoices/components/template-picker";
-import { useDesignState } from "features/invoices/hooks/use-design-state";
+import { DesignItem } from "features/invoices/components/design/design-item";
+import { DesignItemSettings } from "features/invoices/components/design/design-item-settings";
+import { EditorLayout } from "features/invoices/components/designer-layout";
 import { templatesQuery } from "features/invoices/queries/templates-query";
-import { INVOICE_TEMPLATES } from "features/invoices/templates/presets";
-import type { InvoiceTemplate } from "features/invoices/templates/types";
-import { createMockInvoice } from "features/invoices/utils/mock-invoice";
-import { getErrorMessage } from "lib/get-error-message";
-import { Suspense, useRef, useState } from "react";
-import { toast } from "sonner";
+import type { TemplatePaths, TemplateValue } from "features/invoices/state";
+import {
+  colorsAtom,
+  createTypedUpdatePath,
+  dateAtom,
+  dateLabelAtom,
+  designStateAtom,
+  dueDateAtom,
+  dueDateLabelAtom,
+  getPathAtom,
+  numberAtom,
+  numberLabelAtom,
+  titleAtom,
+  updatePathAtom
+} from "features/invoices/state";
+import { useAtomValue, useSetAtom } from "jotai";
+import type { ComponentProps, CSSProperties } from "react";
+import { Suspense } from "react";
 
 export const Route = createFileRoute("/dashboard/(editor)/templates/create")({
   component: CreateTemplatePage,
@@ -37,6 +37,7 @@ export const Route = createFileRoute("/dashboard/(editor)/templates/create")({
       if (!cachedUser.activeOrganization) {
         throw redirect({ to: "/create-organisation" });
       }
+
       return { user: cachedUser };
     }
 
@@ -76,216 +77,108 @@ function CreateTemplatePage() {
 }
 
 function CreateTemplateContent() {
-  const router = useRouter();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-
-  const { data: session } = useSuspenseQuery(sessionQuery());
-
-  const [selectedTemplateId, setSelectedTemplateId] =
-    useState<string>("classic");
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const previewRef = useRef<HTMLDivElement | null>(null);
-
-  const selectedTemplate =
-    INVOICE_TEMPLATES[selectedTemplateId as keyof typeof INVOICE_TEMPLATES];
-
-  const {
-    designTokens,
-    designVisibility,
-    setDesignTokens,
-    setDesignVisibility,
-    handleDesignChange
-  } = useDesignState(
-    selectedTemplate.defaultTokens,
-    selectedTemplate.defaultVisibility,
-    previewRef
-  );
-
-  const mockInvoice = createMockInvoice();
-  const mockOrganization = {
-    name: session?.activeOrganization?.name || "Your Company",
-    logo: null
-  };
-
-  const form = useForm({
-    defaultValues: {
-      name: "",
-      description: "",
-      baseTemplateId: selectedTemplateId,
-      tokens: designTokens,
-      visibility: designVisibility
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        await createTemplate({
-          data: {
-            name: value.name,
-            description: value.description || undefined,
-            baseTemplateId: selectedTemplateId,
-            tokens: designTokens,
-            visibility: designVisibility,
-            logoPosition: designTokens.logoPosition
-          }
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: templatesQuery().queryKey
-        });
-
-        toast.success("Template created successfully");
-
-        await navigate({ to: "/dashboard/templates" });
-      } catch (error) {
-        toast.error(
-          getErrorMessage(error, "An error occurred while creating template")
-        );
-      }
-    }
-  });
-
-  const handleTemplateChange = (templateId: string) => {
-    const newTemplate =
-      INVOICE_TEMPLATES[templateId as keyof typeof INVOICE_TEMPLATES];
-
-    setDesignTokens(newTemplate.defaultTokens);
-    setDesignVisibility(newTemplate.defaultVisibility);
-    setSelectedTemplateId(templateId);
-
-    form.setFieldValue("baseTemplateId", templateId);
-    form.setFieldValue("tokens", newTemplate.defaultTokens);
-    form.setFieldValue("visibility", newTemplate.defaultVisibility);
-  };
-
-  const handleBack = () => {
-    router.history.back();
-  };
-
-  const templateForPreview: InvoiceTemplate = {
-    ...selectedTemplate,
-    defaultTokens: designTokens,
-    defaultVisibility: designVisibility
-  };
-
-  const settingsContent = (
-    <div className="flex flex-col gap-8 p-4 pb-0">
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
-        }}
-        className="flex flex-col gap-8"
-      >
-        <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Template Information
-          </h3>
-          <form.Field name="name">
-            {field => (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="name">
-                  Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="My Custom Template"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={e => field.handleChange(e.target.value)}
-                  autoComplete="off"
-                  data-1p-ignore
-                  data-lpignore="true"
-                />
-                {field.state.meta.errors.length > 0 && (
-                  <p className="text-sm text-red-600">
-                    {String(field.state.meta.errors[0])}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
-          <form.Field name="description">
-            {field => (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="description">Description</Label>
-                <textarea
-                  id="description"
-                  rows={3}
-                  placeholder="Optional description for this template"
-                  value={field.state.value}
-                  onBlur={field.handleBlur}
-                  onChange={e => field.handleChange(e.target.value)}
-                  className="border-input bg-background rounded-md border px-3 py-2 text-sm"
-                  autoComplete="off"
-                />
-              </div>
-            )}
-          </form.Field>
-        </div>
-        <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-gray-900">
-            Start with a Template
-          </h3>
-          <TemplatePicker
-            selectedTemplateId={selectedTemplateId}
-            onSelect={handleTemplateChange}
-          />
-        </div>
-        <div className="flex flex-col gap-4">
-          <h3 className="text-sm font-semibold text-gray-900">Customise</h3>
-          <DesignControls
-            defaultTokens={selectedTemplate.defaultTokens}
-            defaultVisibility={selectedTemplate.defaultVisibility}
-            templateId={selectedTemplateId}
-            overrides={{
-              templateId: selectedTemplateId,
-              tokens: designTokens,
-              visibility: designVisibility
-            }}
-            onChange={handleDesignChange}
-            previewRef={previewRef}
-          />
-        </div>
-        <div className="border-border sticky bottom-0 z-10 flex gap-4 border-t bg-white py-4">
-          <Link to="/dashboard/templates" className="flex-1">
-            <Button type="button" variant="outline" className="w-full">
-              Cancel
-            </Button>
-          </Link>
-          <Button
-            type="submit"
-            className="flex-1"
-            disabled={!form.state.canSubmit}
-          >
-            Create Template
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-
   return (
     <EditorLayout
       title="Create Template"
-      onBack={handleBack}
-      settingsContent={settingsContent}
-      settingsOpen={settingsOpen}
-      onSettingsOpenChange={setSettingsOpen}
+      settingsContent={<CreateTemplatePreview />}
     >
-      <InvoicePreviewContainer
-        previewRef={previewRef}
-        invoice={mockInvoice}
-        organization={mockOrganization}
-        template={templateForPreview}
-        overrides={{
-          templateId: selectedTemplateId,
-          tokens: designTokens,
-          visibility: designVisibility
-        }}
-      />
+      <CreateTemplatePreviewContent />
     </EditorLayout>
+  );
+}
+
+function CreateTemplatePreviewContent() {
+  const cssVariables = useAtomValue(colorsAtom) as CSSProperties;
+
+  return (
+    <div className="flex flex-1 flex-col bg-white p-10" style={cssVariables}>
+      <DesignItem path="components.title.value" value={titleAtom} />
+      <div className="flex flex-row items-center gap-2">
+        <DesignItem
+          path="components.numberLabel.value"
+          value={numberLabelAtom}
+        />
+        <DesignItem path="components.number.value" value={numberAtom} />
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <DesignItem path="components.dateLabel.value" value={dateLabelAtom} />
+        <DesignItem path="components.date.value" value={dateAtom} />
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <DesignItem
+          path="components.dueDateLabel.value"
+          value={dueDateLabelAtom}
+        />
+        <DesignItem path="components.dueDate.value" value={dueDateAtom} />
+      </div>
+    </div>
+  );
+}
+
+export function InputUpdater<TPath extends TemplatePaths>({
+  variableName,
+  label,
+  type
+}: {
+  variableName: TPath;
+  label: string;
+  type: ComponentProps<typeof Input>["type"];
+}) {
+  const pathValue = useAtomValue(getPathAtom(variableName));
+  const updatePath = createTypedUpdatePath(useSetAtom(updatePathAtom));
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label>{label}</Label>
+      <Input
+        type={type}
+        value={String(pathValue)}
+        onChange={e =>
+          updatePath(variableName, e.target.value as TemplateValue<TPath>)
+        }
+      />
+    </div>
+  );
+}
+
+function CreateTemplatePreview() {
+  const currentSelectedPath = useAtomValue(designStateAtom);
+  return (
+    <div className="flex flex-1 flex-col gap-6 bg-white p-4">
+      <InputUpdater
+        variableName="colors.--accent-color"
+        label="Accent Colour"
+        type="color"
+      />
+      <InputUpdater
+        variableName="colors.--primary-color"
+        label="Primary Colour"
+        type="color"
+      />
+      <InputUpdater
+        variableName="colors.--text-color"
+        label="Text Colour"
+        type="color"
+      />
+      <InputUpdater
+        variableName="components.title.value"
+        label="Title Label"
+        type="text"
+      />
+      <InputUpdater
+        variableName="components.title.fontSize"
+        label="Font Size"
+        type="number"
+      />
+      <InputUpdater
+        variableName="components.title.fontWeight"
+        label="Font Weight"
+        type="number"
+      />
+      {currentSelectedPath.currentSelectedPath === "components.title.value" && (
+        <DesignItemSettings path="components.title" />
+      )}
+    </div>
   );
 }
 
