@@ -23,7 +23,7 @@ export function InvoicePreviewContainer({
     <div className="mx-auto w-full max-w-3xl">
       <div
         ref={previewRef}
-        className="invoice-preview-container w-full bg-white shadow-sm"
+        className="w-full bg-white shadow-sm"
         data-page-size={template.defaultTokens.pageSize}
       >
         <div className="p-4 pb-12 sm:p-8">
