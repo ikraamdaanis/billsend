@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: user
       POSTGRES_DB: billsend
     ports:
-      - "5434:5432"
+      - "5400:5432"
     volumes:
       - postgres_billsend:/var/lib/postgresql/data
     healthcheck:
