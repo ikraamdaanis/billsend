@@ -169,3 +169,31 @@ export function SelectScrollDownButton({
     </SelectPrimitive.ScrollDownButton>
   );
 }
+
+/**
+ * Native HTML Select component with custom chevron styling
+ */
+export function NativeSelect({
+  className,
+  children,
+  ...props
+}: ComponentProps<"select">) {
+  return (
+    <select
+      className={cn(
+        "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 pr-8 text-sm focus:ring-1 focus:ring-offset-0 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50",
+        className
+      )}
+      style={{
+        backgroundImage: `url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><polyline points='6,9 12,15 18,9'></polyline></svg>")`,
+        backgroundSize: "16px 16px",
+        backgroundPosition: "right 8px center",
+        backgroundRepeat: "no-repeat",
+        appearance: "none"
+      }}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}

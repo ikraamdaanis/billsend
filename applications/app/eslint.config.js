@@ -50,6 +50,19 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_",
           destructuredArrayIgnorePattern: "^_"
         }
+      ],
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          selector: "typeParameter",
+          format: ["PascalCase"],
+          leadingUnderscore: "forbid",
+          trailingUnderscore: "forbid",
+          custom: {
+            regex: "^([A-Z]|T[A-Z][A-Za-z]+)$",
+            match: true
+          }
+        }
       ]
     }
   },

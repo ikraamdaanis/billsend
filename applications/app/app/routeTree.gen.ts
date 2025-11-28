@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as NewRouteImport } from './routes/new'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
@@ -32,6 +33,11 @@ import { Route as DashboardrootInvoicesInvoiceIdIndexRouteImport } from './route
 import { Route as DashboardeditorTemplatesTemplateIdEditRouteImport } from './routes/dashboard/(editor)/templates.$templateId.edit'
 import { Route as DashboardeditorInvoicesInvoiceIdDesignRouteImport } from './routes/dashboard/(editor)/invoices.$invoiceId.design'
 
+const NewRoute = NewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const authRouteRoute = authRouteRouteImport.update({
   id: '/(auth)',
   getParentRoute: () => rootRouteImport,
@@ -155,6 +161,7 @@ const DashboardeditorInvoicesInvoiceIdDesignRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/new': typeof NewRoute
   '/dashboard': typeof DashboardrootRouteRouteWithChildren
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/new': typeof NewRoute
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
@@ -202,6 +210,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
+  '/new': typeof NewRoute
   '/dashboard/(root)': typeof DashboardrootRouteRouteWithChildren
   '/(auth)/create-organisation': typeof authCreateOrganisationRoute
   '/(auth)/login': typeof authLoginRoute
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/new'
     | '/dashboard'
     | '/create-organisation'
     | '/login'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/new'
     | '/create-organisation'
     | '/login'
     | '/signup'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/(auth)'
+    | '/new'
     | '/dashboard/(root)'
     | '/(auth)/create-organisation'
     | '/(auth)/login'
@@ -298,6 +310,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
+  NewRoute: typeof NewRoute
   DashboardrootRouteRoute: typeof DashboardrootRouteRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPdfInvoiceIdRoute: typeof ApiPdfInvoiceIdRouteWithChildren
@@ -308,6 +321,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/new': {
+      id: '/new'
+      path: '/new'
+      fullPath: '/new'
+      preLoaderRoute: typeof NewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/(auth)': {
       id: '/(auth)'
       path: ''
@@ -526,6 +546,7 @@ const ApiPdfInvoiceIdRouteWithChildren = ApiPdfInvoiceIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
+  NewRoute: NewRoute,
   DashboardrootRouteRoute: DashboardrootRouteRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPdfInvoiceIdRoute: ApiPdfInvoiceIdRouteWithChildren,
