@@ -15,11 +15,15 @@ export function getErrorMessage(
   error: unknown,
   defaultMessage: string = "An unexpected error occurred"
 ) {
-  if (error instanceof Error) return error.message;
+  let message = defaultMessage;
 
   if (isErrorContext(error)) {
-    return error.error.message || defaultMessage;
+    message = error.error.message || error.error.statusText;
   }
 
-  return defaultMessage;
+  if (error instanceof Error) {
+    message = error.message;
+  }
+
+  return message;
 }
