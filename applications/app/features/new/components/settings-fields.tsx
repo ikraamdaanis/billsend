@@ -22,7 +22,9 @@ export const AlignSettings = memo(function AlignSettings({
 }) {
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-align font-medium">Align</Label>
+      <Label htmlFor="text-align" className="text-xs font-medium">
+        Align
+      </Label>
       <div className="flex items-center justify-end gap-2">
         <ToggleGroup
           type="single"
@@ -70,7 +72,7 @@ export const SizeSettings = memo(function SizeSettings({
 }) {
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-size" className="font-medium">
+      <Label htmlFor="text-size" className="text-xs font-medium">
         Size
       </Label>
       <div className="flex items-center justify-end gap-2">
@@ -102,7 +104,7 @@ export const FontWeightSettings = memo(function FontWeightSettings({
 }) {
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-weight" className="font-medium">
+      <Label htmlFor="text-weight" className="text-xs font-medium">
         Weight
       </Label>
       <div className="flex items-center justify-end gap-2">
@@ -148,7 +150,7 @@ export const ColorSettings = memo(function ColorSettings({
 }) {
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-color" className="font-medium">
+      <Label htmlFor="text-color" className="text-xs font-medium">
         {label}
       </Label>
       <div className="flex items-center justify-end gap-2">

@@ -1,4 +1,5 @@
 import { Label } from "components/ui/label";
+import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import {
   AlignSettings,
@@ -129,7 +130,7 @@ export const LineItemsSettings = memo(function LineItemsSettings() {
 const DescriptionSettings = memo(function DescriptionSettings() {
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-medium">Header Settings</h3>
+      <h3 className="text-sm font-medium">Header settings</h3>
       <div className="flex flex-col gap-2">
         <DescriptionHeaderAlign />
         <DescriptionHeaderSize />
@@ -137,14 +138,16 @@ const DescriptionSettings = memo(function DescriptionSettings() {
         <DescriptionHeaderColor />
         <DescriptionHeaderLabel />
       </div>
-      <h3 className="font-medium">Row Settings</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Row settings</h3>
       <div className="flex flex-col gap-2">
         <DescriptionRowAlign />
         <DescriptionRowSize />
         <DescriptionRowWeight />
         <DescriptionRowColor />
       </div>
-      <h3 className="font-medium">Table Design</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Table design</h3>
       <TableDesignSettings />
     </div>
   );
@@ -154,7 +157,7 @@ const DescriptionSettings = memo(function DescriptionSettings() {
 const QuantitySettings = memo(function QuantitySettings() {
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-medium">Header Settings</h3>
+      <h3 className="text-sm font-medium">Header settings</h3>
       <div className="flex flex-col gap-2">
         <QuantityHeaderAlign />
         <QuantityHeaderSize />
@@ -162,14 +165,16 @@ const QuantitySettings = memo(function QuantitySettings() {
         <QuantityHeaderColor />
         <QuantityHeaderLabel />
       </div>
-      <h3 className="font-medium">Row Settings</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Row settings</h3>
       <div className="flex flex-col gap-2">
         <QuantityRowAlign />
         <QuantityRowSize />
         <QuantityRowWeight />
         <QuantityRowColor />
       </div>
-      <h3 className="font-medium">Table Design</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Table design</h3>
       <TableDesignSettings />
     </div>
   );
@@ -179,7 +184,7 @@ const QuantitySettings = memo(function QuantitySettings() {
 const UnitPriceSettings = memo(function UnitPriceSettings() {
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-medium">Header Settings</h3>
+      <h3 className="text-sm font-medium">Header settings</h3>
       <div className="flex flex-col gap-2">
         <UnitPriceHeaderAlign />
         <UnitPriceHeaderSize />
@@ -187,14 +192,16 @@ const UnitPriceSettings = memo(function UnitPriceSettings() {
         <UnitPriceHeaderColor />
         <UnitPriceHeaderLabel />
       </div>
-      <h3 className="font-medium">Row Settings</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Row settings</h3>
       <div className="flex flex-col gap-2">
         <UnitPriceRowAlign />
         <UnitPriceRowSize />
         <UnitPriceRowWeight />
         <UnitPriceRowColor />
       </div>
-      <h3 className="font-medium">Table Design</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Table design</h3>
       <TableDesignSettings />
     </div>
   );
@@ -204,7 +211,7 @@ const UnitPriceSettings = memo(function UnitPriceSettings() {
 const AmountSettings = memo(function AmountSettings() {
   return (
     <div className="flex flex-col gap-4">
-      <h3 className="font-medium">Header Settings</h3>
+      <h3 className="text-sm font-medium">Header settings</h3>
       <div className="flex flex-col gap-2">
         <AmountHeaderAlign />
         <AmountHeaderSize />
@@ -212,14 +219,16 @@ const AmountSettings = memo(function AmountSettings() {
         <AmountHeaderColor />
         <AmountHeaderLabel />
       </div>
-      <h3 className="font-medium">Row Settings</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Row settings</h3>
       <div className="flex flex-col gap-2">
         <AmountRowAlign />
         <AmountRowSize />
         <AmountRowWeight />
         <AmountRowColor />
       </div>
-      <h3 className="font-medium">Table Design</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Table design</h3>
       <TableDesignSettings />
     </div>
   );

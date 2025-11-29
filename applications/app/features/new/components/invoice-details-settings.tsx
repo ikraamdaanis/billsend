@@ -1,3 +1,4 @@
+import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import {
   AlignSettings,
@@ -106,15 +107,16 @@ export function InvoiceDetailsSettings() {
 // Number Settings
 const InvoiceNumberSettings = memo(function InvoiceNumberSettings() {
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <h3 className="font-medium">Label Settings</h3>
+    <div className="flex flex-col gap-4">
+      <h3 className="text-sm font-medium">Label settings</h3>
       <div className="flex flex-col gap-2">
         <NumberLabelAlign />
         <NumberLabelSize />
         <NumberLabelWeight />
         <NumberLabelColor />
       </div>
-      <h3 className="font-medium">Value Settings</h3>
+      <Separator />
+      <h3 className="text-sm font-medium">Value settings</h3>
       <div className="flex flex-col gap-2">
         <NumberValueAlign />
         <NumberValueSize />
