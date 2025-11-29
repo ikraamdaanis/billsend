@@ -280,7 +280,34 @@ export const invoiceDefault: Invoice = {
   currency: "GBP"
 };
 
-export const invoiceTemplatesAtom = atom<InvoiceTemplate[]>([]);
+const STORAGE_KEY = "invoice-templates";
+
+function loadTemplatesFromStorage(): InvoiceTemplate[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return parsed.map(
+      (
+        template: Omit<InvoiceTemplate, "createdAt" | "updatedAt"> & {
+          createdAt: string;
+          updatedAt: string;
+        }
+      ) => ({
+        ...template,
+        createdAt: new Date(template.createdAt),
+        updatedAt: new Date(template.updatedAt)
+      })
+    );
+  } catch {
+    return [];
+  }
+}
+
+export const invoiceTemplatesAtom = atom<InvoiceTemplate[]>(
+  loadTemplatesFromStorage()
+);
 export const invoiceTemplatesErrorAtom = atom<unknown>(null);
 
 // Create initial invoice atom

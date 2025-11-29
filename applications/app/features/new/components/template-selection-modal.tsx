@@ -78,7 +78,7 @@ export function TemplateSelectionModal({
               customize it later.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto">
             {templates.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
                 <FileTextIcon className="text-muted-foreground mb-4 h-12 w-12" />
