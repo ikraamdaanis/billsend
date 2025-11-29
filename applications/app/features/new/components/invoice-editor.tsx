@@ -6,6 +6,7 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from "components/ui/drawer";
+import { DownloadInvoice } from "features/new/components/download-invoice";
 import { InvoiceClientDetails } from "features/new/components/invoice-client-details";
 import { InvoiceDetails } from "features/new/components/invoice-details";
 import { InvoiceImage } from "features/new/components/invoice-image";
@@ -24,6 +25,7 @@ import { memo } from "react";
 
 export function InvoiceEditor() {
   const setActiveSettings = useSetAtom(activeSettingsAtom);
+
   function handleSectionClick() {
     setActiveSettings("main");
   }
@@ -32,25 +34,30 @@ export function InvoiceEditor() {
   }
   return (
     <>
-      <div className="mx-auto h-dvh w-full grid-cols-[1fr_260px] bg-zinc-200 lg:grid">
-        <section
-          className="h-full overflow-y-auto p-4"
-          onClick={handleSectionClick}
-        >
-          <div
-            className="mx-auto h-fit w-full max-w-(--breakpoint-lg) rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
-            onClick={handleCanvasClick}
+      <div className="h-dvh w-full">
+        <nav className="bg-background border-border sticky top-0 flex h-14 w-full items-center justify-end border-b px-4">
+          <DownloadInvoice />
+        </nav>
+        <div className="flex h-[calc(100dvh-40px)] w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid">
+          <section
+            className="h-full overflow-y-auto p-4"
+            onClick={handleSectionClick}
           >
-            <Top />
-            <Mid />
-            <Bottom />
-          </div>
-        </section>
-        <section className="bg-background hidden h-full overflow-y-auto pb-4 lg:block">
-          <SettingsPanel />
-        </section>
+            <div
+              className="mx-auto h-fit w-full max-w-[210mm] rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
+              onClick={handleCanvasClick}
+            >
+              <Top />
+              <Mid />
+              <Bottom />
+            </div>
+          </section>
+          <section className="bg-background hidden h-full overflow-y-auto pb-4 lg:block">
+            <SettingsPanel />
+          </section>
+        </div>
       </div>
-      <div className="bg-background2 border-border fixed bottom-0 flex h-10 w-full items-center justify-center border-t lg:hidden">
+      <div className="bg-background border-border fixed bottom-0 flex h-10 w-full items-center justify-center border-t lg:hidden">
         <Drawer>
           <DrawerTrigger className="h-full w-full cursor-pointer">
             Open Settings
