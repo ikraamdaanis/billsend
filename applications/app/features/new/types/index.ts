@@ -138,3 +138,10 @@ export type InvoiceTemplate = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type StoredImage = {
+  id: string;
+  blob: Blob;
+  type: string;
+  createdAt: Date;
+};

@@ -3,11 +3,12 @@
 import { pdf } from "@react-pdf/renderer";
 import { Button } from "components/ui/button";
 import { InvoicePDF } from "features/new/components/invoice-generator";
-import { invoiceAtom } from "features/new/state";
+import { getImageBlob } from "features/new/db";
+import { imageAtom, invoiceAtom } from "features/new/state";
 import { useAtomValue } from "jotai";
 import { cn } from "lib/utils";
 import type { ComponentProps } from "react";
-import { useMemo, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export function DownloadInvoice({
@@ -15,11 +16,53 @@ export function DownloadInvoice({
   ...props
 }: Omit<ComponentProps<typeof Button>, "onClick">) {
   const invoice = useAtomValue(invoiceAtom);
+  const imageId = useAtomValue(imageAtom);
+  const [imageUrl, setImageUrl] = useState("");
 
   const [pending, startTransition] = useTransition();
 
-  // Create a stable copy of the invoice data to avoid unnecessary re-renders
-  const stableInvoice = useMemo(() => ({ ...invoice }), [invoice]);
+  // Load image from IndexedDB when imageId changes
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadImage() {
+      if (!imageId) {
+        setImageUrl("");
+        return;
+      }
+
+      // Check if it's already a blob URL or data URL
+      if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
+        setImageUrl(imageId);
+        return;
+      }
+
+      try {
+        const blob = await getImageBlob(imageId);
+        if (cancelled) return;
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          setImageUrl(url);
+        } else {
+          setImageUrl("");
+        }
+      } catch {
+        if (!cancelled) setImageUrl("");
+      }
+    }
+
+    loadImage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [imageId]);
+
+  // Create a stable copy of the invoice data with loaded image URL
+  const stableInvoice = useMemo(
+    () => ({ ...invoice, image: imageUrl }),
+    [invoice, imageUrl]
+  );
 
   // Generate PDF blob URL for "Open in new tab" button
   function handleCreatePdfUrl() {

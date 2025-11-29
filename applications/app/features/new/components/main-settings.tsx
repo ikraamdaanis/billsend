@@ -4,6 +4,7 @@ import { Separator } from "components/ui/separator";
 import { currencySymbols } from "consts/currencies";
 import { SaveTemplateModal } from "features/new/components/save-template-modal";
 import { TemplateSelectionModal } from "features/new/components/template-selection-modal";
+import { getAllTemplates } from "features/new/db";
 import {
   currencyAtom,
   invoiceAtom,
@@ -12,7 +13,7 @@ import {
 } from "features/new/state";
 import { useAtomValue, useSetAtom } from "jotai";
 import { BookmarkIcon, SaveIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Currency } from "types";
 
 export function MainSettings() {
@@ -22,9 +23,23 @@ export function MainSettings() {
 
   // Get templates data from the jotai atom
   const templates = useAtomValue(invoiceTemplatesAtom);
+  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+
+  // Load templates from IndexedDB on mount
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const loadedTemplates = await getAllTemplates();
+        setTemplates(loadedTemplates);
+      } catch {
+        // Failed to load templates
+      }
+    }
+    loadTemplates();
+  }, [setTemplates]);
 
   return (
     <div className="mb-4 flex h-full flex-col gap-4">

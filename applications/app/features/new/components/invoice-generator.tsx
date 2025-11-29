@@ -13,6 +13,7 @@ import {
 } from "@react-pdf/renderer";
 import { Button } from "components/ui/button";
 import { formatCurrency } from "consts/currencies";
+import { getImageBlob } from "features/new/db";
 import { imageAtom, invoiceAtom } from "features/new/state";
 import type { Invoice } from "features/new/types";
 import { getFontWeight } from "features/new/utils/get-font-weight";
@@ -53,6 +54,8 @@ export const InvoicePDF = memo(function InvoicePDF({
 }: {
   invoice: Invoice;
 }) {
+  // invoice.image should already be a blob URL or empty string
+  const imageUrl = invoice.image || "";
   const styles = StyleSheet.create({
     page: {
       fontFamily: "Geist",
@@ -74,6 +77,7 @@ export const InvoicePDF = memo(function InvoicePDF({
     logo: {
       width: 96,
       height: 96,
+      objectFit: "cover",
       borderRadius: 4,
       backgroundColor: "#FFF3E8",
       marginLeft: 24
@@ -219,9 +223,7 @@ export const InvoicePDF = memo(function InvoicePDF({
               })}
             </View>
           </View>
-          {!!invoice.image && (
-            <PDFImage src={invoice.image} style={styles.logo} />
-          )}
+          {!!imageUrl && <PDFImage src={imageUrl} style={styles.logo} />}
         </View>
         <View>
           <Text style={styles.clientTitle}>Bill to:</Text>
@@ -630,17 +632,60 @@ export const InvoicePDF = memo(function InvoicePDF({
 
 export function InvoiceGenerator() {
   const invoice = useAtomValue(invoiceAtom);
-  const logoImage = useAtomValue(imageAtom);
+  const imageId = useAtomValue(imageAtom);
   const [_isPending, startTransition] = useTransition();
   const [key, setKey] = useState(0);
+  const [imageUrl, setImageUrl] = useState("");
 
-  // Update key when invoice changes to force PDFViewer remount
+  // Load image from IndexedDB when imageId changes
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadImage() {
+      if (!imageId) {
+        setImageUrl("");
+        return;
+      }
+
+      // Check if it's already a blob URL or data URL
+      if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
+        setImageUrl(imageId);
+        return;
+      }
+
+      try {
+        const blob = await getImageBlob(imageId);
+        if (cancelled) return;
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          setImageUrl(url);
+        } else {
+          setImageUrl("");
+        }
+      } catch {
+        if (!cancelled) setImageUrl("");
+      }
+    }
+
+    loadImage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [imageId]);
+
+  // Update key when invoice or image changes to force PDFViewer remount
   useEffect(() => {
     startTransition(() => {
       setKey(prev => prev + 1);
     });
-  }, [invoice, logoImage]);
-  const stableInvoice = useMemo(() => ({ ...invoice }), [invoice]);
+  }, [invoice, imageUrl]);
+
+  // Create stable invoice with loaded image URL
+  const stableInvoice = useMemo(
+    () => ({ ...invoice, image: imageUrl }),
+    [invoice, imageUrl]
+  );
 
   return (
     <div className="mx-auto flex h-full w-full flex-col overflow-y-scroll border-t-8 border-t-neutral-200 bg-white p-8">

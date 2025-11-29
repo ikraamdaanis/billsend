@@ -19,6 +19,7 @@ import {
 import { Input } from "components/ui/input";
 import { NativeSelect } from "components/ui/select";
 import { Textarea } from "components/ui/textarea";
+import { getAllTemplates, saveTemplate } from "features/new/db";
 import { invoiceTemplatesAtom } from "features/new/state";
 import type { Invoice, InvoiceTemplate } from "features/new/types";
 import { useSetAtom } from "jotai";
@@ -27,45 +28,6 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-
-const STORAGE_KEY = "invoice-templates";
-
-function loadTemplatesFromStorage(): InvoiceTemplate[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    const parsed = JSON.parse(stored);
-    return parsed.map(
-      (
-        template: Omit<InvoiceTemplate, "createdAt" | "updatedAt"> & {
-          createdAt: string;
-          updatedAt: string;
-        }
-      ) => ({
-        ...template,
-        createdAt: new Date(template.createdAt),
-        updatedAt: new Date(template.updatedAt)
-      })
-    );
-  } catch {
-    return [];
-  }
-}
-
-function saveTemplatesToStorage(templates: InvoiceTemplate[]): void {
-  if (typeof window === "undefined") return;
-  try {
-    const serialized = templates.map(template => ({
-      ...template,
-      createdAt: template.createdAt.toISOString(),
-      updatedAt: template.updatedAt.toISOString()
-    }));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
-  } catch {
-    throw new Error("Failed to save templates to localStorage");
-  }
-}
 
 const saveTemplateSchema = z.object({
   name: z
@@ -186,32 +148,31 @@ export function SaveTemplateModal({
   // }
 
   function handleSubmit(data: SaveTemplateFormData) {
-    startTransition(() => {
+    startTransition(async () => {
       try {
-        const existingTemplates = loadTemplatesFromStorage();
         const now = new Date();
 
         if (selectedTemplateId && selectedTemplateId !== "new") {
           // Update existing template
-          const templateIndex = existingTemplates.findIndex(
+          const existingTemplate = templates.find(
             t => t.id === selectedTemplateId
           );
 
-          if (templateIndex === -1) {
+          if (!existingTemplate) {
             throw new Error("Template not found");
           }
 
           const updatedTemplate: InvoiceTemplate = {
-            ...existingTemplates[templateIndex],
+            ...existingTemplate,
             name: data.name.trim(),
             description: data.description?.trim() || null,
             templateData: currentInvoiceData,
             updatedAt: now
           };
 
-          existingTemplates[templateIndex] = updatedTemplate;
-          saveTemplatesToStorage(existingTemplates);
-          setTemplates(existingTemplates);
+          await saveTemplate(updatedTemplate);
+          const updatedTemplates = await getAllTemplates();
+          setTemplates(updatedTemplates);
 
           toast.success("Template updated successfully!");
         } else {
@@ -227,8 +188,8 @@ export function SaveTemplateModal({
             updatedAt: now
           };
 
-          const updatedTemplates = [...existingTemplates, newTemplate];
-          saveTemplatesToStorage(updatedTemplates);
+          await saveTemplate(newTemplate);
+          const updatedTemplates = await getAllTemplates();
           setTemplates(updatedTemplates);
 
           toast.success("Template created successfully!");

@@ -1,25 +1,135 @@
 import { Button } from "components/ui/button";
+import { deleteImage, getImageBlob, saveImage } from "features/new/db";
 import { imageAtom, updateImageAtom } from "features/new/state";
 import { useAtomValue, useSetAtom } from "jotai";
 import { cn } from "lib/utils";
 import { Upload } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 
 export function InvoiceImage() {
-  const image = useAtomValue(imageAtom);
+  const imageId = useAtomValue(imageAtom);
   const updateImage = useSetAtom(updateImageAtom);
   const [isDragging, setIsDragging] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const currentUrlRef = useRef<string | null>(null);
+  const lastUploadedIdRef = useRef<string | null>(null);
 
-  function handleImageUpload(files: File[]) {
+  // Load image from IndexedDB when imageId changes
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadImage() {
+      if (!imageId) {
+        // Revoke previous URL if it exists
+        if (currentUrlRef.current) {
+          URL.revokeObjectURL(currentUrlRef.current);
+          currentUrlRef.current = null;
+        }
+        setImageUrl("");
+        lastUploadedIdRef.current = null;
+        return;
+      }
+
+      // If we just uploaded this image and already have a URL, don't reload
+      if (imageId === lastUploadedIdRef.current && currentUrlRef.current) {
+        return;
+      }
+
+      try {
+        const blob = await getImageBlob(imageId);
+
+        if (cancelled) return;
+
+        // Revoke previous URL before creating new one
+        if (currentUrlRef.current) {
+          URL.revokeObjectURL(currentUrlRef.current);
+        }
+
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          currentUrlRef.current = url;
+          setImageUrl(url);
+        } else {
+          currentUrlRef.current = null;
+          setImageUrl("");
+        }
+      } catch {
+        if (!cancelled) {
+          if (currentUrlRef.current) {
+            URL.revokeObjectURL(currentUrlRef.current);
+            currentUrlRef.current = null;
+          }
+          setImageUrl("");
+        }
+      }
+    }
+
+    loadImage();
+
+    return () => {
+      cancelled = true;
+      if (currentUrlRef.current && imageId !== lastUploadedIdRef.current) {
+        URL.revokeObjectURL(currentUrlRef.current);
+        currentUrlRef.current = null;
+      }
+    };
+  }, [imageId]);
+
+  async function handleImageUpload(files: File[]) {
     if (files.length === 0) return;
 
     const file = files[0];
-    const objectUrl = URL.createObjectURL(file);
-    updateImage(objectUrl);
+    const newImageId = crypto.randomUUID();
+
+    // Revoke previous image URL if it exists
+    if (currentUrlRef.current) {
+      URL.revokeObjectURL(currentUrlRef.current);
+      currentUrlRef.current = null;
+    }
+
+    // Immediately show the uploaded image
+    const previewUrl = URL.createObjectURL(file);
+    currentUrlRef.current = previewUrl;
+    setImageUrl(previewUrl);
+
+    try {
+      // Save image blob to IndexedDB
+      await saveImage(newImageId, file, file.type);
+      // Verify it was saved
+      const verifyBlob = await getImageBlob(newImageId);
+      if (!verifyBlob) {
+        throw new Error("Image was not saved correctly");
+      }
+      // Track that we just uploaded this image
+      lastUploadedIdRef.current = newImageId;
+      // Store image ID in invoice state
+      updateImage(newImageId);
+    } catch {
+      // On error, revoke preview URL and clear
+      if (currentUrlRef.current === previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        currentUrlRef.current = null;
+        setImageUrl("");
+      }
+    }
   }
 
-  function handleRemoveImage() {
+  async function handleRemoveImage() {
+    // Revoke current image URL
+    if (currentUrlRef.current) {
+      URL.revokeObjectURL(currentUrlRef.current);
+      currentUrlRef.current = null;
+    }
+    setImageUrl("");
+
+    if (imageId) {
+      try {
+        await deleteImage(imageId);
+      } catch {
+        // Failed to delete from DB, but still clear the UI
+      }
+    }
     updateImage("");
   }
 
@@ -44,14 +154,14 @@ export function InvoiceImage() {
           )}
         >
           <input {...getInputProps()} />
-          {image ? (
+          {imageUrl ? (
             <div className="group relative">
               <img
-                src={image}
+                src={imageUrl}
                 alt="Invoice Image"
                 width={128}
                 height={128}
-                className="ov rounded-lg object-cover"
+                className="h-32 w-32 rounded-lg object-cover"
               />
               <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button
