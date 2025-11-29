@@ -14,21 +14,39 @@ import { InvoicePricing } from "features/new/components/invoice-pricing";
 import { InvoiceSellerDetails } from "features/new/components/invoice-seller-details";
 import { InvoiceTerms } from "features/new/components/invoice-terms";
 import { InvoiceTitle } from "features/new/components/invoice-title";
-import { SettingsPanel } from "features/new/components/settings-panel";
+import {
+  activeSettingsAtom,
+  SettingsPanel
+} from "features/new/components/settings-panel";
+import { useSetAtom } from "jotai";
+import type { MouseEvent } from "react";
 import { memo } from "react";
 
 export function InvoiceEditor() {
+  const setActiveSettings = useSetAtom(activeSettingsAtom);
+  function handleSectionClick() {
+    setActiveSettings("main");
+  }
+  function handleCanvasClick(event: MouseEvent<HTMLDivElement>) {
+    event.stopPropagation();
+  }
   return (
     <>
-      <div className="border-border mx-auto h-full w-full grid-cols-[1fr_260px] border-t bg-zinc-200 lg:grid">
-        <section className="h-full overflow-y-auto p-4">
-          <div className="mx-auto h-fit w-full max-w-(--breakpoint-lg) rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20">
+      <div className="mx-auto h-dvh w-full grid-cols-[1fr_260px] bg-zinc-200 lg:grid">
+        <section
+          className="h-full overflow-y-auto p-4"
+          onClick={handleSectionClick}
+        >
+          <div
+            className="mx-auto h-fit w-full max-w-(--breakpoint-lg) rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
+            onClick={handleCanvasClick}
+          >
             <Top />
             <Mid />
             <Bottom />
           </div>
         </section>
-        <section className="bg-background hidden h-full overflow-y-auto lg:block">
+        <section className="bg-background hidden h-full overflow-y-auto pb-4 lg:block">
           <SettingsPanel />
         </section>
       </div>

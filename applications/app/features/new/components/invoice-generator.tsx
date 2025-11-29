@@ -29,10 +29,6 @@ if (typeof window !== "undefined") {
     family: "Geist",
     fonts: [
       {
-        src: "/fonts/Geist-Light.ttf",
-        fontWeight: 300
-      },
-      {
         src: "/fonts/Geist-Regular.ttf",
         fontWeight: 400
       },
@@ -656,7 +652,6 @@ export function InvoiceGenerator() {
             size="sm"
             className="flex items-center gap-2"
             onClick={() => {
-              console.log("Stable invoice:", stableInvoice);
               const blob = pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
               blob.then(blobData => {
                 const url = URL.createObjectURL(blobData);
