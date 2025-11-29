@@ -9,6 +9,7 @@ import { cn } from "lib/utils";
 import { ExternalLinkIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useMemo, useTransition } from "react";
+import { toast } from "sonner";
 
 export function DownloadInvoice({
   className,
@@ -23,15 +24,28 @@ export function DownloadInvoice({
 
   // Generate PDF blob URL for "Open in new tab" button
   function handleCreatePdfUrl() {
+    // Open window immediately while we still have user interaction context
+    const newWindow = window.open("", "_blank");
+    if (!newWindow) {
+      toast.error("Failed to open new window. Popup may be blocked.");
+      return;
+    }
     startTransition(async () => {
-      const blob = await pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
-      const url = URL.createObjectURL(blob);
-
-      // Open URL in new tab
-      window.open(url, "_blank");
-
-      // Clean up URL object after a delay to ensure the tab has loaded
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      try {
+        const blob = await pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
+        const url = URL.createObjectURL(blob);
+        // Update the window location with the blob URL
+        newWindow.location.href = url;
+        // Don't revoke the URL - Chrome's PDF viewer needs it to persist
+        // The browser will automatically clean it up when the tab is closed
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? `Failed to generate PDF: ${error.message}`
+            : "Failed to generate PDF"
+        );
+        newWindow.close();
+      }
     });
   }
 
