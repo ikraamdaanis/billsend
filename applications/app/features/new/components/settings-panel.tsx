@@ -1,5 +1,3 @@
-import { ArrowLeftIcon, BookmarkIcon, SaveIcon } from "lucide-react";
-
 import { Button } from "components/ui/button";
 import { Label } from "components/ui/label";
 import { Separator } from "components/ui/separator";
@@ -14,7 +12,6 @@ import { LineItemsSettings } from "features/new/components/line-items-settings";
 import { MainSettings } from "features/new/components/main-settings";
 import { SaveTemplateModal } from "features/new/components/save-template-modal";
 import { TemplateSelectionModal } from "features/new/components/template-selection-modal";
-import { SettingsTitles } from "features/new/consts";
 import {
   currencyAtom,
   invoiceAtom,
@@ -23,6 +20,7 @@ import {
 } from "features/new/state";
 import type { SettingsType } from "features/new/types";
 import { atom, useAtomValue, useSetAtom } from "jotai";
+import { BookmarkIcon, SaveIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { memo, useState } from "react";
 import type { Currency } from "types";
@@ -33,7 +31,7 @@ export function SettingsPanel() {
   const activeSettings = useAtomValue(activeSettingsAtom);
 
   return (
-    <div className="bg-background border-border mb-8 h-full min-h-64 border-l p-4">
+    <div className="bg-background h-fit min-h-64 p-4">
       {activeSettings !== "main" ? (
         <SettingsContent settingsType={activeSettings} />
       ) : (
@@ -42,36 +40,6 @@ export function SettingsPanel() {
     </div>
   );
 }
-
-const BackButton = memo(function BackButton() {
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={() => setActiveSettings("main")}
-      className="w-8"
-    >
-      <ArrowLeftIcon className="h-4 w-4" />
-    </Button>
-  );
-});
-
-const SettingsHeader = memo(function SettingsHeader({
-  settingsType
-}: {
-  settingsType: SettingsType;
-}) {
-  return (
-    <div className="bg-background sticky top-0 flex items-center gap-2 pt-4">
-      <BackButton />
-      <Label className="text-lg font-medium">
-        {SettingsTitles[settingsType]}
-      </Label>
-    </div>
-  );
-});
 
 const SettingsContent = memo(function SettingsContent({
   settingsType
@@ -90,10 +58,7 @@ const SettingsContent = memo(function SettingsContent({
   };
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <SettingsHeader settingsType={settingsType} />
-      {settings[settingsType]}
-    </div>
+    <div className="flex h-full flex-col gap-4">{settings[settingsType]}</div>
   );
 });
 
