@@ -23,6 +23,8 @@ import { useSetAtom } from "jotai";
 import type { MouseEvent } from "react";
 import { memo } from "react";
 
+const NAVBAR_HEIGHT = 56;
+
 export function InvoiceEditor() {
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
@@ -35,16 +37,25 @@ export function InvoiceEditor() {
   return (
     <>
       <div className="h-dvh w-full">
-        <nav className="bg-background border-border sticky top-0 flex h-14 w-full items-center justify-end border-b px-4">
+        <nav
+          className="bg-background border-border sticky top-0 flex w-full items-center justify-between border-b px-4"
+          style={{ height: `${NAVBAR_HEIGHT}px` }}
+        >
+          <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
+            billsend
+          </h1>
           <DownloadInvoice />
         </nav>
-        <div className="flex h-[calc(100dvh-40px)] w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid">
+        <div
+          className="flex w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid"
+          style={{ height: `calc(100dvh - ${NAVBAR_HEIGHT}px)` }}
+        >
           <section
             className="h-full overflow-y-auto p-4"
             onClick={handleSectionClick}
           >
             <div
-              className="mx-auto h-fit w-full max-w-[210mm] rounded-lg border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
+              className="mx-auto h-fit w-full max-w-[210mm] border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
               onClick={handleCanvasClick}
             >
               <Top />
