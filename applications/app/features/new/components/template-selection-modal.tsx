@@ -43,12 +43,10 @@ export function TemplateSelectionModal({
   const setInvoice = useSetAtom(invoiceAtom);
 
   function handleTemplateSelect(template: InvoiceTemplate) {
+    // Apply template data directly - the image ID will be loaded by invoice-image.tsx
     setInvoice(template.templateData);
-
     toast.success(`Applied template: ${template.name}`);
-
     onTemplateSelect?.(template);
-
     onOpenChange(false);
   }
 
