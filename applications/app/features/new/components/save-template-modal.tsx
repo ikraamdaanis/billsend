@@ -19,11 +19,53 @@ import {
 import { Input } from "components/ui/input";
 import { NativeSelect } from "components/ui/select";
 import { Textarea } from "components/ui/textarea";
+import { invoiceTemplatesAtom } from "features/new/state";
 import type { Invoice, InvoiceTemplate } from "features/new/types";
+import { useSetAtom } from "jotai";
 import { SaveIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
+
+const STORAGE_KEY = "invoice-templates";
+
+function loadTemplatesFromStorage(): InvoiceTemplate[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored);
+    return parsed.map(
+      (
+        template: Omit<InvoiceTemplate, "createdAt" | "updatedAt"> & {
+          createdAt: string;
+          updatedAt: string;
+        }
+      ) => ({
+        ...template,
+        createdAt: new Date(template.createdAt),
+        updatedAt: new Date(template.updatedAt)
+      })
+    );
+  } catch {
+    return [];
+  }
+}
+
+function saveTemplatesToStorage(templates: InvoiceTemplate[]): void {
+  if (typeof window === "undefined") return;
+  try {
+    const serialized = templates.map(template => ({
+      ...template,
+      createdAt: template.createdAt.toISOString(),
+      updatedAt: template.updatedAt.toISOString()
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serialized));
+  } catch {
+    throw new Error("Failed to save templates to localStorage");
+  }
+}
 
 const saveTemplateSchema = z.object({
   name: z
@@ -35,6 +77,35 @@ const saveTemplateSchema = z.object({
 
 type SaveTemplateFormData = z.infer<typeof saveTemplateSchema>;
 
+const Keys = z.union([z.string(), z.number(), z.symbol()]);
+
+const _updateTemplateSchema = z.object({
+  id: z.string().min(1, "Template ID is required"),
+  name: z
+    .string()
+    .min(1, "Template name is required")
+    .max(100, "Template name must be less than 100 characters"),
+  description: z.string().optional(),
+  templateData: z.record(Keys, z.unknown()),
+  isDefault: z.boolean().default(false),
+  screenshotUrl: z.string().optional()
+});
+
+export type UpdateTemplateData = z.infer<typeof _updateTemplateSchema>;
+
+const _createTemplateSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Template name is required")
+    .max(100, "Template name must be less than 100 characters"),
+  description: z.string().optional(),
+  templateData: z.record(Keys, z.unknown()),
+  isDefault: z.boolean().default(false),
+  screenshotUrl: z.string().optional()
+});
+
+export type CreateTemplateData = z.infer<typeof _createTemplateSchema>;
+
 /**
  * SaveTemplateModal allows users to create a new invoice template or overwrite
  * an existing one with the current invoice data. It provides a form for naming
@@ -44,16 +115,17 @@ type SaveTemplateFormData = z.infer<typeof saveTemplateSchema>;
 export function SaveTemplateModal({
   open,
   templates,
-  onOpenChange
-  // currentInvoiceData
+  onOpenChange,
+  currentInvoiceData
 }: {
   open: boolean;
   templates: InvoiceTemplate[];
   onOpenChange: (open: boolean) => void;
   currentInvoiceData: Invoice;
 }) {
-  const [pending] = useTransition();
+  const [pending, startTransition] = useTransition();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   const selectedTemplate = templates.find(
     template => template.id === selectedTemplateId
@@ -113,82 +185,66 @@ export function SaveTemplateModal({
   //   }
   // }
 
-  function handleSubmit(_data: SaveTemplateFormData) {
-    return;
-    // startTransition(async () => {
-    //   try {
-    //     if (selectedTemplateId && selectedTemplateId !== "new") {
-    //       // Update existing template
-    //       const screenshotUrl = await generateScreenshot(selectedTemplateId);
+  function handleSubmit(data: SaveTemplateFormData) {
+    startTransition(() => {
+      try {
+        const existingTemplates = loadTemplatesFromStorage();
+        const now = new Date();
 
-    //       if (!screenshotUrl) {
-    //         toast.error("Failed to generate screenshot");
-    //         return;
-    //       }
+        if (selectedTemplateId && selectedTemplateId !== "new") {
+          // Update existing template
+          const templateIndex = existingTemplates.findIndex(
+            t => t.id === selectedTemplateId
+          );
 
-    //       const updateData: UpdateTemplateData = {
-    //         id: selectedTemplateId,
-    //         name: data.name.trim(),
-    //         description: data.description?.trim() || undefined,
-    //         templateData: currentInvoiceData,
-    //         isDefault: false,
-    //         screenshotUrl
-    //       };
+          if (templateIndex === -1) {
+            throw new Error("Template not found");
+          }
 
-    //       const { error } = await updateInvoiceTemplate(updateData);
+          const updatedTemplate: InvoiceTemplate = {
+            ...existingTemplates[templateIndex],
+            name: data.name.trim(),
+            description: data.description?.trim() || null,
+            templateData: currentInvoiceData,
+            updatedAt: now
+          };
 
-    //       if (error) throw new Error(error);
+          existingTemplates[templateIndex] = updatedTemplate;
+          saveTemplatesToStorage(existingTemplates);
+          setTemplates(existingTemplates);
 
-    //       toast.success("Template updated successfully!");
-    //     } else {
-    //       const templateData: CreateTemplateData = {
-    //         name: data.name.trim(),
-    //         description: data.description?.trim() || undefined,
-    //         templateData: currentInvoiceData,
-    //         isDefault: false
-    //       };
+          toast.success("Template updated successfully!");
+        } else {
+          // Create new template
+          const newTemplate: InvoiceTemplate = {
+            id: crypto.randomUUID(),
+            name: data.name.trim(),
+            description: data.description?.trim() || null,
+            templateData: currentInvoiceData,
+            isDefault: false,
+            screenshotUrl: null,
+            createdAt: now,
+            updatedAt: now
+          };
 
-    //       const { template, error: createError } =
-    //         await createInvoiceTemplate(templateData);
+          const updatedTemplates = [...existingTemplates, newTemplate];
+          saveTemplatesToStorage(updatedTemplates);
+          setTemplates(updatedTemplates);
 
-    //       if (createError || !template) {
-    //         throw new Error(createError || "Failed to create template");
-    //       }
+          toast.success("Template created successfully!");
+        }
 
-    //       const screenshotUrl = await generateScreenshot(template.id);
-
-    //       if (screenshotUrl) {
-    //         const updateData: UpdateTemplateData = {
-    //           id: template.id,
-    //           name: template.name,
-    //           description: template.description || undefined,
-    //           templateData: template.templateData,
-    //           isDefault: template.isDefault,
-    //           screenshotUrl
-    //         };
-
-    //         await updateInvoiceTemplate(updateData);
-    //       }
-    //     }
-
-    //     router.refresh();
-    //     onOpenChange(false);
-    //     toast.success(
-    //       selectedTemplateId && selectedTemplateId !== "new"
-    //         ? "Template updated successfully!"
-    //         : "Template created successfully!"
-    //     );
-
-    //     setTimeout(() => {
-    //       setSelectedTemplateId("");
-    //       form.reset();
-    //     }, 500);
-    //   } catch (error) {
-    //     toast.error(
-    //       error instanceof Error ? error.message : "Failed to save template"
-    //     );
-    //   }
-    // });
+        onOpenChange(false);
+        setTimeout(() => {
+          setSelectedTemplateId("");
+          form.reset();
+        }, 500);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save template"
+        );
+      }
+    });
   }
 
   function handleCancel() {
@@ -213,7 +269,7 @@ export function SaveTemplateModal({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form className="flex flex-col gap-4 p-4">
+          <form className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
               <FormLabel htmlFor="template-select">Template</FormLabel>
               <NativeSelect

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -19,7 +20,8 @@ import {
   activeSettingsAtom,
   SettingsPanel
 } from "features/new/components/settings-panel";
-import { useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
+import { ArrowLeftIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { memo } from "react";
 
@@ -27,6 +29,7 @@ const NAVBAR_HEIGHT = 56;
 
 export function InvoiceEditor() {
   const setActiveSettings = useSetAtom(activeSettingsAtom);
+  const activeSettings = useAtomValue(activeSettingsAtom);
 
   function handleSectionClick() {
     setActiveSettings("main");
@@ -47,11 +50,11 @@ export function InvoiceEditor() {
           <DownloadInvoice />
         </nav>
         <div
-          className="flex w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid"
+          className="relative flex w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid"
           style={{ height: `calc(100dvh - ${NAVBAR_HEIGHT}px)` }}
         >
           <section
-            className="h-full overflow-y-auto p-4"
+            className="relative h-full overflow-y-auto p-4"
             onClick={handleSectionClick}
           >
             <div
@@ -62,8 +65,18 @@ export function InvoiceEditor() {
               <Mid />
               <Bottom />
             </div>
+            {activeSettings !== "main" && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="fixed top-18 right-[264px] z-30 hidden size-8 w-fit min-w-8 lg:flex"
+                onClick={() => setActiveSettings("main")}
+              >
+                <ArrowLeftIcon className="h-4 w-4" />
+              </Button>
+            )}
           </section>
-          <section className="bg-background hidden h-full overflow-y-auto pb-4 lg:block">
+          <section className="bg-background relative z-20 hidden h-full overflow-y-auto pb-4 lg:block">
             <SettingsPanel />
           </section>
         </div>
