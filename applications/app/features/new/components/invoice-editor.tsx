@@ -25,7 +25,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { memo } from "react";
 
-const NAVBAR_HEIGHT = 56;
+const NAVBAR_HEIGHT = 50;
 
 export function InvoiceEditor() {
   const setActiveSettings = useSetAtom(activeSettingsAtom);
