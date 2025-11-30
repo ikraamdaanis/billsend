@@ -6,29 +6,22 @@ import {
   SizeSettings
 } from "features/new/components/settings-fields";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
-import {
-  titleAtom,
-  titleSettingsAtom,
-  updateTitleAtom,
-  updateTitleSettingsAtom
-} from "features/new/state";
+import { titleAtom, titleSettingsAtom } from "features/new/state";
 import { getTextStyles } from "features/new/utils/get-text-styles";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
 
 export const InvoiceTitle = memo(function InvoiceTitle() {
-  const title = useAtomValue(titleAtom);
+  const [title, setTitle] = useAtom(titleAtom);
   const titleSettings = useAtomValue(titleSettingsAtom);
-
-  const updateTitle = useSetAtom(updateTitleAtom);
 
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
   return (
     <InvoiceInput
       value={title}
-      onChange={value => updateTitle(value)}
+      onChange={setTitle}
       onFocus={() => setActiveSettings("title")}
       className="w-full text-5xl font-semibold"
       style={{ ...getTextStyles({ settings: titleSettings }) }}
@@ -55,48 +48,54 @@ const colorAtom = selectAtom(titleSettingsAtom, settings => settings.color);
 
 const Align = memo(function Align() {
   const align = useAtomValue(alignAtom);
-  const updateTitleSettings = useSetAtom(updateTitleSettingsAtom);
+  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateTitleSettings({ align: value })}
+      handleInput={value =>
+        setTitleSettings({ ...titleSettings, align: value })
+      }
     />
   );
 });
 
 const Size = memo(function Size() {
   const size = useAtomValue(sizeAtom);
-  const updateTitleSettings = useSetAtom(updateTitleSettingsAtom);
+  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateTitleSettings({ size: value })}
+      handleInput={value => setTitleSettings({ ...titleSettings, size: value })}
     />
   );
 });
 
 const Weight = memo(function Weight() {
   const weight = useAtomValue(weightAtom);
-  const updateTitleSettings = useSetAtom(updateTitleSettingsAtom);
+  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateTitleSettings({ weight: value })}
+      handleInput={value =>
+        setTitleSettings({ ...titleSettings, weight: value })
+      }
     />
   );
 });
 
 const Color = memo(function Color() {
   const color = useAtomValue(colorAtom);
-  const updateTitleSettings = useSetAtom(updateTitleSettingsAtom);
+  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateTitleSettings({ color: value })}
+      handleInput={value =>
+        setTitleSettings({ ...titleSettings, color: value })
+      }
     />
   );
 });

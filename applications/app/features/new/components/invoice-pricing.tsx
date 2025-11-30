@@ -13,16 +13,13 @@ import {
   taxSettingsAtom,
   totalAtom,
   totalSettingsAtom,
-  updateDiscountsAtom,
-  updateFeesAtom,
-  updateInvoicePricingAtom,
-  updateTaxAtom
+  updateInvoicePricingAtom
 } from "features/new/state";
 import { getTextStyles } from "features/new/utils/get-text-styles";
 import { handleCurrencyInput } from "features/new/utils/handle-currency-input";
 import { handlePercentageInput } from "features/new/utils/handle-percentage-input";
 import { setActiveTab } from "features/new/utils/set-active-tab";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo, useState } from "react";
 
@@ -104,7 +101,7 @@ const taxAmountAtom = selectAtom(taxAtom, tax => tax.amount);
 const TaxRow = memo(function TaxRow() {
   const taxPercentage = useAtomValue(taxPercentageAtom);
   const taxAmount = useAtomValue(taxAmountAtom);
-  const updateTax = useSetAtom(updateTaxAtom);
+  const [tax, setTax] = useAtom(taxAtom);
   const taxSettings = useAtomValue(taxSettingsAtom);
   const currency = useAtomValue(currencyAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
@@ -139,14 +136,14 @@ const TaxRow = memo(function TaxRow() {
             onChange={value => {
               const numericValue = handlePercentageInput(value);
               setTaxInput(numericValue);
-              updateTax(Number(numericValue));
+              setTax({ ...tax, percentage: Number(numericValue) });
               updateInvoicePricing();
             }}
             onBlur={() =>
               handleInputBlur(
                 taxInput,
                 setTaxInput,
-                updateTax,
+                (val: number) => setTax({ ...tax, percentage: val }),
                 updateInvoicePricing
               )
             }
@@ -171,8 +168,7 @@ const TaxRow = memo(function TaxRow() {
 });
 
 const FeesRow = memo(function FeesRow() {
-  const fees = useAtomValue(feesAtom);
-  const updateFees = useSetAtom(updateFeesAtom);
+  const [fees, setFees] = useAtom(feesAtom);
   const feesSettings = useAtomValue(feesSettingsAtom);
   const currency = useAtomValue(currencyAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
@@ -212,14 +208,14 @@ const FeesRow = memo(function FeesRow() {
           onChange={value => {
             const numericValue = handleCurrencyInput(value);
             setFeesInput(numericValue);
-            updateFees(Number(numericValue));
+            setFees(Number(numericValue));
             updateInvoicePricing();
           }}
           onBlur={() =>
             handleInputBlur(
               feesInput,
               setFeesInput,
-              updateFees,
+              setFees,
               updateInvoicePricing
             )
           }
@@ -231,8 +227,7 @@ const FeesRow = memo(function FeesRow() {
 });
 
 const DiscountsRow = memo(function DiscountsRow() {
-  const discounts = useAtomValue(discountsAtom);
-  const updateDiscounts = useSetAtom(updateDiscountsAtom);
+  const [discounts, setDiscounts] = useAtom(discountsAtom);
   const discountsSettings = useAtomValue(discountsSettingsAtom);
   const currency = useAtomValue(currencyAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
@@ -270,14 +265,14 @@ const DiscountsRow = memo(function DiscountsRow() {
           onChange={value => {
             const numericValue = handleCurrencyInput(value);
             setDiscountsInput(numericValue);
-            updateDiscounts(Number(numericValue));
+            setDiscounts(Number(numericValue));
             updateInvoicePricing();
           }}
           onBlur={() =>
             handleInputBlur(
               discountsInput,
               setDiscountsInput,
-              updateDiscounts,
+              setDiscounts,
               updateInvoicePricing
             )
           }

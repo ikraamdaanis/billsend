@@ -6,20 +6,14 @@ import {
   SizeSettings
 } from "features/new/components/settings-fields";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
-import {
-  clientAtom,
-  clientSettingsAtom,
-  updateClientAtom,
-  updateClientSettingsAtom
-} from "features/new/state";
+import { clientAtom, clientSettingsAtom } from "features/new/state";
 import { getTextStyles } from "features/new/utils/get-text-styles";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
 
 export const InvoiceClientDetails = memo(function InvoiceClientDetails() {
-  const client = useAtomValue(clientAtom);
-  const updateClient = useSetAtom(updateClientAtom);
+  const [client, setClient] = useAtom(clientAtom);
   const clientSettings = useAtomValue(clientSettingsAtom);
 
   const setActiveSettings = useSetAtom(activeSettingsAtom);
@@ -27,7 +21,7 @@ export const InvoiceClientDetails = memo(function InvoiceClientDetails() {
   return (
     <InvoiceTextArea
       value={client.content}
-      onChange={value => updateClient(value)}
+      onChange={value => setClient({ ...client, content: value })}
       onFocus={() => setActiveSettings("client")}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: clientSettings })}
@@ -54,48 +48,48 @@ const colorAtom = selectAtom(clientSettingsAtom, settings => settings.color);
 
 const Align = memo(function Align() {
   const align = useAtomValue(alignAtom);
-  const updateClientSettings = useSetAtom(updateClientSettingsAtom);
+  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateClientSettings({ align: value })}
+      handleInput={value => setClientSettings({ ...clientSettings, align: value })}
     />
   );
 });
 
 const Size = memo(function Size() {
   const size = useAtomValue(sizeAtom);
-  const updateClientSettings = useSetAtom(updateClientSettingsAtom);
+  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateClientSettings({ size: value })}
+      handleInput={value => setClientSettings({ ...clientSettings, size: value })}
     />
   );
 });
 
 const Weight = memo(function Weight() {
   const weight = useAtomValue(weightAtom);
-  const updateClientSettings = useSetAtom(updateClientSettingsAtom);
+  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateClientSettings({ weight: value })}
+      handleInput={value => setClientSettings({ ...clientSettings, weight: value })}
     />
   );
 });
 
 const Color = memo(function Color() {
   const color = useAtomValue(colorAtom);
-  const updateClientSettings = useSetAtom(updateClientSettingsAtom);
+  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateClientSettings({ color: value })}
+      handleInput={value => setClientSettings({ ...clientSettings, color: value })}
     />
   );
 });

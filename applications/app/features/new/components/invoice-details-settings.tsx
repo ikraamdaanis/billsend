@@ -9,13 +9,10 @@ import {
 import {
   dueDateSettingsAtom,
   invoiceDateSettingsAtom,
-  numberSettingsAtom,
-  updateDueDateSettingsAtom,
-  updateInvoiceDateSettingsAtom,
-  updateNumberSettingsAtom
+  numberSettingsAtom
 } from "features/new/state";
 import { handleActiveTab } from "features/new/utils/handle-active-tab";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo, useEffect, useRef, useState } from "react";
 
@@ -191,48 +188,68 @@ const numberLabelColorAtom = selectAtom(
 
 const NumberLabelAlign = memo(function NumberLabelAlign() {
   const align = useAtomValue(numberLabelAlignAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateNumberSettings({ label: { align: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          label: { ...numberSettings.label, align: value }
+        })
+      }
     />
   );
 });
 
 const NumberLabelSize = memo(function NumberLabelSize() {
   const size = useAtomValue(numberLabelSizeAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateNumberSettings({ label: { size: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          label: { ...numberSettings.label, size: value }
+        })
+      }
     />
   );
 });
 
 const NumberLabelWeight = memo(function NumberLabelWeight() {
   const weight = useAtomValue(numberLabelWeightAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateNumberSettings({ label: { weight: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          label: { ...numberSettings.label, weight: value }
+        })
+      }
     />
   );
 });
 
 const NumberLabelColor = memo(function NumberLabelColor() {
   const color = useAtomValue(numberLabelColorAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateNumberSettings({ label: { color: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          label: { ...numberSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -257,48 +274,68 @@ const numberValueColorAtom = selectAtom(
 
 const NumberValueAlign = memo(function NumberValueAlign() {
   const align = useAtomValue(numberValueAlignAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateNumberSettings({ value: { align: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          value: { ...numberSettings.value, align: value }
+        })
+      }
     />
   );
 });
 
 const NumberValueSize = memo(function NumberValueSize() {
   const size = useAtomValue(numberValueSizeAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateNumberSettings({ value: { size: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          value: { ...numberSettings.value, size: value }
+        })
+      }
     />
   );
 });
 
 const NumberValueWeight = memo(function NumberValueWeight() {
   const weight = useAtomValue(numberValueWeightAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateNumberSettings({ value: { weight: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          value: { ...numberSettings.value, weight: value }
+        })
+      }
     />
   );
 });
 
 const NumberValueColor = memo(function NumberValueColor() {
   const color = useAtomValue(numberValueColorAtom);
-  const updateNumberSettings = useSetAtom(updateNumberSettingsAtom);
+  const [numberSettings, setNumberSettings] = useAtom(numberSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateNumberSettings({ value: { color: value } })}
+      handleInput={value =>
+        setNumberSettings({
+          ...numberSettings,
+          value: { ...numberSettings.value, color: value }
+        })
+      }
     />
   );
 });
@@ -323,48 +360,76 @@ const dateLabelColorAtom = selectAtom(
 
 const DateLabelAlign = memo(function DateLabelAlign() {
   const align = useAtomValue(dateLabelAlignAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateDateSettings({ label: { align: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          label: { ...invoiceDateSettings.label, align: value }
+        })
+      }
     />
   );
 });
 
 const DateLabelSize = memo(function DateLabelSize() {
   const size = useAtomValue(dateLabelSizeAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDateSettings({ label: { size: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          label: { ...invoiceDateSettings.label, size: value }
+        })
+      }
     />
   );
 });
 
 const DateLabelWeight = memo(function DateLabelWeight() {
   const weight = useAtomValue(dateLabelWeightAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateDateSettings({ label: { weight: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          label: { ...invoiceDateSettings.label, weight: value }
+        })
+      }
     />
   );
 });
 
 const DateLabelColor = memo(function DateLabelColor() {
   const color = useAtomValue(dateLabelColorAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateDateSettings({ label: { color: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          label: { ...invoiceDateSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -388,48 +453,76 @@ const dateValueColorAtom = selectAtom(
 
 const DateValueAlign = memo(function DateValueAlign() {
   const align = useAtomValue(dateValueAlignAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateDateSettings({ value: { align: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          value: { ...invoiceDateSettings.value, align: value }
+        })
+      }
     />
   );
 });
 
 const DateValueSize = memo(function DateValueSize() {
   const size = useAtomValue(dateValueSizeAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDateSettings({ value: { size: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          value: { ...invoiceDateSettings.value, size: value }
+        })
+      }
     />
   );
 });
 
 const DateValueWeight = memo(function DateValueWeight() {
   const weight = useAtomValue(dateValueWeightAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateDateSettings({ value: { weight: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          value: { ...invoiceDateSettings.value, weight: value }
+        })
+      }
     />
   );
 });
 
 const DateValueColor = memo(function DateValueColor() {
   const color = useAtomValue(dateValueColorAtom);
-  const updateDateSettings = useSetAtom(updateInvoiceDateSettingsAtom);
+  const [invoiceDateSettings, setInvoiceDateSettings] = useAtom(
+    invoiceDateSettingsAtom
+  );
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateDateSettings({ value: { color: value } })}
+      handleInput={value =>
+        setInvoiceDateSettings({
+          ...invoiceDateSettings,
+          value: { ...invoiceDateSettings.value, color: value }
+        })
+      }
     />
   );
 });
@@ -454,48 +547,68 @@ const dueDateLabelColorAtom = selectAtom(
 
 const DueDateLabelAlign = memo(function DueDateLabelAlign() {
   const align = useAtomValue(dueDateLabelAlignAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateDueDateSettings({ label: { align: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          label: { ...dueDateSettings.label, align: value }
+        })
+      }
     />
   );
 });
 
 const DueDateLabelSize = memo(function DueDateLabelSize() {
   const size = useAtomValue(dueDateLabelSizeAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDueDateSettings({ label: { size: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          label: { ...dueDateSettings.label, size: value }
+        })
+      }
     />
   );
 });
 
 const DueDateLabelWeight = memo(function DueDateLabelWeight() {
   const weight = useAtomValue(dueDateLabelWeightAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateDueDateSettings({ label: { weight: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          label: { ...dueDateSettings.label, weight: value }
+        })
+      }
     />
   );
 });
 
 const DueDateLabelColor = memo(function DueDateLabelColor() {
   const color = useAtomValue(dueDateLabelColorAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateDueDateSettings({ label: { color: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          label: { ...dueDateSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -520,48 +633,68 @@ const dueDateValueColorAtom = selectAtom(
 
 const DueDateValueAlign = memo(function DueDateValueAlign() {
   const align = useAtomValue(dueDateValueAlignAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateDueDateSettings({ value: { align: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          value: { ...dueDateSettings.value, align: value }
+        })
+      }
     />
   );
 });
 
 const DueDateValueSize = memo(function DueDateValueSize() {
   const size = useAtomValue(dueDateValueSizeAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDueDateSettings({ value: { size: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          value: { ...dueDateSettings.value, size: value }
+        })
+      }
     />
   );
 });
 
 const DueDateValueWeight = memo(function DueDateValueWeight() {
   const weight = useAtomValue(dueDateValueWeightAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateDueDateSettings({ value: { weight: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          value: { ...dueDateSettings.value, weight: value }
+        })
+      }
     />
   );
 });
 
 const DueDateValueColor = memo(function DueDateValueColor() {
   const color = useAtomValue(dueDateValueColorAtom);
-  const updateDueDateSettings = useSetAtom(updateDueDateSettingsAtom);
+  const [dueDateSettings, setDueDateSettings] = useAtom(dueDateSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateDueDateSettings({ value: { color: value } })}
+      handleInput={value =>
+        setDueDateSettings({
+          ...dueDateSettings,
+          value: { ...dueDateSettings.value, color: value }
+        })
+      }
     />
   );
 });

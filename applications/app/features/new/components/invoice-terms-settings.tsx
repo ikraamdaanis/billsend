@@ -4,8 +4,8 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "features/new/components/settings-fields";
-import { termsSettingsAtom, updateTermsSettingsAtom } from "features/new/state";
-import { useAtomValue, useSetAtom } from "jotai";
+import { termsSettingsAtom } from "features/new/state";
+import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
 
@@ -52,14 +52,15 @@ const termsLabelColorAtom = selectAtom(
 
 const TermsLabelAlign = memo(function TermsLabelAlign() {
   const align = useAtomValue(termsLabelAlignAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
       handleInput={value =>
-        updateTermsSettings({
-          label: { align: value }
+        setTermsSettings({
+          ...termsSettings,
+          label: { ...termsSettings.label, align: value }
         })
       }
     />
@@ -68,14 +69,15 @@ const TermsLabelAlign = memo(function TermsLabelAlign() {
 
 const TermsLabelSize = memo(function TermsLabelSize() {
   const size = useAtomValue(termsLabelSizeAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
       handleInput={value =>
-        updateTermsSettings({
-          label: { size: value }
+        setTermsSettings({
+          ...termsSettings,
+          label: { ...termsSettings.label, size: value }
         })
       }
     />
@@ -84,14 +86,15 @@ const TermsLabelSize = memo(function TermsLabelSize() {
 
 const TermsLabelWeight = memo(function TermsLabelWeight() {
   const weight = useAtomValue(termsLabelWeightAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        updateTermsSettings({
-          label: { weight: value }
+        setTermsSettings({
+          ...termsSettings,
+          label: { ...termsSettings.label, weight: value }
         })
       }
     />
@@ -100,14 +103,15 @@ const TermsLabelWeight = memo(function TermsLabelWeight() {
 
 const TermsLabelColor = memo(function TermsLabelColor() {
   const color = useAtomValue(termsLabelColorAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
       handleInput={value =>
-        updateTermsSettings({
-          label: { color: value }
+        setTermsSettings({
+          ...termsSettings,
+          label: { ...termsSettings.label, color: value }
         })
       }
     />
@@ -134,14 +138,15 @@ const termsContentColorAtom = selectAtom(
 
 const TermsContentAlign = memo(function TermsContentAlign() {
   const align = useAtomValue(termsContentAlignAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
       handleInput={value =>
-        updateTermsSettings({
-          content: { align: value }
+        setTermsSettings({
+          ...termsSettings,
+          content: { ...termsSettings.content, align: value }
         })
       }
     />
@@ -150,14 +155,15 @@ const TermsContentAlign = memo(function TermsContentAlign() {
 
 const TermsContentSize = memo(function TermsContentSize() {
   const size = useAtomValue(termsContentSizeAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
       handleInput={value =>
-        updateTermsSettings({
-          content: { size: value }
+        setTermsSettings({
+          ...termsSettings,
+          content: { ...termsSettings.content, size: value }
         })
       }
     />
@@ -166,14 +172,15 @@ const TermsContentSize = memo(function TermsContentSize() {
 
 const TermsContentWeight = memo(function TermsContentWeight() {
   const weight = useAtomValue(termsContentWeightAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        updateTermsSettings({
-          content: { weight: value }
+        setTermsSettings({
+          ...termsSettings,
+          content: { ...termsSettings.content, weight: value }
         })
       }
     />
@@ -182,14 +189,15 @@ const TermsContentWeight = memo(function TermsContentWeight() {
 
 const TermsContentColor = memo(function TermsContentColor() {
   const color = useAtomValue(termsContentColorAtom);
-  const updateTermsSettings = useSetAtom(updateTermsSettingsAtom);
+  const [termsSettings, setTermsSettings] = useAtom(termsSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
       handleInput={value =>
-        updateTermsSettings({
-          content: { color: value }
+        setTermsSettings({
+          ...termsSettings,
+          content: { ...termsSettings.content, color: value }
         })
       }
     />

@@ -6,14 +6,11 @@ import {
   invoiceDateAtom,
   invoiceDateSettingsAtom,
   numberAtom,
-  numberSettingsAtom,
-  updateDueDateAtom,
-  updateInvoiceDateAtom,
-  updateNumberAtom
+  numberSettingsAtom
 } from "features/new/state";
 import { getTextStyles } from "features/new/utils/get-text-styles";
 import { setActiveTab } from "features/new/utils/set-active-tab";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { memo } from "react";
 
 function InvoiceDetailsComponent() {
@@ -29,8 +26,7 @@ function InvoiceDetailsComponent() {
 }
 
 const InvoiceNumber = memo(function InvoiceNumber() {
-  const number = useAtomValue(numberAtom);
-  const updateNumber = useSetAtom(updateNumberAtom);
+  const [number, setNumber] = useAtom(numberAtom);
   const numberSettings = useAtomValue(numberSettingsAtom);
 
   return (
@@ -51,7 +47,7 @@ const InvoiceNumber = memo(function InvoiceNumber() {
       </div>
       <InvoiceInput
         value={number}
-        onChange={value => updateNumber(value)}
+        onChange={setNumber}
         className="h-[unset]! w-full py-0"
         style={getTextStyles({ settings: numberSettings.value })}
         placeholder="########"
@@ -61,8 +57,7 @@ const InvoiceNumber = memo(function InvoiceNumber() {
 });
 
 const InvoiceDate = memo(function InvoiceDate() {
-  const invoiceDate = useAtomValue(invoiceDateAtom);
-  const updateInvoiceDate = useSetAtom(updateInvoiceDateAtom);
+  const [invoiceDate, setInvoiceDate] = useAtom(invoiceDateAtom);
   const invoiceDateSettings = useAtomValue(invoiceDateSettingsAtom);
 
   return (
@@ -83,7 +78,7 @@ const InvoiceDate = memo(function InvoiceDate() {
       </div>
       <InvoiceInput
         value={invoiceDate}
-        onChange={value => updateInvoiceDate(value)}
+        onChange={setInvoiceDate}
         className="h-[unset]! w-full py-0"
         style={getTextStyles({ settings: invoiceDateSettings.value })}
         placeholder="Enter the invoice date"
@@ -93,8 +88,7 @@ const InvoiceDate = memo(function InvoiceDate() {
 });
 
 const InvoiceDueDate = memo(function InvoiceDueDate() {
-  const dueDate = useAtomValue(dueDateAtom);
-  const updateDueDate = useSetAtom(updateDueDateAtom);
+  const [dueDate, setDueDate] = useAtom(dueDateAtom);
   const dueDateSettings = useAtomValue(dueDateSettingsAtom);
 
   return (
@@ -115,7 +109,7 @@ const InvoiceDueDate = memo(function InvoiceDueDate() {
       </div>
       <InvoiceInput
         value={dueDate}
-        onChange={value => updateDueDate(value)}
+        onChange={setDueDate}
         className="h-[unset]! w-full py-0"
         style={getTextStyles({ settings: dueDateSettings.value })}
         placeholder="Enter the payment due date"

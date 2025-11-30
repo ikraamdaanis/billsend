@@ -1,15 +1,14 @@
 import { Button } from "components/ui/button";
 import { deleteImage, getImageBlob, saveImage } from "features/new/db";
-import { imageAtom, updateImageAtom } from "features/new/state";
-import { useAtomValue, useSetAtom } from "jotai";
+import { imageAtom } from "features/new/state";
+import { useAtom } from "jotai";
 import { cn } from "lib/utils";
 import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 
 export function InvoiceImage() {
-  const imageId = useAtomValue(imageAtom);
-  const updateImage = useSetAtom(updateImageAtom);
+  const [imageId, setImageId] = useAtom(imageAtom);
   const [isDragging, setIsDragging] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>("");
   const currentUrlRef = useRef<string | null>(null);
@@ -104,7 +103,7 @@ export function InvoiceImage() {
       // Track that we just uploaded this image
       lastUploadedIdRef.current = newImageId;
       // Store image ID in invoice state
-      updateImage(newImageId);
+      setImageId(newImageId);
     } catch {
       // On error, revoke preview URL and clear
       if (currentUrlRef.current === previewUrl) {
@@ -130,7 +129,7 @@ export function InvoiceImage() {
         // Failed to delete from DB, but still clear the UI
       }
     }
-    updateImage("");
+    setImageId("");
   }
 
   return (

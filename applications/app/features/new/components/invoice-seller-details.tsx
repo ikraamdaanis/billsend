@@ -6,20 +6,14 @@ import {
   SizeSettings
 } from "features/new/components/settings-fields";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
-import {
-  sellerAtom,
-  sellerSettingsAtom,
-  updateSellerAtom,
-  updateSellerSettingsAtom
-} from "features/new/state";
+import { sellerAtom, sellerSettingsAtom } from "features/new/state";
 import { getTextStyles } from "features/new/utils/get-text-styles";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
 
 export const InvoiceSellerDetails = memo(function InvoiceSellerDetails() {
-  const seller = useAtomValue(sellerAtom);
-  const updateSeller = useSetAtom(updateSellerAtom);
+  const [seller, setSeller] = useAtom(sellerAtom);
   const sellerSettings = useAtomValue(sellerSettingsAtom);
 
   const setActiveSettings = useSetAtom(activeSettingsAtom);
@@ -27,7 +21,7 @@ export const InvoiceSellerDetails = memo(function InvoiceSellerDetails() {
   return (
     <InvoiceTextArea
       value={seller.content}
-      onChange={value => updateSeller(value)}
+      onChange={value => setSeller({ ...seller, content: value })}
       onFocus={() => setActiveSettings("seller")}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: sellerSettings })}
@@ -54,48 +48,48 @@ const colorAtom = selectAtom(sellerSettingsAtom, settings => settings.color);
 
 const Align = memo(function Align() {
   const align = useAtomValue(alignAtom);
-  const updateSellerSettings = useSetAtom(updateSellerSettingsAtom);
+  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateSellerSettings({ align: value })}
+      handleInput={value => setSellerSettings({ ...sellerSettings, align: value })}
     />
   );
 });
 
 const Size = memo(function Size() {
   const size = useAtomValue(sizeAtom);
-  const updateSellerSettings = useSetAtom(updateSellerSettingsAtom);
+  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateSellerSettings({ size: value })}
+      handleInput={value => setSellerSettings({ ...sellerSettings, size: value })}
     />
   );
 });
 
 const Weight = memo(function Weight() {
   const weight = useAtomValue(weightAtom);
-  const updateSellerSettings = useSetAtom(updateSellerSettingsAtom);
+  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateSellerSettings({ weight: value })}
+      handleInput={value => setSellerSettings({ ...sellerSettings, weight: value })}
     />
   );
 });
 
 const Color = memo(function Color() {
   const color = useAtomValue(colorAtom);
-  const updateSellerSettings = useSetAtom(updateSellerSettingsAtom);
+  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateSellerSettings({ color: value })}
+      handleInput={value => setSellerSettings({ ...sellerSettings, color: value })}
     />
   );
 });
