@@ -1,5 +1,3 @@
-"use client";
-
 import { pdf } from "@react-pdf/renderer";
 import { Button } from "components/ui/button";
 import { InvoicePDF } from "features/new/components/invoice-generator";
