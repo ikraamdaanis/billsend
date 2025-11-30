@@ -7,20 +7,9 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "features/new/components/settings-fields";
-import {
-  tableSettingsAtom,
-  updateAmountHeaderSettingsAtom,
-  updateAmountRowSettingsAtom,
-  updateDescriptionHeaderSettingsAtom,
-  updateDescriptionRowSettingsAtom,
-  updateQuantityHeaderSettingsAtom,
-  updateQuantityRowSettingsAtom,
-  updateTableDesignSettingsAtom,
-  updateUnitPriceHeaderSettingsAtom,
-  updateUnitPriceRowSettingsAtom
-} from "features/new/state";
+import { tableSettingsAtom } from "features/new/state";
 import { handleActiveTab } from "features/new/utils/handle-active-tab";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo, useEffect, useRef, useState } from "react";
 
@@ -255,13 +244,16 @@ const TableDesignSettings = memo(function TableDesignSettings() {
 
 const TableBackgroundColor = memo(function TableBackgroundColor() {
   const backgroundColor = useAtomValue(tableBackgroundColorAtom);
-  const updateTableDesignSettings = useSetAtom(updateTableDesignSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={backgroundColor}
       handleInput={value =>
-        updateTableDesignSettings({ backgroundColor: value })
+        setTableSettings({
+          ...tableSettings,
+          backgroundColor: value
+        })
       }
       label="Background"
     />
@@ -270,12 +262,17 @@ const TableBackgroundColor = memo(function TableBackgroundColor() {
 
 const TableBorderColor = memo(function TableBorderColor() {
   const borderColor = useAtomValue(tableBorderColorAtom);
-  const updateTableDesignSettings = useSetAtom(updateTableDesignSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={borderColor}
-      handleInput={value => updateTableDesignSettings({ borderColor: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          borderColor: value
+        })
+      }
       label="Border Color"
     />
   );
@@ -305,65 +302,87 @@ const descriptionHeaderLabelAtom = selectAtom(
 
 const DescriptionHeaderAlign = memo(function DescriptionHeaderAlign() {
   const align = useAtomValue(descriptionHeaderAlignAtom);
-  const updateDescriptionHeaderSettings = useSetAtom(
-    updateDescriptionHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateDescriptionHeaderSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionHeaderSettings: {
+            ...tableSettings.descriptionHeaderSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionHeaderSize = memo(function DescriptionHeaderSize() {
   const size = useAtomValue(descriptionHeaderSizeAtom);
-  const updateDescriptionHeaderSettings = useSetAtom(
-    updateDescriptionHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDescriptionHeaderSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionHeaderSettings: {
+            ...tableSettings.descriptionHeaderSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionHeaderWeight = memo(function DescriptionHeaderWeight() {
   const weight = useAtomValue(descriptionHeaderWeightAtom);
-  const updateDescriptionHeaderSettings = useSetAtom(
-    updateDescriptionHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateDescriptionHeaderSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionHeaderSettings: {
+            ...tableSettings.descriptionHeaderSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionHeaderColor = memo(function DescriptionHeaderColor() {
   const color = useAtomValue(descriptionHeaderColorAtom);
-  const updateDescriptionHeaderSettings = useSetAtom(
-    updateDescriptionHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateDescriptionHeaderSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionHeaderSettings: {
+            ...tableSettings.descriptionHeaderSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionHeaderLabel = memo(function DescriptionHeaderLabel() {
   const label = useAtomValue(descriptionHeaderLabelAtom);
-  const updateDescriptionHeaderSettings = useSetAtom(
-    updateDescriptionHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -375,7 +394,13 @@ const DescriptionHeaderLabel = memo(function DescriptionHeaderLabel() {
         id="description-header-label"
         value={label}
         onChange={({ target: { value } }) =>
-          updateDescriptionHeaderSettings({ label: value })
+          setTableSettings({
+            ...tableSettings,
+            descriptionHeaderSettings: {
+              ...tableSettings.descriptionHeaderSettings,
+              label: value
+            }
+          })
         }
         className="w-full border p-2"
       />
@@ -403,56 +428,80 @@ const descriptionRowColorAtom = selectAtom(
 
 const DescriptionRowAlign = memo(function DescriptionRowAlign() {
   const align = useAtomValue(descriptionRowAlignAtom);
-  const updateDescriptionRowSettings = useSetAtom(
-    updateDescriptionRowSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateDescriptionRowSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionRowSettings: {
+            ...tableSettings.descriptionRowSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionRowSize = memo(function DescriptionRowSize() {
   const size = useAtomValue(descriptionRowSizeAtom);
-  const updateDescriptionRowSettings = useSetAtom(
-    updateDescriptionRowSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDescriptionRowSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionRowSettings: {
+            ...tableSettings.descriptionRowSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionRowWeight = memo(function DescriptionRowWeight() {
   const weight = useAtomValue(descriptionRowWeightAtom);
-  const updateDescriptionRowSettings = useSetAtom(
-    updateDescriptionRowSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateDescriptionRowSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionRowSettings: {
+            ...tableSettings.descriptionRowSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const DescriptionRowColor = memo(function DescriptionRowColor() {
   const color = useAtomValue(descriptionRowColorAtom);
-  const updateDescriptionRowSettings = useSetAtom(
-    updateDescriptionRowSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateDescriptionRowSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          descriptionRowSettings: {
+            ...tableSettings.descriptionRowSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
@@ -481,65 +530,87 @@ const quantityHeaderLabelAtom = selectAtom(
 
 const QuantityHeaderAlign = memo(function QuantityHeaderAlign() {
   const align = useAtomValue(quantityHeaderAlignAtom);
-  const updateQuantityHeaderSettings = useSetAtom(
-    updateQuantityHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateQuantityHeaderSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityHeaderSettings: {
+            ...tableSettings.quantityHeaderSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityHeaderSize = memo(function QuantityHeaderSize() {
   const size = useAtomValue(quantityHeaderSizeAtom);
-  const updateQuantityHeaderSettings = useSetAtom(
-    updateQuantityHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateQuantityHeaderSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityHeaderSettings: {
+            ...tableSettings.quantityHeaderSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityHeaderWeight = memo(function QuantityHeaderWeight() {
   const weight = useAtomValue(quantityHeaderWeightAtom);
-  const updateQuantityHeaderSettings = useSetAtom(
-    updateQuantityHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateQuantityHeaderSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityHeaderSettings: {
+            ...tableSettings.quantityHeaderSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityHeaderColor = memo(function QuantityHeaderColor() {
   const color = useAtomValue(quantityHeaderColorAtom);
-  const updateQuantityHeaderSettings = useSetAtom(
-    updateQuantityHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateQuantityHeaderSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityHeaderSettings: {
+            ...tableSettings.quantityHeaderSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityHeaderLabel = memo(function QuantityHeaderLabel() {
   const label = useAtomValue(quantityHeaderLabelAtom);
-  const updateQuantityHeaderSettings = useSetAtom(
-    updateQuantityHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -551,7 +622,13 @@ const QuantityHeaderLabel = memo(function QuantityHeaderLabel() {
         id="quantity-header-label"
         value={label}
         onChange={({ target: { value } }) =>
-          updateQuantityHeaderSettings({ label: value })
+          setTableSettings({
+            ...tableSettings,
+            quantityHeaderSettings: {
+              ...tableSettings.quantityHeaderSettings,
+              label: value
+            }
+          })
         }
         className="w-full border p-2"
       />
@@ -578,48 +655,80 @@ const quantityRowColorAtom = selectAtom(
 
 const QuantityRowAlign = memo(function QuantityRowAlign() {
   const align = useAtomValue(quantityRowAlignAtom);
-  const updateQuantityRowSettings = useSetAtom(updateQuantityRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateQuantityRowSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityRowSettings: {
+            ...tableSettings.quantityRowSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityRowSize = memo(function QuantityRowSize() {
   const size = useAtomValue(quantityRowSizeAtom);
-  const updateQuantityRowSettings = useSetAtom(updateQuantityRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateQuantityRowSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityRowSettings: {
+            ...tableSettings.quantityRowSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityRowWeight = memo(function QuantityRowWeight() {
   const weight = useAtomValue(quantityRowWeightAtom);
-  const updateQuantityRowSettings = useSetAtom(updateQuantityRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateQuantityRowSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityRowSettings: {
+            ...tableSettings.quantityRowSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const QuantityRowColor = memo(function QuantityRowColor() {
   const color = useAtomValue(quantityRowColorAtom);
-  const updateQuantityRowSettings = useSetAtom(updateQuantityRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateQuantityRowSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          quantityRowSettings: {
+            ...tableSettings.quantityRowSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
@@ -648,65 +757,87 @@ const unitPriceHeaderLabelAtom = selectAtom(
 
 const UnitPriceHeaderAlign = memo(function UnitPriceHeaderAlign() {
   const align = useAtomValue(unitPriceHeaderAlignAtom);
-  const updateUnitPriceHeaderSettings = useSetAtom(
-    updateUnitPriceHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateUnitPriceHeaderSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceHeaderSettings: {
+            ...tableSettings.unitPriceHeaderSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceHeaderSize = memo(function UnitPriceHeaderSize() {
   const size = useAtomValue(unitPriceHeaderSizeAtom);
-  const updateUnitPriceHeaderSettings = useSetAtom(
-    updateUnitPriceHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateUnitPriceHeaderSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceHeaderSettings: {
+            ...tableSettings.unitPriceHeaderSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceHeaderWeight = memo(function UnitPriceHeaderWeight() {
   const weight = useAtomValue(unitPriceHeaderWeightAtom);
-  const updateUnitPriceHeaderSettings = useSetAtom(
-    updateUnitPriceHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateUnitPriceHeaderSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceHeaderSettings: {
+            ...tableSettings.unitPriceHeaderSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceHeaderColor = memo(function UnitPriceHeaderColor() {
   const color = useAtomValue(unitPriceHeaderColorAtom);
-  const updateUnitPriceHeaderSettings = useSetAtom(
-    updateUnitPriceHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateUnitPriceHeaderSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceHeaderSettings: {
+            ...tableSettings.unitPriceHeaderSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceHeaderLabel = memo(function UnitPriceHeaderLabel() {
   const label = useAtomValue(unitPriceHeaderLabelAtom);
-  const updateUnitPriceHeaderSettings = useSetAtom(
-    updateUnitPriceHeaderSettingsAtom
-  );
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -718,7 +849,13 @@ const UnitPriceHeaderLabel = memo(function UnitPriceHeaderLabel() {
         id="unit-price-header-label"
         value={label}
         onChange={({ target: { value } }) =>
-          updateUnitPriceHeaderSettings({ label: value })
+          setTableSettings({
+            ...tableSettings,
+            unitPriceHeaderSettings: {
+              ...tableSettings.unitPriceHeaderSettings,
+              label: value
+            }
+          })
         }
         className="w-full border p-2"
       />
@@ -746,48 +883,80 @@ const unitPriceRowColorAtom = selectAtom(
 
 const UnitPriceRowAlign = memo(function UnitPriceRowAlign() {
   const align = useAtomValue(unitPriceRowAlignAtom);
-  const updateUnitPriceRowSettings = useSetAtom(updateUnitPriceRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateUnitPriceRowSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceRowSettings: {
+            ...tableSettings.unitPriceRowSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceRowSize = memo(function UnitPriceRowSize() {
   const size = useAtomValue(unitPriceRowSizeAtom);
-  const updateUnitPriceRowSettings = useSetAtom(updateUnitPriceRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateUnitPriceRowSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceRowSettings: {
+            ...tableSettings.unitPriceRowSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceRowWeight = memo(function UnitPriceRowWeight() {
   const weight = useAtomValue(unitPriceRowWeightAtom);
-  const updateUnitPriceRowSettings = useSetAtom(updateUnitPriceRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateUnitPriceRowSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceRowSettings: {
+            ...tableSettings.unitPriceRowSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const UnitPriceRowColor = memo(function UnitPriceRowColor() {
   const color = useAtomValue(unitPriceRowColorAtom);
-  const updateUnitPriceRowSettings = useSetAtom(updateUnitPriceRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateUnitPriceRowSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          unitPriceRowSettings: {
+            ...tableSettings.unitPriceRowSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
@@ -816,55 +985,87 @@ const amountHeaderLabelAtom = selectAtom(
 
 const AmountHeaderAlign = memo(function AmountHeaderAlign() {
   const align = useAtomValue(amountHeaderAlignAtom);
-  const updateAmountHeaderSettings = useSetAtom(updateAmountHeaderSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateAmountHeaderSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountHeaderSettings: {
+            ...tableSettings.amountHeaderSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountHeaderSize = memo(function AmountHeaderSize() {
   const size = useAtomValue(amountHeaderSizeAtom);
-  const updateAmountHeaderSettings = useSetAtom(updateAmountHeaderSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateAmountHeaderSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountHeaderSettings: {
+            ...tableSettings.amountHeaderSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountHeaderWeight = memo(function AmountHeaderWeight() {
   const weight = useAtomValue(amountHeaderWeightAtom);
-  const updateAmountHeaderSettings = useSetAtom(updateAmountHeaderSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateAmountHeaderSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountHeaderSettings: {
+            ...tableSettings.amountHeaderSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountHeaderColor = memo(function AmountHeaderColor() {
   const color = useAtomValue(amountHeaderColorAtom);
-  const updateAmountHeaderSettings = useSetAtom(updateAmountHeaderSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateAmountHeaderSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountHeaderSettings: {
+            ...tableSettings.amountHeaderSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountHeaderLabel = memo(function AmountHeaderLabel() {
   const label = useAtomValue(amountHeaderLabelAtom);
-  const updateAmountHeaderSettings = useSetAtom(updateAmountHeaderSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -876,7 +1077,13 @@ const AmountHeaderLabel = memo(function AmountHeaderLabel() {
         id="amount-header-label"
         value={label}
         onChange={({ target: { value } }) =>
-          updateAmountHeaderSettings({ label: value })
+          setTableSettings({
+            ...tableSettings,
+            amountHeaderSettings: {
+              ...tableSettings.amountHeaderSettings,
+              label: value
+            }
+          })
         }
         className="w-full border p-2"
       />
@@ -904,48 +1111,80 @@ const amountRowColorAtom = selectAtom(
 
 const AmountRowAlign = memo(function AmountRowAlign() {
   const align = useAtomValue(amountRowAlignAtom);
-  const updateAmountRowSettings = useSetAtom(updateAmountRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateAmountRowSettings({ align: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountRowSettings: {
+            ...tableSettings.amountRowSettings,
+            align: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountRowSize = memo(function AmountRowSize() {
   const size = useAtomValue(amountRowSizeAtom);
-  const updateAmountRowSettings = useSetAtom(updateAmountRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateAmountRowSettings({ size: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountRowSettings: {
+            ...tableSettings.amountRowSettings,
+            size: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountRowWeight = memo(function AmountRowWeight() {
   const weight = useAtomValue(amountRowWeightAtom);
-  const updateAmountRowSettings = useSetAtom(updateAmountRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateAmountRowSettings({ weight: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountRowSettings: {
+            ...tableSettings.amountRowSettings,
+            weight: value
+          }
+        })
+      }
     />
   );
 });
 
 const AmountRowColor = memo(function AmountRowColor() {
   const color = useAtomValue(amountRowColorAtom);
-  const updateAmountRowSettings = useSetAtom(updateAmountRowSettingsAtom);
+  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateAmountRowSettings({ color: value })}
+      handleInput={value =>
+        setTableSettings({
+          ...tableSettings,
+          amountRowSettings: {
+            ...tableSettings.amountRowSettings,
+            color: value
+          }
+        })
+      }
     />
   );
 });

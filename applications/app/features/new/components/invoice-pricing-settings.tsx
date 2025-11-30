@@ -10,15 +10,10 @@ import {
   feesSettingsAtom,
   subtotalSettingsAtom,
   taxSettingsAtom,
-  totalSettingsAtom,
-  updateDiscountsSettingsAtom,
-  updateFeesSettingsAtom,
-  updateSubtotalSettingsAtom,
-  updateTaxSettingsAtom,
-  updateTotalSettingsAtom
+  totalSettingsAtom
 } from "features/new/state";
 import { handleActiveTab } from "features/new/utils/handle-active-tab";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo, useEffect, useRef, useState } from "react";
 
@@ -142,12 +137,17 @@ const subtotalLabelAlignAtom = selectAtom(
 
 const SubtotalLabelAlign = memo(function SubtotalLabelAlign() {
   const align = useAtomValue(subtotalLabelAlignAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateSubtotalSettings({ label: { align: value } })}
+      handleInput={value =>
+        setSubtotalSettings({
+          ...subtotalSettings,
+          label: { ...subtotalSettings.label, align: value }
+        })
+      }
     />
   );
 });
@@ -159,12 +159,17 @@ const subtotalLabelSizeAtom = selectAtom(
 
 const SubtotalLabelSize = memo(function SubtotalLabelSize() {
   const size = useAtomValue(subtotalLabelSizeAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateSubtotalSettings({ label: { size: value } })}
+      handleInput={value =>
+        setSubtotalSettings({
+          ...subtotalSettings,
+          label: { ...subtotalSettings.label, size: value }
+        })
+      }
     />
   );
 });
@@ -176,13 +181,16 @@ const subtotalLabelWeightAtom = selectAtom(
 
 const SubtotalLabelWeight = memo(function SubtotalLabelWeight() {
   const weight = useAtomValue(subtotalLabelWeightAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        updateSubtotalSettings({ label: { weight: value } })
+        setSubtotalSettings({
+          ...subtotalSettings,
+          label: { ...subtotalSettings.label, weight: value }
+        })
       }
     />
   );
@@ -195,12 +203,17 @@ const subtotalLabelColorAtom = selectAtom(
 
 const SubtotalLabelColor = memo(function SubtotalLabelColor() {
   const color = useAtomValue(subtotalLabelColorAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateSubtotalSettings({ label: { color: value } })}
+      handleInput={value =>
+        setSubtotalSettings({
+          ...subtotalSettings,
+          label: { ...subtotalSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -213,12 +226,17 @@ const subtotalValueAlignAtom = selectAtom(
 
 const SubtotalValueAlign = memo(function SubtotalValueAlign() {
   const align = useAtomValue(subtotalValueAlignAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateSubtotalSettings({ value: { align: value } })}
+      handleInput={value =>
+        setSubtotalSettings({
+          ...subtotalSettings,
+          value: { ...subtotalSettings.value, align: value }
+        })
+      }
     />
   );
 });
@@ -230,12 +248,17 @@ const subtotalValueSizeAtom = selectAtom(
 
 const SubtotalValueSize = memo(function SubtotalValueSize() {
   const size = useAtomValue(subtotalValueSizeAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateSubtotalSettings({ value: { size: value } })}
+      handleInput={value =>
+        setSubtotalSettings({
+          ...subtotalSettings,
+          value: { ...subtotalSettings.value, size: value }
+        })
+      }
     />
   );
 });
@@ -247,13 +270,16 @@ const subtotalValueWeightAtom = selectAtom(
 
 const SubtotalValueWeight = memo(function SubtotalValueWeight() {
   const weight = useAtomValue(subtotalValueWeightAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        updateSubtotalSettings({ value: { weight: value } })
+        setSubtotalSettings({
+          ...subtotalSettings,
+          value: { ...subtotalSettings.value, weight: value }
+        })
       }
     />
   );
@@ -266,12 +292,17 @@ const subtotalValueColorAtom = selectAtom(
 
 const SubtotalValueColor = memo(function SubtotalValueColor() {
   const color = useAtomValue(subtotalValueColorAtom);
-  const updateSubtotalSettings = useSetAtom(updateSubtotalSettingsAtom);
+  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateSubtotalSettings({ value: { color: value } })}
+      handleInput={value =>
+        setSubtotalSettings({
+          ...subtotalSettings,
+          value: { ...subtotalSettings.value, color: value }
+        })
+      }
     />
   );
 });
@@ -306,12 +337,17 @@ const taxLabelAlignAtom = selectAtom(
 
 const TaxLabelAlign = memo(function TaxLabelAlign() {
   const align = useAtomValue(taxLabelAlignAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateTaxSettings({ label: { align: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          label: { ...taxSettings.label, align: value }
+        })
+      }
     />
   );
 });
@@ -323,12 +359,17 @@ const taxLabelSizeAtom = selectAtom(
 
 const TaxLabelSize = memo(function TaxLabelSize() {
   const size = useAtomValue(taxLabelSizeAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateTaxSettings({ label: { size: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          label: { ...taxSettings.label, size: value }
+        })
+      }
     />
   );
 });
@@ -340,12 +381,17 @@ const taxLabelWeightAtom = selectAtom(
 
 const TaxLabelWeight = memo(function TaxLabelWeight() {
   const weight = useAtomValue(taxLabelWeightAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateTaxSettings({ label: { weight: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          label: { ...taxSettings.label, weight: value }
+        })
+      }
     />
   );
 });
@@ -357,12 +403,17 @@ const taxLabelColorAtom = selectAtom(
 
 const TaxLabelColor = memo(function TaxLabelColor() {
   const color = useAtomValue(taxLabelColorAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateTaxSettings({ label: { color: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          label: { ...taxSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -375,12 +426,17 @@ const taxValueAlignAtom = selectAtom(
 
 const TaxValueAlign = memo(function TaxValueAlign() {
   const align = useAtomValue(taxValueAlignAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateTaxSettings({ value: { align: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          value: { ...taxSettings.value, align: value }
+        })
+      }
     />
   );
 });
@@ -392,12 +448,17 @@ const taxValueSizeAtom = selectAtom(
 
 const TaxValueSize = memo(function TaxValueSize() {
   const size = useAtomValue(taxValueSizeAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateTaxSettings({ value: { size: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          value: { ...taxSettings.value, size: value }
+        })
+      }
     />
   );
 });
@@ -409,12 +470,17 @@ const taxValueWeightAtom = selectAtom(
 
 const TaxValueWeight = memo(function TaxValueWeight() {
   const weight = useAtomValue(taxValueWeightAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateTaxSettings({ value: { weight: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          value: { ...taxSettings.value, weight: value }
+        })
+      }
     />
   );
 });
@@ -426,12 +492,17 @@ const taxValueColorAtom = selectAtom(
 
 const TaxValueColor = memo(function TaxValueColor() {
   const color = useAtomValue(taxValueColorAtom);
-  const updateTaxSettings = useSetAtom(updateTaxSettingsAtom);
+  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateTaxSettings({ value: { color: value } })}
+      handleInput={value =>
+        setTaxSettings({
+          ...taxSettings,
+          value: { ...taxSettings.value, color: value }
+        })
+      }
     />
   );
 });
@@ -466,12 +537,17 @@ const feesLabelAlignAtom = selectAtom(
 
 const FeesLabelAlign = memo(function FeesLabelAlign() {
   const align = useAtomValue(feesLabelAlignAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateFeesSettings({ label: { align: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          label: { ...feesSettings.label, align: value }
+        })
+      }
     />
   );
 });
@@ -483,12 +559,17 @@ const feesLabelSizeAtom = selectAtom(
 
 const FeesLabelSize = memo(function FeesLabelSize() {
   const size = useAtomValue(feesLabelSizeAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateFeesSettings({ label: { size: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          label: { ...feesSettings.label, size: value }
+        })
+      }
     />
   );
 });
@@ -500,12 +581,17 @@ const feesLabelWeightAtom = selectAtom(
 
 const FeesLabelWeight = memo(function FeesLabelWeight() {
   const weight = useAtomValue(feesLabelWeightAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateFeesSettings({ label: { weight: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          label: { ...feesSettings.label, weight: value }
+        })
+      }
     />
   );
 });
@@ -517,12 +603,17 @@ const feesLabelColorAtom = selectAtom(
 
 const FeesLabelColor = memo(function FeesLabelColor() {
   const color = useAtomValue(feesLabelColorAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateFeesSettings({ label: { color: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          label: { ...feesSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -535,12 +626,17 @@ const feesValueAlignAtom = selectAtom(
 
 const FeesValueAlign = memo(function FeesValueAlign() {
   const align = useAtomValue(feesValueAlignAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateFeesSettings({ value: { align: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          value: { ...feesSettings.value, align: value }
+        })
+      }
     />
   );
 });
@@ -552,12 +648,17 @@ const feesValueSizeAtom = selectAtom(
 
 const FeesValueSize = memo(function FeesValueSize() {
   const size = useAtomValue(feesValueSizeAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateFeesSettings({ value: { size: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          value: { ...feesSettings.value, size: value }
+        })
+      }
     />
   );
 });
@@ -569,12 +670,17 @@ const feesValueWeightAtom = selectAtom(
 
 const FeesValueWeight = memo(function FeesValueWeight() {
   const weight = useAtomValue(feesValueWeightAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateFeesSettings({ value: { weight: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          value: { ...feesSettings.value, weight: value }
+        })
+      }
     />
   );
 });
@@ -586,12 +692,17 @@ const feesValueColorAtom = selectAtom(
 
 const FeesValueColor = memo(function FeesValueColor() {
   const color = useAtomValue(feesValueColorAtom);
-  const updateFeesSettings = useSetAtom(updateFeesSettingsAtom);
+  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateFeesSettings({ value: { color: value } })}
+      handleInput={value =>
+        setFeesSettings({
+          ...feesSettings,
+          value: { ...feesSettings.value, color: value }
+        })
+      }
     />
   );
 });
@@ -626,13 +737,16 @@ const discountsLabelAlignAtom = selectAtom(
 
 const DiscountsLabelAlign = memo(function DiscountsLabelAlign() {
   const align = useAtomValue(discountsLabelAlignAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
       handleInput={value =>
-        updateDiscountsSettings({ label: { align: value } })
+        setDiscountsSettings({
+          ...discountsSettings,
+          label: { ...discountsSettings.label, align: value }
+        })
       }
     />
   );
@@ -645,12 +759,17 @@ const discountsLabelSizeAtom = selectAtom(
 
 const DiscountsLabelSize = memo(function DiscountsLabelSize() {
   const size = useAtomValue(discountsLabelSizeAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDiscountsSettings({ label: { size: value } })}
+      handleInput={value =>
+        setDiscountsSettings({
+          ...discountsSettings,
+          label: { ...discountsSettings.label, size: value }
+        })
+      }
     />
   );
 });
@@ -662,13 +781,16 @@ const discountsLabelWeightAtom = selectAtom(
 
 const DiscountsLabelWeight = memo(function DiscountsLabelWeight() {
   const weight = useAtomValue(discountsLabelWeightAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        updateDiscountsSettings({ label: { weight: value } })
+        setDiscountsSettings({
+          ...discountsSettings,
+          label: { ...discountsSettings.label, weight: value }
+        })
       }
     />
   );
@@ -681,13 +803,16 @@ const discountsLabelColorAtom = selectAtom(
 
 const DiscountsLabelColor = memo(function DiscountsLabelColor() {
   const color = useAtomValue(discountsLabelColorAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
       handleInput={value =>
-        updateDiscountsSettings({ label: { color: value } })
+        setDiscountsSettings({
+          ...discountsSettings,
+          label: { ...discountsSettings.label, color: value }
+        })
       }
     />
   );
@@ -701,13 +826,16 @@ const discountsValueAlignAtom = selectAtom(
 
 const DiscountsValueAlign = memo(function DiscountsValueAlign() {
   const align = useAtomValue(discountsValueAlignAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
       handleInput={value =>
-        updateDiscountsSettings({ value: { align: value } })
+        setDiscountsSettings({
+          ...discountsSettings,
+          value: { ...discountsSettings.value, align: value }
+        })
       }
     />
   );
@@ -720,12 +848,17 @@ const discountsValueSizeAtom = selectAtom(
 
 const DiscountsValueSize = memo(function DiscountsValueSize() {
   const size = useAtomValue(discountsValueSizeAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateDiscountsSettings({ value: { size: value } })}
+      handleInput={value =>
+        setDiscountsSettings({
+          ...discountsSettings,
+          value: { ...discountsSettings.value, size: value }
+        })
+      }
     />
   );
 });
@@ -737,13 +870,16 @@ const discountsValueWeightAtom = selectAtom(
 
 const DiscountsValueWeight = memo(function DiscountsValueWeight() {
   const weight = useAtomValue(discountsValueWeightAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        updateDiscountsSettings({ value: { weight: value } })
+        setDiscountsSettings({
+          ...discountsSettings,
+          value: { ...discountsSettings.value, weight: value }
+        })
       }
     />
   );
@@ -756,13 +892,16 @@ const discountsValueColorAtom = selectAtom(
 
 const DiscountsValueColor = memo(function DiscountsValueColor() {
   const color = useAtomValue(discountsValueColorAtom);
-  const updateDiscountsSettings = useSetAtom(updateDiscountsSettingsAtom);
+  const [discountsSettings, setDiscountsSettings] = useAtom(discountsSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
       handleInput={value =>
-        updateDiscountsSettings({ value: { color: value } })
+        setDiscountsSettings({
+          ...discountsSettings,
+          value: { ...discountsSettings.value, color: value }
+        })
       }
     />
   );
@@ -798,12 +937,17 @@ const totalLabelAlignAtom = selectAtom(
 
 const TotalLabelAlign = memo(function TotalLabelAlign() {
   const align = useAtomValue(totalLabelAlignAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateTotalSettings({ label: { align: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          label: { ...totalSettings.label, align: value }
+        })
+      }
     />
   );
 });
@@ -815,12 +959,17 @@ const totalLabelSizeAtom = selectAtom(
 
 const TotalLabelSize = memo(function TotalLabelSize() {
   const size = useAtomValue(totalLabelSizeAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateTotalSettings({ label: { size: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          label: { ...totalSettings.label, size: value }
+        })
+      }
     />
   );
 });
@@ -832,12 +981,17 @@ const totalLabelWeightAtom = selectAtom(
 
 const TotalLabelWeight = memo(function TotalLabelWeight() {
   const weight = useAtomValue(totalLabelWeightAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateTotalSettings({ label: { weight: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          label: { ...totalSettings.label, weight: value }
+        })
+      }
     />
   );
 });
@@ -849,12 +1003,17 @@ const totalLabelColorAtom = selectAtom(
 
 const TotalLabelColor = memo(function TotalLabelColor() {
   const color = useAtomValue(totalLabelColorAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateTotalSettings({ label: { color: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          label: { ...totalSettings.label, color: value }
+        })
+      }
     />
   );
 });
@@ -867,12 +1026,17 @@ const totalValueAlignAtom = selectAtom(
 
 const TotalValueAlign = memo(function TotalValueAlign() {
   const align = useAtomValue(totalValueAlignAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
-      handleInput={value => updateTotalSettings({ value: { align: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          value: { ...totalSettings.value, align: value }
+        })
+      }
     />
   );
 });
@@ -884,12 +1048,17 @@ const totalValueSizeAtom = selectAtom(
 
 const TotalValueSize = memo(function TotalValueSize() {
   const size = useAtomValue(totalValueSizeAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => updateTotalSettings({ value: { size: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          value: { ...totalSettings.value, size: value }
+        })
+      }
     />
   );
 });
@@ -901,12 +1070,17 @@ const totalValueWeightAtom = selectAtom(
 
 const TotalValueWeight = memo(function TotalValueWeight() {
   const weight = useAtomValue(totalValueWeightAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
-      handleInput={value => updateTotalSettings({ value: { weight: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          value: { ...totalSettings.value, weight: value }
+        })
+      }
     />
   );
 });
@@ -918,12 +1092,17 @@ const totalValueColorAtom = selectAtom(
 
 const TotalValueColor = memo(function TotalValueColor() {
   const color = useAtomValue(totalValueColorAtom);
-  const updateTotalSettings = useSetAtom(updateTotalSettingsAtom);
+  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
-      handleInput={value => updateTotalSettings({ value: { color: value } })}
+      handleInput={value =>
+        setTotalSettings({
+          ...totalSettings,
+          value: { ...totalSettings.value, color: value }
+        })
+      }
     />
   );
 });

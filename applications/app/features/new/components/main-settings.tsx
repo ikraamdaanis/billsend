@@ -8,17 +8,15 @@ import { getAllTemplates } from "features/new/db";
 import {
   currencyAtom,
   invoiceAtom,
-  invoiceTemplatesAtom,
-  updateCurrencyAtom
+  invoiceTemplatesAtom
 } from "features/new/state";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { BookmarkIcon, SaveIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Currency } from "types";
 
 export function MainSettings() {
-  const currency = useAtomValue(currencyAtom);
-  const updateCurrency = useSetAtom(updateCurrencyAtom);
+  const [currency, setCurrency] = useAtom(currencyAtom);
   const currentInvoice = useAtomValue(invoiceAtom);
 
   // Get templates data from the jotai atom
@@ -73,7 +71,7 @@ export function MainSettings() {
           <select
             id="currency-select"
             value={currency}
-            onChange={e => updateCurrency(e.target.value as Currency)}
+            onChange={e => setCurrency(e.target.value as Currency)}
             className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:ring-1 focus:ring-offset-0 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
           >
             {currencySymbols.map(({ code, symbol, currency: currencyName }) => (
