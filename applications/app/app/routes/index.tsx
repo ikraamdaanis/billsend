@@ -23,6 +23,7 @@ function HomePage() {
       const threshold = 32;
       setIsScrolled(scrollPosition > threshold);
     }
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -39,7 +40,7 @@ function HomePage() {
               <div className="flex items-center">
                 <h1 className="text-brand-500 text-xl font-bold">billsend</h1>
               </div>
-              <Link to="/new" preload="viewport">
+              <Link to="/create" preload="viewport">
                 <Button className="cursor-pointer">Create Invoice</Button>
               </Link>
             </div>
@@ -64,7 +65,7 @@ function HomePage() {
               customise, and download.
             </p>
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Link to="/new" preload="viewport">
+              <Link to="/create" preload="viewport">
                 <Button className="bg-brand-400 hover:bg-brand-500 flex h-[unset] items-center justify-center rounded-lg px-8 py-4 text-lg font-semibold text-white transition-colors">
                   Start creating
                   <ArrowRight className="h-5 w-5" />
@@ -177,7 +178,7 @@ function HomePage() {
             No sign-up required. Start designing your invoice right now, it only
             takes a minute.
           </p>
-          <Link to="/new" preload="viewport">
+          <Link to="/create" preload="viewport">
             <Button className="bg-brand-400 hover:bg-brand-500 h-[unset] rounded-lg px-8 py-4 text-lg font-semibold text-white transition-colors">
               Create your invoice
             </Button>
