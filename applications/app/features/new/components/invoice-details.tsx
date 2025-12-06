@@ -17,7 +17,10 @@ function InvoiceDetailsComponent() {
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
   return (
-    <div className="flex flex-col" onClick={() => setActiveSettings("details")}>
+    <div
+      className="flex flex-col pt-7"
+      onClick={() => setActiveSettings("details")}
+    >
       <InvoiceNumber />
       <InvoiceDate />
       <InvoiceDueDate />

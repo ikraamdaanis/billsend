@@ -76,26 +76,44 @@ export const invoiceDefault: Invoice = {
     }
   },
   seller: {
+    label: "From",
     content: "",
     placeholder:
       "Acme Inc.\n123 Main St.\nAnytown, USA 12345\n(555) 555-5555\ninfo@acmeinc.com"
   },
   sellerSettings: {
-    align: "left",
-    size: "14",
-    weight: "Medium",
-    color: DEFAULT_FONT_COLOUR
+    label: {
+      align: "left",
+      size: "14",
+      weight: "Medium",
+      color: DEFAULT_FONT_COLOUR
+    },
+    content: {
+      align: "left",
+      size: "14",
+      weight: "Medium",
+      color: DEFAULT_FONT_COLOUR
+    }
   },
   client: {
+    label: "To",
     content: "",
     placeholder:
       "John Doe\n123 Main St.\nAnytown, USA 12345\n(555) 555-5555\njohn.doe@example.com"
   },
   clientSettings: {
-    align: "left",
-    size: "14",
-    weight: "Normal",
-    color: DEFAULT_FONT_COLOUR
+    label: {
+      align: "left",
+      size: "14",
+      weight: "Medium",
+      color: DEFAULT_FONT_COLOUR
+    },
+    content: {
+      align: "left",
+      size: "14",
+      weight: "Normal",
+      color: DEFAULT_FONT_COLOUR
+    }
   },
   items: [
     {
