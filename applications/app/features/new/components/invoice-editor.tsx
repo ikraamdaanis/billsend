@@ -1,4 +1,12 @@
+import { Link } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle
+} from "components/ui/dialog";
 import {
   Drawer,
   DrawerContent,
@@ -21,11 +29,13 @@ import {
 } from "features/new/components/settings-panel";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ArrowLeftIcon } from "lucide-react";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 const NAVBAR_HEIGHT = 50;
 
 export function InvoiceEditor() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const setActiveSettings = useSetAtom(activeSettingsAtom);
   const activeSettings = useAtomValue(activeSettingsAtom);
 
@@ -40,9 +50,15 @@ export function InvoiceEditor() {
           className="bg-background border-border sticky top-0 flex w-full items-center justify-between border-b px-4"
           style={{ height: `${NAVBAR_HEIGHT}px` }}
         >
-          <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
-            billsend
-          </h1>
+          <Button
+            variant="unstyled"
+            size="unstyled"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
+              billsend
+            </h1>
+          </Button>{" "}
           <DownloadInvoice />
         </nav>
         <div
@@ -61,7 +77,7 @@ export function InvoiceEditor() {
               className="fixed top-18 right-[264px] z-30 hidden size-8 w-fit min-w-8 lg:flex"
               onClick={() => setActiveSettings("main")}
             >
-              <ArrowLeftIcon className="h-4 w-4" />
+              <ArrowLeftIcon className="size-4" />
             </Button>
           )}
           <section className="bg-background border-border relative z-20 hidden h-full overflow-y-auto border-l pb-4 lg:block">
@@ -80,6 +96,23 @@ export function InvoiceEditor() {
           </DrawerContent>
         </Drawer>
       </div>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="w-md">
+          <DialogTitle>Leave this page?</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to leave this page and go back to the home
+            page?
+          </DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Link to="/">
+              <Button>Leave</Button>
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
