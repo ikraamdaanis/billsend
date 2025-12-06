@@ -93,7 +93,7 @@ export const InvoicePDF = memo(function InvoicePDF({
       textAlign: "center"
     },
     sellerInfo: {
-      marginBottom: 20
+      marginBottom: 4
     },
     detailsRow: {
       flexDirection: "row",
@@ -212,11 +212,26 @@ export const InvoicePDF = memo(function InvoicePDF({
               {invoice.title}
             </Text>
             <View style={styles.sellerInfo}>
+              {invoice.seller.label && (
+                <Text
+                  style={{
+                    ...styles.clientTitle,
+                    ...getTextStyles({
+                      settings: invoice.sellerSettings.label,
+                      isPdf: true
+                    })
+                  }}
+                >
+                  {invoice.seller.label}
+                </Text>
+              )}
               {renderMultilineText(invoice.seller.content, {
-                textAlign: invoice.sellerSettings.align,
-                fontSize: scaleFontSize(invoice.sellerSettings.size),
-                fontWeight: getFontWeight(invoice.sellerSettings.weight),
-                color: invoice.sellerSettings.color,
+                textAlign: invoice.sellerSettings.content.align,
+                fontSize: scaleFontSize(invoice.sellerSettings.content.size),
+                fontWeight: getFontWeight(
+                  invoice.sellerSettings.content.weight
+                ),
+                color: invoice.sellerSettings.content.color,
                 marginBottom: 2
               })}
             </View>
@@ -224,16 +239,28 @@ export const InvoicePDF = memo(function InvoicePDF({
           {!!imageUrl && <PDFImage src={imageUrl} style={styles.logo} />}
         </View>
         <View>
-          <Text style={styles.clientTitle}>Bill to:</Text>
+          {invoice.client.label && (
+            <Text
+              style={{
+                ...styles.clientTitle,
+                ...getTextStyles({
+                  settings: invoice.clientSettings.label,
+                  isPdf: true
+                })
+              }}
+            >
+              {invoice.client.label}
+            </Text>
+          )}
         </View>
         <View style={styles.detailsRow}>
           <View style={styles.clientInfo}>
             {renderMultilineText(invoice.client.content, {
-              fontSize: scaleFontSize(invoice.clientSettings.size),
-              fontWeight: getFontWeight(invoice.clientSettings.weight),
-              color: invoice.clientSettings.color,
+              fontSize: scaleFontSize(invoice.clientSettings.content.size),
+              fontWeight: getFontWeight(invoice.clientSettings.content.weight),
+              color: invoice.clientSettings.content.color,
               marginBottom: 2,
-              textAlign: invoice.clientSettings.align
+              textAlign: invoice.clientSettings.content.align
             })}
           </View>
           <View style={styles.invoiceDetails}>

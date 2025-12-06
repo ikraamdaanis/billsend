@@ -37,11 +37,13 @@ export type InvoiceItem = {
 };
 
 export type InvoiceSeller = {
+  label: string;
   content: string;
   placeholder: string;
 };
 
 export type InvoiceClient = {
+  label: string;
   content: string;
   placeholder: string;
 };
@@ -76,9 +78,15 @@ export type Invoice = {
     value: TextSettings;
   };
   seller: InvoiceSeller;
-  sellerSettings: TextSettings;
+  sellerSettings: {
+    label: TextSettings;
+    content: TextSettings;
+  };
   client: InvoiceClient;
-  clientSettings: TextSettings;
+  clientSettings: {
+    label: TextSettings;
+    content: TextSettings;
+  };
   items: InvoiceItem[];
   tableSettings: TableSettings;
   subtotal: number;

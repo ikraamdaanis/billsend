@@ -132,8 +132,7 @@ const Top = memo(function Top() {
 const Mid = memo(function Mid() {
   return (
     <>
-      <p className="mt-6 mb-2 font-medium">Bill to:</p>
-      <div className="grid gap-8 sm:grid-cols-2">
+      <div className="mt-2 grid gap-8 sm:grid-cols-2">
         <InvoiceClientDetails />
         <InvoiceDetails />
       </div>
