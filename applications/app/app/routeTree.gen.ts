@@ -9,7 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as NewRouteImport } from './routes/new'
+import { Route as CreateRouteImport } from './routes/create'
 import { Route as authRouteRouteImport } from './routes/(auth)/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
@@ -33,9 +33,9 @@ import { Route as DashboardrootInvoicesInvoiceIdIndexRouteImport } from './route
 import { Route as DashboardeditorTemplatesTemplateIdEditRouteImport } from './routes/dashboard/(editor)/templates.$templateId.edit'
 import { Route as DashboardeditorInvoicesInvoiceIdDesignRouteImport } from './routes/dashboard/(editor)/invoices.$invoiceId.design'
 
-const NewRoute = NewRouteImport.update({
-  id: '/new',
-  path: '/new',
+const CreateRoute = CreateRouteImport.update({
+  id: '/create',
+  path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
 const authRouteRoute = authRouteRouteImport.update({
@@ -161,7 +161,7 @@ const DashboardeditorInvoicesInvoiceIdDesignRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/new': typeof NewRoute
+  '/create': typeof CreateRoute
   '/dashboard': typeof DashboardrootRouteRouteWithChildren
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
@@ -185,7 +185,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/new': typeof NewRoute
+  '/create': typeof CreateRoute
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
@@ -210,7 +210,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
-  '/new': typeof NewRoute
+  '/create': typeof CreateRoute
   '/dashboard/(root)': typeof DashboardrootRouteRouteWithChildren
   '/(auth)/create-organisation': typeof authCreateOrganisationRoute
   '/(auth)/login': typeof authLoginRoute
@@ -236,7 +236,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/new'
+    | '/create'
     | '/dashboard'
     | '/create-organisation'
     | '/login'
@@ -260,7 +260,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/new'
+    | '/create'
     | '/create-organisation'
     | '/login'
     | '/signup'
@@ -284,7 +284,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/(auth)'
-    | '/new'
+    | '/create'
     | '/dashboard/(root)'
     | '/(auth)/create-organisation'
     | '/(auth)/login'
@@ -310,7 +310,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
-  NewRoute: typeof NewRoute
+  CreateRoute: typeof CreateRoute
   DashboardrootRouteRoute: typeof DashboardrootRouteRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPdfInvoiceIdRoute: typeof ApiPdfInvoiceIdRouteWithChildren
@@ -321,11 +321,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/new': {
-      id: '/new'
-      path: '/new'
-      fullPath: '/new'
-      preLoaderRoute: typeof NewRouteImport
+    '/create': {
+      id: '/create'
+      path: '/create'
+      fullPath: '/create'
+      preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/(auth)': {
@@ -546,7 +546,7 @@ const ApiPdfInvoiceIdRouteWithChildren = ApiPdfInvoiceIdRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
-  NewRoute: NewRoute,
+  CreateRoute: CreateRoute,
   DashboardrootRouteRoute: DashboardrootRouteRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPdfInvoiceIdRoute: ApiPdfInvoiceIdRouteWithChildren,
