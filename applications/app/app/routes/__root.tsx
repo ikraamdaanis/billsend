@@ -3,9 +3,11 @@ import type { QueryClient } from "@tanstack/react-query";
 import {
   HeadContent,
   Scripts,
-  createRootRouteWithContext
+  createRootRouteWithContext,
+  useNavigate
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import appCss from "styles/globals.css?url";
 
@@ -40,8 +42,18 @@ export const Route = createRootRouteWithContext<{
     ]
   }),
   shellComponent: RootDocument,
-  notFoundComponent: () => <div>Not Found</div>
+  notFoundComponent: NotFoundComponent
 });
+
+function NotFoundComponent() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate({ to: "/" });
+  }, [navigate]);
+
+  return null;
+}
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
