@@ -29,7 +29,7 @@ export const Route = createFileRoute("/(auth)/create-organisation")({
 
     if (!user) throw redirect({ to: "/login" });
 
-    if (user.activeOrganization) throw redirect({ to: "/dashboard" });
+    if (user.activeOrganization) throw redirect({ to: "/" });
   }
 });
 
@@ -66,7 +66,7 @@ function CreateOrganisationPage() {
             queryKey: sessionQuery().queryKey
           });
 
-          await router.navigate({ to: "/dashboard" });
+          await router.navigate({ to: "/" });
         } catch (error) {
           toast.error(
             getErrorMessage(
