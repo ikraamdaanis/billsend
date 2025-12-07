@@ -15,9 +15,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authCreateOrganisationRouteImport } from './routes/(auth)/create-organisation'
-import { Route as ApiPdfInvoiceIdRouteImport } from './routes/api/pdf/$invoiceId'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as ApiPdfInvoiceIdSplatRouteImport } from './routes/api/pdf/$invoiceId/$'
 
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
@@ -48,21 +45,6 @@ const authCreateOrganisationRoute = authCreateOrganisationRouteImport.update({
   path: '/create-organisation',
   getParentRoute: () => authRouteRoute,
 } as any)
-const ApiPdfInvoiceIdRoute = ApiPdfInvoiceIdRouteImport.update({
-  id: '/api/pdf/$invoiceId',
-  path: '/api/pdf/$invoiceId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPdfInvoiceIdSplatRoute = ApiPdfInvoiceIdSplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => ApiPdfInvoiceIdRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -70,9 +52,6 @@ export interface FileRoutesByFullPath {
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/pdf/$invoiceId': typeof ApiPdfInvoiceIdRouteWithChildren
-  '/api/pdf/$invoiceId/$': typeof ApiPdfInvoiceIdSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -80,9 +59,6 @@ export interface FileRoutesByTo {
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/pdf/$invoiceId': typeof ApiPdfInvoiceIdRouteWithChildren
-  '/api/pdf/$invoiceId/$': typeof ApiPdfInvoiceIdSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,31 +68,12 @@ export interface FileRoutesById {
   '/(auth)/create-organisation': typeof authCreateOrganisationRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/signup': typeof authSignupRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/pdf/$invoiceId': typeof ApiPdfInvoiceIdRouteWithChildren
-  '/api/pdf/$invoiceId/$': typeof ApiPdfInvoiceIdSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/create'
-    | '/create-organisation'
-    | '/login'
-    | '/signup'
-    | '/api/auth/$'
-    | '/api/pdf/$invoiceId'
-    | '/api/pdf/$invoiceId/$'
+  fullPaths: '/' | '/create' | '/create-organisation' | '/login' | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/create'
-    | '/create-organisation'
-    | '/login'
-    | '/signup'
-    | '/api/auth/$'
-    | '/api/pdf/$invoiceId'
-    | '/api/pdf/$invoiceId/$'
+  to: '/' | '/create' | '/create-organisation' | '/login' | '/signup'
   id:
     | '__root__'
     | '/'
@@ -125,17 +82,12 @@ export interface FileRouteTypes {
     | '/(auth)/create-organisation'
     | '/(auth)/login'
     | '/(auth)/signup'
-    | '/api/auth/$'
-    | '/api/pdf/$invoiceId'
-    | '/api/pdf/$invoiceId/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   CreateRoute: typeof CreateRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
-  ApiPdfInvoiceIdRoute: typeof ApiPdfInvoiceIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -182,27 +134,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authCreateOrganisationRouteImport
       parentRoute: typeof authRouteRoute
     }
-    '/api/pdf/$invoiceId': {
-      id: '/api/pdf/$invoiceId'
-      path: '/api/pdf/$invoiceId'
-      fullPath: '/api/pdf/$invoiceId'
-      preLoaderRoute: typeof ApiPdfInvoiceIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/pdf/$invoiceId/$': {
-      id: '/api/pdf/$invoiceId/$'
-      path: '/$'
-      fullPath: '/api/pdf/$invoiceId/$'
-      preLoaderRoute: typeof ApiPdfInvoiceIdSplatRouteImport
-      parentRoute: typeof ApiPdfInvoiceIdRoute
-    }
   }
 }
 
@@ -222,24 +153,10 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
-interface ApiPdfInvoiceIdRouteChildren {
-  ApiPdfInvoiceIdSplatRoute: typeof ApiPdfInvoiceIdSplatRoute
-}
-
-const ApiPdfInvoiceIdRouteChildren: ApiPdfInvoiceIdRouteChildren = {
-  ApiPdfInvoiceIdSplatRoute: ApiPdfInvoiceIdSplatRoute,
-}
-
-const ApiPdfInvoiceIdRouteWithChildren = ApiPdfInvoiceIdRoute._addFileChildren(
-  ApiPdfInvoiceIdRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   CreateRoute: CreateRoute,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
-  ApiPdfInvoiceIdRoute: ApiPdfInvoiceIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
