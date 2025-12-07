@@ -108,7 +108,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <Link
-              to="/dashboard/settings"
+              to="/"
               preload="viewport"
               onClick={() => {
                 if (isMobile) setOpenMobile(false);
@@ -116,10 +116,7 @@ export function AppSidebar() {
             >
               <SidebarMenuButton
                 size="lg"
-                className={cn(
-                  "font-medium",
-                  pathname === "/dashboard/settings" && "bg-zinc-100"
-                )}
+                className={cn("font-medium", pathname === "/" && "bg-zinc-100")}
               >
                 <span className="grid size-6 place-content-center rounded-sm bg-zinc-400">
                   <IoCog className="size-5! text-white" />

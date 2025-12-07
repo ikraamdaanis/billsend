@@ -17,7 +17,7 @@ export const Route = createFileRoute("/(auth)")({
 
     const isCreateOrganisation = location.pathname === "/create-organisation";
 
-    if (user && !isCreateOrganisation) throw redirect({ to: "/dashboard" });
+    if (user && !isCreateOrganisation) throw redirect({ to: "/" });
 
     return { user, redirectUrl: REDIRECT_URL };
   }

@@ -15,23 +15,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as authSignupRouteImport } from './routes/(auth)/signup'
 import { Route as authLoginRouteImport } from './routes/(auth)/login'
 import { Route as authCreateOrganisationRouteImport } from './routes/(auth)/create-organisation'
-import { Route as DashboardrootRouteRouteImport } from './routes/dashboard/(root)/route'
-import { Route as DashboardrootIndexRouteImport } from './routes/dashboard/(root)/index'
-import { Route as DashboardrootSettingsRouteImport } from './routes/dashboard/(root)/settings'
 import { Route as ApiPdfInvoiceIdRouteImport } from './routes/api/pdf/$invoiceId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
-import { Route as DashboardrootTemplatesIndexRouteImport } from './routes/dashboard/(root)/templates/index'
-import { Route as DashboardrootInvoicesIndexRouteImport } from './routes/dashboard/(root)/invoices/index'
-import { Route as DashboardrootClientsIndexRouteImport } from './routes/dashboard/(root)/clients/index'
-import { Route as DashboardrootTemplatesTemplateIdRouteImport } from './routes/dashboard/(root)/templates/$templateId'
-import { Route as DashboardrootInvoicesCreateRouteImport } from './routes/dashboard/(root)/invoices/create'
-import { Route as DashboardrootClientsCreateRouteImport } from './routes/dashboard/(root)/clients/create'
-import { Route as DashboardrootClientsClientIdRouteImport } from './routes/dashboard/(root)/clients/$clientId'
-import { Route as DashboardeditorTemplatesCreateRouteImport } from './routes/dashboard/(editor)/templates.create'
 import { Route as ApiPdfInvoiceIdSplatRouteImport } from './routes/api/pdf/$invoiceId/$'
-import { Route as DashboardrootInvoicesInvoiceIdIndexRouteImport } from './routes/dashboard/(root)/invoices/$invoiceId/index'
-import { Route as DashboardeditorTemplatesTemplateIdEditRouteImport } from './routes/dashboard/(editor)/templates.$templateId.edit'
-import { Route as DashboardeditorInvoicesInvoiceIdDesignRouteImport } from './routes/dashboard/(editor)/invoices.$invoiceId.design'
 
 const CreateRoute = CreateRouteImport.update({
   id: '/create',
@@ -62,21 +48,6 @@ const authCreateOrganisationRoute = authCreateOrganisationRouteImport.update({
   path: '/create-organisation',
   getParentRoute: () => authRouteRoute,
 } as any)
-const DashboardrootRouteRoute = DashboardrootRouteRouteImport.update({
-  id: '/dashboard/(root)',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardrootIndexRoute = DashboardrootIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardrootRouteRoute,
-} as any)
-const DashboardrootSettingsRoute = DashboardrootSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => DashboardrootRouteRoute,
-} as any)
 const ApiPdfInvoiceIdRoute = ApiPdfInvoiceIdRouteImport.update({
   id: '/api/pdf/$invoiceId',
   path: '/api/pdf/$invoiceId',
@@ -87,101 +58,21 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardrootTemplatesIndexRoute =
-  DashboardrootTemplatesIndexRouteImport.update({
-    id: '/templates/',
-    path: '/templates/',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardrootInvoicesIndexRoute =
-  DashboardrootInvoicesIndexRouteImport.update({
-    id: '/invoices/',
-    path: '/invoices/',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardrootClientsIndexRoute =
-  DashboardrootClientsIndexRouteImport.update({
-    id: '/clients/',
-    path: '/clients/',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardrootTemplatesTemplateIdRoute =
-  DashboardrootTemplatesTemplateIdRouteImport.update({
-    id: '/templates/$templateId',
-    path: '/templates/$templateId',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardrootInvoicesCreateRoute =
-  DashboardrootInvoicesCreateRouteImport.update({
-    id: '/invoices/create',
-    path: '/invoices/create',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardrootClientsCreateRoute =
-  DashboardrootClientsCreateRouteImport.update({
-    id: '/clients/create',
-    path: '/clients/create',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardrootClientsClientIdRoute =
-  DashboardrootClientsClientIdRouteImport.update({
-    id: '/clients/$clientId',
-    path: '/clients/$clientId',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardeditorTemplatesCreateRoute =
-  DashboardeditorTemplatesCreateRouteImport.update({
-    id: '/dashboard/(editor)/templates/create',
-    path: '/dashboard/templates/create',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPdfInvoiceIdSplatRoute = ApiPdfInvoiceIdSplatRouteImport.update({
   id: '/$',
   path: '/$',
   getParentRoute: () => ApiPdfInvoiceIdRoute,
 } as any)
-const DashboardrootInvoicesInvoiceIdIndexRoute =
-  DashboardrootInvoicesInvoiceIdIndexRouteImport.update({
-    id: '/invoices/$invoiceId/',
-    path: '/invoices/$invoiceId/',
-    getParentRoute: () => DashboardrootRouteRoute,
-  } as any)
-const DashboardeditorTemplatesTemplateIdEditRoute =
-  DashboardeditorTemplatesTemplateIdEditRouteImport.update({
-    id: '/dashboard/(editor)/templates/$templateId/edit',
-    path: '/dashboard/templates/$templateId/edit',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const DashboardeditorInvoicesInvoiceIdDesignRoute =
-  DashboardeditorInvoicesInvoiceIdDesignRouteImport.update({
-    id: '/dashboard/(editor)/invoices/$invoiceId/design',
-    path: '/dashboard/invoices/$invoiceId/design',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
-  '/dashboard': typeof DashboardrootRouteRouteWithChildren
   '/create-organisation': typeof authCreateOrganisationRoute
   '/login': typeof authLoginRoute
   '/signup': typeof authSignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/pdf/$invoiceId': typeof ApiPdfInvoiceIdRouteWithChildren
-  '/dashboard/settings': typeof DashboardrootSettingsRoute
-  '/dashboard/': typeof DashboardrootIndexRoute
   '/api/pdf/$invoiceId/$': typeof ApiPdfInvoiceIdSplatRoute
-  '/dashboard/templates/create': typeof DashboardeditorTemplatesCreateRoute
-  '/dashboard/clients/$clientId': typeof DashboardrootClientsClientIdRoute
-  '/dashboard/clients/create': typeof DashboardrootClientsCreateRoute
-  '/dashboard/invoices/create': typeof DashboardrootInvoicesCreateRoute
-  '/dashboard/templates/$templateId': typeof DashboardrootTemplatesTemplateIdRoute
-  '/dashboard/clients': typeof DashboardrootClientsIndexRoute
-  '/dashboard/invoices': typeof DashboardrootInvoicesIndexRoute
-  '/dashboard/templates': typeof DashboardrootTemplatesIndexRoute
-  '/dashboard/invoices/$invoiceId/design': typeof DashboardeditorInvoicesInvoiceIdDesignRoute
-  '/dashboard/templates/$templateId/edit': typeof DashboardeditorTemplatesTemplateIdEditRoute
-  '/dashboard/invoices/$invoiceId': typeof DashboardrootInvoicesInvoiceIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -191,72 +82,31 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/pdf/$invoiceId': typeof ApiPdfInvoiceIdRouteWithChildren
-  '/dashboard/settings': typeof DashboardrootSettingsRoute
-  '/dashboard': typeof DashboardrootIndexRoute
   '/api/pdf/$invoiceId/$': typeof ApiPdfInvoiceIdSplatRoute
-  '/dashboard/templates/create': typeof DashboardeditorTemplatesCreateRoute
-  '/dashboard/clients/$clientId': typeof DashboardrootClientsClientIdRoute
-  '/dashboard/clients/create': typeof DashboardrootClientsCreateRoute
-  '/dashboard/invoices/create': typeof DashboardrootInvoicesCreateRoute
-  '/dashboard/templates/$templateId': typeof DashboardrootTemplatesTemplateIdRoute
-  '/dashboard/clients': typeof DashboardrootClientsIndexRoute
-  '/dashboard/invoices': typeof DashboardrootInvoicesIndexRoute
-  '/dashboard/templates': typeof DashboardrootTemplatesIndexRoute
-  '/dashboard/invoices/$invoiceId/design': typeof DashboardeditorInvoicesInvoiceIdDesignRoute
-  '/dashboard/templates/$templateId/edit': typeof DashboardeditorTemplatesTemplateIdEditRoute
-  '/dashboard/invoices/$invoiceId': typeof DashboardrootInvoicesInvoiceIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/create': typeof CreateRoute
-  '/dashboard/(root)': typeof DashboardrootRouteRouteWithChildren
   '/(auth)/create-organisation': typeof authCreateOrganisationRoute
   '/(auth)/login': typeof authLoginRoute
   '/(auth)/signup': typeof authSignupRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/pdf/$invoiceId': typeof ApiPdfInvoiceIdRouteWithChildren
-  '/dashboard/(root)/settings': typeof DashboardrootSettingsRoute
-  '/dashboard/(root)/': typeof DashboardrootIndexRoute
   '/api/pdf/$invoiceId/$': typeof ApiPdfInvoiceIdSplatRoute
-  '/dashboard/(editor)/templates/create': typeof DashboardeditorTemplatesCreateRoute
-  '/dashboard/(root)/clients/$clientId': typeof DashboardrootClientsClientIdRoute
-  '/dashboard/(root)/clients/create': typeof DashboardrootClientsCreateRoute
-  '/dashboard/(root)/invoices/create': typeof DashboardrootInvoicesCreateRoute
-  '/dashboard/(root)/templates/$templateId': typeof DashboardrootTemplatesTemplateIdRoute
-  '/dashboard/(root)/clients/': typeof DashboardrootClientsIndexRoute
-  '/dashboard/(root)/invoices/': typeof DashboardrootInvoicesIndexRoute
-  '/dashboard/(root)/templates/': typeof DashboardrootTemplatesIndexRoute
-  '/dashboard/(editor)/invoices/$invoiceId/design': typeof DashboardeditorInvoicesInvoiceIdDesignRoute
-  '/dashboard/(editor)/templates/$templateId/edit': typeof DashboardeditorTemplatesTemplateIdEditRoute
-  '/dashboard/(root)/invoices/$invoiceId/': typeof DashboardrootInvoicesInvoiceIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/create'
-    | '/dashboard'
     | '/create-organisation'
     | '/login'
     | '/signup'
     | '/api/auth/$'
     | '/api/pdf/$invoiceId'
-    | '/dashboard/settings'
-    | '/dashboard/'
     | '/api/pdf/$invoiceId/$'
-    | '/dashboard/templates/create'
-    | '/dashboard/clients/$clientId'
-    | '/dashboard/clients/create'
-    | '/dashboard/invoices/create'
-    | '/dashboard/templates/$templateId'
-    | '/dashboard/clients'
-    | '/dashboard/invoices'
-    | '/dashboard/templates'
-    | '/dashboard/invoices/$invoiceId/design'
-    | '/dashboard/templates/$templateId/edit'
-    | '/dashboard/invoices/$invoiceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -266,57 +116,26 @@ export interface FileRouteTypes {
     | '/signup'
     | '/api/auth/$'
     | '/api/pdf/$invoiceId'
-    | '/dashboard/settings'
-    | '/dashboard'
     | '/api/pdf/$invoiceId/$'
-    | '/dashboard/templates/create'
-    | '/dashboard/clients/$clientId'
-    | '/dashboard/clients/create'
-    | '/dashboard/invoices/create'
-    | '/dashboard/templates/$templateId'
-    | '/dashboard/clients'
-    | '/dashboard/invoices'
-    | '/dashboard/templates'
-    | '/dashboard/invoices/$invoiceId/design'
-    | '/dashboard/templates/$templateId/edit'
-    | '/dashboard/invoices/$invoiceId'
   id:
     | '__root__'
     | '/'
     | '/(auth)'
     | '/create'
-    | '/dashboard/(root)'
     | '/(auth)/create-organisation'
     | '/(auth)/login'
     | '/(auth)/signup'
     | '/api/auth/$'
     | '/api/pdf/$invoiceId'
-    | '/dashboard/(root)/settings'
-    | '/dashboard/(root)/'
     | '/api/pdf/$invoiceId/$'
-    | '/dashboard/(editor)/templates/create'
-    | '/dashboard/(root)/clients/$clientId'
-    | '/dashboard/(root)/clients/create'
-    | '/dashboard/(root)/invoices/create'
-    | '/dashboard/(root)/templates/$templateId'
-    | '/dashboard/(root)/clients/'
-    | '/dashboard/(root)/invoices/'
-    | '/dashboard/(root)/templates/'
-    | '/dashboard/(editor)/invoices/$invoiceId/design'
-    | '/dashboard/(editor)/templates/$templateId/edit'
-    | '/dashboard/(root)/invoices/$invoiceId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   authRouteRoute: typeof authRouteRouteWithChildren
   CreateRoute: typeof CreateRoute
-  DashboardrootRouteRoute: typeof DashboardrootRouteRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPdfInvoiceIdRoute: typeof ApiPdfInvoiceIdRouteWithChildren
-  DashboardeditorTemplatesCreateRoute: typeof DashboardeditorTemplatesCreateRoute
-  DashboardeditorInvoicesInvoiceIdDesignRoute: typeof DashboardeditorInvoicesInvoiceIdDesignRoute
-  DashboardeditorTemplatesTemplateIdEditRoute: typeof DashboardeditorTemplatesTemplateIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -363,27 +182,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof authCreateOrganisationRouteImport
       parentRoute: typeof authRouteRoute
     }
-    '/dashboard/(root)': {
-      id: '/dashboard/(root)'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardrootRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/(root)/': {
-      id: '/dashboard/(root)/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardrootIndexRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/settings': {
-      id: '/dashboard/(root)/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardrootSettingsRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
     '/api/pdf/$invoiceId': {
       id: '/api/pdf/$invoiceId'
       path: '/api/pdf/$invoiceId'
@@ -398,89 +196,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/(root)/templates/': {
-      id: '/dashboard/(root)/templates/'
-      path: '/templates'
-      fullPath: '/dashboard/templates'
-      preLoaderRoute: typeof DashboardrootTemplatesIndexRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/invoices/': {
-      id: '/dashboard/(root)/invoices/'
-      path: '/invoices'
-      fullPath: '/dashboard/invoices'
-      preLoaderRoute: typeof DashboardrootInvoicesIndexRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/clients/': {
-      id: '/dashboard/(root)/clients/'
-      path: '/clients'
-      fullPath: '/dashboard/clients'
-      preLoaderRoute: typeof DashboardrootClientsIndexRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/templates/$templateId': {
-      id: '/dashboard/(root)/templates/$templateId'
-      path: '/templates/$templateId'
-      fullPath: '/dashboard/templates/$templateId'
-      preLoaderRoute: typeof DashboardrootTemplatesTemplateIdRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/invoices/create': {
-      id: '/dashboard/(root)/invoices/create'
-      path: '/invoices/create'
-      fullPath: '/dashboard/invoices/create'
-      preLoaderRoute: typeof DashboardrootInvoicesCreateRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/clients/create': {
-      id: '/dashboard/(root)/clients/create'
-      path: '/clients/create'
-      fullPath: '/dashboard/clients/create'
-      preLoaderRoute: typeof DashboardrootClientsCreateRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(root)/clients/$clientId': {
-      id: '/dashboard/(root)/clients/$clientId'
-      path: '/clients/$clientId'
-      fullPath: '/dashboard/clients/$clientId'
-      preLoaderRoute: typeof DashboardrootClientsClientIdRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(editor)/templates/create': {
-      id: '/dashboard/(editor)/templates/create'
-      path: '/dashboard/templates/create'
-      fullPath: '/dashboard/templates/create'
-      preLoaderRoute: typeof DashboardeditorTemplatesCreateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/pdf/$invoiceId/$': {
       id: '/api/pdf/$invoiceId/$'
       path: '/$'
       fullPath: '/api/pdf/$invoiceId/$'
       preLoaderRoute: typeof ApiPdfInvoiceIdSplatRouteImport
       parentRoute: typeof ApiPdfInvoiceIdRoute
-    }
-    '/dashboard/(root)/invoices/$invoiceId/': {
-      id: '/dashboard/(root)/invoices/$invoiceId/'
-      path: '/invoices/$invoiceId'
-      fullPath: '/dashboard/invoices/$invoiceId'
-      preLoaderRoute: typeof DashboardrootInvoicesInvoiceIdIndexRouteImport
-      parentRoute: typeof DashboardrootRouteRoute
-    }
-    '/dashboard/(editor)/templates/$templateId/edit': {
-      id: '/dashboard/(editor)/templates/$templateId/edit'
-      path: '/dashboard/templates/$templateId/edit'
-      fullPath: '/dashboard/templates/$templateId/edit'
-      preLoaderRoute: typeof DashboardeditorTemplatesTemplateIdEditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/(editor)/invoices/$invoiceId/design': {
-      id: '/dashboard/(editor)/invoices/$invoiceId/design'
-      path: '/dashboard/invoices/$invoiceId/design'
-      fullPath: '/dashboard/invoices/$invoiceId/design'
-      preLoaderRoute: typeof DashboardeditorInvoicesInvoiceIdDesignRouteImport
-      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -501,36 +222,6 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
-interface DashboardrootRouteRouteChildren {
-  DashboardrootSettingsRoute: typeof DashboardrootSettingsRoute
-  DashboardrootIndexRoute: typeof DashboardrootIndexRoute
-  DashboardrootClientsClientIdRoute: typeof DashboardrootClientsClientIdRoute
-  DashboardrootClientsCreateRoute: typeof DashboardrootClientsCreateRoute
-  DashboardrootInvoicesCreateRoute: typeof DashboardrootInvoicesCreateRoute
-  DashboardrootTemplatesTemplateIdRoute: typeof DashboardrootTemplatesTemplateIdRoute
-  DashboardrootClientsIndexRoute: typeof DashboardrootClientsIndexRoute
-  DashboardrootInvoicesIndexRoute: typeof DashboardrootInvoicesIndexRoute
-  DashboardrootTemplatesIndexRoute: typeof DashboardrootTemplatesIndexRoute
-  DashboardrootInvoicesInvoiceIdIndexRoute: typeof DashboardrootInvoicesInvoiceIdIndexRoute
-}
-
-const DashboardrootRouteRouteChildren: DashboardrootRouteRouteChildren = {
-  DashboardrootSettingsRoute: DashboardrootSettingsRoute,
-  DashboardrootIndexRoute: DashboardrootIndexRoute,
-  DashboardrootClientsClientIdRoute: DashboardrootClientsClientIdRoute,
-  DashboardrootClientsCreateRoute: DashboardrootClientsCreateRoute,
-  DashboardrootInvoicesCreateRoute: DashboardrootInvoicesCreateRoute,
-  DashboardrootTemplatesTemplateIdRoute: DashboardrootTemplatesTemplateIdRoute,
-  DashboardrootClientsIndexRoute: DashboardrootClientsIndexRoute,
-  DashboardrootInvoicesIndexRoute: DashboardrootInvoicesIndexRoute,
-  DashboardrootTemplatesIndexRoute: DashboardrootTemplatesIndexRoute,
-  DashboardrootInvoicesInvoiceIdIndexRoute:
-    DashboardrootInvoicesInvoiceIdIndexRoute,
-}
-
-const DashboardrootRouteRouteWithChildren =
-  DashboardrootRouteRoute._addFileChildren(DashboardrootRouteRouteChildren)
-
 interface ApiPdfInvoiceIdRouteChildren {
   ApiPdfInvoiceIdSplatRoute: typeof ApiPdfInvoiceIdSplatRoute
 }
@@ -547,14 +238,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   authRouteRoute: authRouteRouteWithChildren,
   CreateRoute: CreateRoute,
-  DashboardrootRouteRoute: DashboardrootRouteRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPdfInvoiceIdRoute: ApiPdfInvoiceIdRouteWithChildren,
-  DashboardeditorTemplatesCreateRoute: DashboardeditorTemplatesCreateRoute,
-  DashboardeditorInvoicesInvoiceIdDesignRoute:
-    DashboardeditorInvoicesInvoiceIdDesignRoute,
-  DashboardeditorTemplatesTemplateIdEditRoute:
-    DashboardeditorTemplatesTemplateIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
