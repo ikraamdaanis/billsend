@@ -7,10 +7,13 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-// import { deleteInvoiceTemplate } from "features/new/api/delete-invoice-template";
+import { deleteTemplate, getAllTemplates } from "features/new/db";
+import { invoiceTemplatesAtom } from "features/new/state";
 import type { InvoiceTemplate } from "features/new/types";
+import { useSetAtom } from "jotai";
 import { TrashIcon } from "lucide-react";
 import { useTransition } from "react";
+import { toast } from "sonner";
 
 export function DeleteTemplateModal({
   open,
@@ -21,31 +24,29 @@ export function DeleteTemplateModal({
   onOpenChange: (open: boolean) => void;
   template: InvoiceTemplate | null;
 }) {
-  // const router = useRouter();
-
-  const [pending] = useTransition();
+  const [pending, startTransition] = useTransition();
+  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   function handleDelete() {
-    return;
-    // if (!template) return;
+    if (!template) return;
 
-    // startTransition(async () => {
-    //   try {
-    //     const { error } = await deleteInvoiceTemplate({ id: template.id });
+    startTransition(async () => {
+      try {
+        await deleteTemplate(template.id);
 
-    //     if (error) throw new Error(error);
+        const updatedTemplates = await getAllTemplates();
 
-    //     router.refresh();
+        setTemplates(updatedTemplates);
 
-    //     toast.success(`Template "${template.name}" deleted successfully.`);
+        toast.success(`Template "${template.name}" deleted successfully.`);
 
-    //     onOpenChange(false);
-    //   } catch (error) {
-    //     toast.error(
-    //       error instanceof Error ? error.message : "Failed to delete template."
-    //     );
-    //   }
-    // });
+        onOpenChange(false);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete template."
+        );
+      }
+    });
   }
 
   if (!template) return null;
