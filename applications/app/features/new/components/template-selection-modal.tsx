@@ -66,7 +66,7 @@ export function TemplateSelectionModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[90vh] w-[1280px] flex-col">
-          <DialogHeader className="border-border border-b px-6 py-4">
+          <DialogHeader className="border-border border-b pb-4">
             <DialogTitle className="flex items-center gap-2">
               <SparklesIcon className="h-5 w-5" />
               Choose a Template
@@ -101,7 +101,7 @@ export function TemplateSelectionModal({
               </div>
             )}
           </div>
-          <DialogFooter className="border-border border-t px-6 py-4">
+          <DialogFooter className="border-border border-t pt-4">
             <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-sm">
