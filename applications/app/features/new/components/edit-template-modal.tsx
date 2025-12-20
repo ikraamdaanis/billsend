@@ -18,10 +18,14 @@ import {
 } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { Textarea } from "components/ui/textarea";
+import { getAllTemplates, saveTemplate } from "features/new/db";
+import { invoiceTemplatesAtom } from "features/new/state";
 import type { InvoiceTemplate } from "features/new/types";
+import { useSetAtom } from "jotai";
 import { PencilIcon } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const editTemplateSchema = z.object({
@@ -52,7 +56,8 @@ export function EditTemplateModal({
   template: InvoiceTemplate | null;
   onComplete?: () => void;
 }) {
-  const [pending] = useTransition();
+  const [pending, startTransition] = useTransition();
+  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   const form = useForm<EditTemplateFormData>({
     resolver: zodResolver(editTemplateSchema),
@@ -66,36 +71,33 @@ export function EditTemplateModal({
     }
   });
 
-  function handleSubmit(_data: EditTemplateFormData) {
-    return;
-    // if (!template) return;
+  function handleSubmit(data: EditTemplateFormData) {
+    if (!template) return;
 
-    // startTransition(async () => {
-    //   try {
-    //     const updateData: UpdateTemplateData = {
-    //       id: template.id,
-    //       name: data.name.trim(),
-    //       description: data.description?.trim() || undefined,
-    //       templateData: template.templateData,
-    //       isDefault: false,
-    //       screenshotUrl: template.screenshotUrl || undefined
-    //     };
+    startTransition(async () => {
+      try {
+        const updatedTemplate: InvoiceTemplate = {
+          ...template,
+          name: data.name.trim(),
+          description: data.description?.trim() || null,
+          updatedAt: new Date()
+        };
 
-    //     const { error } = await updateInvoiceTemplate(updateData);
+        await saveTemplate(updatedTemplate);
 
-    //     if (error) throw new Error(error);
+        const updatedTemplates = await getAllTemplates();
 
-    //     router.refresh();
+        setTemplates(updatedTemplates);
 
-    //     toast.success("Template updated successfully!");
+        toast.success("Template updated successfully!");
 
-    //     handleClose();
-    //   } catch (error) {
-    //     toast.error(
-    //       error instanceof Error ? error.message : "Failed to update template"
-    //     );
-    //   }
-    // });
+        handleClose();
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to update template"
+        );
+      }
+    });
   }
 
   function handleClose() {
