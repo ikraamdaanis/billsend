@@ -177,6 +177,7 @@ function renderTemplatePreview(template: InvoiceTemplate) {
         src={template.screenshotUrl}
         alt={`${template.name} template preview`}
         className="h-full w-full rounded object-cover object-top"
+        loading="lazy"
         onError={e => {
           // Fallback to mock preview if image fails to load
           const target = e.target as HTMLImageElement;

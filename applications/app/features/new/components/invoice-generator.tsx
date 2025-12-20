@@ -20,7 +20,14 @@ import { scaleFontSize } from "features/new/utils/scale-font-size";
 import { useAtomValue } from "jotai";
 import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { memo, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition
+} from "react";
 
 // Only register fonts on the client side
 if (typeof window !== "undefined") {
@@ -658,9 +665,17 @@ export const InvoicePDF = memo(function InvoicePDF({
 export function InvoiceGenerator() {
   const invoice = useAtomValue(invoiceAtom);
   const imageId = useAtomValue(imageAtom);
+
   const [_isPending, startTransition] = useTransition();
   const [key, setKey] = useState(0);
   const [imageUrl, setImageUrl] = useState("");
+  const imageUrlRef = useRef<string | null>(null);
+
+  // Create stable invoice with loaded image URL
+  const stableInvoice = useMemo(
+    () => ({ ...invoice, image: imageUrl }),
+    [invoice, imageUrl]
+  );
 
   // Load image from IndexedDB when imageId changes
   useEffect(() => {
@@ -668,27 +683,57 @@ export function InvoiceGenerator() {
 
     async function loadImage() {
       if (!imageId) {
-        setImageUrl("");
-        return;
+        // Clean up previous blob URL if it exists
+        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+          URL.revokeObjectURL(imageUrlRef.current);
+          imageUrlRef.current = null;
+        }
+
+        return setImageUrl("");
       }
 
       // Check if it's already a blob URL or data URL
       if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
-        setImageUrl(imageId);
-        return;
+        // Clean up previous blob URL if it exists
+        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+          URL.revokeObjectURL(imageUrlRef.current);
+        }
+
+        imageUrlRef.current = imageId;
+        return setImageUrl(imageId);
       }
 
       try {
         const blob = await getImageBlob(imageId);
-        if (cancelled) return;
         if (blob) {
+          // Clean up previous blob URL before creating new one
+          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+            URL.revokeObjectURL(imageUrlRef.current);
+          }
+
           const url = URL.createObjectURL(blob);
+
+          if (cancelled) return URL.revokeObjectURL(url);
+
+          imageUrlRef.current = url;
           setImageUrl(url);
         } else {
+          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+            URL.revokeObjectURL(imageUrlRef.current);
+            imageUrlRef.current = null;
+          }
+
           setImageUrl("");
         }
       } catch {
-        if (!cancelled) setImageUrl("");
+        if (!cancelled) {
+          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+            URL.revokeObjectURL(imageUrlRef.current);
+            imageUrlRef.current = null;
+          }
+
+          setImageUrl("");
+        }
       }
     }
 
@@ -696,6 +741,12 @@ export function InvoiceGenerator() {
 
     return () => {
       cancelled = true;
+
+      // Clean up blob URL on unmount or when imageId changes
+      if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrlRef.current);
+        imageUrlRef.current = null;
+      }
     };
   }, [imageId]);
 
@@ -705,12 +756,6 @@ export function InvoiceGenerator() {
       setKey(prev => prev + 1);
     });
   }, [invoice, imageUrl]);
-
-  // Create stable invoice with loaded image URL
-  const stableInvoice = useMemo(
-    () => ({ ...invoice, image: imageUrl }),
-    [invoice, imageUrl]
-  );
 
   return (
     <div className="mx-auto flex h-full w-full flex-col overflow-y-scroll border-t-8 border-t-neutral-200 bg-white p-8">

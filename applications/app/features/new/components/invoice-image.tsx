@@ -9,10 +9,83 @@ import Dropzone from "react-dropzone";
 
 export function InvoiceImage() {
   const [imageId, setImageId] = useAtom(imageAtom);
-  const [isDragging, setIsDragging] = useState(false);
+
   const [imageUrl, setImageUrl] = useState<string>("");
+  const [isDragging, setIsDragging] = useState(false);
+
   const currentUrlRef = useRef<string | null>(null);
   const lastUploadedIdRef = useRef<string | null>(null);
+
+  async function handleImageUpload(files: File[]) {
+    if (files.length === 0) return;
+
+    const file = files[0];
+    const newImageId = crypto.randomUUID();
+
+    // Revoke previous image URL if it exists
+    if (currentUrlRef.current) {
+      URL.revokeObjectURL(currentUrlRef.current);
+      currentUrlRef.current = null;
+    }
+
+    // Immediately show the uploaded image
+    const previewUrl = URL.createObjectURL(file);
+    currentUrlRef.current = previewUrl;
+    setImageUrl(previewUrl);
+
+    try {
+      // Save image blob to IndexedDB
+      await saveImage(newImageId, file, file.type);
+
+      // Verify it was saved
+      const verifyBlob = await getImageBlob(newImageId);
+
+      if (!verifyBlob) throw new Error("Image was not saved correctly");
+
+      // Track that we just uploaded this image
+      lastUploadedIdRef.current = newImageId;
+
+      // Store image ID in invoice state
+      setImageId(newImageId);
+    } catch {
+      // On error, revoke preview URL and clear
+      if (currentUrlRef.current === previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        currentUrlRef.current = null;
+        setImageUrl("");
+      }
+    }
+  }
+
+  async function handleRemoveImage() {
+    // Revoke current image URL
+    if (currentUrlRef.current) {
+      URL.revokeObjectURL(currentUrlRef.current);
+      currentUrlRef.current = null;
+    }
+
+    setImageUrl("");
+
+    if (imageId) {
+      try {
+        await deleteImage(imageId);
+      } catch {
+        // Failed to delete from DB, but still clear the UI
+      }
+    }
+
+    setImageId("");
+  }
+
+  // Cleanup blob URLs on component unmount
+  useEffect(() => {
+    return () => {
+      if (currentUrlRef.current) {
+        URL.revokeObjectURL(currentUrlRef.current);
+        currentUrlRef.current = null;
+      }
+    };
+  }, []);
 
   // Load image from IndexedDB when imageId changes
   useEffect(() => {
@@ -38,8 +111,6 @@ export function InvoiceImage() {
       try {
         const blob = await getImageBlob(imageId);
 
-        if (cancelled) return;
-
         // Revoke previous URL before creating new one
         if (currentUrlRef.current) {
           URL.revokeObjectURL(currentUrlRef.current);
@@ -47,6 +118,9 @@ export function InvoiceImage() {
 
         if (blob) {
           const url = URL.createObjectURL(blob);
+
+          if (cancelled) return URL.revokeObjectURL(url);
+
           currentUrlRef.current = url;
           setImageUrl(url);
         } else {
@@ -59,6 +133,7 @@ export function InvoiceImage() {
             URL.revokeObjectURL(currentUrlRef.current);
             currentUrlRef.current = null;
           }
+
           setImageUrl("");
         }
       }
@@ -68,69 +143,13 @@ export function InvoiceImage() {
 
     return () => {
       cancelled = true;
-      if (currentUrlRef.current && imageId !== lastUploadedIdRef.current) {
+      // Always clean up blob URL on unmount or when imageId changes
+      if (currentUrlRef.current) {
         URL.revokeObjectURL(currentUrlRef.current);
         currentUrlRef.current = null;
       }
     };
   }, [imageId]);
-
-  async function handleImageUpload(files: File[]) {
-    if (files.length === 0) return;
-
-    const file = files[0];
-    const newImageId = crypto.randomUUID();
-
-    // Revoke previous image URL if it exists
-    if (currentUrlRef.current) {
-      URL.revokeObjectURL(currentUrlRef.current);
-      currentUrlRef.current = null;
-    }
-
-    // Immediately show the uploaded image
-    const previewUrl = URL.createObjectURL(file);
-    currentUrlRef.current = previewUrl;
-    setImageUrl(previewUrl);
-
-    try {
-      // Save image blob to IndexedDB
-      await saveImage(newImageId, file, file.type);
-      // Verify it was saved
-      const verifyBlob = await getImageBlob(newImageId);
-      if (!verifyBlob) {
-        throw new Error("Image was not saved correctly");
-      }
-      // Track that we just uploaded this image
-      lastUploadedIdRef.current = newImageId;
-      // Store image ID in invoice state
-      setImageId(newImageId);
-    } catch {
-      // On error, revoke preview URL and clear
-      if (currentUrlRef.current === previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        currentUrlRef.current = null;
-        setImageUrl("");
-      }
-    }
-  }
-
-  async function handleRemoveImage() {
-    // Revoke current image URL
-    if (currentUrlRef.current) {
-      URL.revokeObjectURL(currentUrlRef.current);
-      currentUrlRef.current = null;
-    }
-    setImageUrl("");
-
-    if (imageId) {
-      try {
-        await deleteImage(imageId);
-      } catch {
-        // Failed to delete from DB, but still clear the UI
-      }
-    }
-    setImageId("");
-  }
 
   return (
     <Dropzone
