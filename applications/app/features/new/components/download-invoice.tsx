@@ -6,7 +6,7 @@ import { imageAtom, invoiceAtom } from "features/new/state";
 import { useAtomValue } from "jotai";
 import { cn } from "lib/utils";
 import type { ComponentProps } from "react";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export function DownloadInvoice({
@@ -16,6 +16,7 @@ export function DownloadInvoice({
   const invoice = useAtomValue(invoiceAtom);
   const imageId = useAtomValue(imageAtom);
   const [imageUrl, setImageUrl] = useState("");
+  const imageUrlRef = useRef<string | null>(null);
 
   const [pending, startTransition] = useTransition();
 
@@ -25,27 +26,58 @@ export function DownloadInvoice({
 
     async function loadImage() {
       if (!imageId) {
+        // Clean up previous blob URL if it exists
+        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+          URL.revokeObjectURL(imageUrlRef.current);
+          imageUrlRef.current = null;
+        }
         setImageUrl("");
         return;
       }
 
       // Check if it's already a blob URL or data URL
       if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
+        // Clean up previous blob URL if it exists
+        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+          URL.revokeObjectURL(imageUrlRef.current);
+        }
+        imageUrlRef.current = imageId;
         setImageUrl(imageId);
         return;
       }
 
       try {
         const blob = await getImageBlob(imageId);
-        if (cancelled) return;
+
         if (blob) {
+          // Clean up previous blob URL before creating new one
+          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+            URL.revokeObjectURL(imageUrlRef.current);
+          }
+
           const url = URL.createObjectURL(blob);
+
+          if (cancelled) return URL.revokeObjectURL(url);
+
+          imageUrlRef.current = url;
           setImageUrl(url);
         } else {
+          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+            URL.revokeObjectURL(imageUrlRef.current);
+            imageUrlRef.current = null;
+          }
+
           setImageUrl("");
         }
       } catch {
-        if (!cancelled) setImageUrl("");
+        if (!cancelled) {
+          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+            URL.revokeObjectURL(imageUrlRef.current);
+            imageUrlRef.current = null;
+          }
+
+          setImageUrl("");
+        }
       }
     }
 
@@ -53,6 +85,12 @@ export function DownloadInvoice({
 
     return () => {
       cancelled = true;
+
+      // Clean up blob URL on unmount or when imageId changes
+      if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrlRef.current);
+        imageUrlRef.current = null;
+      }
     };
   }, [imageId]);
 
