@@ -69,7 +69,7 @@ export function DownloadInvoice({
 
           setImageUrl("");
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
             URL.revokeObjectURL(imageUrlRef.current);
@@ -77,6 +77,12 @@ export function DownloadInvoice({
           }
 
           setImageUrl("");
+
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to load image from storage."
+          );
         }
       }
     }

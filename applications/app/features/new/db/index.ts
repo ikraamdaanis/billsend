@@ -26,29 +26,67 @@ export const db = new InvoiceDatabase();
 
 // Ensure database is ready before use
 export async function ensureDbReady(): Promise<void> {
-  await db.open();
+  try {
+    await db.open();
+  } catch {
+    throw new Error(
+      "Unable to access local storage. Please check your browser settings and ensure IndexedDB is enabled."
+    );
+  }
 }
 
 export async function getAllTemplates(): Promise<InvoiceTemplate[]> {
-  await ensureDbReady();
-  return await db.templates.toArray();
+  try {
+    await ensureDbReady();
+    return await db.templates.toArray();
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load templates from local storage."
+    );
+  }
 }
 
 export async function saveTemplate(template: InvoiceTemplate): Promise<string> {
-  await ensureDbReady();
-  return await db.templates.put(template);
+  try {
+    await ensureDbReady();
+    return await db.templates.put(template);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to save template to local storage."
+    );
+  }
 }
 
 export async function getTemplate(
   id: string
 ): Promise<InvoiceTemplate | undefined> {
-  await ensureDbReady();
-  return await db.templates.get(id);
+  try {
+    await ensureDbReady();
+    return await db.templates.get(id);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load template from local storage."
+    );
+  }
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
-  await ensureDbReady();
-  await db.templates.delete(id);
+  try {
+    await ensureDbReady();
+    await db.templates.delete(id);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete template from local storage."
+    );
+  }
 }
 
 export async function saveImage(
@@ -56,40 +94,74 @@ export async function saveImage(
   blob: Blob,
   type: string
 ): Promise<string> {
-  await ensureDbReady();
-  // Convert blob to ArrayBuffer for reliable storage
-  const arrayBuffer = await blob.arrayBuffer();
-  const image: StoredImage = {
-    id,
-    data: arrayBuffer,
-    type,
-    createdAt: new Date()
-  };
-  await db.images.put(image);
-  // Verify save worked
-  const verify = await db.images.get(id);
-  if (!verify) {
-    throw new Error(`Failed to save image ${id}`);
+  try {
+    await ensureDbReady();
+    // Convert blob to ArrayBuffer for reliable storage
+    const arrayBuffer = await blob.arrayBuffer();
+    const image: StoredImage = {
+      id,
+      data: arrayBuffer,
+      type,
+      createdAt: new Date()
+    };
+    await db.images.put(image);
+    // Verify save worked
+    const verify = await db.images.get(id);
+    if (!verify) {
+      throw new Error(
+        "Failed to save image. The image may be too large or your browser storage may be full."
+      );
+    }
+    return id;
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to save image to local storage."
+    );
   }
-  return id;
 }
 
 export async function getImage(id: string): Promise<StoredImage | undefined> {
-  await ensureDbReady();
-  return await db.images.get(id);
+  try {
+    await ensureDbReady();
+    return await db.images.get(id);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load image from local storage."
+    );
+  }
 }
 
 export async function deleteImage(id: string): Promise<void> {
-  await ensureDbReady();
-  await db.images.delete(id);
+  try {
+    await ensureDbReady();
+    await db.images.delete(id);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete image from local storage."
+    );
+  }
 }
 
 export async function getImageBlob(id: string): Promise<Blob | null> {
-  await ensureDbReady();
-  const image = await db.images.get(id);
-  if (!image) {
-    return null;
+  try {
+    await ensureDbReady();
+    const image = await db.images.get(id);
+    if (!image) {
+      return null;
+    }
+    // Convert ArrayBuffer back to Blob
+    return new Blob([image.data], { type: image.type });
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load image from local storage."
+    );
   }
-  // Convert ArrayBuffer back to Blob
-  return new Blob([image.data], { type: image.type });
 }

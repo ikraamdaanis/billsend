@@ -13,6 +13,7 @@ import {
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { BookmarkIcon, SaveIcon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import type { Currency } from "types";
 
 export function MainSettings() {
@@ -32,10 +33,15 @@ export function MainSettings() {
       try {
         const loadedTemplates = await getAllTemplates();
         setTemplates(loadedTemplates);
-      } catch {
-        // Failed to load templates
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to load templates from storage."
+        );
       }
     }
+
     loadTemplates();
   }, [setTemplates]);
 

@@ -6,6 +6,7 @@ import { cn } from "lib/utils";
 import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
+import { toast } from "sonner";
 
 export function InvoiceImage() {
   const [imageId, setImageId] = useAtom(imageAtom);
@@ -47,13 +48,18 @@ export function InvoiceImage() {
 
       // Store image ID in invoice state
       setImageId(newImageId);
-    } catch {
+    } catch (error) {
       // On error, revoke preview URL and clear
       if (currentUrlRef.current === previewUrl) {
         URL.revokeObjectURL(previewUrl);
         currentUrlRef.current = null;
         setImageUrl("");
       }
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to save image. Please try again."
+      );
     }
   }
 
@@ -69,8 +75,13 @@ export function InvoiceImage() {
     if (imageId) {
       try {
         await deleteImage(imageId);
-      } catch {
+      } catch (error) {
         // Failed to delete from DB, but still clear the UI
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to remove image from storage."
+        );
       }
     }
 
@@ -127,7 +138,7 @@ export function InvoiceImage() {
           currentUrlRef.current = null;
           setImageUrl("");
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           if (currentUrlRef.current) {
             URL.revokeObjectURL(currentUrlRef.current);
@@ -135,6 +146,11 @@ export function InvoiceImage() {
           }
 
           setImageUrl("");
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to load image from storage."
+          );
         }
       }
     }
