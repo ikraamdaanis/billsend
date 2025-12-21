@@ -28,6 +28,7 @@ import {
   useState,
   useTransition
 } from "react";
+import { toast } from "sonner";
 
 // Only register fonts on the client side
 if (typeof window !== "undefined") {
@@ -725,7 +726,7 @@ export function InvoiceGenerator() {
 
           setImageUrl("");
         }
-      } catch {
+      } catch (error) {
         if (!cancelled) {
           if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
             URL.revokeObjectURL(imageUrlRef.current);
@@ -733,6 +734,11 @@ export function InvoiceGenerator() {
           }
 
           setImageUrl("");
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Failed to load image from storage."
+          );
         }
       }
     }
