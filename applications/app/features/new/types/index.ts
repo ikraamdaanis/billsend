@@ -147,6 +147,15 @@ export type InvoiceTemplate = {
   updatedAt: Date;
 };
 
+export type InvoiceDocument = {
+  id: string;
+  name: string;
+  invoiceData: Invoice;
+  templateId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type StoredImage = {
   id: string;
   blob: Blob;

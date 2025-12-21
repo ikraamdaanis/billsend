@@ -1,6 +1,6 @@
 import type { Table } from "dexie";
 import Dexie from "dexie";
-import type { InvoiceTemplate } from "features/new/types";
+import type { InvoiceDocument, InvoiceTemplate } from "features/new/types";
 
 export interface StoredImage {
   id: string;
@@ -11,12 +11,18 @@ export interface StoredImage {
 
 class InvoiceDatabase extends Dexie {
   templates!: Table<InvoiceTemplate, string>;
+  invoices!: Table<InvoiceDocument, string>;
   images!: Table<StoredImage, string>;
 
   constructor() {
     super("InvoiceDatabase");
     this.version(1).stores({
       templates: "id, name, createdAt, updatedAt",
+      images: "id"
+    });
+    this.version(2).stores({
+      templates: "id, name, createdAt, updatedAt",
+      invoices: "id, name, createdAt, updatedAt",
       images: "id"
     });
   }
@@ -85,6 +91,60 @@ export async function deleteTemplate(id: string): Promise<void> {
       error instanceof Error
         ? error.message
         : "Failed to delete template from local storage."
+    );
+  }
+}
+
+export async function getAllInvoices(): Promise<InvoiceDocument[]> {
+  try {
+    await ensureDbReady();
+    return await db.invoices.toArray();
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load invoices from local storage."
+    );
+  }
+}
+
+export async function saveInvoice(invoice: InvoiceDocument): Promise<string> {
+  try {
+    await ensureDbReady();
+    return await db.invoices.put(invoice);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to save invoice to local storage."
+    );
+  }
+}
+
+export async function getInvoice(
+  id: string
+): Promise<InvoiceDocument | undefined> {
+  try {
+    await ensureDbReady();
+    return await db.invoices.get(id);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load invoice from local storage."
+    );
+  }
+}
+
+export async function deleteInvoice(id: string): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.invoices.delete(id);
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete invoice from local storage."
     );
   }
 }
