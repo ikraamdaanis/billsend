@@ -17,6 +17,7 @@ import { DownloadInvoice } from "features/new/components/download-invoice";
 import { InvoiceCanvas } from "features/new/components/invoice-canvas";
 import { InvoiceClientDetails } from "features/new/components/invoice-client-details";
 import { InvoiceDetails } from "features/new/components/invoice-details";
+import { InvoiceFileMenu } from "features/new/components/invoice-file-menu";
 import { InvoiceImage } from "features/new/components/invoice-image";
 import { InvoiceLineItems } from "features/new/components/invoice-line-items";
 import { InvoicePricing } from "features/new/components/invoice-pricing";
@@ -27,43 +28,60 @@ import {
   activeSettingsAtom,
   SettingsPanel
 } from "features/new/components/settings-panel";
+import { currentInvoiceDocumentNameAtom } from "features/new/state";
 import { useAtomValue, useSetAtom } from "jotai";
 import { ArrowLeftIcon } from "lucide-react";
 import { memo, useState } from "react";
 
-const NAVBAR_HEIGHT = 50;
+const TOOLBAR_HEIGHT = 50;
 
 export function InvoiceEditor() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const setActiveSettings = useSetAtom(activeSettingsAtom);
   const activeSettings = useAtomValue(activeSettingsAtom);
+  const currentDocumentName = useAtomValue(currentInvoiceDocumentNameAtom);
 
   function handleSectionClick() {
     setActiveSettings("main");
   }
 
+  const displayName = currentDocumentName || "Untitled invoice";
+
   return (
     <>
       <div className="h-dvh w-full">
+        {/* Toolbar - Framer style: logo left, menubar, filename center, download right */}
         <nav
-          className="bg-background border-border sticky top-0 flex w-full items-center justify-between border-b px-4"
-          style={{ height: `${NAVBAR_HEIGHT}px` }}
+          className="bg-background border-border sticky top-0 z-50 flex w-full items-center justify-between border-b px-4"
+          style={{ height: `${TOOLBAR_HEIGHT}px` }}
         >
-          <Button
-            variant="unstyled"
-            size="unstyled"
-            onClick={() => setIsModalOpen(true)}
-          >
-            <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
-              billsend
-            </h1>
-          </Button>{" "}
-          <DownloadInvoice />
+          <div className="flex items-center gap-4">
+            <Button
+              variant="unstyled"
+              size="unstyled"
+              onClick={() => setIsModalOpen(true)}
+            >
+              <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
+                billsend
+              </h1>
+            </Button>
+            <InvoiceFileMenu />
+          </div>
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <h2 className="text-foreground text-sm font-medium">
+              {displayName}
+            </h2>
+          </div>
+          <div className="ml-auto">
+            <DownloadInvoice />
+          </div>
         </nav>
         <div
           className="relative flex w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid"
-          style={{ height: `calc(100dvh - ${NAVBAR_HEIGHT}px)` }}
+          style={{
+            height: `calc(100dvh - ${TOOLBAR_HEIGHT}px)`
+          }}
         >
           <InvoiceCanvas onSectionClick={handleSectionClick}>
             <Top />
