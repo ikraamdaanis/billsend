@@ -38,7 +38,9 @@ function HomePage() {
           <div className="mx-auto max-w-[calc(1280px+4rem)] rounded-2xl border border-gray-100 bg-white/90 px-4 backdrop-blur-sm">
             <div className="flex h-16 items-center justify-between">
               <div className="flex items-center">
-                <h1 className="text-brand-500 text-xl font-bold">billsend</h1>
+                <h1 className="text-brand-500 font-bricolage-grotesque text-xl font-bold">
+                  billsend
+                </h1>
               </div>
               <Link to="/create" preload="viewport">
                 <Button className="cursor-pointer">Create Invoice</Button>
@@ -190,7 +192,9 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="mb-4 flex items-center justify-center space-x-2">
-              <h3 className="text-brand-500 text-xl font-bold">billsend</h3>
+              <h3 className="text-brand-500 font-bricolage-grotesque text-xl font-bold">
+                billsend
+              </h3>
             </div>
             <p className="text-sm text-gray-500">
               © {dayjs().format("YYYY")} billsend.io. All rights reserved.
