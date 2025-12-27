@@ -126,6 +126,15 @@ export type Invoice = {
   currency: Currency;
 };
 
+export type InvoiceDocument = {
+  id: string;
+  name: string;
+  invoiceData: Invoice;
+  templateId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export type SettingsType =
   | "title"
   | "details"
@@ -143,15 +152,6 @@ export type InvoiceTemplate = {
   isDefault: boolean;
   templateData: Invoice;
   screenshotUrl: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-export type InvoiceDocument = {
-  id: string;
-  name: string;
-  invoiceData: Invoice;
-  templateId: string | null;
   createdAt: Date;
   updatedAt: Date;
 };
