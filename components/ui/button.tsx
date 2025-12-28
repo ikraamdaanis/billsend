@@ -1,4 +1,4 @@
-import { Slot } from "@radix-ui/react-slot";
+import { Button as BaseButton } from '@base-ui/react/button';
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 import { cn } from "lib/utils";
@@ -52,12 +52,13 @@ function Button({
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot : "button";
+  const Comp = asChild ? true : false;
 
   return (
-    <Comp
+    <BaseButton
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      {...(Comp ? {render: <div/>, nativeButton: false} : {})}
       {...props}
     />
   );
