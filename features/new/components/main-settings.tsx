@@ -1,74 +1,14 @@
-import { Button } from "components/ui/button";
 import { Label } from "components/ui/label";
-import { Separator } from "components/ui/separator";
 import { currencySymbols } from "consts/currencies";
-import { SaveTemplateModal } from "features/new/components/save-template-modal";
-import { TemplateSelectionModal } from "features/new/components/template-selection-modal";
-import { getAllTemplates } from "features/new/db";
-import {
-  currencyAtom,
-  invoiceAtom,
-  invoiceTemplatesAtom
-} from "features/new/state";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { BookmarkIcon, SaveIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { currencyAtom } from "features/new/state";
+import { useAtom } from "jotai";
 import type { Currency } from "types";
 
 export function MainSettings() {
   const [currency, setCurrency] = useAtom(currencyAtom);
-  const currentInvoice = useAtomValue(invoiceAtom);
-
-  // Get templates data from the jotai atom
-  const templates = useAtomValue(invoiceTemplatesAtom);
-  const setTemplates = useSetAtom(invoiceTemplatesAtom);
-
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-
-  // Load templates from IndexedDB on mount
-  useEffect(() => {
-    async function loadTemplates() {
-      try {
-        const loadedTemplates = await getAllTemplates();
-        setTemplates(loadedTemplates);
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to load templates from storage."
-        );
-      }
-    }
-
-    loadTemplates();
-  }, [setTemplates]);
 
   return (
     <div className="mb-4 flex h-full flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label className="font-medium">Templates</Label>
-        <div className="flex flex-col gap-2">
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setShowTemplateModal(true)}
-          >
-            <BookmarkIcon className="h-4 w-4" />
-            Choose Template
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => setShowSaveModal(true)}
-          >
-            <SaveIcon className="h-4 w-4" />
-            Save as Template
-          </Button>
-        </div>
-      </div>
-      <Separator />
       <div className="flex flex-col gap-2">
         <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
           <Label htmlFor="currency-select" className="font-medium">
@@ -88,17 +28,6 @@ export function MainSettings() {
           </select>
         </div>
       </div>
-      <TemplateSelectionModal
-        open={showTemplateModal}
-        onOpenChange={setShowTemplateModal}
-        templates={templates}
-      />
-      <SaveTemplateModal
-        open={showSaveModal}
-        onOpenChange={setShowSaveModal}
-        currentInvoiceData={currentInvoice}
-        templates={templates}
-      />
     </div>
   );
 }
