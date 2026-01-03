@@ -1,6 +1,6 @@
 import { getAllInvoices, getInvoice, saveInvoice } from "features/new/db";
-import type { Invoice, InvoiceDocument } from "features/new/types";
 import { invoiceDefault } from "features/new/state/invoice";
+import type { Invoice, InvoiceDocument } from "features/new/types";
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
 
