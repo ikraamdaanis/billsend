@@ -1,13 +1,12 @@
 import { Input } from "components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "components/ui/popover";
-import type { KeyboardEvent } from "react";
-import { memo, useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { HexColorPicker } from "react-colorful";
 
 /**
  * Color picker component to change the color of an invoice text field.
  */
-function ColorPickerComponent({
+export function ColorPicker({
   color,
   onChange
 }: {
@@ -16,69 +15,41 @@ function ColorPickerComponent({
 }) {
   const [inputValue, setInputValue] = useState(color);
 
-  const handleInputChange = useCallback(
-    (value: string) => {
-      setInputValue(value);
-      onChange(value);
-    },
-    [onChange]
-  );
-
-  const handlePickerChange = useCallback(
-    (value: string) => {
-      setInputValue(value);
-      onChange(value);
-    },
-    [onChange]
-  );
-
-  const handleInputKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        onChange(inputValue);
-      }
-    },
-    [inputValue, onChange]
-  );
-
-  const handleInputBlur = useCallback(() => {
-    onChange(inputValue);
-  }, [inputValue, onChange]);
-
-  const colorPreviewStyle = useMemo(
-    () => ({
-      backgroundColor: color
-    }),
-    [color]
-  );
-
   return (
     <Popover>
       <PopoverTrigger asChild>
         <div
           className="h-8 w-8 rounded-md border border-zinc-200"
-          style={colorPreviewStyle}
+          style={{ backgroundColor: color }}
         />
       </PopoverTrigger>
       <PopoverContent className="flex w-auto flex-col gap-2 p-3">
         <HexColorPicker
           color={color}
-          onChange={handlePickerChange}
+          onChange={value => {
+            setInputValue(value);
+            onChange(value);
+          }}
           className="w-full"
           style={{ width: "100%" }}
         />
         <Input
           type="text"
           value={inputValue}
-          onChange={({ target: { value } }) => handleInputChange(value)}
-          onKeyDown={handleInputKeyDown}
-          onBlur={handleInputBlur}
+          onChange={({ target: { value } }) => {
+            setInputValue(value);
+            onChange(value);
+          }}
+          onKeyDown={event => {
+            if (event.key !== "Enter") return;
+
+            event.preventDefault();
+            onChange(inputValue);
+          }}
+          onBlur={() => onChange(inputValue)}
           placeholder="#000000"
         />
       </PopoverContent>
     </Popover>
   );
 }
-
-export const ColorPicker = memo(ColorPickerComponent);
