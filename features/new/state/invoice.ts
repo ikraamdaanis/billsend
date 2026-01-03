@@ -27,7 +27,7 @@ export const invoiceDefault: Invoice = {
   titleSettings: {
     align: "left",
     size: "36",
-    weight: "Bold",
+    weight: "Semibold",
     color: DEFAULT_FONT_COLOUR
   },
   number: "1",
@@ -41,7 +41,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "left",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -56,7 +56,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "left",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -71,7 +71,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "left",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -91,7 +91,7 @@ export const invoiceDefault: Invoice = {
     content: {
       align: "left",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -202,7 +202,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "right",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -220,7 +220,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "right",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -235,7 +235,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "right",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
@@ -250,7 +250,7 @@ export const invoiceDefault: Invoice = {
     value: {
       align: "right",
       size: "14",
-      weight: "Medium",
+      weight: "Normal",
       color: DEFAULT_FONT_COLOUR
     }
   },
