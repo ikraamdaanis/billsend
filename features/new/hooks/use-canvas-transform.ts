@@ -5,14 +5,14 @@ import {
 } from "features/new/state/canvas-lock";
 import { useAtomValue, useSetAtom } from "jotai";
 import type { RefObject } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const VERTICAL_PADDING = 16;
 
-interface Transform {
+type Transform = {
   x: number;
   y: number;
-}
+};
 
 const DEFAULT_TRANSFORM: Transform = { x: 0, y: 0 };
 
@@ -26,21 +26,21 @@ export function useCanvasTransform(): {
   const locked = useAtomValue(canvasLockAtom);
   const setLocked = useSetAtom(canvasLockAtom);
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [transform, setTransform] = useState<Transform>(DEFAULT_TRANSFORM);
 
-  const handleLock = useCallback(() => {
+  function handleLock() {
     setLocked(!locked);
+
     // Reset position when locking/unlocking
     setTransform(DEFAULT_TRANSFORM);
-  }, [locked, setLocked]);
+  }
 
   // Calculate max vertical offset based on canvas height and margin
-  const getMaxVerticalOffset = useCallback(() => {
-    if (!canvasRef.current || !containerRef.current) {
-      return Infinity;
-    }
+  function getMaxVerticalOffset() {
+    if (!canvasRef.current || !containerRef.current) return Infinity;
 
     // offsetHeight includes padding and border, but not margins
     const canvasHeight = canvasRef.current.offsetHeight;
@@ -49,16 +49,14 @@ export function useCanvasTransform(): {
     const totalHeight = canvasHeight + VERTICAL_PADDING * 2;
 
     // If canvas fits in viewport, no scrolling needed
-    if (totalHeight <= viewportHeight) {
-      return 0;
-    }
+    if (totalHeight <= viewportHeight) return 0;
 
     // Calculate how much we can scroll to show full canvas with margin
     // When centered (y=0), canvas is in middle
     // To see top: scroll up (negative y) by (totalHeight - viewportHeight) / 2
     // To see bottom: scroll down (positive y) by same amount
     return (totalHeight - viewportHeight) / 2;
-  }, []);
+  }
 
   // Gesture handlers - vertical scrolling with padding above and below canvas
   useGesture(
