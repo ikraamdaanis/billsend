@@ -32,9 +32,9 @@ export function UnsavedChangesDialog({
             You have unsaved changes. What would you like to do?
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex gap-2 sm:gap-0">
+        <DialogFooter >
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => {
               onAction("cancel");
               onOpenChange(false);
