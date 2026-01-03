@@ -9,9 +9,11 @@ import {
 } from "components/ui/menubar";
 import { OpenInvoiceDialog } from "features/new/components/open-invoice-dialog";
 import { SaveInvoiceDialog } from "features/new/components/save-invoice-dialog";
+import { SaveTemplateModal } from "features/new/components/save-template-modal";
+import { TemplateSelectionModal } from "features/new/components/template-selection-modal";
 import type { UnsavedChangesAction } from "features/new/components/unsaved-changes-dialog";
 import { UnsavedChangesDialog } from "features/new/components/unsaved-changes-dialog";
-import { getAllInvoices } from "features/new/db";
+import { getAllInvoices, getAllTemplates } from "features/new/db";
 import {
   currentInvoiceDocumentIdAtom,
   currentInvoiceDocumentNameAtom,
@@ -19,16 +21,23 @@ import {
   hasUnsavedChangesAtom,
   invoiceAtom,
   invoiceDefault,
+  invoiceTemplatesAtom,
   lastSavedInvoiceAtom,
   loadInvoiceDocumentIntoAtom,
   resetToNewInvoice,
   saveCurrentInvoiceAsDocument,
   updateCurrentInvoiceDocument
 } from "features/new/state";
-import type { InvoiceDocument } from "features/new/types";
-import { useAtom, useSetAtom } from "jotai";
+import type { InvoiceDocument, InvoiceTemplate } from "features/new/types";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { isEqual } from "lodash-es";
-import { FileIcon, FilePlusIcon, FolderOpenIcon, SaveIcon } from "lucide-react";
+import {
+  BookmarkIcon,
+  FileIcon,
+  FilePlusIcon,
+  FolderOpenIcon,
+  SaveIcon
+} from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -46,12 +55,16 @@ export function InvoiceFileMenu() {
 
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [defaultName, setDefaultName] = useState<string>("Invoice 001");
   const [existingInvoices, setExistingInvoices] = useState<InvoiceDocument[]>(
     []
   );
+  const templates = useAtomValue(invoiceTemplatesAtom);
+  const setTemplates = useSetAtom(invoiceTemplatesAtom);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -67,6 +80,18 @@ export function InvoiceFileMenu() {
     }
     loadData();
   }, [saveAsDialogOpen]);
+
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const loadedTemplates = await getAllTemplates();
+        setTemplates(loadedTemplates);
+      } catch {
+        // Silently fail
+      }
+    }
+    loadTemplates();
+  }, [setTemplates, templateDialogOpen, saveTemplateDialogOpen]);
 
   const handleNewInvoice = useCallback(() => {
     if (hasUnsavedChanges) {
@@ -133,6 +158,38 @@ export function InvoiceFileMenu() {
   const handleSaveAs = useCallback(() => {
     setSaveAsDialogOpen(true);
   }, []);
+
+  const handleOpenTemplate = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setPendingAction(() => () => {
+        setTemplateDialogOpen(true);
+      });
+      setUnsavedDialogOpen(true);
+      return;
+    }
+    setTemplateDialogOpen(true);
+  }, [hasUnsavedChanges]);
+
+  const handleSaveAsTemplate = useCallback(() => {
+    setSaveTemplateDialogOpen(true);
+  }, []);
+
+  function handleSelectTemplate(template: InvoiceTemplate) {
+    startTransition( () => {
+      try {
+        setInvoice(template.templateData);
+        setCurrentDocumentId(null);
+        setCurrentDocumentName(null);
+        setLastSavedInvoice(null);
+        setHasUnsavedChanges(false);
+        toast.success(`Applied template: ${template.name}`);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to apply template"
+        );
+      }
+    });
+  }
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -287,6 +344,15 @@ export function InvoiceFileMenu() {
               Save As...
               <MenubarShortcut>⇧⌘S</MenubarShortcut>
             </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
+              <BookmarkIcon className="mr-2 h-4 w-4" />
+              Open Template
+            </MenubarItem>
+            <MenubarItem onClick={handleSaveAsTemplate} disabled={pending}>
+              <SaveIcon className="mr-2 h-4 w-4" />
+              Save As Template
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -307,6 +373,18 @@ export function InvoiceFileMenu() {
         open={unsavedDialogOpen}
         onOpenChange={setUnsavedDialogOpen}
         onAction={handleUnsavedAction}
+      />
+      <TemplateSelectionModal
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
+        templates={templates}
+        onTemplateSelect={handleSelectTemplate}
+      />
+      <SaveTemplateModal
+        open={saveTemplateDialogOpen}
+        onOpenChange={setSaveTemplateDialogOpen}
+        currentInvoiceData={invoice}
+        templates={templates}
       />
     </>
   );
