@@ -175,7 +175,7 @@ export function InvoiceFileMenu() {
   }, []);
 
   function handleSelectTemplate(template: InvoiceTemplate) {
-    startTransition( () => {
+    startTransition(() => {
       try {
         setInvoice(template.templateData);
         setCurrentDocumentId(null);
