@@ -159,21 +159,6 @@ export function InvoiceFileMenu() {
     setSaveAsDialogOpen(true);
   }, []);
 
-  const handleOpenTemplate = useCallback(() => {
-    if (hasUnsavedChanges) {
-      setPendingAction(() => () => {
-        setTemplateDialogOpen(true);
-      });
-      setUnsavedDialogOpen(true);
-      return;
-    }
-    setTemplateDialogOpen(true);
-  }, [hasUnsavedChanges]);
-
-  const handleSaveAsTemplate = useCallback(() => {
-    setSaveTemplateDialogOpen(true);
-  }, []);
-
   function handleSelectTemplate(template: InvoiceTemplate) {
     startTransition(() => {
       try {
@@ -345,11 +330,27 @@ export function InvoiceFileMenu() {
               <MenubarShortcut>⇧⌘S</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
+            <MenubarItem
+              onClick={() => {
+                if (hasUnsavedChanges) {
+                  setPendingAction(() => () => {
+                    setTemplateDialogOpen(true);
+                  });
+
+                  return setUnsavedDialogOpen(true);
+                }
+
+                setTemplateDialogOpen(true);
+              }}
+              disabled={pending}
+            >
               <BookmarkIcon className="mr-2 h-4 w-4" />
               Open Template
             </MenubarItem>
-            <MenubarItem onClick={handleSaveAsTemplate} disabled={pending}>
+            <MenubarItem
+              onClick={() => setSaveTemplateDialogOpen(true)}
+              disabled={pending}
+            >
               <SaveIcon className="mr-2 h-4 w-4" />
               Save As Template
             </MenubarItem>
