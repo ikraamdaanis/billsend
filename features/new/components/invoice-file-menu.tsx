@@ -67,32 +67,6 @@ export function InvoiceFileMenu() {
   const setTemplates = useSetAtom(invoiceTemplatesAtom);
   const [pending, startTransition] = useTransition();
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const invoices = await getAllInvoices();
-        setExistingInvoices(invoices);
-        const name = generateDefaultInvoiceName(invoices);
-        setDefaultName(name);
-      } catch {
-        // Silently fail - default name will be used
-      }
-    }
-    loadData();
-  }, [saveAsDialogOpen]);
-
-  useEffect(() => {
-    async function loadTemplates() {
-      try {
-        const loadedTemplates = await getAllTemplates();
-        setTemplates(loadedTemplates);
-      } catch {
-        // Silently fail
-      }
-    }
-    loadTemplates();
-  }, [setTemplates, templateDialogOpen, saveTemplateDialogOpen]);
-
   const handleNewInvoice = useCallback(() => {
     if (hasUnsavedChanges) {
       setPendingAction(() => () => {
@@ -176,49 +150,6 @@ export function InvoiceFileMenu() {
     });
   }
 
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-      const modKey = isMac ? event.metaKey : event.ctrlKey;
-
-      if (!modKey) return;
-
-      if (event.key === "n" && !event.shiftKey) {
-        event.preventDefault();
-        handleNewInvoice();
-      } else if (event.key === "o") {
-        event.preventDefault();
-        handleOpenInvoice();
-      } else if (event.key === "s" && !event.shiftKey) {
-        event.preventDefault();
-        handleSave();
-      } else if (event.key === "s" && event.shiftKey) {
-        event.preventDefault();
-        handleSaveAs();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNewInvoice, handleOpenInvoice, handleSave, handleSaveAs]);
-
-  useEffect(() => {
-    // If we're in a blank invoice (no document ID), compare with default
-    if (currentDocumentId === null) {
-      const hasChanges = !isEqual(invoice, invoiceDefault);
-      return setHasUnsavedChanges(hasChanges);
-    }
-
-    // If we're in an existing invoice, compare with last saved version
-    if (lastSavedInvoice === null) {
-      // No saved version yet, so there are changes
-      return setHasUnsavedChanges(true);
-    }
-
-    const hasChanges = !isEqual(invoice, lastSavedInvoice);
-    setHasUnsavedChanges(hasChanges);
-  }, [invoice, currentDocumentId, lastSavedInvoice, setHasUnsavedChanges]);
-
   async function handleSaveInvoice(name: string, overwriteId?: string) {
     return new Promise<void>((resolve, reject) => {
       startTransition(async () => {
@@ -299,6 +230,75 @@ export function InvoiceFileMenu() {
       }
     }
   }
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const invoices = await getAllInvoices();
+        setExistingInvoices(invoices);
+        const name = generateDefaultInvoiceName(invoices);
+        setDefaultName(name);
+      } catch {
+        // Silently fail - default name will be used
+      }
+    }
+    loadData();
+  }, [saveAsDialogOpen]);
+
+  useEffect(() => {
+    async function loadTemplates() {
+      try {
+        const loadedTemplates = await getAllTemplates();
+        setTemplates(loadedTemplates);
+      } catch {
+        // Silently fail
+      }
+    }
+    loadTemplates();
+  }, [setTemplates, templateDialogOpen, saveTemplateDialogOpen]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const modKey = isMac ? event.metaKey : event.ctrlKey;
+
+      if (!modKey) return;
+
+      if (event.key === "n" && !event.shiftKey) {
+        event.preventDefault();
+        handleNewInvoice();
+      } else if (event.key === "o") {
+        event.preventDefault();
+        handleOpenInvoice();
+      } else if (event.key === "s" && !event.shiftKey) {
+        event.preventDefault();
+        handleSave();
+      } else if (event.key === "s" && event.shiftKey) {
+        event.preventDefault();
+        handleSaveAs();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleNewInvoice, handleOpenInvoice, handleSave, handleSaveAs]);
+
+  useEffect(() => {
+    // If we're in a blank invoice (no document ID), compare with default
+    if (currentDocumentId === null) {
+      const hasChanges = !isEqual(invoice, invoiceDefault);
+      return setHasUnsavedChanges(hasChanges);
+    }
+
+    // If we're in an existing invoice, compare with last saved version
+    if (lastSavedInvoice === null) {
+      // No saved version yet, so there are changes
+      return setHasUnsavedChanges(true);
+    }
+
+    const hasChanges = !isEqual(invoice, lastSavedInvoice);
+    setHasUnsavedChanges(hasChanges);
+  }, [invoice, currentDocumentId, lastSavedInvoice, setHasUnsavedChanges]);
 
   return (
     <>
