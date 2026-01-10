@@ -78,17 +78,17 @@ export function InvoiceFileMenu() {
         );
         setHasUnsavedChanges(false);
       });
-      setUnsavedDialogOpen(true);
-      return;
+
+      return setUnsavedDialogOpen(true);
     }
 
+    setHasUnsavedChanges(false);
     resetToNewInvoice(
       setInvoice,
       setCurrentDocumentId,
       setCurrentDocumentName,
       setLastSavedInvoice
     );
-    setHasUnsavedChanges(false);
   }, [
     hasUnsavedChanges,
     setInvoice,
@@ -103,8 +103,8 @@ export function InvoiceFileMenu() {
       setPendingAction(() => () => {
         setOpenDialogOpen(true);
       });
-      setUnsavedDialogOpen(true);
-      return;
+
+      return setUnsavedDialogOpen(true);
     }
 
     setOpenDialogOpen(true);
@@ -141,6 +141,7 @@ export function InvoiceFileMenu() {
         setCurrentDocumentName(null);
         setLastSavedInvoice(null);
         setHasUnsavedChanges(false);
+
         toast.success(`Applied template: ${template.name}`);
       } catch (error) {
         toast.error(
@@ -166,9 +167,11 @@ export function InvoiceFileMenu() {
             const existingInvoice = invoices.find(
               inv => inv.id === overwriteId
             );
+
             if (existingInvoice) {
               setCurrentDocumentName(existingInvoice.name);
             }
+
             toast.success("Invoice saved successfully");
             resolve();
           } else {
@@ -180,13 +183,16 @@ export function InvoiceFileMenu() {
               setCurrentDocumentName,
               setLastSavedInvoice
             );
+
             toast.success("Invoice saved successfully");
+
             resolve();
           }
         } catch (error) {
           toast.error(
             error instanceof Error ? error.message : "Failed to save invoice"
           );
+
           reject(error);
         }
       });
@@ -203,6 +209,7 @@ export function InvoiceFileMenu() {
           setCurrentDocumentName,
           setLastSavedInvoice
         );
+
         toast.success(`Opened invoice: ${invoiceDoc.name}`);
       } catch (error) {
         toast.error(
@@ -215,6 +222,7 @@ export function InvoiceFileMenu() {
   function handleUnsavedAction(action: UnsavedChangesAction) {
     if (action === "save") {
       handleSave();
+
       // Note: handleSave uses startTransition, so we execute pendingAction after a short delay
       // to ensure the save has been initiated
       setTimeout(() => {
@@ -234,10 +242,8 @@ export function InvoiceFileMenu() {
   useEffect(() => {
     async function loadData() {
       try {
-        const invoices = await getAllInvoices();
-        setExistingInvoices(invoices);
-        const name = generateDefaultInvoiceName(invoices);
-        setDefaultName(name);
+        setExistingInvoices(await getAllInvoices());
+        setDefaultName(generateDefaultInvoiceName(await getAllInvoices()));
       } catch {
         // Silently fail - default name will be used
       }
@@ -248,8 +254,7 @@ export function InvoiceFileMenu() {
   useEffect(() => {
     async function loadTemplates() {
       try {
-        const loadedTemplates = await getAllTemplates();
-        setTemplates(loadedTemplates);
+        setTemplates(await getAllTemplates());
       } catch {
         // Silently fail
       }
@@ -280,6 +285,7 @@ export function InvoiceFileMenu() {
     }
 
     window.addEventListener("keydown", handleKeyDown);
+
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNewInvoice, handleOpenInvoice, handleSave, handleSaveAs]);
 
