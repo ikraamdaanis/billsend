@@ -17,12 +17,10 @@ export function ColorPicker({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <div
-          className="h-8 w-8 rounded-md border border-zinc-200"
-          style={{ backgroundColor: color }}
-        />
-      </PopoverTrigger>
+      <PopoverTrigger
+        className="size-8 min-w-8 rounded-md border border-zinc-200"
+        style={{ backgroundColor: color }}
+      />
       <PopoverContent className="flex w-auto flex-col gap-2 p-3">
         <HexColorPicker
           color={color}
@@ -31,7 +29,6 @@ export function ColorPicker({
             onChange(value);
           }}
           className="w-full"
-          style={{ width: "100%" }}
         />
         <Input
           type="text"
