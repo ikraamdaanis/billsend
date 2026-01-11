@@ -15,6 +15,7 @@ export function DownloadInvoice({
 }: Omit<ComponentProps<typeof Button>, "onClick">) {
   const invoice = useAtomValue(invoiceAtom);
   const imageId = useAtomValue(imageAtom);
+
   const [imageUrl, setImageUrl] = useState("");
   const imageUrlRef = useRef<string | null>(null);
 
@@ -31,8 +32,8 @@ export function DownloadInvoice({
           URL.revokeObjectURL(imageUrlRef.current);
           imageUrlRef.current = null;
         }
-        setImageUrl("");
-        return;
+
+        return setImageUrl("");
       }
 
       // Check if it's already a blob URL or data URL
@@ -41,9 +42,9 @@ export function DownloadInvoice({
         if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
           URL.revokeObjectURL(imageUrlRef.current);
         }
+
         imageUrlRef.current = imageId;
-        setImageUrl(imageId);
-        return;
+        return setImageUrl(imageId);
       }
 
       try {
@@ -110,16 +111,19 @@ export function DownloadInvoice({
   function handleCreatePdfUrl() {
     // Open window immediately while we still have user interaction context
     const newWindow = window.open("", "_blank");
+
     if (!newWindow) {
-      toast.error("Failed to open new window. Popup may be blocked.");
-      return;
+      return toast.error("Failed to open new window. Popup may be blocked.");
     }
+
     startTransition(async () => {
       try {
         const blob = await pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
         const url = URL.createObjectURL(blob);
+
         // Update the window location with the blob URL
         newWindow.location.href = url;
+
         // Don't revoke the URL - Chrome's PDF viewer needs it to persist
         // The browser will automatically clean it up when the tab is closed
       } catch (error) {
@@ -128,6 +132,7 @@ export function DownloadInvoice({
             ? `Failed to generate PDF: ${error.message}`
             : "Failed to generate PDF"
         );
+
         newWindow.close();
       }
     });
@@ -138,7 +143,7 @@ export function DownloadInvoice({
       variant="default"
       onClick={handleCreatePdfUrl}
       disabled={pending}
-      className={cn("h-7 roundeds-xs px-2", className)}
+      className={cn("roundeds-xs h-7 px-2", className)}
       {...props}
     >
       Download
