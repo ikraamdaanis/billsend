@@ -67,30 +67,30 @@ export function InvoiceFileMenu() {
   const setTemplates = useSetAtom(invoiceTemplatesAtom);
   const [pending, startTransition] = useTransition();
 
+  const runWithUnsavedGuard = useCallback(
+    (action: () => void) => {
+      if (hasUnsavedChanges) {
+        setPendingAction(() => action);
+        setUnsavedDialogOpen(true);
+      } else {
+        action();
+      }
+    },
+    [hasUnsavedChanges]
+  );
+
   const handleNewInvoice = useCallback(() => {
-    if (hasUnsavedChanges) {
-      setPendingAction(() => () => {
-        resetToNewInvoice(
-          setInvoice,
-          setCurrentDocumentId,
-          setCurrentDocumentName,
-          setLastSavedInvoice
-        );
-        setHasUnsavedChanges(false);
-      });
-
-      return setUnsavedDialogOpen(true);
-    }
-
-    setHasUnsavedChanges(false);
-    resetToNewInvoice(
-      setInvoice,
-      setCurrentDocumentId,
-      setCurrentDocumentName,
-      setLastSavedInvoice
-    );
+    runWithUnsavedGuard(() => {
+      resetToNewInvoice(
+        setInvoice,
+        setCurrentDocumentId,
+        setCurrentDocumentName,
+        setLastSavedInvoice
+      );
+      setHasUnsavedChanges(false);
+    });
   }, [
-    hasUnsavedChanges,
+    runWithUnsavedGuard,
     setInvoice,
     setCurrentDocumentId,
     setCurrentDocumentName,
@@ -99,16 +99,16 @@ export function InvoiceFileMenu() {
   ]);
 
   const handleOpenInvoice = useCallback(() => {
-    if (hasUnsavedChanges) {
-      setPendingAction(() => () => {
-        setOpenDialogOpen(true);
-      });
+    runWithUnsavedGuard(() => {
+      setOpenDialogOpen(true);
+    });
+  }, [runWithUnsavedGuard]);
 
-      return setUnsavedDialogOpen(true);
-    }
-
-    setOpenDialogOpen(true);
-  }, [hasUnsavedChanges]);
+  const handleOpenTemplate = useCallback(() => {
+    runWithUnsavedGuard(() => {
+      setTemplateDialogOpen(true);
+    });
+  }, [runWithUnsavedGuard]);
 
   const handleSave = useCallback(() => {
     if (!currentDocumentId) return setSaveAsDialogOpen(true);
@@ -336,20 +336,7 @@ export function InvoiceFileMenu() {
               <MenubarShortcut>⇧⌘S</MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem
-              onClick={() => {
-                if (hasUnsavedChanges) {
-                  setPendingAction(() => () => {
-                    setTemplateDialogOpen(true);
-                  });
-
-                  return setUnsavedDialogOpen(true);
-                }
-
-                setTemplateDialogOpen(true);
-              }}
-              disabled={pending}
-            >
+            <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
               <BookmarkIcon className="mr-2 h-4 w-4" />
               Open Template
             </MenubarItem>
