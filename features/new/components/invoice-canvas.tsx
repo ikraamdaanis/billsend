@@ -1,5 +1,14 @@
 import { useCanvasTransform } from "features/new/hooks/use-canvas-transform";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+const CANVAS_STATIC_STYLES: CSSProperties = {
+  marginTop: "16px",
+  marginBottom: "16px",
+  WebkitFontSmoothing: "antialiased",
+  MozOsxFontSmoothing: "grayscale",
+  backfaceVisibility: "hidden",
+  WebkitBackfaceVisibility: "hidden"
+};
 
 export function InvoiceCanvas({
   children,
@@ -26,14 +35,7 @@ export function InvoiceCanvas({
           ref={canvasRef}
           className="h-fit w-[210mm] border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
           onClick={event => event.stopPropagation()}
-          style={{
-            marginTop: "16px",
-            marginBottom: "16px",
-            WebkitFontSmoothing: "antialiased",
-            MozOsxFontSmoothing: "grayscale",
-            backfaceVisibility: "hidden",
-            WebkitBackfaceVisibility: "hidden"
-          }}
+          style={CANVAS_STATIC_STYLES}
         >
           {children}
         </div>

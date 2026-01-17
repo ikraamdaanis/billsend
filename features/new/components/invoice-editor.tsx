@@ -38,100 +38,151 @@ const TOOLBAR_HEIGHT = 50;
 export function InvoiceEditor() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-  const activeSettings = useAtomValue(activeSettingsAtom);
-  const currentDocumentName = useAtomValue(currentInvoiceDocumentNameAtom);
-
-  function handleSectionClick() {
-    setActiveSettings("main");
-  }
-
-  const displayName = currentDocumentName || "Untitled invoice";
-
   return (
     <>
       <div className="h-dvh w-full">
-        {/* Toolbar - Framer style: logo left, menubar, filename center, download right */}
-        <nav
-          className="bg-background border-border sticky top-0 z-50 flex w-full items-center justify-between border-b px-4"
-          style={{ height: `${TOOLBAR_HEIGHT}px` }}
-        >
-          <div className="flex items-center gap-4">
-            <Button
-              variant="unstyled"
-              size="unstyled"
-              onClick={() => setIsModalOpen(true)}
-            >
-              <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
-                billsend
-              </h1>
-            </Button>
-            <InvoiceFileMenu />
-          </div>
-          <div className="absolute left-1/2 -translate-x-1/2">
-            <h2 className="text-foreground text-sm font-medium">
-              {displayName}
-            </h2>
-          </div>
-          <div className="ml-auto">
-            <DownloadInvoice />
-          </div>
-        </nav>
+        <Toolbar setIsModalOpen={setIsModalOpen} />
         <div
           className="relative flex w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid"
           style={{
             height: `calc(100dvh - ${TOOLBAR_HEIGHT}px)`
           }}
         >
-          <InvoiceCanvas onSectionClick={handleSectionClick}>
-            <Top />
-            <Mid />
-            <Bottom />
-          </InvoiceCanvas>
-          {activeSettings !== "main" && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="fixed top-18 right-[264px] z-30 hidden size-8 w-fit min-w-8 lg:flex"
-              onClick={() => setActiveSettings("main")}
-            >
-              <ArrowLeftIcon className="size-4" />
-            </Button>
-          )}
-          <section className="bg-background border-border relative z-20 hidden h-full overflow-y-auto border-l pb-4 lg:block">
-            <SettingsPanel />
-          </section>
+          <CanvasArea />
+          <SettingsArea />
         </div>
       </div>
-      <div className="bg-background border-border fixed bottom-0 flex h-10 w-full items-center justify-center border-t lg:hidden">
-        <Drawer>
-          <DrawerTrigger className="h-full w-full cursor-pointer">
-            Open Settings
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerTitle className="sr-only">Settings</DrawerTitle>
-            <SettingsPanel />
-          </DrawerContent>
-        </Drawer>
-      </div>
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="w-md">
-          <DialogTitle>Leave this page?</DialogTitle>
-          <DialogDescription>
-            Are you sure you want to leave this page and go back to the home
-            page?
-          </DialogDescription>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Link to="/">
-              <Button>Leave</Button>
-            </Link>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <MobileSettingsDrawer />
+      <LeavePageDialog isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
     </>
+  );
+}
+
+function Toolbar({
+  setIsModalOpen
+}: {
+  setIsModalOpen: (open: boolean) => void;
+}) {
+  const currentDocumentName = useAtomValue(currentInvoiceDocumentNameAtom);
+  const displayName = currentDocumentName || "Untitled invoice";
+
+  return (
+    <nav
+      className="bg-background border-border sticky top-0 z-50 flex w-full items-center justify-between border-b px-4"
+      style={{ height: `${TOOLBAR_HEIGHT}px` }}
+    >
+      <div className="flex items-center gap-4">
+        <Button
+          variant="unstyled"
+          size="unstyled"
+          onClick={() => setIsModalOpen(true)}
+        >
+          <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
+            billsend
+          </h1>
+        </Button>
+        <InvoiceFileMenu />
+      </div>
+      <div className="absolute left-1/2 -translate-x-1/2">
+        <h2 className="text-foreground text-sm font-medium">
+          {displayName}
+        </h2>
+      </div>
+      <div className="ml-auto">
+        <DownloadInvoice />
+      </div>
+    </nav>
+  );
+}
+
+function CanvasArea() {
+  const setActiveSettings = useSetAtom(activeSettingsAtom);
+
+  function handleSectionClick() {
+    setActiveSettings("main");
+  }
+
+  return (
+    <InvoiceCanvas onSectionClick={handleSectionClick}>
+      <Top />
+      <Mid />
+      <Bottom />
+    </InvoiceCanvas>
+  );
+}
+
+function SettingsArea() {
+  return (
+    <>
+      <SettingsToggleButton />
+      <section className="bg-background border-border relative z-20 hidden h-full overflow-y-auto border-l pb-4 lg:block">
+        <SettingsPanel />
+      </section>
+    </>
+  );
+}
+
+function SettingsToggleButton() {
+  const activeSettings = useAtomValue(activeSettingsAtom);
+  const setActiveSettings = useSetAtom(activeSettingsAtom);
+
+  if (activeSettings === "main") {
+    return null;
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="icon"
+      className="fixed top-18 right-[264px] z-30 hidden size-8 w-fit min-w-8 lg:flex"
+      onClick={() => setActiveSettings("main")}
+    >
+      <ArrowLeftIcon className="size-4" />
+    </Button>
+  );
+}
+
+function MobileSettingsDrawer() {
+  return (
+    <div className="bg-background border-border fixed bottom-0 flex h-10 w-full items-center justify-center border-t lg:hidden">
+      <Drawer>
+        <DrawerTrigger className="h-full w-full cursor-pointer">
+          Open Settings
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerTitle className="sr-only">Settings</DrawerTitle>
+          <SettingsPanel />
+        </DrawerContent>
+      </Drawer>
+    </div>
+  );
+}
+
+function LeavePageDialog({
+  isModalOpen,
+  setIsModalOpen
+}: {
+  isModalOpen: boolean;
+  setIsModalOpen: (open: boolean) => void;
+}) {
+  return (
+    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <DialogContent className="w-md">
+        <DialogTitle>Leave this page?</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to leave this page and go back to the home
+          page?
+        </DialogDescription>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+            Cancel
+          </Button>
+          <Link to="/">
+            <Button>Leave</Button>
+          </Link>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
