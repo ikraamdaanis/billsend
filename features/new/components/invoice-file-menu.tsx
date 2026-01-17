@@ -38,7 +38,7 @@ import {
   FolderOpenIcon,
   SaveIcon
 } from "lucide-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 export function InvoiceFileMenu() {
@@ -67,19 +67,16 @@ export function InvoiceFileMenu() {
   const setTemplates = useSetAtom(invoiceTemplatesAtom);
   const [pending, startTransition] = useTransition();
 
-  const runWithUnsavedGuard = useCallback(
-    (action: () => void) => {
-      if (hasUnsavedChanges) {
-        setPendingAction(() => action);
-        setUnsavedDialogOpen(true);
-      } else {
-        action();
-      }
-    },
-    [hasUnsavedChanges]
-  );
+  function runWithUnsavedGuard(action: () => void) {
+    if (hasUnsavedChanges) {
+      setPendingAction(() => action);
+      setUnsavedDialogOpen(true);
+    } else {
+      action();
+    }
+  }
 
-  const handleNewInvoice = useCallback(() => {
+  function handleNewInvoice() {
     runWithUnsavedGuard(() => {
       resetToNewInvoice(
         setInvoice,
@@ -89,28 +86,21 @@ export function InvoiceFileMenu() {
       );
       setHasUnsavedChanges(false);
     });
-  }, [
-    runWithUnsavedGuard,
-    setInvoice,
-    setCurrentDocumentId,
-    setCurrentDocumentName,
-    setLastSavedInvoice,
-    setHasUnsavedChanges
-  ]);
+  }
 
-  const handleOpenInvoice = useCallback(() => {
+  function handleOpenInvoice() {
     runWithUnsavedGuard(() => {
       setOpenDialogOpen(true);
     });
-  }, [runWithUnsavedGuard]);
+  }
 
-  const handleOpenTemplate = useCallback(() => {
+  function handleOpenTemplate() {
     runWithUnsavedGuard(() => {
       setTemplateDialogOpen(true);
     });
-  }, [runWithUnsavedGuard]);
+  }
 
-  const handleSave = useCallback(() => {
+  function handleSave() {
     if (!currentDocumentId) return setSaveAsDialogOpen(true);
 
     startTransition(async () => {
@@ -127,11 +117,11 @@ export function InvoiceFileMenu() {
         );
       }
     });
-  }, [currentDocumentId, invoice, setLastSavedInvoice]);
+  }
 
-  const handleSaveAs = useCallback(() => {
+  function handleSaveAs() {
     setSaveAsDialogOpen(true);
-  }, []);
+  }
 
   function handleSelectTemplate(template: InvoiceTemplate) {
     startTransition(() => {
@@ -287,7 +277,7 @@ export function InvoiceFileMenu() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNewInvoice, handleOpenInvoice, handleSave, handleSaveAs]);
+  });
 
   useEffect(() => {
     // If we're in a blank invoice (no document ID), compare with default
