@@ -1,6 +1,7 @@
 import { getAllInvoices, getInvoice, saveInvoice } from "features/new/db";
 import { invoiceDefault } from "features/new/state/invoice";
 import type { Invoice, InvoiceDocument } from "features/new/types";
+import { ensureItemIds } from "features/new/utils/ensure-item-ids";
 import { atom } from "jotai";
 import { loadable } from "jotai/utils";
 
@@ -52,11 +53,13 @@ export async function loadInvoiceDocumentIntoAtom(
   // Use immer updater pattern to properly set the invoice
   // Deep copy the invoice data to ensure all nested properties are copied
   const invoiceDataCopy = JSON.parse(JSON.stringify(document.invoiceData));
+  // Ensure all items have IDs (backward compatibility for saved invoices without IDs)
+  const invoice = ensureItemIds(invoiceDataCopy);
   // With atomWithImmer, we can return a new value directly
-  setInvoice(invoiceDataCopy);
+  setInvoice(invoice);
   setCurrentDocumentId(documentId);
   setCurrentDocumentName(document.name);
-  setLastSaved(JSON.parse(JSON.stringify(document.invoiceData)));
+  setLastSaved(JSON.parse(JSON.stringify(invoice)));
 }
 
 export async function saveCurrentInvoiceAsDocument(
@@ -113,9 +116,10 @@ export function resetToNewInvoice(
 ): void {
   // Deep copy the default invoice to ensure a fresh instance
   const defaultCopy = JSON.parse(JSON.stringify(invoiceDefault));
-  setInvoice(defaultCopy);
+  // Ensure all items have IDs (generates new IDs for the fresh invoice)
+  const invoiceWithIds = ensureItemIds(defaultCopy);
+  setInvoice(invoiceWithIds);
   setCurrentDocumentId(null);
   setCurrentDocumentName(null);
   setLastSaved(null);
 }
-

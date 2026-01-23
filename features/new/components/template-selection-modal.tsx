@@ -12,6 +12,7 @@ import { EditTemplateModal } from "features/new/components/edit-template-modal";
 import { TemplateCard } from "features/new/components/template-card";
 import { invoiceAtom } from "features/new/state";
 import type { InvoiceTemplate } from "features/new/types";
+import { ensureItemIds } from "features/new/utils/ensure-item-ids";
 import { useSetAtom } from "jotai";
 import { FileTextIcon, SparklesIcon } from "lucide-react";
 import type { MouseEvent } from "react";
@@ -44,7 +45,9 @@ export function TemplateSelectionModal({
 
   function handleTemplateSelect(template: InvoiceTemplate) {
     // Apply template data directly - the image ID will be loaded by invoice-image.tsx
-    setInvoice(template.templateData);
+    // Ensure all items have IDs (backward compatibility for templates without IDs)
+    const templateWithIds = ensureItemIds(template.templateData);
+    setInvoice(templateWithIds);
     toast.success(`Applied template: ${template.name}`);
     onTemplateSelect?.(template);
     onOpenChange(false);
