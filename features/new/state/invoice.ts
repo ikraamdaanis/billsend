@@ -117,6 +117,7 @@ export const invoiceDefault: Invoice = {
   },
   items: [
     {
+      id: crypto.randomUUID(),
       description: "Item 1",
       quantity: 1,
       unitPrice: 0,

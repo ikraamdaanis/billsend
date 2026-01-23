@@ -292,7 +292,7 @@ const LineItems = memo(function LineItems() {
   return (
     <>
       {lineItems.map((item, index) => (
-        <LineItem key={index} item={item} index={index} />
+        <LineItem key={item.id} item={item} index={index} />
       ))}
     </>
   );
@@ -318,7 +318,7 @@ const LineItem = memo(function LineItem({
       <QuantityCell index={index} quantity={item.quantity} />
       <UnitPriceCell index={index} unitPrice={item.unitPrice} />
       <AmountCell amount={amount} />
-      {lineItems.length > 1 && <RemoveItemButton index={index} />}
+      {lineItems.length > 1 && <RemoveItemButton itemId={item.id} />}
     </div>
   );
 });
@@ -519,9 +519,9 @@ const AmountCell = memo(function AmountCell({ amount }: { amount: number }) {
 });
 
 const RemoveItemButton = memo(function RemoveItemButton({
-  index
+  itemId
 }: {
-  index: number;
+  itemId: string;
 }) {
   const updateInvoice = useSetAtom(invoiceAtom);
 
@@ -529,7 +529,7 @@ const RemoveItemButton = memo(function RemoveItemButton({
     updateInvoice(prevInvoice => {
       const newInvoice = {
         ...prevInvoice,
-        items: prevInvoice.items.filter((_, i) => i !== index)
+        items: prevInvoice.items.filter(item => item.id !== itemId)
       };
 
       return calculateInvoiceTotals(newInvoice);
@@ -560,6 +560,7 @@ const AddItemButton = memo(function AddItemButton() {
         items: [
           ...prevInvoice.items,
           {
+            id: crypto.randomUUID(),
             description: "",
             quantity: 1,
             unitPrice: 0,
