@@ -1,17 +1,17 @@
 import type { Invoice } from "features/new/types";
 
 export function calculateInvoiceTotals(invoice: Invoice): Invoice {
-  // Calculate the sum of all items
-  const subtotal = invoice.items.reduce((sum, item) => {
+  // Calculate items with amounts (immutable - create new item objects)
+  const itemsWithAmounts = invoice.items.map(item => {
     const quantity = Number(item.quantity) || 0;
     const unitPrice = Number(item.unitPrice) || 0;
-    const itemTotal = quantity * unitPrice;
+    const amount = quantity * unitPrice;
 
-    // Update the item's amount
-    item.amount = itemTotal;
+    return { ...item, amount };
+  });
 
-    return sum + itemTotal;
-  }, 0);
+  // Calculate the sum of all items
+  const subtotal = itemsWithAmounts.reduce((sum, item) => sum + item.amount, 0);
 
   // Calculate tax amount
   const taxAmount = (subtotal * (Number(invoice.tax.percentage) || 0)) / 100;
@@ -25,6 +25,7 @@ export function calculateInvoiceTotals(invoice: Invoice): Invoice {
 
   return {
     ...invoice,
+    items: itemsWithAmounts,
     subtotal: subtotal,
     tax: {
       ...invoice.tax,
