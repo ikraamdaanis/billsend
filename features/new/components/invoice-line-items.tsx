@@ -14,10 +14,11 @@ import {
   tableSettingsAtom,
   updateInvoiceValueAtom
 } from "features/new/state";
-import type { Invoice } from "features/new/types";
+import type { Invoice, TableColumnSettings, TextSettings } from "features/new/types";
 import { calculateInvoiceTotals } from "features/new/utils/calculate-invoice-totals";
 import { getTextStyles } from "features/new/utils/get-text-styles";
 import { setActiveTab } from "features/new/utils/set-active-tab";
+import type { Atom } from "jotai";
 import { useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { cn } from "lib/utils";
@@ -81,6 +82,107 @@ const borderColorAtom = selectAtom(
   settings => settings.borderColor
 );
 
+type LineItemFieldKey = "description" | "quantity" | "unitPrice";
+
+type LineItemTab = (typeof LINE_ITEM_TABS)[keyof typeof LINE_ITEM_TABS];
+
+type LineItemColumnKind = "text" | "integer" | "currency" | "amount";
+
+interface LineItemColumnConfig {
+  id: "description" | "quantity" | "unitPrice" | "amount";
+  headerSettingsAtom: Atom<TableColumnSettings>;
+  rowSettingsAtom: Atom<TextSettings>;
+  headerLabelField: DeepKeyOf<Invoice>;
+  headerPlaceholder: string;
+  headerInputClassName: string;
+  tab: LineItemTab;
+  cell: {
+    kind: LineItemColumnKind;
+    itemField?: LineItemFieldKey;
+    placeholder?: string;
+    wrapperClassName: string;
+    inputClassName?: string;
+    displayClassName?: string;
+  };
+}
+
+const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
+  {
+    id: "description",
+    headerSettingsAtom: descriptionHeaderSettingsAtom,
+    rowSettingsAtom: descriptionRowSettingsAtom,
+    headerLabelField: "tableSettings.descriptionHeaderSettings.label",
+    headerPlaceholder: "Description",
+    headerInputClassName:
+      "relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+    tab: LINE_ITEM_TABS.description,
+    cell: {
+      kind: "text",
+      itemField: "description",
+      placeholder: "Enter a description",
+      wrapperClassName: "col-span-1 flex h-full items-center",
+      inputClassName:
+        "w-full rounded-none border-none py-2 pl-2 ring-0 outline-none focus-visible:py-2"
+    }
+  },
+  {
+    id: "quantity",
+    headerSettingsAtom: quantityHeaderSettingsAtom,
+    rowSettingsAtom: quantityRowSettingsAtom,
+    headerLabelField: "tableSettings.quantityHeaderSettings.label",
+    headerPlaceholder: "Quantity",
+    headerInputClassName:
+      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+    tab: LINE_ITEM_TABS.quantity,
+    cell: {
+      kind: "integer",
+      itemField: "quantity",
+      wrapperClassName: "col-span-1 flex h-full items-center",
+      inputClassName:
+        "w-full rounded-none border-none py-2 ring-0 outline-none focus-visible:py-2"
+    }
+  },
+  {
+    id: "unitPrice",
+    headerSettingsAtom: unitPriceHeaderSettingsAtom,
+    rowSettingsAtom: unitPriceRowSettingsAtom,
+    headerLabelField: "tableSettings.unitPriceHeaderSettings.label",
+    headerPlaceholder: "Unit Price",
+    headerInputClassName:
+      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+    tab: LINE_ITEM_TABS.unitPrice,
+    cell: {
+      kind: "currency",
+      itemField: "unitPrice",
+      wrapperClassName: "col-span-1 flex h-full items-center",
+      inputClassName:
+        "w-full rounded-none border-none py-2 ring-0 outline-none focus-visible:py-2"
+    }
+  },
+  {
+    id: "amount",
+    headerSettingsAtom: amountHeaderSettingsAtom,
+    rowSettingsAtom: amountRowSettingsAtom,
+    headerLabelField: "tableSettings.amountHeaderSettings.label",
+    headerPlaceholder: "Amount",
+    headerInputClassName:
+      "relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:p-2",
+    tab: LINE_ITEM_TABS.amount,
+    cell: {
+      kind: "amount",
+      wrapperClassName: "col-span-1 cursor-pointer pr-2",
+      displayClassName: "inline-block h-full w-full font-medium"
+    }
+  }
+];
+
+function getItemFieldPath(
+  index: number,
+  field: LineItemFieldKey
+): DeepKeyOf<Invoice> {
+  return `items[${index}].${field}` as DeepKeyOf<Invoice>;
+}
+
 /**
  * Displays the line items for the invoice.
  */
@@ -115,22 +217,25 @@ const TableHeader = memo(function TableHeader() {
       className="grid grid-cols-[repeat(4,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_120px_150px]"
       style={{ backgroundColor, borderColor }}
     >
-      <DescriptionHeader />
-      <QuantityHeader />
-      <UnitPriceHeader />
-      <AmountHeader />
+      {LINE_ITEM_COLUMNS.map(column => (
+        <TableHeaderCell key={column.id} column={column} />
+      ))}
     </div>
   );
 });
 
-const DescriptionHeader = memo(function DescriptionHeader() {
-  const descriptionHeaderSettings = useAtomValue(descriptionHeaderSettingsAtom);
+const TableHeaderCell = memo(function TableHeaderCell({
+  column
+}: {
+  column: LineItemColumnConfig;
+}) {
+  const headerSettings = useAtomValue(column.headerSettingsAtom);
   const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
   function handleChange(value: string) {
     updateInvoiceValue({
-      field: "tableSettings.descriptionHeaderSettings.label",
+      field: column.headerLabelField,
       value
     });
   }
@@ -139,7 +244,7 @@ const DescriptionHeader = memo(function DescriptionHeader() {
     setActiveSettings("table");
     setActiveTab({
       eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.description,
+      tab: column.tab,
       option: LINE_ITEM_TAB_SECTIONS.header
     });
   }
@@ -149,142 +254,16 @@ const DescriptionHeader = memo(function DescriptionHeader() {
       className="col-span-1 cursor-pointer text-sm font-medium"
       onClick={handleClick}
       style={getTextStyles({
-        settings: descriptionHeaderSettings
+        settings: headerSettings
       })}
     >
       <InvoiceInput
-        value={descriptionHeaderSettings.label || ""}
+        value={headerSettings.label || ""}
         onChange={handleChange}
-        className="relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2"
-        placeholder="Description"
+        className={column.headerInputClassName}
+        placeholder={column.headerPlaceholder}
         style={getTextStyles({
-          settings: descriptionHeaderSettings
-        })}
-      />
-    </div>
-  );
-});
-
-const QuantityHeader = memo(function QuantityHeader() {
-  const quantityHeaderSettings = useAtomValue(quantityHeaderSettingsAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  function handleChange(value: string) {
-    updateInvoiceValue({
-      field: "tableSettings.quantityHeaderSettings.label",
-      value
-    });
-  }
-
-  function handleClick() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.quantity,
-      option: LINE_ITEM_TAB_SECTIONS.header
-    });
-  }
-
-  return (
-    <div
-      className="col-span-1 cursor-pointer text-sm font-medium"
-      onClick={handleClick}
-      style={getTextStyles({
-        settings: quantityHeaderSettings
-      })}
-    >
-      <InvoiceInput
-        value={quantityHeaderSettings.label || ""}
-        onChange={handleChange}
-        className="relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2"
-        placeholder="Quantity"
-        style={getTextStyles({
-          settings: quantityHeaderSettings
-        })}
-      />
-    </div>
-  );
-});
-
-const UnitPriceHeader = memo(function UnitPriceHeader() {
-  const unitPriceHeaderSettings = useAtomValue(unitPriceHeaderSettingsAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  function handleChange(value: string) {
-    updateInvoiceValue({
-      field: "tableSettings.unitPriceHeaderSettings.label",
-      value
-    });
-  }
-
-  function handleClick() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.unitPrice,
-      option: LINE_ITEM_TAB_SECTIONS.header
-    });
-  }
-
-  return (
-    <div
-      className="col-span-1 cursor-pointer text-sm font-medium"
-      onClick={handleClick}
-      style={getTextStyles({
-        settings: unitPriceHeaderSettings
-      })}
-    >
-      <InvoiceInput
-        value={unitPriceHeaderSettings.label || ""}
-        onChange={handleChange}
-        className="relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2"
-        placeholder="Unit Price"
-        style={getTextStyles({
-          settings: unitPriceHeaderSettings
-        })}
-      />
-    </div>
-  );
-});
-
-const AmountHeader = memo(function AmountHeader() {
-  const amountHeaderSettings = useAtomValue(amountHeaderSettingsAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  function handleChange(value: string) {
-    updateInvoiceValue({
-      field: "tableSettings.amountHeaderSettings.label",
-      value
-    });
-  }
-
-  function handleClick() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.amount,
-      option: LINE_ITEM_TAB_SECTIONS.header
-    });
-  }
-
-  return (
-    <div
-      className="col-span-1 cursor-pointer text-sm font-medium"
-      onClick={handleClick}
-      style={getTextStyles({
-        settings: amountHeaderSettings
-      })}
-    >
-      <InvoiceInput
-        value={amountHeaderSettings.label || ""}
-        onChange={handleChange}
-        className="relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:p-2"
-        placeholder="Amount"
-        style={getTextStyles({
-          settings: amountHeaderSettings
+          settings: headerSettings
         })}
       />
     </div>
@@ -319,206 +298,150 @@ const LineItem = memo(function LineItem({
       className="relative grid grid-cols-[repeat(4,1fr)] items-center gap-2 lg:grid-cols-[1fr_80px_120px_150px]"
       style={{ borderColor }}
     >
-      <DescriptionCell index={index} description={item.description} />
-      <QuantityCell index={index} quantity={item.quantity} />
-      <UnitPriceCell index={index} unitPrice={item.unitPrice} />
-      <AmountCell amount={amount} />
+      {LINE_ITEM_COLUMNS.map(column => (
+        <TableCell
+          key={`${item.id}-${column.id}`}
+          column={column}
+          item={item}
+          index={index}
+          amount={amount}
+        />
+      ))}
       {lineItems.length > 1 && <RemoveItemButton itemId={item.id} />}
     </div>
   );
 });
 
-const DescriptionCell = memo(function DescriptionCell({
+const TableCell = memo(function TableCell({
+  column,
+  item,
   index,
-  description
+  amount
 }: {
+  column: LineItemColumnConfig;
+  item: Invoice["items"][0];
   index: number;
-  description: string;
+  amount: number;
 }) {
-  const descriptionRowSettings = useAtomValue(descriptionRowSettingsAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  function handleChange(value: string) {
-    updateInvoiceValue({
-      field: `items[${index}].description` as DeepKeyOf<Invoice>,
-      value
-    });
-  }
-
-  function handleFocus() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.description,
-      option: LINE_ITEM_TAB_SECTIONS.row
-    });
-  }
-
-  return (
-    <div className="col-span-1 flex h-full items-center">
-      <InvoiceInput
-        value={description}
-        placeholder="Enter a description"
-        onChange={handleChange}
-        className="w-full rounded-none border-none py-2 pl-2 ring-0 outline-none focus-visible:py-2"
-        onFocus={handleFocus}
-        style={getTextStyles({
-          settings: descriptionRowSettings
-        })}
-      />
-    </div>
-  );
-});
-
-const QuantityCell = memo(function QuantityCell({
-  index,
-  quantity
-}: {
-  index: number;
-  quantity: number;
-}) {
-  const quantityRowSettings = useAtomValue(quantityRowSettingsAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  function handleChange(value: string) {
-    // Only allow integers and ensure it doesn't start with 0 unless it's just 0
-    let numericValue = value.replace(/[^0-9]/g, "");
-    // Remove leading zeros unless it's just "0"
-    if (numericValue.length > 1 && numericValue.startsWith("0")) {
-      numericValue = numericValue.replace(/^0+/, "");
-    }
-
-    updateInvoiceValue({
-      field: `items[${index}].quantity` as DeepKeyOf<Invoice>,
-      value: numericValue
-    });
-  }
-
-  function handleFocus() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.quantity,
-      option: LINE_ITEM_TAB_SECTIONS.row
-    });
-  }
-
-  return (
-    <div className="col-span-1 flex h-full items-center">
-      <InvoiceInput
-        value={quantity.toString()}
-        className="w-full rounded-none border-none py-2 ring-0 outline-none focus-visible:py-2"
-        onChange={handleChange}
-        onFocus={handleFocus}
-        style={getTextStyles({
-          settings: quantityRowSettings
-        })}
-      />
-    </div>
-  );
-});
-
-const UnitPriceCell = memo(function UnitPriceCell({
-  index,
-  unitPrice
-}: {
-  index: number;
-  unitPrice: number;
-}) {
-  const unitPriceRowSettings = useAtomValue(unitPriceRowSettingsAtom);
+  const rowSettings = useAtomValue(column.rowSettingsAtom);
   const currency = useAtomValue(currencyAtom);
   const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
-
   const currencySymbol =
     currencySymbols.find(symbol => symbol.code === currency)?.symbol || "";
 
-  function handleChange(value: string) {
-    // Remove currency symbol and any non-numeric characters except decimal point
-    let numericValue = value
-      .replace(currencySymbol, "")
-      .replace(/[^0-9.]/g, "");
-    // Remove leading zeros unless it's just "0" or starts with "0."
-    if (
-      numericValue.length > 1 &&
-      numericValue.startsWith("0") &&
-      !numericValue.startsWith("0.")
-    ) {
-      numericValue = numericValue.replace(/^0+/, "");
-    }
-
-    updateInvoiceValue({
-      field: `items[${index}].unitPrice` as DeepKeyOf<Invoice>,
-      value: numericValue
+  function handleFocus() {
+    setActiveSettings("table");
+    setActiveTab({
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: column.tab,
+      option: LINE_ITEM_TAB_SECTIONS.row
     });
   }
 
-  function handleBlur({ target }: ChangeEvent<HTMLInputElement>) {
-    // If numericValue has no digits, set to 0
-    const hasDigits = /\d/.test(target.value);
+  function handleChange(value: string) {
+    const itemField = column.cell.itemField;
+    if (!itemField) {
+      return;
+    }
 
-    // get the number from the target value, remove the currency symbol and any non-numeric characters except decimal point
+    if (column.cell.kind === "text") {
+      updateInvoiceValue({
+        field: getItemFieldPath(index, itemField),
+        value
+      });
+      return;
+    }
+
+    if (column.cell.kind === "integer") {
+      let numericValue = value.replace(/[^0-9]/g, "");
+      if (numericValue.length > 1 && numericValue.startsWith("0")) {
+        numericValue = numericValue.replace(/^0+/, "");
+      }
+
+      updateInvoiceValue({
+        field: getItemFieldPath(index, itemField),
+        value: numericValue
+      });
+      return;
+    }
+
+    if (column.cell.kind === "currency") {
+      let numericValue = value
+        .replace(currencySymbol, "")
+        .replace(/[^0-9.]/g, "");
+      if (
+        numericValue.length > 1 &&
+        numericValue.startsWith("0") &&
+        !numericValue.startsWith("0.")
+      ) {
+        numericValue = numericValue.replace(/^0+/, "");
+      }
+
+      updateInvoiceValue({
+        field: getItemFieldPath(index, itemField),
+        value: numericValue
+      });
+    }
+  }
+
+  function handleBlur({ target }: ChangeEvent<HTMLInputElement>) {
+    if (column.cell.kind !== "currency" || !column.cell.itemField) {
+      return;
+    }
+
+    const hasDigits = /\d/.test(target.value);
     const number = Number(
       target.value.replace(currencySymbol, "").replace(/[^0-9.]/g, "")
     );
 
     updateInvoiceValue({
-      field: `items[${index}].unitPrice` as DeepKeyOf<Invoice>,
+      field: getItemFieldPath(index, column.cell.itemField),
       value: hasDigits ? number : 0
     });
   }
 
-  function handleFocus() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.unitPrice,
-      option: LINE_ITEM_TAB_SECTIONS.row
-    });
+  if (column.cell.kind === "amount") {
+    return (
+      <div className={column.cell.wrapperClassName} onClick={handleFocus}>
+        <span
+          className={column.cell.displayClassName}
+          style={getTextStyles({
+            settings: rowSettings
+          })}
+        >
+          {formatCurrency(amount, currency)}
+        </span>
+      </div>
+    );
+  }
+
+  let inputValue = "";
+  if (column.cell.kind === "text") {
+    inputValue = item.description;
+  }
+
+  if (column.cell.kind === "integer") {
+    inputValue = item.quantity.toString();
+  }
+
+  if (column.cell.kind === "currency") {
+    inputValue = `${currencySymbol}${item.unitPrice.toString()}`;
   }
 
   return (
-    <div className="col-span-1 flex h-full items-center">
+    <div className={column.cell.wrapperClassName}>
       <InvoiceInput
-        value={`${currencySymbol}${unitPrice.toString()}`}
-        className="w-full rounded-none border-none py-2 ring-0 outline-none focus-visible:py-2"
+        value={inputValue}
+        placeholder={column.cell.placeholder}
         onChange={handleChange}
+        className={column.cell.inputClassName}
         onBlur={handleBlur}
         onFocus={handleFocus}
         style={getTextStyles({
-          settings: unitPriceRowSettings
+          settings: rowSettings
         })}
       />
-    </div>
-  );
-});
-
-const AmountCell = memo(function AmountCell({ amount }: { amount: number }) {
-  const amountRowSettings = useAtomValue(amountRowSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-
-  function handleClick() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: LINE_ITEM_TABS.amount,
-      option: LINE_ITEM_TAB_SECTIONS.row
-    });
-  }
-
-  return (
-    <div className="col-span-1 cursor-pointer pr-2" onClick={handleClick}>
-      <span
-        className="inline-block h-full w-full font-medium"
-        style={getTextStyles({
-          settings: amountRowSettings
-        })}
-      >
-        {formatCurrency(amount, currency)}
-      </span>
     </div>
   );
 });
