@@ -2,6 +2,7 @@ import { Button } from "components/ui/button";
 import { currencySymbols, formatCurrency } from "consts/currencies";
 import { InvoiceInput } from "features/new/components/invoice-input";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
+import type { LineItemTab } from "features/new/consts/events";
 import {
   LINE_ITEM_TABS,
   LINE_ITEM_TAB_SECTIONS,
@@ -14,7 +15,11 @@ import {
   tableSettingsAtom,
   updateInvoiceValueAtom
 } from "features/new/state";
-import type { Invoice, TableColumnSettings, TextSettings } from "features/new/types";
+import type {
+  Invoice,
+  TableColumnSettings,
+  TextSettings
+} from "features/new/types";
 import { calculateInvoiceTotals } from "features/new/utils/calculate-invoice-totals";
 import { getTextStyles } from "features/new/utils/get-text-styles";
 import { setActiveTab } from "features/new/utils/set-active-tab";
@@ -83,8 +88,6 @@ const borderColorAtom = selectAtom(
 );
 
 type LineItemFieldKey = "description" | "quantity" | "unitPrice";
-
-type LineItemTab = (typeof LINE_ITEM_TABS)[keyof typeof LINE_ITEM_TABS];
 
 type LineItemColumnKind = "text" | "integer" | "currency" | "amount";
 
