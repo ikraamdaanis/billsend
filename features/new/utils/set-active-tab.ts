@@ -1,12 +1,11 @@
+import type { TabSelectEventType } from "features/new/consts/events";
+
 export function setActiveTab({
   eventType,
   tab,
   option
 }: {
-  eventType:
-    | "select-details-tab"
-    | "select-line-items-tab"
-    | "select-totals-tab";
+  eventType: TabSelectEventType;
   tab: string;
   option?: string;
 }) {

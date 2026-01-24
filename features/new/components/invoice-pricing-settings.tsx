@@ -5,6 +5,7 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "features/new/components/settings-fields";
+import { TAB_SELECT_EVENTS } from "features/new/consts/events";
 import {
   discountsSettingsAtom,
   feesSettingsAtom,
@@ -51,10 +52,10 @@ export function InvoicePricingSettings() {
       }
     }
 
-    window.addEventListener("select-totals-tab", handleSelectTotalsTab);
+    window.addEventListener(TAB_SELECT_EVENTS.totals, handleSelectTotalsTab);
 
     return () => {
-      window.removeEventListener("select-totals-tab", handleSelectTotalsTab);
+      window.removeEventListener(TAB_SELECT_EVENTS.totals, handleSelectTotalsTab);
     };
   }, []);
 

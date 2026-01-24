@@ -7,6 +7,8 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "features/new/components/settings-fields";
+import type { LineItemTab } from "features/new/consts/events";
+import { LINE_ITEM_TABS, TAB_SELECT_EVENTS } from "features/new/consts/events";
 import { tableSettingsAtom } from "features/new/state";
 import { handleActiveTab } from "features/new/utils/handle-active-tab";
 import { useAtom, useAtomValue } from "jotai";
@@ -15,9 +17,17 @@ import { memo, useEffect, useRef, useState } from "react";
 
 export const LineItemsSettings = memo(function LineItemsSettings() {
   const tabsRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState("description");
+  const [activeTab, setActiveTab] = useState<LineItemTab>(
+    LINE_ITEM_TABS.description
+  );
 
-  function scrollToSelectedTab(value: string) {
+  function isLineItemTab(value: string): value is LineItemTab {
+    return (Object.values(LINE_ITEM_TABS) as LineItemTab[]).includes(
+      value as LineItemTab
+    );
+  }
+
+  function scrollToSelectedTab(value: LineItemTab) {
     if (!tabsRef.current) return;
 
     setActiveTab(value);
@@ -41,28 +51,33 @@ export const LineItemsSettings = memo(function LineItemsSettings() {
         tab: string;
       }>;
 
-      if (customEvent.detail.tab) {
+      if (customEvent.detail.tab && isLineItemTab(customEvent.detail.tab)) {
         scrollToSelectedTab(customEvent.detail.tab);
       }
     }
 
-    window.addEventListener("select-line-items-tab", handleSelectLineItemsTab);
+    window.addEventListener(
+      TAB_SELECT_EVENTS.lineItems,
+      handleSelectLineItemsTab
+    );
 
     return () => {
       window.removeEventListener(
-        "select-line-items-tab",
+        TAB_SELECT_EVENTS.lineItems,
         handleSelectLineItemsTab
       );
     };
   }, []);
 
   function handleValueChange(value: string) {
-    scrollToSelectedTab(value);
+    if (isLineItemTab(value)) {
+      scrollToSelectedTab(value);
+    }
   }
 
   return (
     <Tabs
-      defaultValue="description"
+      defaultValue={LINE_ITEM_TABS.description}
       className="w-full"
       onValueChange={handleValueChange}
       value={activeTab}
@@ -70,45 +85,57 @@ export const LineItemsSettings = memo(function LineItemsSettings() {
       <div ref={tabsRef} className="scrollbar-thin overflow-x-auto pb-1">
         <TabsList className="inline-flex w-auto min-w-full">
           <TabsTrigger
-            value="description"
+            value={LINE_ITEM_TABS.description}
             className="min-w-[100px] flex-1"
-            data-value="description"
+            data-value={LINE_ITEM_TABS.description}
           >
             Description
           </TabsTrigger>
           <TabsTrigger
-            value="quantity"
+            value={LINE_ITEM_TABS.quantity}
             className="min-w-[80px] flex-1"
-            data-value="quantity"
+            data-value={LINE_ITEM_TABS.quantity}
           >
             Quantity
           </TabsTrigger>
           <TabsTrigger
-            value="unitPrice"
+            value={LINE_ITEM_TABS.unitPrice}
             className="min-w-[90px] flex-1"
-            data-value="unitPrice"
+            data-value={LINE_ITEM_TABS.unitPrice}
           >
             Unit Price
           </TabsTrigger>
           <TabsTrigger
-            value="amount"
+            value={LINE_ITEM_TABS.amount}
             className="min-w-[80px] flex-1"
-            data-value="amount"
+            data-value={LINE_ITEM_TABS.amount}
           >
             Amount
           </TabsTrigger>
         </TabsList>
       </div>
-      <TabsContent value="description" className="mt-4 flex flex-col gap-4">
+      <TabsContent
+        value={LINE_ITEM_TABS.description}
+        className="mt-4 flex flex-col gap-4"
+      >
         <DescriptionSettings />
       </TabsContent>
-      <TabsContent value="quantity" className="mt-4 flex flex-col gap-4">
+      <TabsContent
+        value={LINE_ITEM_TABS.quantity}
+        className="mt-4 flex flex-col gap-4"
+      >
         <QuantitySettings />
       </TabsContent>
-      <TabsContent value="unitPrice" className="mt-4 flex flex-col gap-4">
+      <TabsContent
+        value={LINE_ITEM_TABS.unitPrice}
+        className="mt-4 flex flex-col gap-4"
+      >
         <UnitPriceSettings />
       </TabsContent>
-      <TabsContent value="amount" className="mt-4 flex flex-col gap-4">
+      <TabsContent
+        value={LINE_ITEM_TABS.amount}
+        className="mt-4 flex flex-col gap-4"
+      >
         <AmountSettings />
       </TabsContent>
     </Tabs>

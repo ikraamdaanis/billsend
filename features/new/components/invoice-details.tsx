@@ -1,5 +1,6 @@
 import { InvoiceInput } from "features/new/components/invoice-input";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
+import { TAB_SELECT_EVENTS } from "features/new/consts/events";
 import {
   dueDateAtom,
   dueDateSettingsAtom,
@@ -37,7 +38,7 @@ const InvoiceNumber = memo(function InvoiceNumber() {
       className="flex items-center"
       onClick={() => {
         setActiveTab({
-          eventType: "select-details-tab",
+          eventType: TAB_SELECT_EVENTS.details,
           tab: "number"
         });
       }}
@@ -68,7 +69,7 @@ const InvoiceDate = memo(function InvoiceDate() {
       className="flex items-center"
       onClick={() => {
         setActiveTab({
-          eventType: "select-details-tab",
+          eventType: TAB_SELECT_EVENTS.details,
           tab: "invoiceDate"
         });
       }}
@@ -99,7 +100,7 @@ const InvoiceDueDate = memo(function InvoiceDueDate() {
       className="flex items-center"
       onClick={() => {
         setActiveTab({
-          eventType: "select-details-tab",
+          eventType: TAB_SELECT_EVENTS.details,
           tab: "dueDate"
         });
       }}
