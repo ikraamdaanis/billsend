@@ -1,6 +1,7 @@
 import { currencySymbols, formatCurrency } from "consts/currencies";
 import { InvoiceInput } from "features/new/components/invoice-input";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
+import { TAB_SELECT_EVENTS } from "features/new/consts/events";
 import {
   currencyAtom,
   discountsAtom,
@@ -73,7 +74,7 @@ const SubtotalRow = memo(function SubtotalRow() {
       className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
       onClick={() => {
         setActiveTab({
-          eventType: "select-totals-tab",
+          eventType: TAB_SELECT_EVENTS.totals,
           tab: "subtotal"
         });
         setActiveSettings("totals");
@@ -114,7 +115,7 @@ const TaxRow = memo(function TaxRow() {
       className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
       onClick={() => {
         setActiveTab({
-          eventType: "select-totals-tab",
+          eventType: TAB_SELECT_EVENTS.totals,
           tab: "tax"
         });
         setActiveSettings("totals");
@@ -182,7 +183,7 @@ const FeesRow = memo(function FeesRow() {
       className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
       onClick={() => {
         setActiveTab({
-          eventType: "select-totals-tab",
+          eventType: TAB_SELECT_EVENTS.totals,
           tab: "fees"
         });
         setActiveSettings("totals");
@@ -241,7 +242,7 @@ const DiscountsRow = memo(function DiscountsRow() {
       className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
       onClick={() => {
         setActiveTab({
-          eventType: "select-totals-tab",
+          eventType: TAB_SELECT_EVENTS.totals,
           tab: "discounts"
         });
         setActiveSettings("totals");
@@ -295,7 +296,7 @@ const TotalRow = memo(function TotalRow() {
       className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
       onClick={() => {
         setActiveTab({
-          eventType: "select-totals-tab",
+          eventType: TAB_SELECT_EVENTS.totals,
           tab: "total"
         });
         setActiveSettings("totals");

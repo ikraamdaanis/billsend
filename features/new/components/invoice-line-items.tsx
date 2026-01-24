@@ -3,6 +3,11 @@ import { currencySymbols, formatCurrency } from "consts/currencies";
 import { InvoiceInput } from "features/new/components/invoice-input";
 import { activeSettingsAtom } from "features/new/components/settings-panel";
 import {
+  LINE_ITEM_TABS,
+  LINE_ITEM_TAB_SECTIONS,
+  TAB_SELECT_EVENTS
+} from "features/new/consts/events";
+import {
   currencyAtom,
   invoiceAtom,
   lineItemsAtom,
@@ -133,9 +138,9 @@ const DescriptionHeader = memo(function DescriptionHeader() {
   function handleClick() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "description",
-      option: "header"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.description,
+      option: LINE_ITEM_TAB_SECTIONS.header
     });
   }
 
@@ -175,9 +180,9 @@ const QuantityHeader = memo(function QuantityHeader() {
   function handleClick() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "quantity",
-      option: "header"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.quantity,
+      option: LINE_ITEM_TAB_SECTIONS.header
     });
   }
 
@@ -217,9 +222,9 @@ const UnitPriceHeader = memo(function UnitPriceHeader() {
   function handleClick() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "unitPrice",
-      option: "header"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.unitPrice,
+      option: LINE_ITEM_TAB_SECTIONS.header
     });
   }
 
@@ -259,9 +264,9 @@ const AmountHeader = memo(function AmountHeader() {
   function handleClick() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "amount",
-      option: "header"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.amount,
+      option: LINE_ITEM_TAB_SECTIONS.header
     });
   }
 
@@ -344,9 +349,9 @@ const DescriptionCell = memo(function DescriptionCell({
   function handleFocus() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "description",
-      option: "row"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.description,
+      option: LINE_ITEM_TAB_SECTIONS.row
     });
   }
 
@@ -394,9 +399,9 @@ const QuantityCell = memo(function QuantityCell({
   function handleFocus() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "quantity",
-      option: "row"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.quantity,
+      option: LINE_ITEM_TAB_SECTIONS.row
     });
   }
 
@@ -468,9 +473,9 @@ const UnitPriceCell = memo(function UnitPriceCell({
   function handleFocus() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "unitPrice",
-      option: "row"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.unitPrice,
+      option: LINE_ITEM_TAB_SECTIONS.row
     });
   }
 
@@ -498,9 +503,9 @@ const AmountCell = memo(function AmountCell({ amount }: { amount: number }) {
   function handleClick() {
     setActiveSettings("table");
     setActiveTab({
-      eventType: "select-line-items-tab",
-      tab: "amount",
-      option: "row"
+      eventType: TAB_SELECT_EVENTS.lineItems,
+      tab: LINE_ITEM_TABS.amount,
+      option: LINE_ITEM_TAB_SECTIONS.row
     });
   }
 

@@ -6,6 +6,7 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "features/new/components/settings-fields";
+import { TAB_SELECT_EVENTS } from "features/new/consts/events";
 import {
   dueDateSettingsAtom,
   invoiceDateSettingsAtom,
@@ -49,10 +50,16 @@ export function InvoiceDetailsSettings() {
       }
     }
 
-    window.addEventListener("select-details-tab", handleSelectDetailsTab);
+    window.addEventListener(
+      TAB_SELECT_EVENTS.details,
+      handleSelectDetailsTab
+    );
 
     return () => {
-      window.removeEventListener("select-details-tab", handleSelectDetailsTab);
+      window.removeEventListener(
+        TAB_SELECT_EVENTS.details,
+        handleSelectDetailsTab
+      );
     };
   }, []);
 
