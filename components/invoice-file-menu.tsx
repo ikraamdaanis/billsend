@@ -242,8 +242,10 @@ export function InvoiceFileMenu() {
   useEffect(() => {
     async function loadData() {
       try {
-        setExistingInvoices(await getAllInvoices());
-        setDefaultName(generateDefaultInvoiceName(await getAllInvoices()));
+        const invoices = await getAllInvoices();
+
+        setExistingInvoices(invoices);
+        setDefaultName(generateDefaultInvoiceName(invoices));
       } catch {
         // Silently fail - default name will be used
       }
