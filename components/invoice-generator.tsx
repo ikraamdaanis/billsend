@@ -4,7 +4,6 @@ import {
   Page,
   pdf,
   Image as PDFImage,
-  PDFViewer,
   StyleSheet,
   Text,
   View
@@ -16,7 +15,9 @@ import { useAtomValue } from "jotai";
 import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import {
+  lazy,
   memo,
+  Suspense,
   useEffect,
   useMemo,
   useRef,
@@ -54,6 +55,13 @@ if (typeof window !== "undefined") {
     ]
   });
 }
+
+// Dynamically import PDFViewer to reduce initial bundle size
+const PDFViewer = lazy(() =>
+  import("@react-pdf/renderer").then(module => ({
+    default: module.PDFViewer
+  }))
+);
 
 export const InvoicePDF = memo(function InvoicePDF({
   invoice
@@ -794,9 +802,11 @@ export function InvoiceGenerator() {
         key={key}
         className="h-full w-full rounded-lg border border-zinc-300 bg-white shadow-md"
       >
-        <PDFViewer showToolbar={false} className="h-full w-full">
-          <InvoicePDF invoice={stableInvoice} />
-        </PDFViewer>
+        <Suspense>
+          <PDFViewer showToolbar={false} className="h-full w-full">
+            <InvoicePDF invoice={stableInvoice} />
+          </PDFViewer>
+        </Suspense>
       </div>
     </div>
   );
