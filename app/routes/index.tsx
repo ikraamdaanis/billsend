@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
-import dayjs from "dayjs";
 import {
   ArrowRight,
   Check,
@@ -412,7 +411,7 @@ function HomePage() {
               </span>
             </div>
             <p className="text-sm text-stone-500">
-              © {dayjs().format("YYYY")} billsend.io. All rights reserved.
+              © {new Date().getFullYear()} billsend.io. All rights reserved.
             </p>
           </div>
         </div>
