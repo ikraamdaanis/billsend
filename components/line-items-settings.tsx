@@ -9,10 +9,11 @@ import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import type { LineItemTab } from "consts/events";
 import { LINE_ITEM_TABS, TAB_SELECT_EVENTS } from "consts/events";
+import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { memo, useEffect, useRef, useState } from "react";
-import { tableSettingsAtom } from "state";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { tableSettingsAtom } from "state/table";
 import { handleActiveTab } from "utils/handle-active-tab";
 
 export const LineItemsSettings = memo(function LineItemsSettings() {
@@ -27,47 +28,28 @@ export const LineItemsSettings = memo(function LineItemsSettings() {
     );
   }
 
-  function scrollToSelectedTab(value: LineItemTab) {
+  const scrollToSelectedTab = useCallback((value: LineItemTab) => {
     if (!tabsRef.current) return;
 
     setActiveTab(value);
     handleActiveTab({ tabsRef, value });
-  }
+  }, []);
 
   // Handle initial scroll
   useEffect(() => {
-    // Delay the initial scroll to ensure the component is fully rendered
     const timer = setTimeout(() => {
       scrollToSelectedTab(activeTab);
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [activeTab]);
+  }, [activeTab, scrollToSelectedTab]);
 
   // Listen for custom events to select tabs from outside this component
-  useEffect(() => {
-    function handleSelectLineItemsTab(event: Event) {
-      const customEvent = event as CustomEvent<{
-        tab: string;
-      }>;
-
-      if (customEvent.detail.tab && isLineItemTab(customEvent.detail.tab)) {
-        scrollToSelectedTab(customEvent.detail.tab);
-      }
+  useTabSelectEvent(TAB_SELECT_EVENTS.lineItems, tab => {
+    if (isLineItemTab(tab)) {
+      scrollToSelectedTab(tab);
     }
-
-    window.addEventListener(
-      TAB_SELECT_EVENTS.lineItems,
-      handleSelectLineItemsTab
-    );
-
-    return () => {
-      window.removeEventListener(
-        TAB_SELECT_EVENTS.lineItems,
-        handleSelectLineItemsTab
-      );
-    };
-  }, []);
+  });
 
   function handleValueChange(value: string) {
     if (isLineItemTab(value)) {

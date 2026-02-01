@@ -1,12 +1,12 @@
 import { InvoiceInput } from "components/invoice-input";
 import { activeSettingsAtom } from "components/settings-panel";
-import { currencySymbols, formatCurrency } from "consts/currencies";
+import { formatCurrency } from "consts/currencies";
 import { TAB_SELECT_EVENTS } from "consts/events";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo, useState } from "react";
+import { currencyAtom, currencySymbolAtom } from "state/invoice";
 import {
-  currencyAtom,
   discountsAtom,
   discountsSettingsAtom,
   feesAtom,
@@ -18,7 +18,7 @@ import {
   totalAtom,
   totalSettingsAtom,
   updateInvoicePricingAtom
-} from "state";
+} from "state/pricing";
 import { getTextStyles } from "utils/get-text-styles";
 import { handleCurrencyInput } from "utils/handle-currency-input";
 import { handlePercentageInput } from "utils/handle-percentage-input";
@@ -102,7 +102,7 @@ const taxAmountAtom = selectAtom(taxAtom, tax => tax.amount);
 const TaxRow = memo(function TaxRow() {
   const taxPercentage = useAtomValue(taxPercentageAtom);
   const taxAmount = useAtomValue(taxAmountAtom);
-  const [tax, setTax] = useAtom(taxAtom);
+  const setTax = useSetAtom(taxAtom);
   const taxSettings = useAtomValue(taxSettingsAtom);
   const currency = useAtomValue(currencyAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
@@ -137,14 +137,14 @@ const TaxRow = memo(function TaxRow() {
             onChange={value => {
               const numericValue = handlePercentageInput(value);
               setTaxInput(numericValue);
-              setTax({ ...tax, percentage: Number(numericValue) });
+              setTax(prev => ({ ...prev, percentage: Number(numericValue) }));
               updateInvoicePricing();
             }}
             onBlur={() =>
               handleInputBlur(
                 taxInput,
                 setTaxInput,
-                (val: number) => setTax({ ...tax, percentage: val }),
+                (val: number) => setTax(prev => ({ ...prev, percentage: val })),
                 updateInvoicePricing
               )
             }
@@ -171,12 +171,11 @@ const TaxRow = memo(function TaxRow() {
 const FeesRow = memo(function FeesRow() {
   const [fees, setFees] = useAtom(feesAtom);
   const feesSettings = useAtomValue(feesSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
+  const currencySymbol = useAtomValue(currencySymbolAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
   const updateInvoicePricing = useSetAtom(updateInvoicePricingAtom);
 
   const [feesInput, setFeesInput] = useState(fees.toString());
-  const currencySymbol = currencySymbols.find(c => c.code === currency)?.symbol;
 
   return (
     <div
@@ -230,12 +229,11 @@ const FeesRow = memo(function FeesRow() {
 const DiscountsRow = memo(function DiscountsRow() {
   const [discounts, setDiscounts] = useAtom(discountsAtom);
   const discountsSettings = useAtomValue(discountsSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
+  const currencySymbol = useAtomValue(currencySymbolAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
   const updateInvoicePricing = useSetAtom(updateInvoicePricingAtom);
 
   const [discountsInput, setDiscountsInput] = useState(discounts.toString());
-  const currencySymbol = currencySymbols.find(c => c.code === currency)?.symbol;
 
   return (
     <div

@@ -1,13 +1,13 @@
 import { pdf } from "@react-pdf/renderer";
 import { InvoicePDF } from "components/invoice-generator";
 import { Button } from "components/ui/button";
-import { getImageBlob } from "db";
+import { useImageLoader } from "hooks/use-image-loader";
 import { useAtomValue } from "jotai";
 import { cn } from "lib/utils";
 import type { ComponentProps } from "react";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
-import { imageAtom, invoiceAtom } from "state";
+import { imageAtom, invoiceAtom } from "state/invoice";
 
 export function DownloadInvoice({
   className,
@@ -15,91 +15,9 @@ export function DownloadInvoice({
 }: Omit<ComponentProps<typeof Button>, "onClick">) {
   const invoice = useAtomValue(invoiceAtom);
   const imageId = useAtomValue(imageAtom);
-
-  const [imageUrl, setImageUrl] = useState("");
-  const imageUrlRef = useRef<string | null>(null);
+  const imageUrl = useImageLoader(imageId);
 
   const [pending, startTransition] = useTransition();
-
-  // Load image from IndexedDB when imageId changes
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadImage() {
-      if (!imageId) {
-        // Clean up previous blob URL if it exists
-        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-          URL.revokeObjectURL(imageUrlRef.current);
-          imageUrlRef.current = null;
-        }
-
-        return setImageUrl("");
-      }
-
-      // Check if it's already a blob URL or data URL
-      if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
-        // Clean up previous blob URL if it exists
-        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-          URL.revokeObjectURL(imageUrlRef.current);
-        }
-
-        imageUrlRef.current = imageId;
-        return setImageUrl(imageId);
-      }
-
-      try {
-        const blob = await getImageBlob(imageId);
-
-        if (blob) {
-          // Clean up previous blob URL before creating new one
-          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-            URL.revokeObjectURL(imageUrlRef.current);
-          }
-
-          const url = URL.createObjectURL(blob);
-
-          if (cancelled) return URL.revokeObjectURL(url);
-
-          imageUrlRef.current = url;
-          setImageUrl(url);
-        } else {
-          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-            URL.revokeObjectURL(imageUrlRef.current);
-            imageUrlRef.current = null;
-          }
-
-          setImageUrl("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-            URL.revokeObjectURL(imageUrlRef.current);
-            imageUrlRef.current = null;
-          }
-
-          setImageUrl("");
-
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Failed to load image from storage."
-          );
-        }
-      }
-    }
-
-    loadImage();
-
-    return () => {
-      cancelled = true;
-
-      // Clean up blob URL on unmount or when imageId changes
-      if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrlRef.current);
-        imageUrlRef.current = null;
-      }
-    };
-  }, [imageId]);
 
   // Create a stable copy of the invoice data with loaded image URL
   const stableInvoice = useMemo(

@@ -12,7 +12,7 @@ import { ToggleGroup, ToggleGroupItem } from "components/ui/toggle-group";
 import { weightMap } from "consts";
 import { useAtomValue } from "jotai";
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from "lucide-react";
-import { invoiceAtom } from "state";
+import { invoiceAtom } from "state/invoice";
 import type {
   DeepKeyOf,
   Invoice,

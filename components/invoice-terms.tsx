@@ -1,10 +1,10 @@
 import { InvoiceInput } from "components/invoice-input";
 import { InvoiceTextArea } from "components/invoice-textarea";
 import { activeSettingsAtom } from "components/settings-panel";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
-import { termsAtom, termsSettingsAtom } from "state";
+import { termsAtom, termsSettingsAtom } from "state/terms";
 import { getTextStyles } from "utils/get-text-styles";
 
 export const InvoiceTerms = memo(function InvoiceTerms() {
@@ -25,7 +25,7 @@ const termsLabelSettingsAtom = selectAtom(
 const TermsLabel = memo(function TermsLabel() {
   const termsLabel = useAtomValue(termsLabelAtom);
   const termsLabelSettings = useAtomValue(termsLabelSettingsAtom);
-  const [terms, setTerms] = useAtom(termsAtom);
+  const setTerms = useSetAtom(termsAtom);
 
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
@@ -33,7 +33,7 @@ const TermsLabel = memo(function TermsLabel() {
     <InvoiceInput
       value={termsLabel}
       className="mb-2 font-medium md:text-base"
-      onChange={value => setTerms({ ...terms, label: value })}
+      onChange={value => setTerms(prev => ({ ...prev, label: value }))}
       placeholder="Terms and conditions"
       onFocus={() => setActiveSettings("terms")}
       style={getTextStyles({ settings: termsLabelSettings })}
@@ -50,14 +50,14 @@ const termsContentSettingsAtom = selectAtom(
 const TermsContent = memo(function TermsContent() {
   const termsContent = useAtomValue(termsContentAtom);
   const termsContentSettings = useAtomValue(termsContentSettingsAtom);
-  const [terms, setTerms] = useAtom(termsAtom);
+  const setTerms = useSetAtom(termsAtom);
 
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
   return (
     <InvoiceTextArea
       value={termsContent}
-      onChange={value => setTerms({ ...terms, content: value })}
+      onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("terms")}
       className="field-sizing-content min-h-[4lh] w-full"
       style={getTextStyles({ settings: termsContentSettings })}

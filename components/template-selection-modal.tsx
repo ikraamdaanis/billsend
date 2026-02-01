@@ -15,7 +15,7 @@ import { FileTextIcon, SparklesIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { invoiceAtom } from "state";
+import { invoiceAtom } from "state/invoice";
 import type { InvoiceTemplate } from "types";
 import { ensureItemIds } from "utils/ensure-item-ids";
 

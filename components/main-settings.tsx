@@ -1,7 +1,7 @@
 import { Label } from "components/ui/label";
 import { currencySymbols } from "consts/currencies";
 import { useAtom } from "jotai";
-import { currencyAtom } from "state";
+import { currencyAtom } from "state/invoice";
 import type { Currency } from "types";
 
 export function MainSettings() {

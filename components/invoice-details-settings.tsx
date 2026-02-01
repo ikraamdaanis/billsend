@@ -7,58 +7,39 @@ import {
 import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
+import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   dueDateSettingsAtom,
   invoiceDateSettingsAtom,
   numberSettingsAtom
-} from "state";
+} from "state/details";
 import { handleActiveTab } from "utils/handle-active-tab";
 
 export function InvoiceDetailsSettings() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState("number");
 
-  function scrollToSelectedTab(value: string) {
+  const scrollToSelectedTab = useCallback((value: string) => {
     if (!tabsRef.current) return;
 
     setActiveTab(value);
     handleActiveTab({ tabsRef, value });
-  }
+  }, []);
 
   // Handle initial scroll
   useEffect(() => {
-    // Delay the initial scroll to ensure the component is fully rendered
     const timer = setTimeout(() => {
       scrollToSelectedTab(activeTab);
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [activeTab]);
+  }, [activeTab, scrollToSelectedTab]);
 
   // Listen for custom events to select tabs from outside this component
-  useEffect(() => {
-    function handleSelectDetailsTab(event: Event) {
-      const customEvent = event as CustomEvent<{
-        tab: string;
-      }>;
-
-      if (customEvent.detail.tab) {
-        scrollToSelectedTab(customEvent.detail.tab);
-      }
-    }
-
-    window.addEventListener(TAB_SELECT_EVENTS.details, handleSelectDetailsTab);
-
-    return () => {
-      window.removeEventListener(
-        TAB_SELECT_EVENTS.details,
-        handleSelectDetailsTab
-      );
-    };
-  }, []);
+  useTabSelectEvent(TAB_SELECT_EVENTS.details, scrollToSelectedTab);
 
   return (
     <Tabs
