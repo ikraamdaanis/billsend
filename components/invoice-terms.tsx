@@ -1,67 +1,46 @@
 import { InvoiceInput } from "components/invoice-input";
 import { InvoiceTextArea } from "components/invoice-textarea";
-import { activeSettingsAtom } from "components/settings-panel";
-import { useAtomValue, useSetAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
-import { memo } from "react";
-import { termsAtom, termsSettingsAtom } from "state/terms";
+import { useUI } from "context/ui-context";
+import { useTermsSlice } from "stores/invoice-selectors";
 import { getTextStyles } from "utils/get-text-styles";
 
-export const InvoiceTerms = memo(function InvoiceTerms() {
+export function InvoiceTerms() {
   return (
     <>
       <TermsLabel />
       <TermsContent />
     </>
   );
-});
+}
 
-const termsLabelAtom = selectAtom(termsAtom, terms => terms.label);
-const termsLabelSettingsAtom = selectAtom(
-  termsSettingsAtom,
-  settings => settings.label
-);
-
-const TermsLabel = memo(function TermsLabel() {
-  const termsLabel = useAtomValue(termsLabelAtom);
-  const termsLabelSettings = useAtomValue(termsLabelSettingsAtom);
-  const setTerms = useSetAtom(termsAtom);
-
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function TermsLabel() {
+  const { terms, termsSettings, setTerms } = useTermsSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <InvoiceInput
-      value={termsLabel}
+      value={terms.label}
       className="mb-2 font-medium md:text-base"
       onChange={value => setTerms(prev => ({ ...prev, label: value }))}
       placeholder="Terms and conditions"
       onFocus={() => setActiveSettings("terms")}
-      style={getTextStyles({ settings: termsLabelSettings })}
+      style={getTextStyles({ settings: termsSettings.label })}
     />
   );
-});
+}
 
-const termsContentAtom = selectAtom(termsAtom, terms => terms.content);
-const termsContentSettingsAtom = selectAtom(
-  termsSettingsAtom,
-  settings => settings.content
-);
-
-const TermsContent = memo(function TermsContent() {
-  const termsContent = useAtomValue(termsContentAtom);
-  const termsContentSettings = useAtomValue(termsContentSettingsAtom);
-  const setTerms = useSetAtom(termsAtom);
-
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function TermsContent() {
+  const { terms, termsSettings, setTerms } = useTermsSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <InvoiceTextArea
-      value={termsContent}
+      value={terms.content}
       onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("terms")}
       className="field-sizing-content min-h-[4lh] w-full"
-      style={getTextStyles({ settings: termsContentSettings })}
+      style={getTextStyles({ settings: termsSettings.content })}
       placeholder="Add terms and conditions "
     />
   );
-});
+}

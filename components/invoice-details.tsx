@@ -1,21 +1,12 @@
 import { InvoiceInput } from "components/invoice-input";
-import { activeSettingsAtom } from "components/settings-panel";
+import { useUI } from "context/ui-context";
 import { TAB_SELECT_EVENTS } from "consts/events";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { memo } from "react";
-import {
-  dueDateAtom,
-  dueDateSettingsAtom,
-  invoiceDateAtom,
-  invoiceDateSettingsAtom,
-  numberAtom,
-  numberSettingsAtom
-} from "state/details";
+import { useDetailsSlice } from "stores/invoice-selectors";
 import { getTextStyles } from "utils/get-text-styles";
 import { setActiveTab } from "utils/set-active-tab";
 
-function InvoiceDetailsComponent() {
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+export function InvoiceDetails() {
+  const { setActiveSettings } = useUI();
 
   return (
     <div
@@ -29,9 +20,8 @@ function InvoiceDetailsComponent() {
   );
 }
 
-const InvoiceNumber = memo(function InvoiceNumber() {
-  const [number, setNumber] = useAtom(numberAtom);
-  const numberSettings = useAtomValue(numberSettingsAtom);
+function InvoiceNumber() {
+  const { number, numberSettings, setNumber } = useDetailsSlice();
 
   return (
     <div
@@ -58,11 +48,10 @@ const InvoiceNumber = memo(function InvoiceNumber() {
       />
     </div>
   );
-});
+}
 
-const InvoiceDate = memo(function InvoiceDate() {
-  const [invoiceDate, setInvoiceDate] = useAtom(invoiceDateAtom);
-  const invoiceDateSettings = useAtomValue(invoiceDateSettingsAtom);
+function InvoiceDate() {
+  const { invoiceDate, invoiceDateSettings, setInvoiceDate } = useDetailsSlice();
 
   return (
     <div
@@ -89,11 +78,10 @@ const InvoiceDate = memo(function InvoiceDate() {
       />
     </div>
   );
-});
+}
 
-const InvoiceDueDate = memo(function InvoiceDueDate() {
-  const [dueDate, setDueDate] = useAtom(dueDateAtom);
-  const dueDateSettings = useAtomValue(dueDateSettingsAtom);
+function InvoiceDueDate() {
+  const { dueDate, dueDateSettings, setDueDate } = useDetailsSlice();
 
   return (
     <div
@@ -120,6 +108,4 @@ const InvoiceDueDate = memo(function InvoiceDueDate() {
       />
     </div>
   );
-});
-
-export const InvoiceDetails = memo(InvoiceDetailsComponent);
+}

@@ -18,13 +18,11 @@ import {
 } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { Textarea } from "components/ui/textarea";
-import { getAllTemplates, saveTemplate } from "db";
-import { useSetAtom } from "jotai";
+import { saveTemplate } from "db";
 import { PencilIcon } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { invoiceTemplatesAtom } from "state/templates";
 import type { InvoiceTemplate } from "types";
 import { z } from "zod";
 
@@ -57,7 +55,6 @@ export function EditTemplateModal({
   onComplete?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
-  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   const form = useForm<EditTemplateFormData>({
     resolver: zodResolver(editTemplateSchema),
@@ -84,10 +81,6 @@ export function EditTemplateModal({
         };
 
         await saveTemplate(updatedTemplate);
-
-        const updatedTemplates = await getAllTemplates();
-
-        setTemplates(updatedTemplates);
 
         toast.success("Template updated successfully!");
 

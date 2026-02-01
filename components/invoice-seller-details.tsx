@@ -6,71 +6,52 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "components/settings-fields";
-import { activeSettingsAtom } from "components/settings-panel";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
-import { memo } from "react";
-import { sellerAtom, sellerSettingsAtom } from "state/seller";
+import { useUI } from "context/ui-context";
+import { useSellerSlice, useSellerSettingsSlice } from "stores/invoice-selectors";
 import { getTextStyles } from "utils/get-text-styles";
 
-export const InvoiceSellerDetails = memo(function InvoiceSellerDetails() {
+export function InvoiceSellerDetails() {
   return (
     <section className="flex flex-col gap-1">
       <SellerLabel />
       <SellerContent />
     </section>
   );
-});
+}
 
-const sellerLabelAtom = selectAtom(sellerAtom, seller => seller.label);
-const sellerLabelSettingsAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.label
-);
-
-const SellerLabel = memo(function SellerLabel() {
-  const sellerLabel = useAtomValue(sellerLabelAtom);
-  const sellerLabelSettings = useAtomValue(sellerLabelSettingsAtom);
-  const setSeller = useSetAtom(sellerAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function SellerLabel() {
+  const { seller, sellerSettings, setSeller } = useSellerSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <InvoiceInput
-      value={sellerLabel}
+      value={seller.label}
       className="font-medium md:text-base"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
       placeholder="From"
       onFocus={() => setActiveSettings("seller")}
-      style={getTextStyles({ settings: sellerLabelSettings })}
+      style={getTextStyles({ settings: sellerSettings.label })}
     />
   );
-});
+}
 
-const sellerContentAtom = selectAtom(sellerAtom, seller => seller.content);
-const sellerContentSettingsAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.content
-);
-
-const SellerContent = memo(function SellerContent() {
-  const sellerContent = useAtomValue(sellerContentAtom);
-  const sellerContentSettings = useAtomValue(sellerContentSettingsAtom);
-  const [seller, setSeller] = useAtom(sellerAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function SellerContent() {
+  const { seller, sellerSettings, setSeller } = useSellerSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <InvoiceTextArea
-      value={sellerContent}
+      value={seller.content}
       onChange={value => setSeller(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("seller")}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
-      style={getTextStyles({ settings: sellerContentSettings })}
+      style={getTextStyles({ settings: sellerSettings.content })}
       placeholder={seller.placeholder}
     />
   );
-});
+}
 
-export const InvoiceSellerSettings = memo(function InvoiceSellerSettings() {
+export function InvoiceSellerSettings() {
   return (
     <div className="flex flex-col gap-4">
       <div className="mt-4 flex flex-col gap-4">
@@ -91,176 +72,134 @@ export const InvoiceSellerSettings = memo(function InvoiceSellerSettings() {
       </div>
     </div>
   );
-});
+}
 
 // Seller Label Settings
-const sellerLabelAlignAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.label.align
-);
-const sellerLabelSizeAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.label.size
-);
-const sellerLabelWeightAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.label.weight
-);
-const sellerLabelColorAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.label.color
-);
-
-const SellerLabelAlign = memo(function SellerLabelAlign() {
-  const align = useAtomValue(sellerLabelAlignAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerLabelAlign() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={sellerSettings.label.align}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          label: { ...sellerSettings.label, align: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
-});
+}
 
-const SellerLabelSize = memo(function SellerLabelSize() {
-  const size = useAtomValue(sellerLabelSizeAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerLabelSize() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={sellerSettings.label.size}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          label: { ...sellerSettings.label, size: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
-});
+}
 
-const SellerLabelWeight = memo(function SellerLabelWeight() {
-  const weight = useAtomValue(sellerLabelWeightAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerLabelWeight() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={sellerSettings.label.weight}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          label: { ...sellerSettings.label, weight: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
-});
+}
 
-const SellerLabelColor = memo(function SellerLabelColor() {
-  const color = useAtomValue(sellerLabelColorAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerLabelColor() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={sellerSettings.label.color}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          label: { ...sellerSettings.label, color: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
-});
+}
 
 // Seller Content Settings
-const sellerContentAlignAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.content.align
-);
-const sellerContentSizeAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.content.size
-);
-const sellerContentWeightAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.content.weight
-);
-const sellerContentColorAtom = selectAtom(
-  sellerSettingsAtom,
-  settings => settings.content.color
-);
-
-const SellerContentAlign = memo(function SellerContentAlign() {
-  const align = useAtomValue(sellerContentAlignAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerContentAlign() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={sellerSettings.content.align}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          content: { ...sellerSettings.content, align: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, align: value }
+        }))
       }
     />
   );
-});
+}
 
-const SellerContentSize = memo(function SellerContentSize() {
-  const size = useAtomValue(sellerContentSizeAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerContentSize() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={sellerSettings.content.size}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          content: { ...sellerSettings.content, size: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, size: value }
+        }))
       }
     />
   );
-});
+}
 
-const SellerContentWeight = memo(function SellerContentWeight() {
-  const weight = useAtomValue(sellerContentWeightAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerContentWeight() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={sellerSettings.content.weight}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          content: { ...sellerSettings.content, weight: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, weight: value }
+        }))
       }
     />
   );
-});
+}
 
-const SellerContentColor = memo(function SellerContentColor() {
-  const color = useAtomValue(sellerContentColorAtom);
-  const [sellerSettings, setSellerSettings] = useAtom(sellerSettingsAtom);
+function SellerContentColor() {
+  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={sellerSettings.content.color}
       handleInput={value =>
-        setSellerSettings({
-          ...sellerSettings,
-          content: { ...sellerSettings.content, color: value }
-        })
+        setSellerSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, color: value }
+        }))
       }
     />
   );
-});
+}

@@ -1,15 +1,14 @@
 import { Button } from "components/ui/button";
 import { deleteImage, getImageBlob, saveImage } from "db";
-import { useAtom } from "jotai";
 import { cn } from "lib/utils";
 import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
-import { imageAtom } from "state/invoice";
+import { useImageSlice } from "stores/invoice-selectors";
 
 export function InvoiceImage() {
-  const [imageId, setImageId] = useAtom(imageAtom);
+  const { image: imageId, setImage } = useImageSlice();
 
   const [imageUrl, setImageUrl] = useState<string>("");
   const [isDragging, setIsDragging] = useState(false);
@@ -47,7 +46,7 @@ export function InvoiceImage() {
       lastUploadedIdRef.current = newImageId;
 
       // Store image ID in invoice state
-      setImageId(newImageId);
+      setImage(newImageId);
     } catch (error) {
       // On error, revoke preview URL and clear
       if (currentUrlRef.current === previewUrl) {
@@ -85,7 +84,7 @@ export function InvoiceImage() {
       }
     }
 
-    setImageId("");
+    setImage("");
   }
 
   // Cleanup blob URLs on component unmount

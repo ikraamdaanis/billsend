@@ -7,12 +7,10 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { deleteTemplate, getAllTemplates } from "db";
-import { useSetAtom } from "jotai";
+import { deleteTemplate } from "db";
 import { TrashIcon } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { invoiceTemplatesAtom } from "state/templates";
 import type { InvoiceTemplate } from "types";
 
 export function DeleteTemplateModal({
@@ -25,7 +23,6 @@ export function DeleteTemplateModal({
   template: InvoiceTemplate | null;
 }) {
   const [pending, startTransition] = useTransition();
-  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   function handleDelete() {
     if (!template) return;
@@ -33,10 +30,6 @@ export function DeleteTemplateModal({
     startTransition(async () => {
       try {
         await deleteTemplate(template.id);
-
-        const updatedTemplates = await getAllTemplates();
-
-        setTemplates(updatedTemplates);
 
         toast.success(`Template "${template.name}" deleted successfully.`);
 

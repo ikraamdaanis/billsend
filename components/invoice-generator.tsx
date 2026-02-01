@@ -11,19 +11,17 @@ import {
 import { Button } from "components/ui/button";
 import { formatCurrency } from "consts/currencies";
 import { useImageLoader } from "hooks/use-image-loader";
-import { useAtomValue } from "jotai";
 import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import {
   lazy,
-  memo,
   Suspense,
   useEffect,
   useMemo,
   useState,
   useTransition
 } from "react";
-import { imageAtom, invoiceAtom } from "state/invoice";
+import { useInvoiceData } from "stores/invoice-selectors";
 import type { Invoice } from "types";
 import { getFontWeight } from "utils/get-font-weight";
 import { getTextStyles } from "utils/get-text-styles";
@@ -61,11 +59,7 @@ const PDFViewer = lazy(() =>
   }))
 );
 
-export const InvoicePDF = memo(function InvoicePDF({
-  invoice
-}: {
-  invoice: Invoice;
-}) {
+export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   // invoice.image should already be a blob URL or empty string
   const imageUrl = invoice.image || "";
   const styles = StyleSheet.create({
@@ -667,12 +661,11 @@ export const InvoicePDF = memo(function InvoicePDF({
       </Page>
     </Document>
   );
-});
+}
 
 export function InvoiceGenerator() {
-  const invoice = useAtomValue(invoiceAtom);
-  const imageId = useAtomValue(imageAtom);
-  const imageUrl = useImageLoader(imageId);
+  const invoice = useInvoiceData();
+  const imageUrl = useImageLoader(invoice.image);
 
   const [_isPending, startTransition] = useTransition();
   const [key, setKey] = useState(0);

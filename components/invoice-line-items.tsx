@@ -1,6 +1,6 @@
 import { InvoiceInput } from "components/invoice-input";
-import { activeSettingsAtom } from "components/settings-panel";
 import { Button } from "components/ui/button";
+import { useUI } from "context/ui-context";
 import { formatCurrency } from "consts/currencies";
 import type { LineItemTab } from "consts/events";
 import {
@@ -8,84 +8,13 @@ import {
   LINE_ITEM_TAB_SECTIONS,
   TAB_SELECT_EVENTS
 } from "consts/events";
-import type { Atom } from "jotai";
-import { useAtomValue, useSetAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
 import { cn } from "lib/utils";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
-import { memo } from "react";
-import {
-  currencyAtom,
-  currencySymbolAtom,
-  invoiceAtom,
-  updateInvoiceValueAtom
-} from "state/invoice";
-import { lineItemsAtom, tableSettingsAtom } from "state/table";
-import type {
-  DeepKeyOf,
-  Invoice,
-  TableColumnSettings,
-  TextSettings
-} from "types";
-import { calculateInvoiceTotals } from "utils/calculate-invoice-totals";
+import { useLineItemsSlice, useCurrencySymbol } from "stores/invoice-selectors";
+import type { Invoice, InvoiceItem, TableColumnSettings, TextSettings } from "types";
 import { getTextStyles } from "utils/get-text-styles";
 import { setActiveTab } from "utils/set-active-tab";
-
-// Selector atoms for header settings
-const descriptionHeaderSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionHeaderSettings
-);
-
-const quantityHeaderSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityHeaderSettings
-);
-
-const unitPriceHeaderSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceHeaderSettings
-);
-
-const amountHeaderSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountHeaderSettings
-);
-
-// Selector atoms for row settings
-const descriptionRowSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionRowSettings
-);
-
-const quantityRowSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityRowSettings
-);
-
-const unitPriceRowSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceRowSettings
-);
-
-const amountRowSettingsAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountRowSettings
-);
-
-// Selector atom for background color
-const backgroundColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.backgroundColor
-);
-
-const lineItemsLengthAtom = selectAtom(lineItemsAtom, items => items.length);
-
-const borderColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.borderColor
-);
 
 type LineItemFieldKey = "description" | "quantity" | "unitPrice";
 
@@ -93,9 +22,8 @@ type LineItemColumnKind = "text" | "integer" | "currency" | "amount";
 
 interface LineItemColumnConfig {
   id: "description" | "quantity" | "unitPrice" | "amount";
-  headerSettingsAtom: Atom<TableColumnSettings>;
-  rowSettingsAtom: Atom<TextSettings>;
-  headerLabelField: DeepKeyOf<Invoice>;
+  headerSettingsKey: keyof Invoice["tableSettings"];
+  rowSettingsKey: keyof Invoice["tableSettings"];
   headerPlaceholder: string;
   headerInputClassName: string;
   tab: LineItemTab;
@@ -112,9 +40,8 @@ interface LineItemColumnConfig {
 const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   {
     id: "description",
-    headerSettingsAtom: descriptionHeaderSettingsAtom,
-    rowSettingsAtom: descriptionRowSettingsAtom,
-    headerLabelField: "tableSettings.descriptionHeaderSettings.label",
+    headerSettingsKey: "descriptionHeaderSettings",
+    rowSettingsKey: "descriptionRowSettings",
     headerPlaceholder: "Description",
     headerInputClassName:
       "relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
@@ -130,9 +57,8 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   },
   {
     id: "quantity",
-    headerSettingsAtom: quantityHeaderSettingsAtom,
-    rowSettingsAtom: quantityRowSettingsAtom,
-    headerLabelField: "tableSettings.quantityHeaderSettings.label",
+    headerSettingsKey: "quantityHeaderSettings",
+    rowSettingsKey: "quantityRowSettings",
     headerPlaceholder: "Quantity",
     headerInputClassName:
       "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
@@ -147,9 +73,8 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   },
   {
     id: "unitPrice",
-    headerSettingsAtom: unitPriceHeaderSettingsAtom,
-    rowSettingsAtom: unitPriceRowSettingsAtom,
-    headerLabelField: "tableSettings.unitPriceHeaderSettings.label",
+    headerSettingsKey: "unitPriceHeaderSettings",
+    rowSettingsKey: "unitPriceRowSettings",
     headerPlaceholder: "Unit Price",
     headerInputClassName:
       "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
@@ -164,9 +89,8 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   },
   {
     id: "amount",
-    headerSettingsAtom: amountHeaderSettingsAtom,
-    rowSettingsAtom: amountRowSettingsAtom,
-    headerLabelField: "tableSettings.amountHeaderSettings.label",
+    headerSettingsKey: "amountHeaderSettings",
+    rowSettingsKey: "amountRowSettings",
     headerPlaceholder: "Amount",
     headerInputClassName:
       "relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:p-2",
@@ -179,29 +103,21 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   }
 ];
 
-function getItemFieldPath(
-  index: number,
-  field: LineItemFieldKey
-): DeepKeyOf<Invoice> {
-  return `items[${index}].${field}` as DeepKeyOf<Invoice>;
-}
-
 /**
  * Displays the line items for the invoice.
  */
-function InvoiceLineItemsComponent() {
-  const lineItemsLength = useAtomValue(lineItemsLengthAtom);
-  const borderColor = useAtomValue(borderColorAtom);
+export function InvoiceLineItems() {
+  const { items, tableSettings } = useLineItemsSlice();
 
   return (
     <div
       className={cn("w-[calc(100%-2rem)] lg:w-full", {
-        "w-full": lineItemsLength === 1
+        "w-full": items.length === 1
       })}
     >
       <div
         className="line-items-container flex flex-col divide-y rounded-sm border"
-        style={{ borderColor }}
+        style={{ borderColor: tableSettings.borderColor }}
       >
         <TableHeader />
         <LineItems />
@@ -211,36 +127,40 @@ function InvoiceLineItemsComponent() {
   );
 }
 
-const TableHeader = memo(function TableHeader() {
-  const backgroundColor = useAtomValue(backgroundColorAtom);
-  const borderColor = useAtomValue(borderColorAtom);
+function TableHeader() {
+  const { tableSettings } = useLineItemsSlice();
 
   return (
     <div
       className="grid grid-cols-[repeat(4,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_120px_150px]"
-      style={{ backgroundColor, borderColor }}
+      style={{
+        backgroundColor: tableSettings.backgroundColor,
+        borderColor: tableSettings.borderColor
+      }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
         <TableHeaderCell key={column.id} column={column} />
       ))}
     </div>
   );
-});
+}
 
-const TableHeaderCell = memo(function TableHeaderCell({
-  column
-}: {
-  column: LineItemColumnConfig;
-}) {
-  const headerSettings = useAtomValue(column.headerSettingsAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
+  const { tableSettings, setTableSettings } = useLineItemsSlice();
+  const { setActiveSettings } = useUI();
+
+  const headerSettings = tableSettings[
+    column.headerSettingsKey
+  ] as TableColumnSettings;
 
   function handleChange(value: string) {
-    updateInvoiceValue({
-      field: column.headerLabelField,
-      value
-    });
+    setTableSettings(prev => ({
+      ...prev,
+      [column.headerSettingsKey]: {
+        ...(prev[column.headerSettingsKey] as TableColumnSettings),
+        label: value
+      }
+    }));
   }
 
   function handleClick() {
@@ -271,35 +191,34 @@ const TableHeaderCell = memo(function TableHeaderCell({
       />
     </div>
   );
-});
+}
 
-const LineItems = memo(function LineItems() {
-  const lineItems = useAtomValue(lineItemsAtom);
+function LineItems() {
+  const { items } = useLineItemsSlice();
 
   return (
     <>
-      {lineItems.map((item, index) => (
+      {items.map((item, index) => (
         <LineItem key={item.id} item={item} index={index} />
       ))}
     </>
   );
-});
+}
 
-const LineItem = memo(function LineItem({
+function LineItem({
   item,
   index
 }: {
-  item: Invoice["items"][0];
+  item: InvoiceItem;
   index: number;
 }) {
-  const lineItems = useAtomValue(lineItemsAtom);
-  const borderColor = useAtomValue(borderColorAtom);
+  const { items, tableSettings } = useLineItemsSlice();
   const amount = Number(item.quantity) * Number(item.unitPrice);
 
   return (
     <div
       className="relative grid grid-cols-[repeat(4,1fr)] items-center gap-2 lg:grid-cols-[1fr_80px_120px_150px]"
-      style={{ borderColor }}
+      style={{ borderColor: tableSettings.borderColor }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
         <TableCell
@@ -310,27 +229,29 @@ const LineItem = memo(function LineItem({
           amount={amount}
         />
       ))}
-      {lineItems.length > 1 && <RemoveItemButton itemId={item.id} />}
+      {items.length > 1 && <RemoveItemButton itemId={item.id} />}
     </div>
   );
-});
+}
 
-const TableCell = memo(function TableCell({
+function TableCell({
   column,
   item,
   index,
   amount
 }: {
   column: LineItemColumnConfig;
-  item: Invoice["items"][0];
+  item: InvoiceItem;
   index: number;
   amount: number;
 }) {
-  const rowSettings = useAtomValue(column.rowSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
-  const currencySymbol = useAtomValue(currencySymbolAtom);
-  const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+  const { tableSettings, currency, updateItem } = useLineItemsSlice();
+  const currencySymbol = useCurrencySymbol();
+  const { setActiveSettings } = useUI();
+
+  const rowSettings = tableSettings[
+    column.rowSettingsKey
+  ] as TextSettings;
 
   function handleFocus() {
     setActiveSettings("table");
@@ -348,10 +269,7 @@ const TableCell = memo(function TableCell({
     }
 
     if (column.cell.kind === "text") {
-      updateInvoiceValue({
-        field: getItemFieldPath(index, itemField),
-        value
-      });
+      updateItem(index, itemField, value);
       return;
     }
 
@@ -361,10 +279,7 @@ const TableCell = memo(function TableCell({
         numericValue = numericValue.replace(/^0+/, "");
       }
 
-      updateInvoiceValue({
-        field: getItemFieldPath(index, itemField),
-        value: numericValue
-      });
+      updateItem(index, itemField, numericValue === "" ? 0 : Number(numericValue));
       return;
     }
 
@@ -380,10 +295,7 @@ const TableCell = memo(function TableCell({
         numericValue = numericValue.replace(/^0+/, "");
       }
 
-      updateInvoiceValue({
-        field: getItemFieldPath(index, itemField),
-        value: numericValue
-      });
+      updateItem(index, itemField, numericValue === "" ? 0 : Number(numericValue));
     }
   }
 
@@ -397,10 +309,7 @@ const TableCell = memo(function TableCell({
       target.value.replace(currencySymbol, "").replace(/[^0-9.]/g, "")
     );
 
-    updateInvoiceValue({
-      field: getItemFieldPath(index, column.cell.itemField),
-      value: hasDigits ? number : 0
-    });
+    updateItem(index, column.cell.itemField, hasDigits ? number : 0);
   }
 
   if (column.cell.kind === "amount") {
@@ -446,25 +355,10 @@ const TableCell = memo(function TableCell({
       />
     </div>
   );
-});
+}
 
-const RemoveItemButton = memo(function RemoveItemButton({
-  itemId
-}: {
-  itemId: string;
-}) {
-  const updateInvoice = useSetAtom(invoiceAtom);
-
-  function removeItem() {
-    updateInvoice(prevInvoice => {
-      const newInvoice = {
-        ...prevInvoice,
-        items: prevInvoice.items.filter(item => item.id !== itemId)
-      };
-
-      return calculateInvoiceTotals(newInvoice);
-    });
-  }
+function RemoveItemButton({ itemId }: { itemId: string }) {
+  const { removeItem } = useLineItemsSlice();
 
   return (
     <div className="absolute -right-10">
@@ -472,43 +366,30 @@ const RemoveItemButton = memo(function RemoveItemButton({
         size="sm"
         variant="ghost"
         className="h-8 w-8 py-2 hover:bg-zinc-100"
-        onClick={removeItem}
+        onClick={() => removeItem(itemId)}
       >
         <TrashIcon className="h-4 w-4 text-red-700" />
       </Button>
     </div>
   );
-});
+}
 
-const AddItemButton = memo(function AddItemButton() {
-  const updateInvoice = useSetAtom(invoiceAtom);
+function AddItemButton() {
+  const { addItem } = useLineItemsSlice();
 
-  function addItem() {
-    updateInvoice(prevInvoice => {
-      const newInvoice = {
-        ...prevInvoice,
-        items: [
-          ...prevInvoice.items,
-          {
-            id: crypto.randomUUID(),
-            description: "",
-            quantity: 1,
-            unitPrice: 0,
-            amount: 0
-          }
-        ]
-      };
-
-      return calculateInvoiceTotals(newInvoice);
+  function handleAddItem() {
+    addItem({
+      id: crypto.randomUUID(),
+      description: "",
+      quantity: 1,
+      unitPrice: 0
     });
   }
 
   return (
-    <Button size="sm" className="my-4 w-fit" onClick={addItem}>
+    <Button size="sm" className="my-4 w-fit" onClick={handleAddItem}>
       <PlusIcon />
       Add item
     </Button>
   );
-});
-
-export const InvoiceLineItems = memo(InvoiceLineItemsComponent);
+}

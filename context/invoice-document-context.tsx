@@ -1,23 +1,65 @@
 import { getAllInvoices, getInvoice, saveInvoice } from "db";
-import { atom } from "jotai";
-import { loadable } from "jotai/utils";
-import { invoiceDefault } from "state/invoice";
+import type { ReactNode } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
+import { invoiceDefault } from "stores/invoice-store";
 import type { Invoice, InvoiceDocument } from "types";
 import { ensureItemIds } from "utils/ensure-item-ids";
 
-export const currentInvoiceDocumentIdAtom = atom<string | null>(null);
+type InvoiceDocumentContextValue = {
+  currentDocumentId: string | null;
+  currentDocumentName: string | null;
+  lastSavedInvoice: Invoice | null;
+  hasUnsavedChanges: boolean;
+  setCurrentDocumentId: (id: string | null) => void;
+  setCurrentDocumentName: (name: string | null) => void;
+  setLastSavedInvoice: (invoice: Invoice | null) => void;
+  setHasUnsavedChanges: (value: boolean) => void;
+};
 
-export const currentInvoiceDocumentNameAtom = atom<string | null>(null);
+const InvoiceDocumentContext = createContext<InvoiceDocumentContextValue | null>(null);
 
-export const savedInvoicesAtom = atom<Promise<InvoiceDocument[]>>(async () => {
-  return await getAllInvoices();
-});
+export function InvoiceDocumentProvider({
+  children
+}: {
+  children: ReactNode;
+}) {
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
+  const [currentDocumentName, setCurrentDocumentName] = useState<string | null>(null);
+  const [lastSavedInvoice, setLastSavedInvoice] = useState<Invoice | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-export const savedInvoicesLoadableAtom = loadable(savedInvoicesAtom);
+  const value = useMemo(
+    () => ({
+      currentDocumentId,
+      currentDocumentName,
+      lastSavedInvoice,
+      hasUnsavedChanges,
+      setCurrentDocumentId,
+      setCurrentDocumentName,
+      setLastSavedInvoice,
+      setHasUnsavedChanges
+    }),
+    [currentDocumentId, currentDocumentName, lastSavedInvoice, hasUnsavedChanges]
+  );
 
-export const lastSavedInvoiceAtom = atom<Invoice | null>(null);
+  return (
+    <InvoiceDocumentContext.Provider value={value}>
+      {children}
+    </InvoiceDocumentContext.Provider>
+  );
+}
 
-export const hasUnsavedChangesAtom = atom<boolean>(false);
+export function useInvoiceDocument() {
+  const context = useContext(InvoiceDocumentContext);
+  if (!context) {
+    throw new Error(
+      "useInvoiceDocument must be used within an InvoiceDocumentProvider"
+    );
+  }
+  return context;
+}
+
+// Utility functions (same as before, but now work with context setters)
 
 export function generateDefaultInvoiceName(
   existingInvoices: InvoiceDocument[]
@@ -38,9 +80,9 @@ export function generateDefaultInvoiceName(
   return name;
 }
 
-export async function loadInvoiceDocumentIntoAtom(
+export async function loadInvoiceDocument(
   documentId: string,
-  setInvoice: (invoice: Invoice | ((draft: Invoice) => void)) => void,
+  setInvoice: (invoice: Invoice) => void,
   setCurrentDocumentId: (id: string | null) => void,
   setCurrentDocumentName: (name: string | null) => void,
   setLastSaved: (invoice: Invoice | null) => void
@@ -50,12 +92,10 @@ export async function loadInvoiceDocumentIntoAtom(
     throw new Error("Invoice document not found");
   }
 
-  // Use immer updater pattern to properly set the invoice
   // Deep copy the invoice data to ensure all nested properties are copied
   const invoiceDataCopy = JSON.parse(JSON.stringify(document.invoiceData));
   // Ensure all items have IDs (backward compatibility for saved invoices without IDs)
   const invoice = ensureItemIds(invoiceDataCopy);
-  // With atomWithImmer, we can return a new value directly
   setInvoice(invoice);
   setCurrentDocumentId(documentId);
   setCurrentDocumentName(document.name);
@@ -109,7 +149,7 @@ export async function updateCurrentInvoiceDocument(
 }
 
 export function resetToNewInvoice(
-  setInvoice: (invoice: Invoice | ((draft: Invoice) => void)) => void,
+  setInvoice: (invoice: Invoice) => void,
   setCurrentDocumentId: (id: string | null) => void,
   setCurrentDocumentName: (name: string | null) => void,
   setLastSaved: (invoice: Invoice | null) => void
@@ -123,3 +163,6 @@ export function resetToNewInvoice(
   setCurrentDocumentName(null);
   setLastSaved(null);
 }
+
+// Re-export getAllInvoices for use in components
+export { getAllInvoices };

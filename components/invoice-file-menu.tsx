@@ -13,8 +13,17 @@ import {
 } from "components/ui/menubar";
 import type { UnsavedChangesAction } from "components/unsaved-changes-dialog";
 import { UnsavedChangesDialog } from "components/unsaved-changes-dialog";
+import { useInvoiceDataAndActions } from "stores/invoice-selectors";
+import { invoiceDefault } from "stores/invoice-store";
+import {
+  useInvoiceDocument,
+  generateDefaultInvoiceName,
+  loadInvoiceDocument,
+  resetToNewInvoice,
+  saveCurrentInvoiceAsDocument,
+  updateCurrentInvoiceDocument
+} from "context/invoice-document-context";
 import { getAllInvoices, getAllTemplates } from "db";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { isEqual } from "lodash-es";
 import {
   BookmarkIcon,
@@ -25,32 +34,19 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { invoiceAtom, invoiceDefault } from "state/invoice";
-import {
-  currentInvoiceDocumentIdAtom,
-  currentInvoiceDocumentNameAtom,
-  generateDefaultInvoiceName,
-  hasUnsavedChangesAtom,
-  lastSavedInvoiceAtom,
-  loadInvoiceDocumentIntoAtom,
-  resetToNewInvoice,
-  saveCurrentInvoiceAsDocument,
-  updateCurrentInvoiceDocument
-} from "state/invoice-document";
-import { invoiceTemplatesAtom } from "state/templates";
 import type { InvoiceDocument, InvoiceTemplate } from "types";
 
 export function InvoiceFileMenu() {
-  const [invoice] = useAtom(invoiceAtom);
-  const [currentDocumentId, setCurrentDocumentId] = useAtom(
-    currentInvoiceDocumentIdAtom
-  );
-  const [, setCurrentDocumentName] = useAtom(currentInvoiceDocumentNameAtom);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useAtom(
-    hasUnsavedChangesAtom
-  );
-  const [lastSavedInvoice, setLastSavedInvoice] = useAtom(lastSavedInvoiceAtom);
-  const setInvoice = useSetAtom(invoiceAtom);
+  const { invoice, setInvoice } = useInvoiceDataAndActions();
+  const {
+    currentDocumentId,
+    setCurrentDocumentId,
+    setCurrentDocumentName,
+    hasUnsavedChanges,
+    setHasUnsavedChanges,
+    lastSavedInvoice,
+    setLastSavedInvoice
+  } = useInvoiceDocument();
 
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false);
@@ -62,8 +58,7 @@ export function InvoiceFileMenu() {
   const [existingInvoices, setExistingInvoices] = useState<InvoiceDocument[]>(
     []
   );
-  const templates = useAtomValue(invoiceTemplatesAtom);
-  const setTemplates = useSetAtom(invoiceTemplatesAtom);
+  const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [pending, startTransition] = useTransition();
 
   const runWithUnsavedGuard = useCallback(
@@ -201,7 +196,7 @@ export function InvoiceFileMenu() {
   function handleSelectInvoice(invoiceDoc: InvoiceDocument) {
     startTransition(async () => {
       try {
-        await loadInvoiceDocumentIntoAtom(
+        await loadInvoiceDocument(
           invoiceDoc.id,
           setInvoice,
           setCurrentDocumentId,
@@ -261,7 +256,7 @@ export function InvoiceFileMenu() {
       }
     }
     loadTemplates();
-  }, [setTemplates, templateDialogOpen, saveTemplateDialogOpen]);
+  }, [templateDialogOpen, saveTemplateDialogOpen]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

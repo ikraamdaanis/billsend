@@ -6,15 +6,12 @@ import { InvoiceTermsSettings } from "components/invoice-terms-settings";
 import { InvoiceTitleSettings } from "components/invoice-title";
 import { LineItemsSettings } from "components/line-items-settings";
 import { MainSettings } from "components/main-settings";
-import { atom, useAtomValue } from "jotai";
+import { useUI } from "context/ui-context";
 import type { ReactNode } from "react";
-import { memo } from "react";
 import type { SettingsType } from "types";
 
-export const activeSettingsAtom = atom<SettingsType>("main");
-
 export function SettingsPanel() {
-  const activeSettings = useAtomValue(activeSettingsAtom);
+  const { activeSettings } = useUI();
 
   return (
     <div className="bg-background h-fit min-h-64 p-4">
@@ -23,11 +20,7 @@ export function SettingsPanel() {
   );
 }
 
-const SettingsContent = memo(function SettingsContent({
-  settingsType
-}: {
-  settingsType: SettingsType;
-}) {
+function SettingsContent({ settingsType }: { settingsType: SettingsType }) {
   const settings: Record<SettingsType, ReactNode> = {
     title: <InvoiceTitleSettings />,
     seller: <InvoiceSellerSettings />,
@@ -42,4 +35,4 @@ const SettingsContent = memo(function SettingsContent({
   return (
     <div className="flex h-full flex-col gap-4">{settings[settingsType]}</div>
   );
-});
+}

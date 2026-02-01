@@ -10,9 +10,8 @@ import {
 } from "components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "components/ui/toggle-group";
 import { weightMap } from "consts";
-import { useAtomValue } from "jotai";
+import { useInvoiceData } from "stores/invoice-selectors";
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from "lucide-react";
-import { invoiceAtom } from "state/invoice";
 import type {
   DeepKeyOf,
   Invoice,
@@ -33,7 +32,7 @@ export function InvoiceTextSettings({
   settingsPath: DeepKeyOf<Invoice>;
   title?: string;
 }) {
-  const invoice = useAtomValue(invoiceAtom);
+  const invoice = useInvoiceData();
   const fontSizes = [
     8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60, 72, 96
   ];

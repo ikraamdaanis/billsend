@@ -9,14 +9,12 @@ import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import type { LineItemTab } from "consts/events";
 import { LINE_ITEM_TABS, TAB_SELECT_EVENTS } from "consts/events";
+import { useTableSettingsSlice } from "stores/invoice-selectors";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
-import { useAtom, useAtomValue } from "jotai";
-import { selectAtom } from "jotai/utils";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { tableSettingsAtom } from "state/table";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { handleActiveTab } from "utils/handle-active-tab";
 
-export const LineItemsSettings = memo(function LineItemsSettings() {
+export function LineItemsSettings() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<LineItemTab>(
     LINE_ITEM_TABS.description
@@ -122,10 +120,10 @@ export const LineItemsSettings = memo(function LineItemsSettings() {
       </TabsContent>
     </Tabs>
   );
-});
+}
 
 // Description Settings
-const DescriptionSettings = memo(function DescriptionSettings() {
+function DescriptionSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-sm font-medium">Header settings</h3>
@@ -149,10 +147,10 @@ const DescriptionSettings = memo(function DescriptionSettings() {
       <TableDesignSettings />
     </div>
   );
-});
+}
 
 // Quantity Settings
-const QuantitySettings = memo(function QuantitySettings() {
+function QuantitySettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-sm font-medium">Header settings</h3>
@@ -176,10 +174,10 @@ const QuantitySettings = memo(function QuantitySettings() {
       <TableDesignSettings />
     </div>
   );
-});
+}
 
 // Unit Price Settings
-const UnitPriceSettings = memo(function UnitPriceSettings() {
+function UnitPriceSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-sm font-medium">Header settings</h3>
@@ -203,10 +201,10 @@ const UnitPriceSettings = memo(function UnitPriceSettings() {
       <TableDesignSettings />
     </div>
   );
-});
+}
 
 // Amount Settings
-const AmountSettings = memo(function AmountSettings() {
+function AmountSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="text-sm font-medium">Header settings</h3>
@@ -230,34 +228,23 @@ const AmountSettings = memo(function AmountSettings() {
       <TableDesignSettings />
     </div>
   );
-});
+}
 
-const tableBackgroundColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.backgroundColor
-);
-
-const tableBorderColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.borderColor
-);
-
-const TableDesignSettings = memo(function TableDesignSettings() {
+function TableDesignSettings() {
   return (
     <div className="flex flex-col gap-2">
       <TableBackgroundColor />
       <TableBorderColor />
     </div>
   );
-});
+}
 
-const TableBackgroundColor = memo(function TableBackgroundColor() {
-  const backgroundColor = useAtomValue(tableBackgroundColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function TableBackgroundColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={backgroundColor}
+      value={tableSettings.backgroundColor}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -267,15 +254,14 @@ const TableBackgroundColor = memo(function TableBackgroundColor() {
       label="Background"
     />
   );
-});
+}
 
-const TableBorderColor = memo(function TableBorderColor() {
-  const borderColor = useAtomValue(tableBorderColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function TableBorderColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={borderColor}
+      value={tableSettings.borderColor}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -285,37 +271,15 @@ const TableBorderColor = memo(function TableBorderColor() {
       label="Border Color"
     />
   );
-});
+}
 
 // Description Header Settings
-const descriptionHeaderAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionHeaderSettings.align
-);
-const descriptionHeaderSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionHeaderSettings.size
-);
-const descriptionHeaderWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionHeaderSettings.weight
-);
-const descriptionHeaderColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionHeaderSettings.color
-);
-const descriptionHeaderLabelAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionHeaderSettings.label
-);
-
-const DescriptionHeaderAlign = memo(function DescriptionHeaderAlign() {
-  const align = useAtomValue(descriptionHeaderAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionHeaderAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.descriptionHeaderSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -327,15 +291,14 @@ const DescriptionHeaderAlign = memo(function DescriptionHeaderAlign() {
       }
     />
   );
-});
+}
 
-const DescriptionHeaderSize = memo(function DescriptionHeaderSize() {
-  const size = useAtomValue(descriptionHeaderSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionHeaderSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.descriptionHeaderSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -347,15 +310,14 @@ const DescriptionHeaderSize = memo(function DescriptionHeaderSize() {
       }
     />
   );
-});
+}
 
-const DescriptionHeaderWeight = memo(function DescriptionHeaderWeight() {
-  const weight = useAtomValue(descriptionHeaderWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionHeaderWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.descriptionHeaderSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -367,15 +329,14 @@ const DescriptionHeaderWeight = memo(function DescriptionHeaderWeight() {
       }
     />
   );
-});
+}
 
-const DescriptionHeaderColor = memo(function DescriptionHeaderColor() {
-  const color = useAtomValue(descriptionHeaderColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionHeaderColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.descriptionHeaderSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -387,11 +348,10 @@ const DescriptionHeaderColor = memo(function DescriptionHeaderColor() {
       }
     />
   );
-});
+}
 
-const DescriptionHeaderLabel = memo(function DescriptionHeaderLabel() {
-  const label = useAtomValue(descriptionHeaderLabelAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionHeaderLabel() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -401,7 +361,7 @@ const DescriptionHeaderLabel = memo(function DescriptionHeaderLabel() {
       <input
         type="text"
         id="description-header-label"
-        value={label}
+        value={tableSettings.descriptionHeaderSettings.label}
         onChange={({ target: { value } }) =>
           setTableSettings({
             ...tableSettings,
@@ -415,33 +375,15 @@ const DescriptionHeaderLabel = memo(function DescriptionHeaderLabel() {
       />
     </div>
   );
-});
+}
 
 // Description Row Settings
-const descriptionRowAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionRowSettings.align
-);
-const descriptionRowSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionRowSettings.size
-);
-const descriptionRowWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionRowSettings.weight
-);
-const descriptionRowColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.descriptionRowSettings.color
-);
-
-const DescriptionRowAlign = memo(function DescriptionRowAlign() {
-  const align = useAtomValue(descriptionRowAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionRowAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.descriptionRowSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -453,15 +395,14 @@ const DescriptionRowAlign = memo(function DescriptionRowAlign() {
       }
     />
   );
-});
+}
 
-const DescriptionRowSize = memo(function DescriptionRowSize() {
-  const size = useAtomValue(descriptionRowSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionRowSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.descriptionRowSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -473,15 +414,14 @@ const DescriptionRowSize = memo(function DescriptionRowSize() {
       }
     />
   );
-});
+}
 
-const DescriptionRowWeight = memo(function DescriptionRowWeight() {
-  const weight = useAtomValue(descriptionRowWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionRowWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.descriptionRowSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -493,15 +433,14 @@ const DescriptionRowWeight = memo(function DescriptionRowWeight() {
       }
     />
   );
-});
+}
 
-const DescriptionRowColor = memo(function DescriptionRowColor() {
-  const color = useAtomValue(descriptionRowColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function DescriptionRowColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.descriptionRowSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -513,37 +452,15 @@ const DescriptionRowColor = memo(function DescriptionRowColor() {
       }
     />
   );
-});
+}
 
 // Quantity Header Settings
-const quantityHeaderAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityHeaderSettings.align
-);
-const quantityHeaderSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityHeaderSettings.size
-);
-const quantityHeaderWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityHeaderSettings.weight
-);
-const quantityHeaderColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityHeaderSettings.color
-);
-const quantityHeaderLabelAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityHeaderSettings.label
-);
-
-const QuantityHeaderAlign = memo(function QuantityHeaderAlign() {
-  const align = useAtomValue(quantityHeaderAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityHeaderAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.quantityHeaderSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -555,15 +472,14 @@ const QuantityHeaderAlign = memo(function QuantityHeaderAlign() {
       }
     />
   );
-});
+}
 
-const QuantityHeaderSize = memo(function QuantityHeaderSize() {
-  const size = useAtomValue(quantityHeaderSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityHeaderSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.quantityHeaderSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -575,15 +491,14 @@ const QuantityHeaderSize = memo(function QuantityHeaderSize() {
       }
     />
   );
-});
+}
 
-const QuantityHeaderWeight = memo(function QuantityHeaderWeight() {
-  const weight = useAtomValue(quantityHeaderWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityHeaderWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.quantityHeaderSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -595,15 +510,14 @@ const QuantityHeaderWeight = memo(function QuantityHeaderWeight() {
       }
     />
   );
-});
+}
 
-const QuantityHeaderColor = memo(function QuantityHeaderColor() {
-  const color = useAtomValue(quantityHeaderColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityHeaderColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.quantityHeaderSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -615,11 +529,10 @@ const QuantityHeaderColor = memo(function QuantityHeaderColor() {
       }
     />
   );
-});
+}
 
-const QuantityHeaderLabel = memo(function QuantityHeaderLabel() {
-  const label = useAtomValue(quantityHeaderLabelAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityHeaderLabel() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -629,7 +542,7 @@ const QuantityHeaderLabel = memo(function QuantityHeaderLabel() {
       <input
         type="text"
         id="quantity-header-label"
-        value={label}
+        value={tableSettings.quantityHeaderSettings.label}
         onChange={({ target: { value } }) =>
           setTableSettings({
             ...tableSettings,
@@ -643,32 +556,15 @@ const QuantityHeaderLabel = memo(function QuantityHeaderLabel() {
       />
     </div>
   );
-});
+}
 
-const quantityRowAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityRowSettings.align
-);
-const quantityRowSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityRowSettings.size
-);
-const quantityRowWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityRowSettings.weight
-);
-const quantityRowColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.quantityRowSettings.color
-);
-
-const QuantityRowAlign = memo(function QuantityRowAlign() {
-  const align = useAtomValue(quantityRowAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+// Quantity Row Settings
+function QuantityRowAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.quantityRowSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -680,15 +576,14 @@ const QuantityRowAlign = memo(function QuantityRowAlign() {
       }
     />
   );
-});
+}
 
-const QuantityRowSize = memo(function QuantityRowSize() {
-  const size = useAtomValue(quantityRowSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityRowSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.quantityRowSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -700,15 +595,14 @@ const QuantityRowSize = memo(function QuantityRowSize() {
       }
     />
   );
-});
+}
 
-const QuantityRowWeight = memo(function QuantityRowWeight() {
-  const weight = useAtomValue(quantityRowWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityRowWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.quantityRowSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -720,15 +614,14 @@ const QuantityRowWeight = memo(function QuantityRowWeight() {
       }
     />
   );
-});
+}
 
-const QuantityRowColor = memo(function QuantityRowColor() {
-  const color = useAtomValue(quantityRowColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function QuantityRowColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.quantityRowSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -740,37 +633,15 @@ const QuantityRowColor = memo(function QuantityRowColor() {
       }
     />
   );
-});
+}
 
 // Unit Price Header Settings
-const unitPriceHeaderAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceHeaderSettings.align
-);
-const unitPriceHeaderSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceHeaderSettings.size
-);
-const unitPriceHeaderWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceHeaderSettings.weight
-);
-const unitPriceHeaderColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceHeaderSettings.color
-);
-const unitPriceHeaderLabelAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceHeaderSettings.label
-);
-
-const UnitPriceHeaderAlign = memo(function UnitPriceHeaderAlign() {
-  const align = useAtomValue(unitPriceHeaderAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceHeaderAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.unitPriceHeaderSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -782,15 +653,14 @@ const UnitPriceHeaderAlign = memo(function UnitPriceHeaderAlign() {
       }
     />
   );
-});
+}
 
-const UnitPriceHeaderSize = memo(function UnitPriceHeaderSize() {
-  const size = useAtomValue(unitPriceHeaderSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceHeaderSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.unitPriceHeaderSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -802,15 +672,14 @@ const UnitPriceHeaderSize = memo(function UnitPriceHeaderSize() {
       }
     />
   );
-});
+}
 
-const UnitPriceHeaderWeight = memo(function UnitPriceHeaderWeight() {
-  const weight = useAtomValue(unitPriceHeaderWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceHeaderWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.unitPriceHeaderSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -822,15 +691,14 @@ const UnitPriceHeaderWeight = memo(function UnitPriceHeaderWeight() {
       }
     />
   );
-});
+}
 
-const UnitPriceHeaderColor = memo(function UnitPriceHeaderColor() {
-  const color = useAtomValue(unitPriceHeaderColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceHeaderColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.unitPriceHeaderSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -842,11 +710,10 @@ const UnitPriceHeaderColor = memo(function UnitPriceHeaderColor() {
       }
     />
   );
-});
+}
 
-const UnitPriceHeaderLabel = memo(function UnitPriceHeaderLabel() {
-  const label = useAtomValue(unitPriceHeaderLabelAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceHeaderLabel() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -856,7 +723,7 @@ const UnitPriceHeaderLabel = memo(function UnitPriceHeaderLabel() {
       <input
         type="text"
         id="unit-price-header-label"
-        value={label}
+        value={tableSettings.unitPriceHeaderSettings.label}
         onChange={({ target: { value } }) =>
           setTableSettings({
             ...tableSettings,
@@ -870,33 +737,15 @@ const UnitPriceHeaderLabel = memo(function UnitPriceHeaderLabel() {
       />
     </div>
   );
-});
+}
 
 // Unit Price Row Settings
-const unitPriceRowAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceRowSettings.align
-);
-const unitPriceRowSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceRowSettings.size
-);
-const unitPriceRowWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceRowSettings.weight
-);
-const unitPriceRowColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.unitPriceRowSettings.color
-);
-
-const UnitPriceRowAlign = memo(function UnitPriceRowAlign() {
-  const align = useAtomValue(unitPriceRowAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceRowAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.unitPriceRowSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -908,15 +757,14 @@ const UnitPriceRowAlign = memo(function UnitPriceRowAlign() {
       }
     />
   );
-});
+}
 
-const UnitPriceRowSize = memo(function UnitPriceRowSize() {
-  const size = useAtomValue(unitPriceRowSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceRowSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.unitPriceRowSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -928,15 +776,14 @@ const UnitPriceRowSize = memo(function UnitPriceRowSize() {
       }
     />
   );
-});
+}
 
-const UnitPriceRowWeight = memo(function UnitPriceRowWeight() {
-  const weight = useAtomValue(unitPriceRowWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceRowWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.unitPriceRowSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -948,15 +795,14 @@ const UnitPriceRowWeight = memo(function UnitPriceRowWeight() {
       }
     />
   );
-});
+}
 
-const UnitPriceRowColor = memo(function UnitPriceRowColor() {
-  const color = useAtomValue(unitPriceRowColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function UnitPriceRowColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.unitPriceRowSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -968,37 +814,15 @@ const UnitPriceRowColor = memo(function UnitPriceRowColor() {
       }
     />
   );
-});
+}
 
 // Amount Header Settings
-const amountHeaderAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountHeaderSettings.align
-);
-const amountHeaderSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountHeaderSettings.size
-);
-const amountHeaderWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountHeaderSettings.weight
-);
-const amountHeaderColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountHeaderSettings.color
-);
-const amountHeaderLabelAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountHeaderSettings.label
-);
-
-const AmountHeaderAlign = memo(function AmountHeaderAlign() {
-  const align = useAtomValue(amountHeaderAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountHeaderAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.amountHeaderSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1010,15 +834,14 @@ const AmountHeaderAlign = memo(function AmountHeaderAlign() {
       }
     />
   );
-});
+}
 
-const AmountHeaderSize = memo(function AmountHeaderSize() {
-  const size = useAtomValue(amountHeaderSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountHeaderSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.amountHeaderSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1030,15 +853,14 @@ const AmountHeaderSize = memo(function AmountHeaderSize() {
       }
     />
   );
-});
+}
 
-const AmountHeaderWeight = memo(function AmountHeaderWeight() {
-  const weight = useAtomValue(amountHeaderWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountHeaderWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.amountHeaderSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1050,15 +872,14 @@ const AmountHeaderWeight = memo(function AmountHeaderWeight() {
       }
     />
   );
-});
+}
 
-const AmountHeaderColor = memo(function AmountHeaderColor() {
-  const color = useAtomValue(amountHeaderColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountHeaderColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.amountHeaderSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1070,11 +891,10 @@ const AmountHeaderColor = memo(function AmountHeaderColor() {
       }
     />
   );
-});
+}
 
-const AmountHeaderLabel = memo(function AmountHeaderLabel() {
-  const label = useAtomValue(amountHeaderLabelAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountHeaderLabel() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -1084,7 +904,7 @@ const AmountHeaderLabel = memo(function AmountHeaderLabel() {
       <input
         type="text"
         id="amount-header-label"
-        value={label}
+        value={tableSettings.amountHeaderSettings.label}
         onChange={({ target: { value } }) =>
           setTableSettings({
             ...tableSettings,
@@ -1098,33 +918,15 @@ const AmountHeaderLabel = memo(function AmountHeaderLabel() {
       />
     </div>
   );
-});
+}
 
 // Amount Row Settings
-const amountRowAlignAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountRowSettings.align
-);
-const amountRowSizeAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountRowSettings.size
-);
-const amountRowWeightAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountRowSettings.weight
-);
-const amountRowColorAtom = selectAtom(
-  tableSettingsAtom,
-  settings => settings.amountRowSettings.color
-);
-
-const AmountRowAlign = memo(function AmountRowAlign() {
-  const align = useAtomValue(amountRowAlignAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountRowAlign() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={tableSettings.amountRowSettings.align}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1136,15 +938,14 @@ const AmountRowAlign = memo(function AmountRowAlign() {
       }
     />
   );
-});
+}
 
-const AmountRowSize = memo(function AmountRowSize() {
-  const size = useAtomValue(amountRowSizeAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountRowSize() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={tableSettings.amountRowSettings.size}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1156,15 +957,14 @@ const AmountRowSize = memo(function AmountRowSize() {
       }
     />
   );
-});
+}
 
-const AmountRowWeight = memo(function AmountRowWeight() {
-  const weight = useAtomValue(amountRowWeightAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountRowWeight() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={tableSettings.amountRowSettings.weight}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1176,15 +976,14 @@ const AmountRowWeight = memo(function AmountRowWeight() {
       }
     />
   );
-});
+}
 
-const AmountRowColor = memo(function AmountRowColor() {
-  const color = useAtomValue(amountRowColorAtom);
-  const [tableSettings, setTableSettings] = useAtom(tableSettingsAtom);
+function AmountRowColor() {
+  const { tableSettings, setTableSettings } = useTableSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={tableSettings.amountRowSettings.color}
       handleInput={value =>
         setTableSettings({
           ...tableSettings,
@@ -1196,4 +995,4 @@ const AmountRowColor = memo(function AmountRowColor() {
       }
     />
   );
-});
+}

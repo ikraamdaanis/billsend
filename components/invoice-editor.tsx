@@ -10,7 +10,7 @@ import { InvoicePricing } from "components/invoice-pricing";
 import { InvoiceSellerDetails } from "components/invoice-seller-details";
 import { InvoiceTerms } from "components/invoice-terms";
 import { InvoiceTitle } from "components/invoice-title";
-import { activeSettingsAtom, SettingsPanel } from "components/settings-panel";
+import { SettingsPanel } from "components/settings-panel";
 import { Button } from "components/ui/button";
 import {
   Dialog,
@@ -25,10 +25,10 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from "components/ui/drawer";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useInvoiceDocument } from "context/invoice-document-context";
+import { useUI } from "context/ui-context";
 import { ArrowLeftIcon } from "lucide-react";
-import { memo, useState } from "react";
-import { currentInvoiceDocumentNameAtom } from "state/invoice-document";
+import { useState } from "react";
 
 const TOOLBAR_HEIGHT = 50;
 
@@ -63,7 +63,7 @@ function Toolbar({
 }: {
   setIsModalOpen: (open: boolean) => void;
 }) {
-  const currentDocumentName = useAtomValue(currentInvoiceDocumentNameAtom);
+  const { currentDocumentName } = useInvoiceDocument();
   const displayName = currentDocumentName || "Untitled invoice";
 
   return (
@@ -94,7 +94,7 @@ function Toolbar({
 }
 
 function CanvasArea() {
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+  const { setActiveSettings } = useUI();
 
   function handleSectionClick() {
     setActiveSettings("main");
@@ -121,8 +121,7 @@ function SettingsArea() {
 }
 
 function SettingsToggleButton() {
-  const activeSettings = useAtomValue(activeSettingsAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+  const { activeSettings, setActiveSettings } = useUI();
 
   if (activeSettings === "main") {
     return null;
@@ -183,7 +182,7 @@ function LeavePageDialog({
   );
 }
 
-const Top = memo(function Top() {
+function Top() {
   return (
     <div className="flex flex-col-reverse items-start justify-between gap-4 sm:flex-row">
       <div className="flex w-full flex-col gap-4">
@@ -193,9 +192,9 @@ const Top = memo(function Top() {
       <InvoiceImage />
     </div>
   );
-});
+}
 
-const Mid = memo(function Mid() {
+function Mid() {
   return (
     <>
       <div className="mt-2 grid gap-8 sm:grid-cols-2">
@@ -204,9 +203,9 @@ const Mid = memo(function Mid() {
       </div>
     </>
   );
-});
+}
 
-const Bottom = memo(function Bottom() {
+function Bottom() {
   return (
     <>
       <div className="mt-6 max-w-full">
@@ -218,4 +217,4 @@ const Bottom = memo(function Bottom() {
       </div>
     </>
   );
-});
+}
