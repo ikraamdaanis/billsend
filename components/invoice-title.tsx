@@ -6,7 +6,8 @@ import {
   SizeSettings
 } from "components/settings-fields";
 import { useUI } from "context/ui-context";
-import { useTitleSlice, useTitleSettingsSlice } from "stores/invoice-selectors";
+import { useTitleSlice } from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceTitle() {
@@ -28,20 +29,21 @@ export function InvoiceTitle() {
 export function InvoiceTitleSettings() {
   return (
     <div className="flex flex-col gap-2">
-      <Align />
-      <Size />
-      <Weight />
-      <Color />
+      <TitleAlign />
+      <TitleSize />
+      <TitleWeight />
+      <TitleColor />
     </div>
   );
 }
 
-function Align() {
-  const { titleSettings, setTitleSettings } = useTitleSettingsSlice();
+function TitleAlign() {
+  const align = useInvoiceStore(state => state.titleSettings.align);
+  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
 
   return (
     <AlignSettings
-      value={titleSettings.align}
+      value={align}
       handleInput={value =>
         setTitleSettings(prev => ({ ...prev, align: value }))
       }
@@ -49,12 +51,13 @@ function Align() {
   );
 }
 
-function Size() {
-  const { titleSettings, setTitleSettings } = useTitleSettingsSlice();
+function TitleSize() {
+  const size = useInvoiceStore(state => state.titleSettings.size);
+  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
 
   return (
     <SizeSettings
-      value={titleSettings.size}
+      value={size}
       handleInput={value =>
         setTitleSettings(prev => ({ ...prev, size: value }))
       }
@@ -62,12 +65,13 @@ function Size() {
   );
 }
 
-function Weight() {
-  const { titleSettings, setTitleSettings } = useTitleSettingsSlice();
+function TitleWeight() {
+  const weight = useInvoiceStore(state => state.titleSettings.weight);
+  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
 
   return (
     <FontWeightSettings
-      value={titleSettings.weight}
+      value={weight}
       handleInput={value =>
         setTitleSettings(prev => ({ ...prev, weight: value }))
       }
@@ -75,12 +79,13 @@ function Weight() {
   );
 }
 
-function Color() {
-  const { titleSettings, setTitleSettings } = useTitleSettingsSlice();
+function TitleColor() {
+  const color = useInvoiceStore(state => state.titleSettings.color);
+  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
 
   return (
     <ColorSettings
-      value={titleSettings.color}
+      value={color}
       handleInput={value =>
         setTitleSettings(prev => ({ ...prev, color: value }))
       }

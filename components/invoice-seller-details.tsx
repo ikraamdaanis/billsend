@@ -7,7 +7,8 @@ import {
   SizeSettings
 } from "components/settings-fields";
 import { useUI } from "context/ui-context";
-import { useSellerSlice, useSellerSettingsSlice } from "stores/invoice-selectors";
+import { useSellerSlice } from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceSellerDetails() {
@@ -76,11 +77,12 @@ export function InvoiceSellerSettings() {
 
 // Seller Label Settings
 function SellerLabelAlign() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const align = useInvoiceStore(state => state.sellerSettings.label.align);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <AlignSettings
-      value={sellerSettings.label.align}
+      value={align}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -92,11 +94,12 @@ function SellerLabelAlign() {
 }
 
 function SellerLabelSize() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const size = useInvoiceStore(state => state.sellerSettings.label.size);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <SizeSettings
-      value={sellerSettings.label.size}
+      value={size}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -108,11 +111,12 @@ function SellerLabelSize() {
 }
 
 function SellerLabelWeight() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const weight = useInvoiceStore(state => state.sellerSettings.label.weight);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <FontWeightSettings
-      value={sellerSettings.label.weight}
+      value={weight}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -124,11 +128,12 @@ function SellerLabelWeight() {
 }
 
 function SellerLabelColor() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const color = useInvoiceStore(state => state.sellerSettings.label.color);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <ColorSettings
-      value={sellerSettings.label.color}
+      value={color}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -141,11 +146,12 @@ function SellerLabelColor() {
 
 // Seller Content Settings
 function SellerContentAlign() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const align = useInvoiceStore(state => state.sellerSettings.content.align);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <AlignSettings
-      value={sellerSettings.content.align}
+      value={align}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -157,11 +163,12 @@ function SellerContentAlign() {
 }
 
 function SellerContentSize() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const size = useInvoiceStore(state => state.sellerSettings.content.size);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <SizeSettings
-      value={sellerSettings.content.size}
+      value={size}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -173,11 +180,12 @@ function SellerContentSize() {
 }
 
 function SellerContentWeight() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const weight = useInvoiceStore(state => state.sellerSettings.content.weight);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <FontWeightSettings
-      value={sellerSettings.content.weight}
+      value={weight}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,
@@ -189,11 +197,12 @@ function SellerContentWeight() {
 }
 
 function SellerContentColor() {
-  const { sellerSettings, setSellerSettings } = useSellerSettingsSlice();
+  const color = useInvoiceStore(state => state.sellerSettings.content.color);
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
 
   return (
     <ColorSettings
-      value={sellerSettings.content.color}
+      value={color}
       handleInput={value =>
         setSellerSettings(prev => ({
           ...prev,

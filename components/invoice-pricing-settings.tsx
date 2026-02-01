@@ -6,13 +6,7 @@ import {
 } from "components/settings-fields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
-import {
-  useSubtotalSettingsSlice,
-  useTaxSettingsSlice,
-  useFeesSettingsSlice,
-  useDiscountsSettingsSlice,
-  useTotalSettingsSlice
-} from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { handleActiveTab } from "utils/handle-active-tab";
@@ -112,128 +106,136 @@ function SubtotalSettings() {
 }
 
 function SubtotalLabelAlign() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const align = useInvoiceStore(state => state.subtotalSettings.label.align);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <AlignSettings
-      value={subtotalSettings.label.align}
+      value={align}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          label: { ...subtotalSettings.label, align: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalLabelSize() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const size = useInvoiceStore(state => state.subtotalSettings.label.size);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <SizeSettings
-      value={subtotalSettings.label.size}
+      value={size}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          label: { ...subtotalSettings.label, size: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalLabelWeight() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const weight = useInvoiceStore(state => state.subtotalSettings.label.weight);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <FontWeightSettings
-      value={subtotalSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          label: { ...subtotalSettings.label, weight: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalLabelColor() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const color = useInvoiceStore(state => state.subtotalSettings.label.color);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <ColorSettings
-      value={subtotalSettings.label.color}
+      value={color}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          label: { ...subtotalSettings.label, color: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalValueAlign() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const align = useInvoiceStore(state => state.subtotalSettings.value.align);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <AlignSettings
-      value={subtotalSettings.value.align}
+      value={align}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          value: { ...subtotalSettings.value, align: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalValueSize() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const size = useInvoiceStore(state => state.subtotalSettings.value.size);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <SizeSettings
-      value={subtotalSettings.value.size}
+      value={size}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          value: { ...subtotalSettings.value, size: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalValueWeight() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const weight = useInvoiceStore(state => state.subtotalSettings.value.weight);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <FontWeightSettings
-      value={subtotalSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          value: { ...subtotalSettings.value, weight: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function SubtotalValueColor() {
-  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
+  const color = useInvoiceStore(state => state.subtotalSettings.value.color);
+  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
 
   return (
     <ColorSettings
-      value={subtotalSettings.value.color}
+      value={color}
       handleInput={value =>
-        setSubtotalSettings({
-          ...subtotalSettings,
-          value: { ...subtotalSettings.value, color: value }
-        })
+        setSubtotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );
@@ -262,128 +264,136 @@ function TaxSettings() {
 }
 
 function TaxLabelAlign() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const align = useInvoiceStore(state => state.taxSettings.label.align);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <AlignSettings
-      value={taxSettings.label.align}
+      value={align}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          label: { ...taxSettings.label, align: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function TaxLabelSize() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const size = useInvoiceStore(state => state.taxSettings.label.size);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <SizeSettings
-      value={taxSettings.label.size}
+      value={size}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          label: { ...taxSettings.label, size: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function TaxLabelWeight() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const weight = useInvoiceStore(state => state.taxSettings.label.weight);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <FontWeightSettings
-      value={taxSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          label: { ...taxSettings.label, weight: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function TaxLabelColor() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const color = useInvoiceStore(state => state.taxSettings.label.color);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <ColorSettings
-      value={taxSettings.label.color}
+      value={color}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          label: { ...taxSettings.label, color: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
 }
 
 function TaxValueAlign() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const align = useInvoiceStore(state => state.taxSettings.value.align);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <AlignSettings
-      value={taxSettings.value.align}
+      value={align}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          value: { ...taxSettings.value, align: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function TaxValueSize() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const size = useInvoiceStore(state => state.taxSettings.value.size);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <SizeSettings
-      value={taxSettings.value.size}
+      value={size}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          value: { ...taxSettings.value, size: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function TaxValueWeight() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const weight = useInvoiceStore(state => state.taxSettings.value.weight);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <FontWeightSettings
-      value={taxSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          value: { ...taxSettings.value, weight: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function TaxValueColor() {
-  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
+  const color = useInvoiceStore(state => state.taxSettings.value.color);
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
 
   return (
     <ColorSettings
-      value={taxSettings.value.color}
+      value={color}
       handleInput={value =>
-        setTaxSettings({
-          ...taxSettings,
-          value: { ...taxSettings.value, color: value }
-        })
+        setTaxSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );
@@ -412,128 +422,136 @@ function FeesSettings() {
 }
 
 function FeesLabelAlign() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const align = useInvoiceStore(state => state.feesSettings.label.align);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <AlignSettings
-      value={feesSettings.label.align}
+      value={align}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          label: { ...feesSettings.label, align: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function FeesLabelSize() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const size = useInvoiceStore(state => state.feesSettings.label.size);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <SizeSettings
-      value={feesSettings.label.size}
+      value={size}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          label: { ...feesSettings.label, size: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function FeesLabelWeight() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const weight = useInvoiceStore(state => state.feesSettings.label.weight);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <FontWeightSettings
-      value={feesSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          label: { ...feesSettings.label, weight: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function FeesLabelColor() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const color = useInvoiceStore(state => state.feesSettings.label.color);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <ColorSettings
-      value={feesSettings.label.color}
+      value={color}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          label: { ...feesSettings.label, color: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
 }
 
 function FeesValueAlign() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const align = useInvoiceStore(state => state.feesSettings.value.align);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <AlignSettings
-      value={feesSettings.value.align}
+      value={align}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          value: { ...feesSettings.value, align: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function FeesValueSize() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const size = useInvoiceStore(state => state.feesSettings.value.size);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <SizeSettings
-      value={feesSettings.value.size}
+      value={size}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          value: { ...feesSettings.value, size: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function FeesValueWeight() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const weight = useInvoiceStore(state => state.feesSettings.value.weight);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <FontWeightSettings
-      value={feesSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          value: { ...feesSettings.value, weight: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function FeesValueColor() {
-  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
+  const color = useInvoiceStore(state => state.feesSettings.value.color);
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
 
   return (
     <ColorSettings
-      value={feesSettings.value.color}
+      value={color}
       handleInput={value =>
-        setFeesSettings({
-          ...feesSettings,
-          value: { ...feesSettings.value, color: value }
-        })
+        setFeesSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );
@@ -562,128 +580,136 @@ function DiscountsSettings() {
 }
 
 function DiscountsLabelAlign() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const align = useInvoiceStore(state => state.discountsSettings.label.align);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <AlignSettings
-      value={discountsSettings.label.align}
+      value={align}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          label: { ...discountsSettings.label, align: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsLabelSize() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const size = useInvoiceStore(state => state.discountsSettings.label.size);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <SizeSettings
-      value={discountsSettings.label.size}
+      value={size}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          label: { ...discountsSettings.label, size: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsLabelWeight() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const weight = useInvoiceStore(state => state.discountsSettings.label.weight);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <FontWeightSettings
-      value={discountsSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          label: { ...discountsSettings.label, weight: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsLabelColor() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const color = useInvoiceStore(state => state.discountsSettings.label.color);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <ColorSettings
-      value={discountsSettings.label.color}
+      value={color}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          label: { ...discountsSettings.label, color: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsValueAlign() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const align = useInvoiceStore(state => state.discountsSettings.value.align);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <AlignSettings
-      value={discountsSettings.value.align}
+      value={align}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          value: { ...discountsSettings.value, align: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsValueSize() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const size = useInvoiceStore(state => state.discountsSettings.value.size);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <SizeSettings
-      value={discountsSettings.value.size}
+      value={size}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          value: { ...discountsSettings.value, size: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsValueWeight() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const weight = useInvoiceStore(state => state.discountsSettings.value.weight);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <FontWeightSettings
-      value={discountsSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          value: { ...discountsSettings.value, weight: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function DiscountsValueColor() {
-  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
+  const color = useInvoiceStore(state => state.discountsSettings.value.color);
+  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
 
   return (
     <ColorSettings
-      value={discountsSettings.value.color}
+      value={color}
       handleInput={value =>
-        setDiscountsSettings({
-          ...discountsSettings,
-          value: { ...discountsSettings.value, color: value }
-        })
+        setDiscountsSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );
@@ -712,128 +738,136 @@ function TotalSettings() {
 }
 
 function TotalLabelAlign() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const align = useInvoiceStore(state => state.totalSettings.label.align);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <AlignSettings
-      value={totalSettings.label.align}
+      value={align}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          label: { ...totalSettings.label, align: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function TotalLabelSize() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const size = useInvoiceStore(state => state.totalSettings.label.size);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <SizeSettings
-      value={totalSettings.label.size}
+      value={size}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          label: { ...totalSettings.label, size: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function TotalLabelWeight() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const weight = useInvoiceStore(state => state.totalSettings.label.weight);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <FontWeightSettings
-      value={totalSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          label: { ...totalSettings.label, weight: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function TotalLabelColor() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const color = useInvoiceStore(state => state.totalSettings.label.color);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <ColorSettings
-      value={totalSettings.label.color}
+      value={color}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          label: { ...totalSettings.label, color: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
 }
 
 function TotalValueAlign() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const align = useInvoiceStore(state => state.totalSettings.value.align);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <AlignSettings
-      value={totalSettings.value.align}
+      value={align}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          value: { ...totalSettings.value, align: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function TotalValueSize() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const size = useInvoiceStore(state => state.totalSettings.value.size);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <SizeSettings
-      value={totalSettings.value.size}
+      value={size}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          value: { ...totalSettings.value, size: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function TotalValueWeight() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const weight = useInvoiceStore(state => state.totalSettings.value.weight);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <FontWeightSettings
-      value={totalSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          value: { ...totalSettings.value, weight: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function TotalValueColor() {
-  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
+  const color = useInvoiceStore(state => state.totalSettings.value.color);
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
 
   return (
     <ColorSettings
-      value={totalSettings.value.color}
+      value={color}
       handleInput={value =>
-        setTotalSettings({
-          ...totalSettings,
-          value: { ...totalSettings.value, color: value }
-        })
+        setTotalSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );

@@ -7,7 +7,8 @@ import {
   SizeSettings
 } from "components/settings-fields";
 import { useUI } from "context/ui-context";
-import { useClientSlice, useClientSettingsSlice } from "stores/invoice-selectors";
+import { useClientSlice } from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceClientDetails() {
@@ -76,11 +77,12 @@ export function InvoiceClientSettings() {
 
 // Client Label Settings
 function ClientLabelAlign() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const align = useInvoiceStore(state => state.clientSettings.label.align);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <AlignSettings
-      value={clientSettings.label.align}
+      value={align}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -92,11 +94,12 @@ function ClientLabelAlign() {
 }
 
 function ClientLabelSize() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const size = useInvoiceStore(state => state.clientSettings.label.size);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <SizeSettings
-      value={clientSettings.label.size}
+      value={size}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -108,11 +111,12 @@ function ClientLabelSize() {
 }
 
 function ClientLabelWeight() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const weight = useInvoiceStore(state => state.clientSettings.label.weight);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <FontWeightSettings
-      value={clientSettings.label.weight}
+      value={weight}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -124,11 +128,12 @@ function ClientLabelWeight() {
 }
 
 function ClientLabelColor() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const color = useInvoiceStore(state => state.clientSettings.label.color);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <ColorSettings
-      value={clientSettings.label.color}
+      value={color}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -141,11 +146,12 @@ function ClientLabelColor() {
 
 // Client Content Settings
 function ClientContentAlign() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const align = useInvoiceStore(state => state.clientSettings.content.align);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <AlignSettings
-      value={clientSettings.content.align}
+      value={align}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -157,11 +163,12 @@ function ClientContentAlign() {
 }
 
 function ClientContentSize() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const size = useInvoiceStore(state => state.clientSettings.content.size);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <SizeSettings
-      value={clientSettings.content.size}
+      value={size}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -173,11 +180,12 @@ function ClientContentSize() {
 }
 
 function ClientContentWeight() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const weight = useInvoiceStore(state => state.clientSettings.content.weight);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <FontWeightSettings
-      value={clientSettings.content.weight}
+      value={weight}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,
@@ -189,11 +197,12 @@ function ClientContentWeight() {
 }
 
 function ClientContentColor() {
-  const { clientSettings, setClientSettings } = useClientSettingsSlice();
+  const color = useInvoiceStore(state => state.clientSettings.content.color);
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
 
   return (
     <ColorSettings
-      value={clientSettings.content.color}
+      value={color}
       handleInput={value =>
         setClientSettings(prev => ({
           ...prev,

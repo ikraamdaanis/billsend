@@ -4,7 +4,7 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "components/settings-fields";
-import { useTermsSettingsSlice } from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 
 export function InvoiceTermsSettings() {
   return (
@@ -31,64 +31,68 @@ export function InvoiceTermsSettings() {
 
 // Terms Label Settings
 function TermsLabelAlign() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const align = useInvoiceStore(state => state.termsSettings.label.align);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <AlignSettings
-      value={termsSettings.label.align}
+      value={align}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          label: { ...termsSettings.label, align: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function TermsLabelSize() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const size = useInvoiceStore(state => state.termsSettings.label.size);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <SizeSettings
-      value={termsSettings.label.size}
+      value={size}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          label: { ...termsSettings.label, size: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function TermsLabelWeight() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const weight = useInvoiceStore(state => state.termsSettings.label.weight);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <FontWeightSettings
-      value={termsSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          label: { ...termsSettings.label, weight: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function TermsLabelColor() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const color = useInvoiceStore(state => state.termsSettings.label.color);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <ColorSettings
-      value={termsSettings.label.color}
+      value={color}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          label: { ...termsSettings.label, color: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
@@ -96,64 +100,68 @@ function TermsLabelColor() {
 
 // Terms Content Settings
 function TermsContentAlign() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const align = useInvoiceStore(state => state.termsSettings.content.align);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <AlignSettings
-      value={termsSettings.content.align}
+      value={align}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          content: { ...termsSettings.content, align: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, align: value }
+        }))
       }
     />
   );
 }
 
 function TermsContentSize() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const size = useInvoiceStore(state => state.termsSettings.content.size);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <SizeSettings
-      value={termsSettings.content.size}
+      value={size}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          content: { ...termsSettings.content, size: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, size: value }
+        }))
       }
     />
   );
 }
 
 function TermsContentWeight() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const weight = useInvoiceStore(state => state.termsSettings.content.weight);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <FontWeightSettings
-      value={termsSettings.content.weight}
+      value={weight}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          content: { ...termsSettings.content, weight: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, weight: value }
+        }))
       }
     />
   );
 }
 
 function TermsContentColor() {
-  const { termsSettings, setTermsSettings } = useTermsSettingsSlice();
+  const color = useInvoiceStore(state => state.termsSettings.content.color);
+  const setTermsSettings = useInvoiceStore(state => state.setTermsSettings);
 
   return (
     <ColorSettings
-      value={termsSettings.content.color}
+      value={color}
       handleInput={value =>
-        setTermsSettings({
-          ...termsSettings,
-          content: { ...termsSettings.content, color: value }
-        })
+        setTermsSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, color: value }
+        }))
       }
     />
   );
