@@ -1,24 +1,9 @@
 import { InvoiceInput } from "components/invoice-input";
-import { activeSettingsAtom } from "components/settings-panel";
+import { useUI } from "context/ui-context";
 import { formatCurrency } from "consts/currencies";
 import { TAB_SELECT_EVENTS } from "consts/events";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
-import { memo, useState } from "react";
-import { currencyAtom, currencySymbolAtom } from "state/invoice";
-import {
-  discountsAtom,
-  discountsSettingsAtom,
-  feesAtom,
-  feesSettingsAtom,
-  subtotalAtom,
-  subtotalSettingsAtom,
-  taxAtom,
-  taxSettingsAtom,
-  totalAtom,
-  totalSettingsAtom,
-  updateInvoicePricingAtom
-} from "state/pricing";
+import { useState } from "react";
+import { usePricingSlice, useCurrencySymbol } from "stores/invoice-selectors";
 import { getTextStyles } from "utils/get-text-styles";
 import { handleCurrencyInput } from "utils/handle-currency-input";
 import { handlePercentageInput } from "utils/handle-percentage-input";
@@ -27,8 +12,7 @@ import { setActiveTab } from "utils/set-active-tab";
 function handleInputBlur(
   currentInput: string,
   setter: (value: string) => void,
-  setValue: (value: number) => void,
-  updateInvoicePricing: () => void
+  setValue: (value: number) => void
 ) {
   // When input loses focus, ensure valid number
   if (currentInput === "" || currentInput === ".") {
@@ -39,15 +23,14 @@ function handleInputBlur(
     setter(cleanValue);
     setValue(Number(cleanValue));
   }
-
-  updateInvoicePricing();
+  // Note: Totals are auto-recalculated by Zustand store actions
 }
 
 /**
  * Displays the pricing information for the invoice.
  */
-function InvoicePricingComponent() {
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+export function InvoicePricing() {
+  const { setActiveSettings } = useUI();
 
   return (
     <div
@@ -63,11 +46,9 @@ function InvoicePricingComponent() {
   );
 }
 
-const SubtotalRow = memo(function SubtotalRow() {
-  const subtotal = useAtomValue(subtotalAtom);
-  const subtotalSettings = useAtomValue(subtotalSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function SubtotalRow() {
+  const { subtotal, subtotalSettings, currency } = usePricingSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <div
@@ -94,21 +75,13 @@ const SubtotalRow = memo(function SubtotalRow() {
       </span>
     </div>
   );
-});
+}
 
-const taxPercentageAtom = selectAtom(taxAtom, tax => tax.percentage);
-const taxAmountAtom = selectAtom(taxAtom, tax => tax.amount);
+function TaxRow() {
+  const { tax, taxSettings, currency, setTax } = usePricingSlice();
+  const { setActiveSettings } = useUI();
 
-const TaxRow = memo(function TaxRow() {
-  const taxPercentage = useAtomValue(taxPercentageAtom);
-  const taxAmount = useAtomValue(taxAmountAtom);
-  const setTax = useSetAtom(taxAtom);
-  const taxSettings = useAtomValue(taxSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-  const updateInvoicePricing = useSetAtom(updateInvoicePricingAtom);
-
-  const [taxInput, setTaxInput] = useState(taxPercentage.toString());
+  const [taxInput, setTaxInput] = useState(tax.percentage.toString());
 
   return (
     <div
@@ -138,14 +111,12 @@ const TaxRow = memo(function TaxRow() {
               const numericValue = handlePercentageInput(value);
               setTaxInput(numericValue);
               setTax(prev => ({ ...prev, percentage: Number(numericValue) }));
-              updateInvoicePricing();
             }}
             onBlur={() =>
               handleInputBlur(
                 taxInput,
                 setTaxInput,
-                (val: number) => setTax(prev => ({ ...prev, percentage: val })),
-                updateInvoicePricing
+                (val: number) => setTax(prev => ({ ...prev, percentage: val }))
               )
             }
             className="w-10 p-0 text-right focus-visible:w-14"
@@ -162,18 +133,16 @@ const TaxRow = memo(function TaxRow() {
         className="ml-auto min-w-40 cursor-pointer items-center"
         style={getTextStyles({ settings: taxSettings.value })}
       >
-        {formatCurrency(taxAmount, currency)}
+        {formatCurrency(tax.amount, currency)}
       </span>
     </div>
   );
-});
+}
 
-const FeesRow = memo(function FeesRow() {
-  const [fees, setFees] = useAtom(feesAtom);
-  const feesSettings = useAtomValue(feesSettingsAtom);
-  const currencySymbol = useAtomValue(currencySymbolAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-  const updateInvoicePricing = useSetAtom(updateInvoicePricingAtom);
+function FeesRow() {
+  const { fees, feesSettings, setFees } = usePricingSlice();
+  const currencySymbol = useCurrencySymbol();
+  const { setActiveSettings } = useUI();
 
   const [feesInput, setFeesInput] = useState(fees.toString());
 
@@ -209,14 +178,12 @@ const FeesRow = memo(function FeesRow() {
             const numericValue = handleCurrencyInput(value);
             setFeesInput(numericValue);
             setFees(Number(numericValue));
-            updateInvoicePricing();
           }}
           onBlur={() =>
             handleInputBlur(
               feesInput,
               setFeesInput,
-              setFees,
-              updateInvoicePricing
+              setFees
             )
           }
           onFocus={() => setActiveSettings("totals")}
@@ -224,14 +191,12 @@ const FeesRow = memo(function FeesRow() {
       </span>
     </div>
   );
-});
+}
 
-const DiscountsRow = memo(function DiscountsRow() {
-  const [discounts, setDiscounts] = useAtom(discountsAtom);
-  const discountsSettings = useAtomValue(discountsSettingsAtom);
-  const currencySymbol = useAtomValue(currencySymbolAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
-  const updateInvoicePricing = useSetAtom(updateInvoicePricingAtom);
+function DiscountsRow() {
+  const { discounts, discountsSettings, setDiscounts } = usePricingSlice();
+  const currencySymbol = useCurrencySymbol();
+  const { setActiveSettings } = useUI();
 
   const [discountsInput, setDiscountsInput] = useState(discounts.toString());
 
@@ -265,14 +230,12 @@ const DiscountsRow = memo(function DiscountsRow() {
             const numericValue = handleCurrencyInput(value);
             setDiscountsInput(numericValue);
             setDiscounts(Number(numericValue));
-            updateInvoicePricing();
           }}
           onBlur={() =>
             handleInputBlur(
               discountsInput,
               setDiscountsInput,
-              setDiscounts,
-              updateInvoicePricing
+              setDiscounts
             )
           }
           className="w-20 text-right"
@@ -281,13 +244,11 @@ const DiscountsRow = memo(function DiscountsRow() {
       </span>
     </div>
   );
-});
+}
 
-const TotalRow = memo(function TotalRow() {
-  const total = useAtomValue(totalAtom);
-  const totalSettings = useAtomValue(totalSettingsAtom);
-  const currency = useAtomValue(currencyAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function TotalRow() {
+  const { total, totalSettings, currency } = usePricingSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <div
@@ -314,6 +275,4 @@ const TotalRow = memo(function TotalRow() {
       </span>
     </div>
   );
-});
-
-export const InvoicePricing = memo(InvoicePricingComponent);
+}

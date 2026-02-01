@@ -2,20 +2,18 @@ import { pdf } from "@react-pdf/renderer";
 import { InvoicePDF } from "components/invoice-generator";
 import { Button } from "components/ui/button";
 import { useImageLoader } from "hooks/use-image-loader";
-import { useAtomValue } from "jotai";
 import { cn } from "lib/utils";
 import type { ComponentProps } from "react";
 import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
-import { imageAtom, invoiceAtom } from "state/invoice";
+import { useInvoiceData } from "stores/invoice-selectors";
 
 export function DownloadInvoice({
   className,
   ...props
 }: Omit<ComponentProps<typeof Button>, "onClick">) {
-  const invoice = useAtomValue(invoiceAtom);
-  const imageId = useAtomValue(imageAtom);
-  const imageUrl = useImageLoader(imageId);
+  const invoice = useInvoiceData();
+  const imageUrl = useImageLoader(invoice.image);
 
   const [pending, startTransition] = useTransition();
 

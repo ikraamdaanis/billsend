@@ -10,12 +10,11 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { useSetAtom } from "jotai";
+import { useInvoiceActions } from "stores/invoice-selectors";
 import { FileTextIcon, SparklesIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { invoiceAtom } from "state/invoice";
 import type { InvoiceTemplate } from "types";
 import { ensureItemIds } from "utils/ensure-item-ids";
 
@@ -41,7 +40,7 @@ export function TemplateSelectionModal({
   const [selectedTemplate, setSelectedTemplate] =
     useState<InvoiceTemplate | null>(null);
 
-  const setInvoice = useSetAtom(invoiceAtom);
+  const { setInvoice } = useInvoiceActions();
 
   function handleTemplateSelect(template: InvoiceTemplate) {
     // Apply template data directly - the image ID will be loaded by invoice-image.tsx

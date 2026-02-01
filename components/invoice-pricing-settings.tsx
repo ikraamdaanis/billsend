@@ -6,17 +6,15 @@ import {
 } from "components/settings-fields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
-import { useTabSelectEvent } from "hooks/use-tab-select-event";
-import { useAtom, useAtomValue } from "jotai";
-import { selectAtom } from "jotai/utils";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
-  discountsSettingsAtom,
-  feesSettingsAtom,
-  subtotalSettingsAtom,
-  taxSettingsAtom,
-  totalSettingsAtom
-} from "state/pricing";
+  useSubtotalSettingsSlice,
+  useTaxSettingsSlice,
+  useFeesSettingsSlice,
+  useDiscountsSettingsSlice,
+  useTotalSettingsSlice
+} from "stores/invoice-selectors";
+import { useTabSelectEvent } from "hooks/use-tab-select-event";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { handleActiveTab } from "utils/handle-active-tab";
 
 export function InvoicePricingSettings() {
@@ -92,7 +90,7 @@ export function InvoicePricingSettings() {
 }
 
 // ===== SUBTOTAL SETTINGS =====
-const SubtotalSettings = memo(function SubtotalSettings() {
+function SubtotalSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-medium">Label Settings</h3>
@@ -111,21 +109,14 @@ const SubtotalSettings = memo(function SubtotalSettings() {
       </div>
     </div>
   );
-});
+}
 
-// Subtotal Label Atoms and Components
-const subtotalLabelAlignAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.label.align
-);
-
-const SubtotalLabelAlign = memo(function SubtotalLabelAlign() {
-  const align = useAtomValue(subtotalLabelAlignAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalLabelAlign() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={subtotalSettings.label.align}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -134,20 +125,14 @@ const SubtotalLabelAlign = memo(function SubtotalLabelAlign() {
       }
     />
   );
-});
+}
 
-const subtotalLabelSizeAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.label.size
-);
-
-const SubtotalLabelSize = memo(function SubtotalLabelSize() {
-  const size = useAtomValue(subtotalLabelSizeAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalLabelSize() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={subtotalSettings.label.size}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -156,20 +141,14 @@ const SubtotalLabelSize = memo(function SubtotalLabelSize() {
       }
     />
   );
-});
+}
 
-const subtotalLabelWeightAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.label.weight
-);
-
-const SubtotalLabelWeight = memo(function SubtotalLabelWeight() {
-  const weight = useAtomValue(subtotalLabelWeightAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalLabelWeight() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={subtotalSettings.label.weight}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -178,20 +157,14 @@ const SubtotalLabelWeight = memo(function SubtotalLabelWeight() {
       }
     />
   );
-});
+}
 
-const subtotalLabelColorAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.label.color
-);
-
-const SubtotalLabelColor = memo(function SubtotalLabelColor() {
-  const color = useAtomValue(subtotalLabelColorAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalLabelColor() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={subtotalSettings.label.color}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -200,21 +173,14 @@ const SubtotalLabelColor = memo(function SubtotalLabelColor() {
       }
     />
   );
-});
+}
 
-// Subtotal Value Atoms and Components
-const subtotalValueAlignAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.value.align
-);
-
-const SubtotalValueAlign = memo(function SubtotalValueAlign() {
-  const align = useAtomValue(subtotalValueAlignAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalValueAlign() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={subtotalSettings.value.align}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -223,20 +189,14 @@ const SubtotalValueAlign = memo(function SubtotalValueAlign() {
       }
     />
   );
-});
+}
 
-const subtotalValueSizeAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.value.size
-);
-
-const SubtotalValueSize = memo(function SubtotalValueSize() {
-  const size = useAtomValue(subtotalValueSizeAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalValueSize() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={subtotalSettings.value.size}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -245,20 +205,14 @@ const SubtotalValueSize = memo(function SubtotalValueSize() {
       }
     />
   );
-});
+}
 
-const subtotalValueWeightAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.value.weight
-);
-
-const SubtotalValueWeight = memo(function SubtotalValueWeight() {
-  const weight = useAtomValue(subtotalValueWeightAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalValueWeight() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={subtotalSettings.value.weight}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -267,20 +221,14 @@ const SubtotalValueWeight = memo(function SubtotalValueWeight() {
       }
     />
   );
-});
+}
 
-const subtotalValueColorAtom = selectAtom(
-  subtotalSettingsAtom,
-  settings => settings.value.color
-);
-
-const SubtotalValueColor = memo(function SubtotalValueColor() {
-  const color = useAtomValue(subtotalValueColorAtom);
-  const [subtotalSettings, setSubtotalSettings] = useAtom(subtotalSettingsAtom);
+function SubtotalValueColor() {
+  const { subtotalSettings, setSubtotalSettings } = useSubtotalSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={subtotalSettings.value.color}
       handleInput={value =>
         setSubtotalSettings({
           ...subtotalSettings,
@@ -289,10 +237,10 @@ const SubtotalValueColor = memo(function SubtotalValueColor() {
       }
     />
   );
-});
+}
 
 // ===== TAX SETTINGS =====
-const TaxSettings = memo(function TaxSettings() {
+function TaxSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-medium">Label Settings</h3>
@@ -311,21 +259,14 @@ const TaxSettings = memo(function TaxSettings() {
       </div>
     </div>
   );
-});
+}
 
-// Tax Label Atoms and Components
-const taxLabelAlignAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.label.align
-);
-
-const TaxLabelAlign = memo(function TaxLabelAlign() {
-  const align = useAtomValue(taxLabelAlignAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxLabelAlign() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={taxSettings.label.align}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -334,20 +275,14 @@ const TaxLabelAlign = memo(function TaxLabelAlign() {
       }
     />
   );
-});
+}
 
-const taxLabelSizeAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.label.size
-);
-
-const TaxLabelSize = memo(function TaxLabelSize() {
-  const size = useAtomValue(taxLabelSizeAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxLabelSize() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={taxSettings.label.size}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -356,20 +291,14 @@ const TaxLabelSize = memo(function TaxLabelSize() {
       }
     />
   );
-});
+}
 
-const taxLabelWeightAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.label.weight
-);
-
-const TaxLabelWeight = memo(function TaxLabelWeight() {
-  const weight = useAtomValue(taxLabelWeightAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxLabelWeight() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={taxSettings.label.weight}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -378,20 +307,14 @@ const TaxLabelWeight = memo(function TaxLabelWeight() {
       }
     />
   );
-});
+}
 
-const taxLabelColorAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.label.color
-);
-
-const TaxLabelColor = memo(function TaxLabelColor() {
-  const color = useAtomValue(taxLabelColorAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxLabelColor() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={taxSettings.label.color}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -400,21 +323,14 @@ const TaxLabelColor = memo(function TaxLabelColor() {
       }
     />
   );
-});
+}
 
-// Tax Value Atoms and Components
-const taxValueAlignAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.value.align
-);
-
-const TaxValueAlign = memo(function TaxValueAlign() {
-  const align = useAtomValue(taxValueAlignAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxValueAlign() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={taxSettings.value.align}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -423,20 +339,14 @@ const TaxValueAlign = memo(function TaxValueAlign() {
       }
     />
   );
-});
+}
 
-const taxValueSizeAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.value.size
-);
-
-const TaxValueSize = memo(function TaxValueSize() {
-  const size = useAtomValue(taxValueSizeAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxValueSize() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={taxSettings.value.size}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -445,20 +355,14 @@ const TaxValueSize = memo(function TaxValueSize() {
       }
     />
   );
-});
+}
 
-const taxValueWeightAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.value.weight
-);
-
-const TaxValueWeight = memo(function TaxValueWeight() {
-  const weight = useAtomValue(taxValueWeightAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxValueWeight() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={taxSettings.value.weight}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -467,20 +371,14 @@ const TaxValueWeight = memo(function TaxValueWeight() {
       }
     />
   );
-});
+}
 
-const taxValueColorAtom = selectAtom(
-  taxSettingsAtom,
-  settings => settings.value.color
-);
-
-const TaxValueColor = memo(function TaxValueColor() {
-  const color = useAtomValue(taxValueColorAtom);
-  const [taxSettings, setTaxSettings] = useAtom(taxSettingsAtom);
+function TaxValueColor() {
+  const { taxSettings, setTaxSettings } = useTaxSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={taxSettings.value.color}
       handleInput={value =>
         setTaxSettings({
           ...taxSettings,
@@ -489,10 +387,10 @@ const TaxValueColor = memo(function TaxValueColor() {
       }
     />
   );
-});
+}
 
 // ===== FEES SETTINGS =====
-const FeesSettings = memo(function FeesSettings() {
+function FeesSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-medium">Label Settings</h3>
@@ -511,21 +409,14 @@ const FeesSettings = memo(function FeesSettings() {
       </div>
     </div>
   );
-});
+}
 
-// Fees Label Atoms and Components
-const feesLabelAlignAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.label.align
-);
-
-const FeesLabelAlign = memo(function FeesLabelAlign() {
-  const align = useAtomValue(feesLabelAlignAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesLabelAlign() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={feesSettings.label.align}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -534,20 +425,14 @@ const FeesLabelAlign = memo(function FeesLabelAlign() {
       }
     />
   );
-});
+}
 
-const feesLabelSizeAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.label.size
-);
-
-const FeesLabelSize = memo(function FeesLabelSize() {
-  const size = useAtomValue(feesLabelSizeAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesLabelSize() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={feesSettings.label.size}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -556,20 +441,14 @@ const FeesLabelSize = memo(function FeesLabelSize() {
       }
     />
   );
-});
+}
 
-const feesLabelWeightAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.label.weight
-);
-
-const FeesLabelWeight = memo(function FeesLabelWeight() {
-  const weight = useAtomValue(feesLabelWeightAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesLabelWeight() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={feesSettings.label.weight}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -578,20 +457,14 @@ const FeesLabelWeight = memo(function FeesLabelWeight() {
       }
     />
   );
-});
+}
 
-const feesLabelColorAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.label.color
-);
-
-const FeesLabelColor = memo(function FeesLabelColor() {
-  const color = useAtomValue(feesLabelColorAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesLabelColor() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={feesSettings.label.color}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -600,21 +473,14 @@ const FeesLabelColor = memo(function FeesLabelColor() {
       }
     />
   );
-});
+}
 
-// Fees Value Atoms and Components
-const feesValueAlignAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.value.align
-);
-
-const FeesValueAlign = memo(function FeesValueAlign() {
-  const align = useAtomValue(feesValueAlignAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesValueAlign() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={feesSettings.value.align}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -623,20 +489,14 @@ const FeesValueAlign = memo(function FeesValueAlign() {
       }
     />
   );
-});
+}
 
-const feesValueSizeAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.value.size
-);
-
-const FeesValueSize = memo(function FeesValueSize() {
-  const size = useAtomValue(feesValueSizeAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesValueSize() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={feesSettings.value.size}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -645,20 +505,14 @@ const FeesValueSize = memo(function FeesValueSize() {
       }
     />
   );
-});
+}
 
-const feesValueWeightAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.value.weight
-);
-
-const FeesValueWeight = memo(function FeesValueWeight() {
-  const weight = useAtomValue(feesValueWeightAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesValueWeight() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={feesSettings.value.weight}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -667,20 +521,14 @@ const FeesValueWeight = memo(function FeesValueWeight() {
       }
     />
   );
-});
+}
 
-const feesValueColorAtom = selectAtom(
-  feesSettingsAtom,
-  settings => settings.value.color
-);
-
-const FeesValueColor = memo(function FeesValueColor() {
-  const color = useAtomValue(feesValueColorAtom);
-  const [feesSettings, setFeesSettings] = useAtom(feesSettingsAtom);
+function FeesValueColor() {
+  const { feesSettings, setFeesSettings } = useFeesSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={feesSettings.value.color}
       handleInput={value =>
         setFeesSettings({
           ...feesSettings,
@@ -689,10 +537,10 @@ const FeesValueColor = memo(function FeesValueColor() {
       }
     />
   );
-});
+}
 
 // ===== DISCOUNTS SETTINGS =====
-const DiscountsSettings = memo(function DiscountsSettings() {
+function DiscountsSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-medium">Label Settings</h3>
@@ -711,23 +559,14 @@ const DiscountsSettings = memo(function DiscountsSettings() {
       </div>
     </div>
   );
-});
+}
 
-// Discounts Label Atoms and Components
-const discountsLabelAlignAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.label.align
-);
-
-const DiscountsLabelAlign = memo(function DiscountsLabelAlign() {
-  const align = useAtomValue(discountsLabelAlignAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsLabelAlign() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={discountsSettings.label.align}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -736,22 +575,14 @@ const DiscountsLabelAlign = memo(function DiscountsLabelAlign() {
       }
     />
   );
-});
+}
 
-const discountsLabelSizeAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.label.size
-);
-
-const DiscountsLabelSize = memo(function DiscountsLabelSize() {
-  const size = useAtomValue(discountsLabelSizeAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsLabelSize() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={discountsSettings.label.size}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -760,22 +591,14 @@ const DiscountsLabelSize = memo(function DiscountsLabelSize() {
       }
     />
   );
-});
+}
 
-const discountsLabelWeightAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.label.weight
-);
-
-const DiscountsLabelWeight = memo(function DiscountsLabelWeight() {
-  const weight = useAtomValue(discountsLabelWeightAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsLabelWeight() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={discountsSettings.label.weight}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -784,22 +607,14 @@ const DiscountsLabelWeight = memo(function DiscountsLabelWeight() {
       }
     />
   );
-});
+}
 
-const discountsLabelColorAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.label.color
-);
-
-const DiscountsLabelColor = memo(function DiscountsLabelColor() {
-  const color = useAtomValue(discountsLabelColorAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsLabelColor() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={discountsSettings.label.color}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -808,23 +623,14 @@ const DiscountsLabelColor = memo(function DiscountsLabelColor() {
       }
     />
   );
-});
+}
 
-// Discounts Value Atoms and Components
-const discountsValueAlignAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.value.align
-);
-
-const DiscountsValueAlign = memo(function DiscountsValueAlign() {
-  const align = useAtomValue(discountsValueAlignAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsValueAlign() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={discountsSettings.value.align}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -833,22 +639,14 @@ const DiscountsValueAlign = memo(function DiscountsValueAlign() {
       }
     />
   );
-});
+}
 
-const discountsValueSizeAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.value.size
-);
-
-const DiscountsValueSize = memo(function DiscountsValueSize() {
-  const size = useAtomValue(discountsValueSizeAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsValueSize() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={discountsSettings.value.size}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -857,22 +655,14 @@ const DiscountsValueSize = memo(function DiscountsValueSize() {
       }
     />
   );
-});
+}
 
-const discountsValueWeightAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.value.weight
-);
-
-const DiscountsValueWeight = memo(function DiscountsValueWeight() {
-  const weight = useAtomValue(discountsValueWeightAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsValueWeight() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={discountsSettings.value.weight}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -881,22 +671,14 @@ const DiscountsValueWeight = memo(function DiscountsValueWeight() {
       }
     />
   );
-});
+}
 
-const discountsValueColorAtom = selectAtom(
-  discountsSettingsAtom,
-  settings => settings.value.color
-);
-
-const DiscountsValueColor = memo(function DiscountsValueColor() {
-  const color = useAtomValue(discountsValueColorAtom);
-  const [discountsSettings, setDiscountsSettings] = useAtom(
-    discountsSettingsAtom
-  );
+function DiscountsValueColor() {
+  const { discountsSettings, setDiscountsSettings } = useDiscountsSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={discountsSettings.value.color}
       handleInput={value =>
         setDiscountsSettings({
           ...discountsSettings,
@@ -905,10 +687,10 @@ const DiscountsValueColor = memo(function DiscountsValueColor() {
       }
     />
   );
-});
+}
 
 // ===== TOTAL SETTINGS =====
-const TotalSettings = memo(function TotalSettings() {
+function TotalSettings() {
   return (
     <div className="flex flex-col gap-4">
       <h3 className="font-medium">Label Settings</h3>
@@ -927,21 +709,14 @@ const TotalSettings = memo(function TotalSettings() {
       </div>
     </div>
   );
-});
+}
 
-// Total Label Atoms and Components
-const totalLabelAlignAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.label.align
-);
-
-const TotalLabelAlign = memo(function TotalLabelAlign() {
-  const align = useAtomValue(totalLabelAlignAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalLabelAlign() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={totalSettings.label.align}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -950,20 +725,14 @@ const TotalLabelAlign = memo(function TotalLabelAlign() {
       }
     />
   );
-});
+}
 
-const totalLabelSizeAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.label.size
-);
-
-const TotalLabelSize = memo(function TotalLabelSize() {
-  const size = useAtomValue(totalLabelSizeAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalLabelSize() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={totalSettings.label.size}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -972,20 +741,14 @@ const TotalLabelSize = memo(function TotalLabelSize() {
       }
     />
   );
-});
+}
 
-const totalLabelWeightAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.label.weight
-);
-
-const TotalLabelWeight = memo(function TotalLabelWeight() {
-  const weight = useAtomValue(totalLabelWeightAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalLabelWeight() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={totalSettings.label.weight}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -994,20 +757,14 @@ const TotalLabelWeight = memo(function TotalLabelWeight() {
       }
     />
   );
-});
+}
 
-const totalLabelColorAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.label.color
-);
-
-const TotalLabelColor = memo(function TotalLabelColor() {
-  const color = useAtomValue(totalLabelColorAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalLabelColor() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={totalSettings.label.color}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -1016,21 +773,14 @@ const TotalLabelColor = memo(function TotalLabelColor() {
       }
     />
   );
-});
+}
 
-// Total Value Atoms and Components
-const totalValueAlignAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.value.align
-);
-
-const TotalValueAlign = memo(function TotalValueAlign() {
-  const align = useAtomValue(totalValueAlignAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalValueAlign() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={totalSettings.value.align}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -1039,20 +789,14 @@ const TotalValueAlign = memo(function TotalValueAlign() {
       }
     />
   );
-});
+}
 
-const totalValueSizeAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.value.size
-);
-
-const TotalValueSize = memo(function TotalValueSize() {
-  const size = useAtomValue(totalValueSizeAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalValueSize() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={totalSettings.value.size}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -1061,20 +805,14 @@ const TotalValueSize = memo(function TotalValueSize() {
       }
     />
   );
-});
+}
 
-const totalValueWeightAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.value.weight
-);
-
-const TotalValueWeight = memo(function TotalValueWeight() {
-  const weight = useAtomValue(totalValueWeightAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalValueWeight() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={totalSettings.value.weight}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -1083,20 +821,14 @@ const TotalValueWeight = memo(function TotalValueWeight() {
       }
     />
   );
-});
+}
 
-const totalValueColorAtom = selectAtom(
-  totalSettingsAtom,
-  settings => settings.value.color
-);
-
-const TotalValueColor = memo(function TotalValueColor() {
-  const color = useAtomValue(totalValueColorAtom);
-  const [totalSettings, setTotalSettings] = useAtom(totalSettingsAtom);
+function TotalValueColor() {
+  const { totalSettings, setTotalSettings } = useTotalSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={totalSettings.value.color}
       handleInput={value =>
         setTotalSettings({
           ...totalSettings,
@@ -1105,4 +837,4 @@ const TotalValueColor = memo(function TotalValueColor() {
       }
     />
   );
-});
+}

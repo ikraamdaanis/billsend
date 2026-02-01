@@ -1,11 +1,10 @@
 import { Label } from "components/ui/label";
 import { currencySymbols } from "consts/currencies";
-import { useAtom } from "jotai";
-import { currencyAtom } from "state/invoice";
+import { useCurrencySlice } from "stores/invoice-selectors";
 import type { Currency } from "types";
 
 export function MainSettings() {
-  const [currency, setCurrency] = useAtom(currencyAtom);
+  const { currency, setCurrency } = useCurrencySlice();
 
   return (
     <div className="mb-4 flex h-full flex-col gap-4">

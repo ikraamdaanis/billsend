@@ -19,13 +19,11 @@ import {
 import { Input } from "components/ui/input";
 import { NativeSelect } from "components/ui/select";
 import { Textarea } from "components/ui/textarea";
-import { getAllTemplates, saveTemplate } from "db";
-import { useSetAtom } from "jotai";
+import { saveTemplate } from "db";
 import { SaveIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { invoiceTemplatesAtom } from "state/templates";
 import type { Invoice, InvoiceTemplate } from "types";
 import { z } from "zod";
 
@@ -87,7 +85,6 @@ export function SaveTemplateModal({
 }) {
   const [pending, startTransition] = useTransition();
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
-  const setTemplates = useSetAtom(invoiceTemplatesAtom);
 
   const selectedTemplate = templates.find(
     template => template.id === selectedTemplateId
@@ -108,44 +105,6 @@ export function SaveTemplateModal({
   function handleTemplateSelect(templateId: string) {
     setSelectedTemplateId(templateId);
   }
-
-  // async function generateScreenshot(templateId: string) {
-  //   return;
-  //   try {
-  //     // Generate PDF using ReactPDF
-  //     const pdfBlob = await ReactPDF.pdf(
-  //       <InvoicePDF invoice={currentInvoiceData} />
-  //     ).toBlob();
-
-  //     // Send PDF to server function for Puppeteer screenshot
-  //     const formData = new FormData();
-  //     formData.append("pdf", pdfBlob, "invoice.pdf");
-
-  //     const response = await fetch("/api/pdf-to-png", {
-  //       method: "POST",
-  //       body: formData
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to generate screenshot");
-  //     }
-
-  //     const imageBlob = await response.blob();
-  //     const file = new File([imageBlob], `INVOICE_TEMPLATE-${templateId}.png`, {
-  //       type: "image/png"
-  //     });
-
-  //     // Upload to UploadThing
-  //     const uploadResult = await uploadFiles("templateScreenshot", {
-  //       files: [file]
-  //     });
-
-  //     return uploadResult?.[0]?.ufsUrl || null;
-  //   } catch (error) {
-  //     console.error("Screenshot generation failed:", error);
-  //     return null;
-  //   }
-  // }
 
   function handleSubmit(data: SaveTemplateFormData) {
     startTransition(async () => {
@@ -171,8 +130,6 @@ export function SaveTemplateModal({
           };
 
           await saveTemplate(updatedTemplate);
-          const updatedTemplates = await getAllTemplates();
-          setTemplates(updatedTemplates);
 
           toast.success("Template updated successfully!");
         } else {
@@ -189,8 +146,6 @@ export function SaveTemplateModal({
           };
 
           await saveTemplate(newTemplate);
-          const updatedTemplates = await getAllTemplates();
-          setTemplates(updatedTemplates);
 
           toast.success("Template created successfully!");
         }

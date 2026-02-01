@@ -1,8 +1,7 @@
 import { useGesture } from "@use-gesture/react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useUI } from "context/ui-context";
 import type { RefObject } from "react";
-import { useEffect, useRef, useState } from "react";
-import { canvasLockAtom, initializeCanvasLock } from "state/canvas-lock";
+import { useRef, useState } from "react";
 
 const VERTICAL_PADDING = 16;
 
@@ -20,8 +19,7 @@ export function useCanvasTransform(): {
   locked: boolean;
   handleLock: () => void;
 } {
-  const locked = useAtomValue(canvasLockAtom);
-  const setLocked = useSetAtom(canvasLockAtom);
+  const { canvasLock: locked, setCanvasLock } = useUI();
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -29,7 +27,7 @@ export function useCanvasTransform(): {
   const [transform, setTransform] = useState<Transform>(DEFAULT_TRANSFORM);
 
   function handleLock() {
-    setLocked(!locked);
+    setCanvasLock(!locked);
 
     // Reset position when locking/unlocking
     setTransform(DEFAULT_TRANSFORM);
@@ -80,11 +78,6 @@ export function useCanvasTransform(): {
       wheel: { eventOptions: { passive: false } }
     }
   );
-
-  // Initialize lock state from cookie on mount
-  useEffect(() => {
-    initializeCanvasLock(setLocked);
-  }, [setLocked]);
 
   return {
     containerRef,

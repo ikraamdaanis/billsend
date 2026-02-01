@@ -6,71 +6,52 @@ import {
   FontWeightSettings,
   SizeSettings
 } from "components/settings-fields";
-import { activeSettingsAtom } from "components/settings-panel";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { selectAtom } from "jotai/utils";
-import { memo } from "react";
-import { clientAtom, clientSettingsAtom } from "state/client";
+import { useUI } from "context/ui-context";
+import { useClientSlice, useClientSettingsSlice } from "stores/invoice-selectors";
 import { getTextStyles } from "utils/get-text-styles";
 
-export const InvoiceClientDetails = memo(function InvoiceClientDetails() {
+export function InvoiceClientDetails() {
   return (
     <section className="flex flex-col gap-1">
       <ClientLabel />
       <ClientContent />
     </section>
   );
-});
+}
 
-const clientLabelAtom = selectAtom(clientAtom, client => client.label);
-const clientLabelSettingsAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.label
-);
-
-const ClientLabel = memo(function ClientLabel() {
-  const clientLabel = useAtomValue(clientLabelAtom);
-  const clientLabelSettings = useAtomValue(clientLabelSettingsAtom);
-  const setClient = useSetAtom(clientAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function ClientLabel() {
+  const { client, clientSettings, setClient } = useClientSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <InvoiceInput
-      value={clientLabel}
+      value={client.label}
       className="font-medium md:text-base"
       onChange={value => setClient(prev => ({ ...prev, label: value }))}
       placeholder="To"
       onFocus={() => setActiveSettings("client")}
-      style={getTextStyles({ settings: clientLabelSettings })}
+      style={getTextStyles({ settings: clientSettings.label })}
     />
   );
-});
+}
 
-const clientContentAtom = selectAtom(clientAtom, client => client.content);
-const clientContentSettingsAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.content
-);
-
-const ClientContent = memo(function ClientContent() {
-  const clientContent = useAtomValue(clientContentAtom);
-  const clientContentSettings = useAtomValue(clientContentSettingsAtom);
-  const [client, setClient] = useAtom(clientAtom);
-  const setActiveSettings = useSetAtom(activeSettingsAtom);
+function ClientContent() {
+  const { client, clientSettings, setClient } = useClientSlice();
+  const { setActiveSettings } = useUI();
 
   return (
     <InvoiceTextArea
-      value={clientContent}
+      value={client.content}
       onChange={value => setClient(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("client")}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
-      style={getTextStyles({ settings: clientContentSettings })}
+      style={getTextStyles({ settings: clientSettings.content })}
       placeholder={client.placeholder}
     />
   );
-});
+}
 
-export const InvoiceClientSettings = memo(function InvoiceClientSettings() {
+export function InvoiceClientSettings() {
   return (
     <div className="flex flex-col gap-4">
       <div className="mt-4 flex flex-col gap-4">
@@ -91,176 +72,134 @@ export const InvoiceClientSettings = memo(function InvoiceClientSettings() {
       </div>
     </div>
   );
-});
+}
 
 // Client Label Settings
-const clientLabelAlignAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.label.align
-);
-const clientLabelSizeAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.label.size
-);
-const clientLabelWeightAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.label.weight
-);
-const clientLabelColorAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.label.color
-);
-
-const ClientLabelAlign = memo(function ClientLabelAlign() {
-  const align = useAtomValue(clientLabelAlignAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientLabelAlign() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={clientSettings.label.align}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          label: { ...clientSettings.label, align: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
-});
+}
 
-const ClientLabelSize = memo(function ClientLabelSize() {
-  const size = useAtomValue(clientLabelSizeAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientLabelSize() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={clientSettings.label.size}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          label: { ...clientSettings.label, size: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
-});
+}
 
-const ClientLabelWeight = memo(function ClientLabelWeight() {
-  const weight = useAtomValue(clientLabelWeightAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientLabelWeight() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={clientSettings.label.weight}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          label: { ...clientSettings.label, weight: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
-});
+}
 
-const ClientLabelColor = memo(function ClientLabelColor() {
-  const color = useAtomValue(clientLabelColorAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientLabelColor() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={clientSettings.label.color}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          label: { ...clientSettings.label, color: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
-});
+}
 
 // Client Content Settings
-const clientContentAlignAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.content.align
-);
-const clientContentSizeAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.content.size
-);
-const clientContentWeightAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.content.weight
-);
-const clientContentColorAtom = selectAtom(
-  clientSettingsAtom,
-  settings => settings.content.color
-);
-
-const ClientContentAlign = memo(function ClientContentAlign() {
-  const align = useAtomValue(clientContentAlignAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientContentAlign() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <AlignSettings
-      value={align}
+      value={clientSettings.content.align}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          content: { ...clientSettings.content, align: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, align: value }
+        }))
       }
     />
   );
-});
+}
 
-const ClientContentSize = memo(function ClientContentSize() {
-  const size = useAtomValue(clientContentSizeAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientContentSize() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <SizeSettings
-      value={size}
+      value={clientSettings.content.size}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          content: { ...clientSettings.content, size: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, size: value }
+        }))
       }
     />
   );
-});
+}
 
-const ClientContentWeight = memo(function ClientContentWeight() {
-  const weight = useAtomValue(clientContentWeightAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientContentWeight() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <FontWeightSettings
-      value={weight}
+      value={clientSettings.content.weight}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          content: { ...clientSettings.content, weight: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, weight: value }
+        }))
       }
     />
   );
-});
+}
 
-const ClientContentColor = memo(function ClientContentColor() {
-  const color = useAtomValue(clientContentColorAtom);
-  const [clientSettings, setClientSettings] = useAtom(clientSettingsAtom);
+function ClientContentColor() {
+  const { clientSettings, setClientSettings } = useClientSettingsSlice();
 
   return (
     <ColorSettings
-      value={color}
+      value={clientSettings.content.color}
       handleInput={value =>
-        setClientSettings({
-          ...clientSettings,
-          content: { ...clientSettings.content, color: value }
-        })
+        setClientSettings(prev => ({
+          ...prev,
+          content: { ...prev.content, color: value }
+        }))
       }
     />
   );
-});
+}
