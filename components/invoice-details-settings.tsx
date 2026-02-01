@@ -7,11 +7,7 @@ import {
 import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
-import {
-  useNumberSettingsSlice,
-  useInvoiceDateSettingsSlice,
-  useDueDateSettingsSlice
-} from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { handleActiveTab } from "utils/handle-active-tab";
@@ -153,64 +149,68 @@ function InvoiceDueDateSettings() {
 
 // Number Label Components
 function NumberLabelAlign() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const align = useInvoiceStore(state => state.numberSettings.label.align);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <AlignSettings
-      value={numberSettings.label.align}
+      value={align}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          label: { ...numberSettings.label, align: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function NumberLabelSize() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const size = useInvoiceStore(state => state.numberSettings.label.size);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <SizeSettings
-      value={numberSettings.label.size}
+      value={size}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          label: { ...numberSettings.label, size: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function NumberLabelWeight() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const weight = useInvoiceStore(state => state.numberSettings.label.weight);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <FontWeightSettings
-      value={numberSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          label: { ...numberSettings.label, weight: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function NumberLabelColor() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const color = useInvoiceStore(state => state.numberSettings.label.color);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <ColorSettings
-      value={numberSettings.label.color}
+      value={color}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          label: { ...numberSettings.label, color: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
@@ -218,64 +218,68 @@ function NumberLabelColor() {
 
 // Number Value Components
 function NumberValueAlign() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const align = useInvoiceStore(state => state.numberSettings.value.align);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <AlignSettings
-      value={numberSettings.value.align}
+      value={align}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          value: { ...numberSettings.value, align: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function NumberValueSize() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const size = useInvoiceStore(state => state.numberSettings.value.size);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <SizeSettings
-      value={numberSettings.value.size}
+      value={size}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          value: { ...numberSettings.value, size: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function NumberValueWeight() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const weight = useInvoiceStore(state => state.numberSettings.value.weight);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <FontWeightSettings
-      value={numberSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          value: { ...numberSettings.value, weight: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function NumberValueColor() {
-  const { numberSettings, setNumberSettings } = useNumberSettingsSlice();
+  const color = useInvoiceStore(state => state.numberSettings.value.color);
+  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
 
   return (
     <ColorSettings
-      value={numberSettings.value.color}
+      value={color}
       handleInput={value =>
-        setNumberSettings({
-          ...numberSettings,
-          value: { ...numberSettings.value, color: value }
-        })
+        setNumberSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );
@@ -283,64 +287,68 @@ function NumberValueColor() {
 
 // Invoice Date Label Components
 function DateLabelAlign() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const align = useInvoiceStore(state => state.invoiceDateSettings.label.align);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <AlignSettings
-      value={invoiceDateSettings.label.align}
+      value={align}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          label: { ...invoiceDateSettings.label, align: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function DateLabelSize() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const size = useInvoiceStore(state => state.invoiceDateSettings.label.size);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <SizeSettings
-      value={invoiceDateSettings.label.size}
+      value={size}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          label: { ...invoiceDateSettings.label, size: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function DateLabelWeight() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const weight = useInvoiceStore(state => state.invoiceDateSettings.label.weight);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <FontWeightSettings
-      value={invoiceDateSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          label: { ...invoiceDateSettings.label, weight: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function DateLabelColor() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const color = useInvoiceStore(state => state.invoiceDateSettings.label.color);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <ColorSettings
-      value={invoiceDateSettings.label.color}
+      value={color}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          label: { ...invoiceDateSettings.label, color: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
@@ -348,64 +356,68 @@ function DateLabelColor() {
 
 // Invoice Date Value Components
 function DateValueAlign() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const align = useInvoiceStore(state => state.invoiceDateSettings.value.align);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <AlignSettings
-      value={invoiceDateSettings.value.align}
+      value={align}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          value: { ...invoiceDateSettings.value, align: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function DateValueSize() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const size = useInvoiceStore(state => state.invoiceDateSettings.value.size);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <SizeSettings
-      value={invoiceDateSettings.value.size}
+      value={size}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          value: { ...invoiceDateSettings.value, size: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function DateValueWeight() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const weight = useInvoiceStore(state => state.invoiceDateSettings.value.weight);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <FontWeightSettings
-      value={invoiceDateSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          value: { ...invoiceDateSettings.value, weight: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function DateValueColor() {
-  const { invoiceDateSettings, setInvoiceDateSettings } = useInvoiceDateSettingsSlice();
+  const color = useInvoiceStore(state => state.invoiceDateSettings.value.color);
+  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
 
   return (
     <ColorSettings
-      value={invoiceDateSettings.value.color}
+      value={color}
       handleInput={value =>
-        setInvoiceDateSettings({
-          ...invoiceDateSettings,
-          value: { ...invoiceDateSettings.value, color: value }
-        })
+        setInvoiceDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );
@@ -413,64 +425,68 @@ function DateValueColor() {
 
 // Due Date Label Components
 function DueDateLabelAlign() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const align = useInvoiceStore(state => state.dueDateSettings.label.align);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <AlignSettings
-      value={dueDateSettings.label.align}
+      value={align}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          label: { ...dueDateSettings.label, align: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, align: value }
+        }))
       }
     />
   );
 }
 
 function DueDateLabelSize() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const size = useInvoiceStore(state => state.dueDateSettings.label.size);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <SizeSettings
-      value={dueDateSettings.label.size}
+      value={size}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          label: { ...dueDateSettings.label, size: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, size: value }
+        }))
       }
     />
   );
 }
 
 function DueDateLabelWeight() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const weight = useInvoiceStore(state => state.dueDateSettings.label.weight);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <FontWeightSettings
-      value={dueDateSettings.label.weight}
+      value={weight}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          label: { ...dueDateSettings.label, weight: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, weight: value }
+        }))
       }
     />
   );
 }
 
 function DueDateLabelColor() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const color = useInvoiceStore(state => state.dueDateSettings.label.color);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <ColorSettings
-      value={dueDateSettings.label.color}
+      value={color}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          label: { ...dueDateSettings.label, color: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          label: { ...prev.label, color: value }
+        }))
       }
     />
   );
@@ -478,64 +494,68 @@ function DueDateLabelColor() {
 
 // Due Date Value Components
 function DueDateValueAlign() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const align = useInvoiceStore(state => state.dueDateSettings.value.align);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <AlignSettings
-      value={dueDateSettings.value.align}
+      value={align}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          value: { ...dueDateSettings.value, align: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, align: value }
+        }))
       }
     />
   );
 }
 
 function DueDateValueSize() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const size = useInvoiceStore(state => state.dueDateSettings.value.size);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <SizeSettings
-      value={dueDateSettings.value.size}
+      value={size}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          value: { ...dueDateSettings.value, size: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, size: value }
+        }))
       }
     />
   );
 }
 
 function DueDateValueWeight() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const weight = useInvoiceStore(state => state.dueDateSettings.value.weight);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <FontWeightSettings
-      value={dueDateSettings.value.weight}
+      value={weight}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          value: { ...dueDateSettings.value, weight: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, weight: value }
+        }))
       }
     />
   );
 }
 
 function DueDateValueColor() {
-  const { dueDateSettings, setDueDateSettings } = useDueDateSettingsSlice();
+  const color = useInvoiceStore(state => state.dueDateSettings.value.color);
+  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
 
   return (
     <ColorSettings
-      value={dueDateSettings.value.color}
+      value={color}
       handleInput={value =>
-        setDueDateSettings({
-          ...dueDateSettings,
-          value: { ...dueDateSettings.value, color: value }
-        })
+        setDueDateSettings(prev => ({
+          ...prev,
+          value: { ...prev.value, color: value }
+        }))
       }
     />
   );

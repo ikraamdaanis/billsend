@@ -9,7 +9,7 @@ import { Separator } from "components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import type { LineItemTab } from "consts/events";
 import { LINE_ITEM_TABS, TAB_SELECT_EVENTS } from "consts/events";
-import { useTableSettingsSlice } from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { handleActiveTab } from "utils/handle-active-tab";
@@ -240,16 +240,17 @@ function TableDesignSettings() {
 }
 
 function TableBackgroundColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const backgroundColor = useInvoiceStore(state => state.tableSettings.backgroundColor);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.backgroundColor}
+      value={backgroundColor}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           backgroundColor: value
-        })
+        }))
       }
       label="Background"
     />
@@ -257,16 +258,17 @@ function TableBackgroundColor() {
 }
 
 function TableBorderColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const borderColor = useInvoiceStore(state => state.tableSettings.borderColor);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.borderColor}
+      value={borderColor}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           borderColor: value
-        })
+        }))
       }
       label="Border Color"
     />
@@ -275,83 +277,88 @@ function TableBorderColor() {
 
 // Description Header Settings
 function DescriptionHeaderAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.descriptionHeaderSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionHeaderSettings: {
-            ...tableSettings.descriptionHeaderSettings,
+            ...prev.descriptionHeaderSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionHeaderSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.descriptionHeaderSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionHeaderSettings: {
-            ...tableSettings.descriptionHeaderSettings,
+            ...prev.descriptionHeaderSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionHeaderWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.descriptionHeaderSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionHeaderSettings: {
-            ...tableSettings.descriptionHeaderSettings,
+            ...prev.descriptionHeaderSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionHeaderColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.descriptionHeaderSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionHeaderSettings: {
-            ...tableSettings.descriptionHeaderSettings,
+            ...prev.descriptionHeaderSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionHeaderLabel() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const label = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.label);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -361,15 +368,15 @@ function DescriptionHeaderLabel() {
       <input
         type="text"
         id="description-header-label"
-        value={tableSettings.descriptionHeaderSettings.label}
+        value={label}
         onChange={({ target: { value } }) =>
-          setTableSettings({
-            ...tableSettings,
+          setTableSettings(prev => ({
+            ...prev,
             descriptionHeaderSettings: {
-              ...tableSettings.descriptionHeaderSettings,
+              ...prev.descriptionHeaderSettings,
               label: value
             }
-          })
+          }))
         }
         className="w-full border p-2"
       />
@@ -379,76 +386,80 @@ function DescriptionHeaderLabel() {
 
 // Description Row Settings
 function DescriptionRowAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.descriptionRowSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionRowSettings: {
-            ...tableSettings.descriptionRowSettings,
+            ...prev.descriptionRowSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionRowSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.descriptionRowSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionRowSettings: {
-            ...tableSettings.descriptionRowSettings,
+            ...prev.descriptionRowSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionRowWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.descriptionRowSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionRowSettings: {
-            ...tableSettings.descriptionRowSettings,
+            ...prev.descriptionRowSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function DescriptionRowColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.descriptionRowSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           descriptionRowSettings: {
-            ...tableSettings.descriptionRowSettings,
+            ...prev.descriptionRowSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
@@ -456,83 +467,88 @@ function DescriptionRowColor() {
 
 // Quantity Header Settings
 function QuantityHeaderAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.quantityHeaderSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityHeaderSettings: {
-            ...tableSettings.quantityHeaderSettings,
+            ...prev.quantityHeaderSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityHeaderSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.quantityHeaderSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityHeaderSettings: {
-            ...tableSettings.quantityHeaderSettings,
+            ...prev.quantityHeaderSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityHeaderWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.quantityHeaderSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityHeaderSettings: {
-            ...tableSettings.quantityHeaderSettings,
+            ...prev.quantityHeaderSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityHeaderColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.quantityHeaderSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityHeaderSettings: {
-            ...tableSettings.quantityHeaderSettings,
+            ...prev.quantityHeaderSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityHeaderLabel() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const label = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.label);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -542,15 +558,15 @@ function QuantityHeaderLabel() {
       <input
         type="text"
         id="quantity-header-label"
-        value={tableSettings.quantityHeaderSettings.label}
+        value={label}
         onChange={({ target: { value } }) =>
-          setTableSettings({
-            ...tableSettings,
+          setTableSettings(prev => ({
+            ...prev,
             quantityHeaderSettings: {
-              ...tableSettings.quantityHeaderSettings,
+              ...prev.quantityHeaderSettings,
               label: value
             }
-          })
+          }))
         }
         className="w-full border p-2"
       />
@@ -560,76 +576,80 @@ function QuantityHeaderLabel() {
 
 // Quantity Row Settings
 function QuantityRowAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.quantityRowSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.quantityRowSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityRowSettings: {
-            ...tableSettings.quantityRowSettings,
+            ...prev.quantityRowSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityRowSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.quantityRowSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.quantityRowSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityRowSettings: {
-            ...tableSettings.quantityRowSettings,
+            ...prev.quantityRowSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityRowWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.quantityRowSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.quantityRowSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityRowSettings: {
-            ...tableSettings.quantityRowSettings,
+            ...prev.quantityRowSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function QuantityRowColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.quantityRowSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.quantityRowSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           quantityRowSettings: {
-            ...tableSettings.quantityRowSettings,
+            ...prev.quantityRowSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
@@ -637,83 +657,88 @@ function QuantityRowColor() {
 
 // Unit Price Header Settings
 function UnitPriceHeaderAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.unitPriceHeaderSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceHeaderSettings: {
-            ...tableSettings.unitPriceHeaderSettings,
+            ...prev.unitPriceHeaderSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceHeaderSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.unitPriceHeaderSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceHeaderSettings: {
-            ...tableSettings.unitPriceHeaderSettings,
+            ...prev.unitPriceHeaderSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceHeaderWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.unitPriceHeaderSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceHeaderSettings: {
-            ...tableSettings.unitPriceHeaderSettings,
+            ...prev.unitPriceHeaderSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceHeaderColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.unitPriceHeaderSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceHeaderSettings: {
-            ...tableSettings.unitPriceHeaderSettings,
+            ...prev.unitPriceHeaderSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceHeaderLabel() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const label = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.label);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -723,15 +748,15 @@ function UnitPriceHeaderLabel() {
       <input
         type="text"
         id="unit-price-header-label"
-        value={tableSettings.unitPriceHeaderSettings.label}
+        value={label}
         onChange={({ target: { value } }) =>
-          setTableSettings({
-            ...tableSettings,
+          setTableSettings(prev => ({
+            ...prev,
             unitPriceHeaderSettings: {
-              ...tableSettings.unitPriceHeaderSettings,
+              ...prev.unitPriceHeaderSettings,
               label: value
             }
-          })
+          }))
         }
         className="w-full border p-2"
       />
@@ -741,76 +766,80 @@ function UnitPriceHeaderLabel() {
 
 // Unit Price Row Settings
 function UnitPriceRowAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.unitPriceRowSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceRowSettings: {
-            ...tableSettings.unitPriceRowSettings,
+            ...prev.unitPriceRowSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceRowSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.unitPriceRowSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceRowSettings: {
-            ...tableSettings.unitPriceRowSettings,
+            ...prev.unitPriceRowSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceRowWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.unitPriceRowSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceRowSettings: {
-            ...tableSettings.unitPriceRowSettings,
+            ...prev.unitPriceRowSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function UnitPriceRowColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.unitPriceRowSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           unitPriceRowSettings: {
-            ...tableSettings.unitPriceRowSettings,
+            ...prev.unitPriceRowSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
@@ -818,83 +847,88 @@ function UnitPriceRowColor() {
 
 // Amount Header Settings
 function AmountHeaderAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.amountHeaderSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountHeaderSettings: {
-            ...tableSettings.amountHeaderSettings,
+            ...prev.amountHeaderSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountHeaderSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.amountHeaderSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountHeaderSettings: {
-            ...tableSettings.amountHeaderSettings,
+            ...prev.amountHeaderSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountHeaderWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.amountHeaderSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountHeaderSettings: {
-            ...tableSettings.amountHeaderSettings,
+            ...prev.amountHeaderSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountHeaderColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.amountHeaderSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountHeaderSettings: {
-            ...tableSettings.amountHeaderSettings,
+            ...prev.amountHeaderSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountHeaderLabel() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const label = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.label);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
@@ -904,15 +938,15 @@ function AmountHeaderLabel() {
       <input
         type="text"
         id="amount-header-label"
-        value={tableSettings.amountHeaderSettings.label}
+        value={label}
         onChange={({ target: { value } }) =>
-          setTableSettings({
-            ...tableSettings,
+          setTableSettings(prev => ({
+            ...prev,
             amountHeaderSettings: {
-              ...tableSettings.amountHeaderSettings,
+              ...prev.amountHeaderSettings,
               label: value
             }
-          })
+          }))
         }
         className="w-full border p-2"
       />
@@ -922,76 +956,80 @@ function AmountHeaderLabel() {
 
 // Amount Row Settings
 function AmountRowAlign() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const align = useInvoiceStore(state => state.tableSettings.amountRowSettings.align);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <AlignSettings
-      value={tableSettings.amountRowSettings.align}
+      value={align}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountRowSettings: {
-            ...tableSettings.amountRowSettings,
+            ...prev.amountRowSettings,
             align: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountRowSize() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const size = useInvoiceStore(state => state.tableSettings.amountRowSettings.size);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <SizeSettings
-      value={tableSettings.amountRowSettings.size}
+      value={size}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountRowSettings: {
-            ...tableSettings.amountRowSettings,
+            ...prev.amountRowSettings,
             size: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountRowWeight() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const weight = useInvoiceStore(state => state.tableSettings.amountRowSettings.weight);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <FontWeightSettings
-      value={tableSettings.amountRowSettings.weight}
+      value={weight}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountRowSettings: {
-            ...tableSettings.amountRowSettings,
+            ...prev.amountRowSettings,
             weight: value
           }
-        })
+        }))
       }
     />
   );
 }
 
 function AmountRowColor() {
-  const { tableSettings, setTableSettings } = useTableSettingsSlice();
+  const color = useInvoiceStore(state => state.tableSettings.amountRowSettings.color);
+  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
     <ColorSettings
-      value={tableSettings.amountRowSettings.color}
+      value={color}
       handleInput={value =>
-        setTableSettings({
-          ...tableSettings,
+        setTableSettings(prev => ({
+          ...prev,
           amountRowSettings: {
-            ...tableSettings.amountRowSettings,
+            ...prev.amountRowSettings,
             color: value
           }
-        })
+        }))
       }
     />
   );
