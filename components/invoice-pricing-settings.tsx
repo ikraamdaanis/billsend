@@ -6,61 +6,41 @@ import {
 } from "components/settings-fields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
+import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   discountsSettingsAtom,
   feesSettingsAtom,
   subtotalSettingsAtom,
   taxSettingsAtom,
   totalSettingsAtom
-} from "state";
+} from "state/pricing";
 import { handleActiveTab } from "utils/handle-active-tab";
 
 export function InvoicePricingSettings() {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState("subtotal");
 
-  function scrollToSelectedTab(value: string) {
+  const scrollToSelectedTab = useCallback((value: string) => {
     if (!tabsRef.current) return;
 
     setActiveTab(value);
     handleActiveTab({ tabsRef, value });
-  }
+  }, []);
 
   // Handle initial scroll
   useEffect(() => {
-    // Delay the initial scroll to ensure the component is fully rendered
     const timer = setTimeout(() => {
       scrollToSelectedTab(activeTab);
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [activeTab]);
+  }, [activeTab, scrollToSelectedTab]);
 
   // Listen for custom events to select tabs from outside this component
-  useEffect(() => {
-    function handleSelectTotalsTab(event: Event) {
-      const customEvent = event as CustomEvent<{
-        tab: string;
-        option: string;
-      }>;
-
-      if (customEvent.detail.tab) {
-        scrollToSelectedTab(customEvent.detail.tab);
-      }
-    }
-
-    window.addEventListener(TAB_SELECT_EVENTS.totals, handleSelectTotalsTab);
-
-    return () => {
-      window.removeEventListener(
-        TAB_SELECT_EVENTS.totals,
-        handleSelectTotalsTab
-      );
-    };
-  }, []);
+  useTabSelectEvent(TAB_SELECT_EVENTS.totals, scrollToSelectedTab);
 
   function handleValueChange(value: string) {
     scrollToSelectedTab(value);

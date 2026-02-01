@@ -28,7 +28,7 @@ import {
 import { useAtomValue, useSetAtom } from "jotai";
 import { ArrowLeftIcon } from "lucide-react";
 import { memo, useState } from "react";
-import { currentInvoiceDocumentNameAtom } from "state";
+import { currentInvoiceDocumentNameAtom } from "state/invoice-document";
 
 const TOOLBAR_HEIGHT = 50;
 

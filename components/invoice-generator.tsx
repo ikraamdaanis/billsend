@@ -10,7 +10,7 @@ import {
 } from "@react-pdf/renderer";
 import { Button } from "components/ui/button";
 import { formatCurrency } from "consts/currencies";
-import { getImageBlob } from "db";
+import { useImageLoader } from "hooks/use-image-loader";
 import { useAtomValue } from "jotai";
 import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -20,12 +20,10 @@ import {
   Suspense,
   useEffect,
   useMemo,
-  useRef,
   useState,
   useTransition
 } from "react";
-import { toast } from "sonner";
-import { imageAtom, invoiceAtom } from "state";
+import { imageAtom, invoiceAtom } from "state/invoice";
 import type { Invoice } from "types";
 import { getFontWeight } from "utils/get-font-weight";
 import { getTextStyles } from "utils/get-text-styles";
@@ -674,95 +672,16 @@ export const InvoicePDF = memo(function InvoicePDF({
 export function InvoiceGenerator() {
   const invoice = useAtomValue(invoiceAtom);
   const imageId = useAtomValue(imageAtom);
+  const imageUrl = useImageLoader(imageId);
 
   const [_isPending, startTransition] = useTransition();
   const [key, setKey] = useState(0);
-  const [imageUrl, setImageUrl] = useState("");
-  const imageUrlRef = useRef<string | null>(null);
 
   // Create stable invoice with loaded image URL
   const stableInvoice = useMemo(
     () => ({ ...invoice, image: imageUrl }),
     [invoice, imageUrl]
   );
-
-  // Load image from IndexedDB when imageId changes
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadImage() {
-      if (!imageId) {
-        // Clean up previous blob URL if it exists
-        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-          URL.revokeObjectURL(imageUrlRef.current);
-          imageUrlRef.current = null;
-        }
-
-        return setImageUrl("");
-      }
-
-      // Check if it's already a blob URL or data URL
-      if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
-        // Clean up previous blob URL if it exists
-        if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-          URL.revokeObjectURL(imageUrlRef.current);
-        }
-
-        imageUrlRef.current = imageId;
-        return setImageUrl(imageId);
-      }
-
-      try {
-        const blob = await getImageBlob(imageId);
-        if (blob) {
-          // Clean up previous blob URL before creating new one
-          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-            URL.revokeObjectURL(imageUrlRef.current);
-          }
-
-          const url = URL.createObjectURL(blob);
-
-          if (cancelled) return URL.revokeObjectURL(url);
-
-          imageUrlRef.current = url;
-          setImageUrl(url);
-        } else {
-          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-            URL.revokeObjectURL(imageUrlRef.current);
-            imageUrlRef.current = null;
-          }
-
-          setImageUrl("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-            URL.revokeObjectURL(imageUrlRef.current);
-            imageUrlRef.current = null;
-          }
-
-          setImageUrl("");
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Failed to load image from storage."
-          );
-        }
-      }
-    }
-
-    loadImage();
-
-    return () => {
-      cancelled = true;
-
-      // Clean up blob URL on unmount or when imageId changes
-      if (imageUrlRef.current && imageUrlRef.current.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrlRef.current);
-        imageUrlRef.current = null;
-      }
-    };
-  }, [imageId]);
 
   // Update key when invoice or image changes to force PDFViewer remount
   useEffect(() => {

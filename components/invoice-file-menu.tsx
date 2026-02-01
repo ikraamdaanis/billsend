@@ -25,20 +25,19 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { invoiceAtom, invoiceDefault } from "state/invoice";
 import {
   currentInvoiceDocumentIdAtom,
   currentInvoiceDocumentNameAtom,
   generateDefaultInvoiceName,
   hasUnsavedChangesAtom,
-  invoiceAtom,
-  invoiceDefault,
-  invoiceTemplatesAtom,
   lastSavedInvoiceAtom,
   loadInvoiceDocumentIntoAtom,
   resetToNewInvoice,
   saveCurrentInvoiceAsDocument,
   updateCurrentInvoiceDocument
-} from "state";
+} from "state/invoice-document";
+import { invoiceTemplatesAtom } from "state/templates";
 import type { InvoiceDocument, InvoiceTemplate } from "types";
 
 export function InvoiceFileMenu() {

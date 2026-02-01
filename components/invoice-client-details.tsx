@@ -10,7 +10,7 @@ import { activeSettingsAtom } from "components/settings-panel";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
-import { clientAtom, clientSettingsAtom } from "state";
+import { clientAtom, clientSettingsAtom } from "state/client";
 import { getTextStyles } from "utils/get-text-styles";
 
 export const InvoiceClientDetails = memo(function InvoiceClientDetails() {
@@ -31,14 +31,14 @@ const clientLabelSettingsAtom = selectAtom(
 const ClientLabel = memo(function ClientLabel() {
   const clientLabel = useAtomValue(clientLabelAtom);
   const clientLabelSettings = useAtomValue(clientLabelSettingsAtom);
-  const [client, setClient] = useAtom(clientAtom);
+  const setClient = useSetAtom(clientAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
   return (
     <InvoiceInput
       value={clientLabel}
       className="font-medium md:text-base"
-      onChange={value => setClient({ ...client, label: value })}
+      onChange={value => setClient(prev => ({ ...prev, label: value }))}
       placeholder="To"
       onFocus={() => setActiveSettings("client")}
       style={getTextStyles({ settings: clientLabelSettings })}
@@ -61,7 +61,7 @@ const ClientContent = memo(function ClientContent() {
   return (
     <InvoiceTextArea
       value={clientContent}
-      onChange={value => setClient({ ...client, content: value })}
+      onChange={value => setClient(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("client")}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: clientContentSettings })}

@@ -1,7 +1,7 @@
 import { InvoiceInput } from "components/invoice-input";
 import { activeSettingsAtom } from "components/settings-panel";
 import { Button } from "components/ui/button";
-import { currencySymbols, formatCurrency } from "consts/currencies";
+import { formatCurrency } from "consts/currencies";
 import type { LineItemTab } from "consts/events";
 import {
   LINE_ITEM_TABS,
@@ -17,11 +17,11 @@ import type { ChangeEvent } from "react";
 import { memo } from "react";
 import {
   currencyAtom,
+  currencySymbolAtom,
   invoiceAtom,
-  lineItemsAtom,
-  tableSettingsAtom,
   updateInvoiceValueAtom
-} from "state";
+} from "state/invoice";
+import { lineItemsAtom, tableSettingsAtom } from "state/table";
 import type {
   DeepKeyOf,
   Invoice,
@@ -328,10 +328,9 @@ const TableCell = memo(function TableCell({
 }) {
   const rowSettings = useAtomValue(column.rowSettingsAtom);
   const currency = useAtomValue(currencyAtom);
+  const currencySymbol = useAtomValue(currencySymbolAtom);
   const updateInvoiceValue = useSetAtom(updateInvoiceValueAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
-  const currencySymbol =
-    currencySymbols.find(symbol => symbol.code === currency)?.symbol || "";
 
   function handleFocus() {
     setActiveSettings("table");

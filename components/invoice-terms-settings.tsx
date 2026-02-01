@@ -7,7 +7,7 @@ import {
 import { useAtom, useAtomValue } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
-import { termsSettingsAtom } from "state";
+import { termsSettingsAtom } from "state/terms";
 
 export const InvoiceTermsSettings = memo(function InvoiceTermsSettings() {
   return (

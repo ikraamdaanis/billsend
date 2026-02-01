@@ -12,7 +12,7 @@ import { useSetAtom } from "jotai";
 import { TrashIcon } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { invoiceTemplatesAtom } from "state";
+import { invoiceTemplatesAtom } from "state/templates";
 import type { InvoiceTemplate } from "types";
 
 export function DeleteTemplateModal({

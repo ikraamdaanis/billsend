@@ -25,7 +25,7 @@ import { SaveIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { invoiceTemplatesAtom } from "state";
+import { invoiceTemplatesAtom } from "state/templates";
 import type { Invoice, InvoiceTemplate } from "types";
 import { z } from "zod";
 

@@ -24,7 +24,7 @@ import { PencilIcon } from "lucide-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { invoiceTemplatesAtom } from "state";
+import { invoiceTemplatesAtom } from "state/templates";
 import type { InvoiceTemplate } from "types";
 import { z } from "zod";
 

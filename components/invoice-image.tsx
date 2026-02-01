@@ -6,7 +6,7 @@ import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
-import { imageAtom } from "state";
+import { imageAtom } from "state/invoice";
 
 export function InvoiceImage() {
   const [imageId, setImageId] = useAtom(imageAtom);

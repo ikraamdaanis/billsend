@@ -1,3 +1,4 @@
+import { currencySymbols } from "consts/currencies";
 import { addDays, format } from "date-fns";
 import { atom } from "jotai";
 import { atomWithImmer } from "jotai-immer";
@@ -5,6 +6,11 @@ import { focusAtom } from "jotai-optics";
 import { setTypedNestedValue } from "lib/set-nested-value";
 import type { DeepKeyOf, DeepValueType, Invoice } from "types";
 import { calculateInvoiceTotals } from "utils/calculate-invoice-totals";
+
+// Build a Map for O(1) currency symbol lookups
+const currencySymbolMap = new Map(
+  currencySymbols.map(currency => [currency.code, currency.symbol])
+);
 
 const DEFAULT_FONT_COLOUR = "#1a1a1a";
 
@@ -299,6 +305,13 @@ export const invoiceAtom = atomWithImmer<Invoice>(invoiceDefault);
 // Focused atoms for image and currency
 export const imageAtom = focusAtom(invoiceAtom, o => o.prop("image"));
 export const currencyAtom = focusAtom(invoiceAtom, o => o.prop("currency"));
+
+// Derived atom for currency symbol with O(1) lookup
+export const currencySymbolAtom = atom(get => {
+  const currency = get(currencyAtom);
+
+  return currencySymbolMap.get(currency) ?? "$";
+});
 
 // Utility atom for updating nested invoice values with dynamic paths
 // Uses setTypedNestedValue to maintain the same API as before

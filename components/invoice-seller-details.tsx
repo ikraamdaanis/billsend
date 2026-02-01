@@ -10,7 +10,7 @@ import { activeSettingsAtom } from "components/settings-panel";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
-import { sellerAtom, sellerSettingsAtom } from "state";
+import { sellerAtom, sellerSettingsAtom } from "state/seller";
 import { getTextStyles } from "utils/get-text-styles";
 
 export const InvoiceSellerDetails = memo(function InvoiceSellerDetails() {
@@ -31,14 +31,14 @@ const sellerLabelSettingsAtom = selectAtom(
 const SellerLabel = memo(function SellerLabel() {
   const sellerLabel = useAtomValue(sellerLabelAtom);
   const sellerLabelSettings = useAtomValue(sellerLabelSettingsAtom);
-  const [seller, setSeller] = useAtom(sellerAtom);
+  const setSeller = useSetAtom(sellerAtom);
   const setActiveSettings = useSetAtom(activeSettingsAtom);
 
   return (
     <InvoiceInput
       value={sellerLabel}
       className="font-medium md:text-base"
-      onChange={value => setSeller({ ...seller, label: value })}
+      onChange={value => setSeller(prev => ({ ...prev, label: value }))}
       placeholder="From"
       onFocus={() => setActiveSettings("seller")}
       style={getTextStyles({ settings: sellerLabelSettings })}
@@ -61,7 +61,7 @@ const SellerContent = memo(function SellerContent() {
   return (
     <InvoiceTextArea
       value={sellerContent}
-      onChange={value => setSeller({ ...seller, content: value })}
+      onChange={value => setSeller(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("seller")}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: sellerContentSettings })}

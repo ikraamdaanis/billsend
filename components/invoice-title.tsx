@@ -9,7 +9,7 @@ import { activeSettingsAtom } from "components/settings-panel";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { selectAtom } from "jotai/utils";
 import { memo } from "react";
-import { titleAtom, titleSettingsAtom } from "state";
+import { titleAtom, titleSettingsAtom } from "state/title";
 import { getTextStyles } from "utils/get-text-styles";
 
 export const InvoiceTitle = memo(function InvoiceTitle() {
@@ -48,13 +48,13 @@ const colorAtom = selectAtom(titleSettingsAtom, settings => settings.color);
 
 const Align = memo(function Align() {
   const align = useAtomValue(alignAtom);
-  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
+  const setTitleSettings = useSetAtom(titleSettingsAtom);
 
   return (
     <AlignSettings
       value={align}
       handleInput={value =>
-        setTitleSettings({ ...titleSettings, align: value })
+        setTitleSettings(prev => ({ ...prev, align: value }))
       }
     />
   );
@@ -62,25 +62,27 @@ const Align = memo(function Align() {
 
 const Size = memo(function Size() {
   const size = useAtomValue(sizeAtom);
-  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
+  const setTitleSettings = useSetAtom(titleSettingsAtom);
 
   return (
     <SizeSettings
       value={size}
-      handleInput={value => setTitleSettings({ ...titleSettings, size: value })}
+      handleInput={value =>
+        setTitleSettings(prev => ({ ...prev, size: value }))
+      }
     />
   );
 });
 
 const Weight = memo(function Weight() {
   const weight = useAtomValue(weightAtom);
-  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
+  const setTitleSettings = useSetAtom(titleSettingsAtom);
 
   return (
     <FontWeightSettings
       value={weight}
       handleInput={value =>
-        setTitleSettings({ ...titleSettings, weight: value })
+        setTitleSettings(prev => ({ ...prev, weight: value }))
       }
     />
   );
@@ -88,13 +90,13 @@ const Weight = memo(function Weight() {
 
 const Color = memo(function Color() {
   const color = useAtomValue(colorAtom);
-  const [titleSettings, setTitleSettings] = useAtom(titleSettingsAtom);
+  const setTitleSettings = useSetAtom(titleSettingsAtom);
 
   return (
     <ColorSettings
       value={color}
       handleInput={value =>
-        setTitleSettings({ ...titleSettings, color: value })
+        setTitleSettings(prev => ({ ...prev, color: value }))
       }
     />
   );

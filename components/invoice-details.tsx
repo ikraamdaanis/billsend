@@ -10,7 +10,7 @@ import {
   invoiceDateSettingsAtom,
   numberAtom,
   numberSettingsAtom
-} from "state";
+} from "state/details";
 import { getTextStyles } from "utils/get-text-styles";
 import { setActiveTab } from "utils/set-active-tab";
 
