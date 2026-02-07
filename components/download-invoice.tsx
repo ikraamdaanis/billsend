@@ -59,7 +59,7 @@ export function DownloadInvoice({
       variant="default"
       onClick={handleCreatePdfUrl}
       disabled={pending}
-      className={cn("roundeds-xs h-7 px-2", className)}
+      className={cn("h-7 px-2", className)}
       {...props}
     >
       Download
