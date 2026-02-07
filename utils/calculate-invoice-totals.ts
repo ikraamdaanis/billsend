@@ -5,7 +5,7 @@ export function calculateInvoiceTotals(invoice: Invoice): Invoice {
   const itemsWithAmounts = invoice.items.map(item => {
     const quantity = Number(item.quantity) || 0;
     const unitPrice = Number(item.unitPrice) || 0;
-    const amount = quantity * unitPrice;
+    const amount = Math.round(quantity * unitPrice * 100) / 100;
 
     return { ...item, amount };
   });
@@ -14,14 +14,16 @@ export function calculateInvoiceTotals(invoice: Invoice): Invoice {
   const subtotal = itemsWithAmounts.reduce((sum, item) => sum + item.amount, 0);
 
   // Calculate tax amount
-  const taxAmount = (subtotal * (Number(invoice.tax.percentage) || 0)) / 100;
+  const taxAmount =
+    Math.round(subtotal * (Number(invoice.tax.percentage) || 0)) / 100;
 
   // Get fees and discounts
   const fees = Number(invoice.fees) || 0;
   const discounts = Number(invoice.discounts) || 0;
 
   // Calculate total
-  const total = subtotal + taxAmount + fees - discounts;
+  const total =
+    Math.round((subtotal + taxAmount + fees - discounts) * 100) / 100;
 
   return {
     ...invoice,
