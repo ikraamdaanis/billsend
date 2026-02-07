@@ -11,5 +11,5 @@ const fontWeights: Record<string, number> = {
  * Helper function to convert weight string to PDF weight.
  */
 export function getFontWeight(weight: FontWeight) {
-  return fontWeights[weight.toLowerCase()];
+  return fontWeights[weight.toLowerCase()] ?? 400;
 }
