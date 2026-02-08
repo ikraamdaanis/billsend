@@ -4,6 +4,7 @@ import { InvoiceCanvas } from "components/invoice-canvas";
 import { InvoiceClientDetails } from "components/invoice-client-details";
 import { InvoiceDetails } from "components/invoice-details";
 import { InvoiceFileMenu } from "components/invoice-file-menu";
+import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
 import { InvoiceImage } from "components/invoice-image";
 import { InvoiceLineItems } from "components/invoice-line-items";
 import { InvoicePricing } from "components/invoice-pricing";
@@ -27,8 +28,10 @@ import {
 } from "components/ui/drawer";
 import { useInvoiceDocument } from "context/invoice-document-context";
 import { useUI } from "context/ui-context";
+import { getInvoice, saveInvoice } from "db";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const TOOLBAR_HEIGHT = 50;
 
@@ -63,8 +66,29 @@ function Toolbar({
 }: {
   setIsModalOpen: (open: boolean) => void;
 }) {
-  const { currentDocumentName } = useInvoiceDocument();
+  const { currentDocumentId, currentDocumentName, setCurrentDocumentName } =
+    useInvoiceDocument();
   const displayName = currentDocumentName || "Untitled invoice";
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+
+  async function handleRename(newName: string) {
+    const trimmedName = newName.trim();
+
+    if (currentDocumentId) {
+      const existingDoc = await getInvoice(currentDocumentId);
+      if (!existingDoc) {
+        throw new Error("Invoice document not found");
+      }
+      await saveInvoice({
+        ...existingDoc,
+        name: trimmedName,
+        updatedAt: new Date()
+      });
+    }
+
+    setCurrentDocumentName(trimmedName);
+    toast.success("Invoice renamed successfully");
+  }
 
   return (
     <nav
@@ -84,11 +108,25 @@ function Toolbar({
         <InvoiceFileMenu />
       </div>
       <div className="absolute left-1/2 -translate-x-1/2">
-        <h2 className="text-foreground text-sm font-medium">{displayName}</h2>
+        <button
+          type="button"
+          onClick={() => setRenameDialogOpen(true)}
+          className="hover:bg-accent cursor-pointer rounded-md px-2 py-1 transition-colors"
+        >
+          <h2 className="text-foreground text-sm font-medium">
+            {displayName}
+          </h2>
+        </button>
       </div>
       <div className="ml-auto">
         <DownloadInvoice />
       </div>
+      <RenameInvoiceDialog
+        open={renameDialogOpen}
+        onOpenChange={setRenameDialogOpen}
+        currentName={displayName}
+        onRename={handleRename}
+      />
     </nav>
   );
 }
