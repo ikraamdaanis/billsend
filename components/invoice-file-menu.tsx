@@ -13,15 +13,13 @@ import {
 } from "components/ui/menubar";
 import type { UnsavedChangesAction } from "components/unsaved-changes-dialog";
 import { UnsavedChangesDialog } from "components/unsaved-changes-dialog";
-import { useInvoiceDataAndActions } from "stores/invoice-selectors";
-import { invoiceDefault } from "stores/invoice-store";
 import {
-  useInvoiceDocument,
   generateDefaultInvoiceName,
   loadInvoiceDocument,
   resetToNewInvoice,
   saveCurrentInvoiceAsDocument,
-  updateCurrentInvoiceDocument
+  updateCurrentInvoiceDocument,
+  useInvoiceDocument
 } from "context/invoice-document-context";
 import { getAllInvoices, getAllTemplates } from "db";
 import { isEqual } from "lodash-es";
@@ -34,9 +32,17 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { useInvoiceDataAndActions } from "stores/invoice-selectors";
+import { invoiceDefault } from "stores/invoice-store";
 import type { InvoiceDocument, InvoiceTemplate } from "types";
 
-export function InvoiceFileMenu() {
+export function InvoiceFileMenu({
+  saveDialogOpen: externalSaveDialogOpen,
+  onSaveDialogOpenChange: onExternalSaveDialogOpenChange
+}: {
+  saveDialogOpen?: boolean;
+  onSaveDialogOpenChange?: (open: boolean) => void;
+} = {}) {
   const { invoice, setInvoice } = useInvoiceDataAndActions();
   const {
     currentDocumentId,
@@ -49,7 +55,11 @@ export function InvoiceFileMenu() {
   } = useInvoiceDocument();
 
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
-  const [saveAsDialogOpen, setSaveAsDialogOpen] = useState(false);
+  const [internalSaveAsDialogOpen, setInternalSaveAsDialogOpen] =
+    useState(false);
+  const saveAsDialogOpen =
+    internalSaveAsDialogOpen || (externalSaveDialogOpen ?? false);
+
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
@@ -71,6 +81,14 @@ export function InvoiceFileMenu() {
       }
     },
     [hasUnsavedChanges]
+  );
+
+  const setSaveAsDialogOpen = useCallback(
+    (open: boolean) => {
+      setInternalSaveAsDialogOpen(open);
+      onExternalSaveDialogOpenChange?.(open);
+    },
+    [onExternalSaveDialogOpenChange]
   );
 
   const handleNewInvoice = useCallback(() => {
@@ -121,11 +139,11 @@ export function InvoiceFileMenu() {
         );
       }
     });
-  }, [currentDocumentId, invoice, setLastSavedInvoice, startTransition]);
+  }, [currentDocumentId, invoice, setLastSavedInvoice, setSaveAsDialogOpen]);
 
   const handleSaveAs = useCallback(() => {
     setSaveAsDialogOpen(true);
-  }, []);
+  }, [setSaveAsDialogOpen]);
 
   function handleSelectTemplate(template: InvoiceTemplate) {
     startTransition(() => {
