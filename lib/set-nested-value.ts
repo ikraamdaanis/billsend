@@ -16,7 +16,7 @@ export function setNestedValue<T extends object>(
 
   if (match) {
     const [, key, index] = match;
-    const array = (obj as unknown as Record<string, unknown[]>)[key];
+    const array = (obj as unknown as Record<string, unknown[]>)[key] ?? [];
     const idx = Number(index);
 
     return {
