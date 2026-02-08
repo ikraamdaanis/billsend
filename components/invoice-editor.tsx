@@ -70,6 +70,7 @@ function Toolbar({
     useInvoiceDocument();
   const displayName = currentDocumentName || "Untitled invoice";
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   async function handleRename(newName: string) {
     const trimmedName = newName.trim();
@@ -90,6 +91,14 @@ function Toolbar({
     toast.success("Invoice renamed successfully");
   }
 
+  function handleTitleClick() {
+    if (currentDocumentId) {
+      setRenameDialogOpen(true);
+    } else {
+      setSaveDialogOpen(true);
+    }
+  }
+
   return (
     <nav
       className="bg-background border-border sticky top-0 z-50 flex w-full items-center justify-between border-b px-4"
@@ -105,12 +114,15 @@ function Toolbar({
             billsend
           </h1>
         </Button>
-        <InvoiceFileMenu />
+        <InvoiceFileMenu
+          saveDialogOpen={saveDialogOpen}
+          onSaveDialogOpenChange={setSaveDialogOpen}
+        />
       </div>
       <div className="absolute left-1/2 -translate-x-1/2">
         <button
           type="button"
-          onClick={() => setRenameDialogOpen(true)}
+          onClick={handleTitleClick}
           className="hover:bg-accent cursor-pointer rounded-md px-2 py-1 transition-colors"
         >
           <h2 className="text-foreground text-sm font-medium">
