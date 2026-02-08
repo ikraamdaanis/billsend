@@ -339,7 +339,7 @@ function HomePage() {
       {/* CTA Section — Dark rounded card */}
       <section className="relative px-4 py-16 sm:px-6 sm:py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="relative overflow-hidden rounded-[2rem] bg-stone-900 p-10 sm:p-16">
+          <div className="relative overflow-hidden rounded-4xl bg-stone-900 p-10 sm:p-16">
             {/* Background effects */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="from-brand-500/20 absolute top-0 -left-1/4 h-full w-1/2 bg-linear-to-r to-transparent" />
