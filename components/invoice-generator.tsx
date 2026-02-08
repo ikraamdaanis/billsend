@@ -425,7 +425,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
 
             return (
               <View
-                key={index}
+                key={item.id}
                 style={isLastItem ? styles.tableLastRow : styles.tableRow}
               >
                 <View style={[styles.tableCell, { width: "40%" }]}>
