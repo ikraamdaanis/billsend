@@ -174,15 +174,7 @@ export function InvoiceFileMenu({
               setLastSavedInvoice
             );
             setCurrentDocumentId(overwriteId);
-            // Update name from existing invoices
-            const invoices = await getAllInvoices();
-            const existingInvoice = invoices.find(
-              inv => inv.id === overwriteId
-            );
-
-            if (existingInvoice) {
-              setCurrentDocumentName(existingInvoice.name);
-            }
+            setCurrentDocumentName(name);
 
             toast.success("Invoice saved successfully");
             resolve();
