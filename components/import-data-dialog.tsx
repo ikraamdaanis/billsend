@@ -1,0 +1,216 @@
+import { Button } from "components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "components/ui/dialog";
+import { AlertTriangleIcon, CheckCircleIcon, UploadIcon } from "lucide-react";
+import type { ChangeEvent } from "react";
+import { useRef, useState } from "react";
+import type { BillsendExportFile, ImportAnalysis, ImportResult } from "types";
+import {
+  analyzeImport,
+  executeImport,
+  parseExportFile
+} from "utils/import-data";
+
+type ImportState = "idle" | "analyzing" | "preview" | "importing" | "done";
+
+export function ImportDataDialog({
+  open,
+  onOpenChange
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [state, setState] = useState<ImportState>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<ImportAnalysis | null>(null);
+  const [parsedData, setParsedData] = useState<BillsendExportFile | null>(null);
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleClose() {
+    onOpenChange(false);
+    setState("idle");
+    setError(null);
+    setAnalysis(null);
+    setParsedData(null);
+    setResult(null);
+  }
+
+  async function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setError(null);
+    setState("analyzing");
+
+    try {
+      const parsed = await parseExportFile(file);
+      setParsedData(parsed);
+
+      const importAnalysis = await analyzeImport(parsed);
+      setAnalysis(importAnalysis);
+      setState("preview");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to analyze file.");
+      setState("idle");
+    }
+
+    // Reset the file input so the same file can be re-selected
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleImport() {
+    if (!parsedData) return;
+
+    setState("importing");
+    setError(null);
+
+    try {
+      const importResult = await executeImport(parsedData);
+      setResult(importResult);
+      setState("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to import data.");
+      setState("preview");
+    }
+  }
+
+  const hasConflicts =
+    analysis &&
+    (analysis.templates.conflicts.length > 0 ||
+      analysis.invoices.conflicts.length > 0);
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <UploadIcon className="h-5 w-5" />
+            Import Data
+          </DialogTitle>
+          <DialogDescription>
+            Import invoices, templates, and images from a Billsend export file.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="py-4">
+          {state === "idle" && (
+            <div className="flex flex-col items-center gap-4">
+              {error && (
+                <div className="bg-destructive/10 text-destructive w-full rounded-md p-3 text-sm">
+                  {error}
+                </div>
+              )}
+              <label
+                htmlFor="import-file-input"
+                className="border-border hover:bg-accent flex w-full cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors"
+              >
+                <UploadIcon className="text-muted-foreground h-8 w-8" />
+                <span className="text-sm font-medium">
+                  Select a .json export file
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  Click to browse files
+                </span>
+              </label>
+              <input
+                ref={fileInputRef}
+                id="import-file-input"
+                type="file"
+                accept=".json"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </div>
+          )}
+
+          {state === "analyzing" && (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Analyzing file...</p>
+            </div>
+          )}
+
+          {state === "preview" && analysis && (
+            <div className="flex flex-col gap-4">
+              {error && (
+                <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+                  {error}
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between rounded-md border p-3">
+                  <span className="text-sm">Templates</span>
+                  <span className="text-muted-foreground text-sm">
+                    {analysis.templates.total} total
+                    {analysis.templates.conflicts.length > 0 &&
+                      ` (${analysis.templates.conflicts.length} to rename)`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between rounded-md border p-3">
+                  <span className="text-sm">Invoices</span>
+                  <span className="text-muted-foreground text-sm">
+                    {analysis.invoices.total} total
+                    {analysis.invoices.conflicts.length > 0 &&
+                      ` (${analysis.invoices.conflicts.length} to rename)`}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between rounded-md border p-3">
+                  <span className="text-sm">Images</span>
+                  <span className="text-muted-foreground text-sm">
+                    {analysis.images.total} total
+                  </span>
+                </div>
+              </div>
+              {hasConflicts && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+                  <AlertTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm text-amber-800 dark:text-amber-200">
+                    Some names already exist and will be renamed with an
+                    &quot;(imported)&quot; suffix.
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {state === "importing" && (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Importing data...</p>
+            </div>
+          )}
+
+          {state === "done" && result && (
+            <div className="flex flex-col items-center gap-4 py-4">
+              <CheckCircleIcon className="h-10 w-10 text-green-600" />
+              <p className="text-center text-sm">
+                Successfully imported {result.invoicesImported} invoice
+                {result.invoicesImported !== 1 ? "s" : ""},{" "}
+                {result.templatesImported} template
+                {result.templatesImported !== 1 ? "s" : ""}, and{" "}
+                {result.imagesImported} image
+                {result.imagesImported !== 1 ? "s" : ""}.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          {state === "preview" && (
+            <Button onClick={handleImport}>Import</Button>
+          )}
+          <Button variant="outline" onClick={handleClose}>
+            {state === "done" ? "Done" : "Cancel"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

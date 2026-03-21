@@ -1,5 +1,5 @@
 import { useShallow } from "zustand/react/shallow";
-import { useInvoiceStore, currencySymbolMap } from "./invoice-store";
+import { useInvoiceStore, currencySymbolMap } from "stores/invoice-store";
 import type { Invoice } from "types";
 
 // Title slice - only re-renders when title or titleSettings change

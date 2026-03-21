@@ -16,16 +16,19 @@ type InvoiceDocumentContextValue = {
   setHasUnsavedChanges: (value: boolean) => void;
 };
 
-const InvoiceDocumentContext = createContext<InvoiceDocumentContextValue | null>(null);
+const InvoiceDocumentContext =
+  createContext<InvoiceDocumentContextValue | null>(null);
 
-export function InvoiceDocumentProvider({
-  children
-}: {
-  children: ReactNode;
-}) {
-  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
-  const [currentDocumentName, setCurrentDocumentName] = useState<string | null>(null);
-  const [lastSavedInvoice, setLastSavedInvoice] = useState<Invoice | null>(null);
+export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(
+    null
+  );
+  const [currentDocumentName, setCurrentDocumentName] = useState<string | null>(
+    null
+  );
+  const [lastSavedInvoice, setLastSavedInvoice] = useState<Invoice | null>(
+    null
+  );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const value = useMemo(
@@ -39,7 +42,12 @@ export function InvoiceDocumentProvider({
       setLastSavedInvoice,
       setHasUnsavedChanges
     }),
-    [currentDocumentId, currentDocumentName, lastSavedInvoice, hasUnsavedChanges]
+    [
+      currentDocumentId,
+      currentDocumentName,
+      lastSavedInvoice,
+      hasUnsavedChanges
+    ]
   );
 
   return (

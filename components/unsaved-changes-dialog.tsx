@@ -32,7 +32,7 @@ export function UnsavedChangesDialog({
             You have unsaved changes. What would you like to do?
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter >
+        <DialogFooter>
           <Button
             variant="ghost"
             onClick={() => {

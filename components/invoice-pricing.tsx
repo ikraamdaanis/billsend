@@ -113,10 +113,8 @@ function TaxRow() {
               setTax(prev => ({ ...prev, percentage: Number(numericValue) }));
             }}
             onBlur={() =>
-              handleInputBlur(
-                taxInput,
-                setTaxInput,
-                (val: number) => setTax(prev => ({ ...prev, percentage: val }))
+              handleInputBlur(taxInput, setTaxInput, (val: number) =>
+                setTax(prev => ({ ...prev, percentage: val }))
               )
             }
             className="w-10 p-0 text-right focus-visible:w-14"
@@ -179,13 +177,7 @@ function FeesRow() {
             setFeesInput(numericValue);
             setFees(Number(numericValue));
           }}
-          onBlur={() =>
-            handleInputBlur(
-              feesInput,
-              setFeesInput,
-              setFees
-            )
-          }
+          onBlur={() => handleInputBlur(feesInput, setFeesInput, setFees)}
           onFocus={() => setActiveSettings("totals")}
         />
       </span>
@@ -232,11 +224,7 @@ function DiscountsRow() {
             setDiscounts(Number(numericValue));
           }}
           onBlur={() =>
-            handleInputBlur(
-              discountsInput,
-              setDiscountsInput,
-              setDiscounts
-            )
+            handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
           }
           className="w-20 text-right"
           onFocus={() => setActiveSettings("totals")}

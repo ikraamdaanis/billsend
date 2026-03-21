@@ -12,7 +12,12 @@ import { cn } from "lib/utils";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
 import { useLineItemsSlice, useCurrencySymbol } from "stores/invoice-selectors";
-import type { Invoice, InvoiceItem, TableColumnSettings, TextSettings } from "types";
+import type {
+  Invoice,
+  InvoiceItem,
+  TableColumnSettings,
+  TextSettings
+} from "types";
 import { getTextStyles } from "utils/get-text-styles";
 import { setActiveTab } from "utils/set-active-tab";
 
@@ -205,13 +210,7 @@ function LineItems() {
   );
 }
 
-function LineItem({
-  item,
-  index
-}: {
-  item: InvoiceItem;
-  index: number;
-}) {
+function LineItem({ item, index }: { item: InvoiceItem; index: number }) {
   const { items, tableSettings } = useLineItemsSlice();
   const amount = Number(item.quantity) * Number(item.unitPrice);
 
@@ -249,9 +248,7 @@ function TableCell({
   const currencySymbol = useCurrencySymbol();
   const { setActiveSettings } = useUI();
 
-  const rowSettings = tableSettings[
-    column.rowSettingsKey
-  ] as TextSettings;
+  const rowSettings = tableSettings[column.rowSettingsKey] as TextSettings;
 
   function handleFocus() {
     setActiveSettings("table");
@@ -279,7 +276,11 @@ function TableCell({
         numericValue = numericValue.replace(/^0+/, "");
       }
 
-      updateItem(index, itemField, numericValue === "" ? 0 : Number(numericValue));
+      updateItem(
+        index,
+        itemField,
+        numericValue === "" ? 0 : Number(numericValue)
+      );
       return;
     }
 
@@ -295,7 +296,11 @@ function TableCell({
         numericValue = numericValue.replace(/^0+/, "");
       }
 
-      updateItem(index, itemField, numericValue === "" ? 0 : Number(numericValue));
+      updateItem(
+        index,
+        itemField,
+        numericValue === "" ? 0 : Number(numericValue)
+      );
     }
   }
 

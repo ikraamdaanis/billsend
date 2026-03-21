@@ -51,7 +51,8 @@ function InvoiceNumber() {
 }
 
 function InvoiceDate() {
-  const { invoiceDate, invoiceDateSettings, setInvoiceDate } = useDetailsSlice();
+  const { invoiceDate, invoiceDateSettings, setInvoiceDate } =
+    useDetailsSlice();
 
   return (
     <div
