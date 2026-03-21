@@ -1,54 +1,53 @@
-# billsend
+# BillSend
 
 A free, local-first invoice generator that runs entirely in your browser. Create professional invoices with fully customisable templates—no account needed, no servers, no tracking. Your data never leaves your device.
 
 ## Features
 
-- 📝 Create invoices with line items, pricing, and terms
-- 🎨 Fully customisable templates (colours, fonts, spacing, layouts)
-- 💾 Save and load invoice templates
-- 📄 Export to PDF
-- 🔒 100% local storage using IndexedDB (Dexie)
-- ⚡ Lightning fast—everything runs in your browser
-- 🎯 No sign-up required, no accounts, no tracking
+- Create invoices with line items, pricing, and terms
+- Fully customisable templates (colours, fonts, spacing, layouts)
+- Save and load invoice documents locally
+- Export to PDF
+- 100% local storage using IndexedDB (Dexie)
+- Fast, offline-capable—everything runs in your browser
+- No sign-up required, no accounts, no tracking
 
 ## Tech Stack
 
-- **React** - UI framework
-- **TanStack Start** - Full-stack React framework
-- **TanStack Router** - Type-safe routing
-- **TanStack Query** - Data fetching and caching
-- **Jotai** - State management
-- **Dexie** - IndexedDB wrapper for local storage
-- **React Hook Form** - Form handling
-- **Zod** - Schema validation
-- **@react-pdf/renderer** - PDF generation
-- **Tailwind CSS** - Styling
-- **shadcn/ui** - UI components
-- **Vite** - Build tooling
-- **Turbo** - Monorepo tooling
+- **React 19** — UI
+- **TanStack Start** — app framework (with TanStack Router)
+- **Vite 7** — build (React Compiler enabled)
+- **TypeScript** — strict mode
+- **Zustand** — invoice state (Immer)
+- **Dexie** — IndexedDB persistence
+- **React Hook Form** + **Zod** — forms and validation
+- **@react-pdf/renderer** — PDF export (dynamic import)
+- **Tailwind CSS 4** + **shadcn/ui** — styling and components
+- **Vitest** — tests
 
 ## Getting Started
 
 ```bash
-# Install dependencies
 bun install
-
-# Start development server
-bun dev
+bun run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+The app runs at [http://localhost:3000](http://localhost:3000).
 
 ## Development
 
 ```bash
-# Run development server
-bun dev
-
-# Build for production
-bun build
-
-# Type check
-bun ts-lint
+bun run dev          # Dev server (port 3000)
+bun run build        # Production build
+bun run serve        # Preview production build
+bun run test         # Vitest
+bun run lint         # ESLint
+bun run format       # Prettier
+bun run check        # Format + lint fix
+bun run check-types  # TypeScript (no emit)
+bun run ts-lint      # Type check (watch)
 ```
+
+## Deployment
+
+Configured for **Netlify** (see `@netlify/vite-plugin-tanstack-start`).
