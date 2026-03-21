@@ -1,3 +1,4 @@
+import { ImportDataDialog } from "components/import-data-dialog";
 import { OpenInvoiceDialog } from "components/open-invoice-dialog";
 import { SaveInvoiceDialog } from "components/save-invoice-dialog";
 import { SaveTemplateModal } from "components/save-template-modal";
@@ -25,16 +26,19 @@ import { getAllInvoices, getAllTemplates } from "db";
 import { isEqual } from "lodash-es";
 import {
   BookmarkIcon,
+  DownloadIcon,
   FileIcon,
   FilePlusIcon,
   FolderOpenIcon,
-  SaveIcon
+  SaveIcon,
+  UploadIcon
 } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { useInvoiceDataAndActions } from "stores/invoice-selectors";
 import { invoiceDefault } from "stores/invoice-store";
 import type { InvoiceDocument, InvoiceTemplate } from "types";
+import { exportAllData } from "utils/export-data";
 
 export function InvoiceFileMenu({
   saveDialogOpen: externalSaveDialogOpen,
@@ -62,6 +66,7 @@ export function InvoiceFileMenu({
 
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [defaultName, setDefaultName] = useState<string>("Invoice 001");
@@ -144,6 +149,19 @@ export function InvoiceFileMenu({
   const handleSaveAs = useCallback(() => {
     setSaveAsDialogOpen(true);
   }, [setSaveAsDialogOpen]);
+
+  const handleExport = useCallback(() => {
+    startTransition(async () => {
+      try {
+        await exportAllData();
+        toast.success("Data exported successfully");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to export data"
+        );
+      }
+    });
+  }, []);
 
   function handleSelectTemplate(template: InvoiceTemplate) {
     startTransition(() => {
@@ -353,6 +371,18 @@ export function InvoiceFileMenu({
               <SaveIcon className="mr-2 h-4 w-4" />
               Save As Template
             </MenubarItem>
+            <MenubarSeparator />
+            <MenubarItem onClick={handleExport} disabled={pending}>
+              <DownloadIcon className="mr-2 h-4 w-4" />
+              Export Data
+            </MenubarItem>
+            <MenubarItem
+              onClick={() => setImportDialogOpen(true)}
+              disabled={pending}
+            >
+              <UploadIcon className="mr-2 h-4 w-4" />
+              Import Data
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
       </Menubar>
@@ -385,6 +415,10 @@ export function InvoiceFileMenu({
         onOpenChange={setSaveTemplateDialogOpen}
         currentInvoiceData={invoice}
         templates={templates}
+      />
+      <ImportDataDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
       />
     </>
   );

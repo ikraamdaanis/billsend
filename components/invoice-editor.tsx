@@ -125,9 +125,7 @@ function Toolbar({
           onClick={handleTitleClick}
           className="hover:bg-accent cursor-pointer rounded-md px-2 py-1 transition-colors"
         >
-          <h2 className="text-foreground text-sm font-medium">
-            {displayName}
-          </h2>
+          <h2 className="text-foreground text-sm font-medium">{displayName}</h2>
         </button>
       </div>
       <div className="ml-auto">

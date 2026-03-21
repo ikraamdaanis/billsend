@@ -288,7 +288,9 @@ function NumberValueColor() {
 // Invoice Date Label Components
 function DateLabelAlign() {
   const align = useInvoiceStore(state => state.invoiceDateSettings.label.align);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <AlignSettings
@@ -305,7 +307,9 @@ function DateLabelAlign() {
 
 function DateLabelSize() {
   const size = useInvoiceStore(state => state.invoiceDateSettings.label.size);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <SizeSettings
@@ -321,8 +325,12 @@ function DateLabelSize() {
 }
 
 function DateLabelWeight() {
-  const weight = useInvoiceStore(state => state.invoiceDateSettings.label.weight);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const weight = useInvoiceStore(
+    state => state.invoiceDateSettings.label.weight
+  );
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <FontWeightSettings
@@ -339,7 +347,9 @@ function DateLabelWeight() {
 
 function DateLabelColor() {
   const color = useInvoiceStore(state => state.invoiceDateSettings.label.color);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <ColorSettings
@@ -357,7 +367,9 @@ function DateLabelColor() {
 // Invoice Date Value Components
 function DateValueAlign() {
   const align = useInvoiceStore(state => state.invoiceDateSettings.value.align);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <AlignSettings
@@ -374,7 +386,9 @@ function DateValueAlign() {
 
 function DateValueSize() {
   const size = useInvoiceStore(state => state.invoiceDateSettings.value.size);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <SizeSettings
@@ -390,8 +404,12 @@ function DateValueSize() {
 }
 
 function DateValueWeight() {
-  const weight = useInvoiceStore(state => state.invoiceDateSettings.value.weight);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const weight = useInvoiceStore(
+    state => state.invoiceDateSettings.value.weight
+  );
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <FontWeightSettings
@@ -408,7 +426,9 @@ function DateValueWeight() {
 
 function DateValueColor() {
   const color = useInvoiceStore(state => state.invoiceDateSettings.value.color);
-  const setInvoiceDateSettings = useInvoiceStore(state => state.setInvoiceDateSettings);
+  const setInvoiceDateSettings = useInvoiceStore(
+    state => state.setInvoiceDateSettings
+  );
 
   return (
     <ColorSettings

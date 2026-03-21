@@ -240,7 +240,9 @@ function TableDesignSettings() {
 }
 
 function TableBackgroundColor() {
-  const backgroundColor = useInvoiceStore(state => state.tableSettings.backgroundColor);
+  const backgroundColor = useInvoiceStore(
+    state => state.tableSettings.backgroundColor
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -277,7 +279,9 @@ function TableBorderColor() {
 
 // Description Header Settings
 function DescriptionHeaderAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.descriptionHeaderSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -297,7 +301,9 @@ function DescriptionHeaderAlign() {
 }
 
 function DescriptionHeaderSize() {
-  const size = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.descriptionHeaderSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -317,7 +323,9 @@ function DescriptionHeaderSize() {
 }
 
 function DescriptionHeaderWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.descriptionHeaderSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -337,7 +345,9 @@ function DescriptionHeaderWeight() {
 }
 
 function DescriptionHeaderColor() {
-  const color = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.descriptionHeaderSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -357,7 +367,9 @@ function DescriptionHeaderColor() {
 }
 
 function DescriptionHeaderLabel() {
-  const label = useInvoiceStore(state => state.tableSettings.descriptionHeaderSettings.label);
+  const label = useInvoiceStore(
+    state => state.tableSettings.descriptionHeaderSettings.label
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -386,7 +398,9 @@ function DescriptionHeaderLabel() {
 
 // Description Row Settings
 function DescriptionRowAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.descriptionRowSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -406,7 +420,9 @@ function DescriptionRowAlign() {
 }
 
 function DescriptionRowSize() {
-  const size = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.descriptionRowSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -426,7 +442,9 @@ function DescriptionRowSize() {
 }
 
 function DescriptionRowWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.descriptionRowSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -446,7 +464,9 @@ function DescriptionRowWeight() {
 }
 
 function DescriptionRowColor() {
-  const color = useInvoiceStore(state => state.tableSettings.descriptionRowSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.descriptionRowSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -467,7 +487,9 @@ function DescriptionRowColor() {
 
 // Quantity Header Settings
 function QuantityHeaderAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.quantityHeaderSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -487,7 +509,9 @@ function QuantityHeaderAlign() {
 }
 
 function QuantityHeaderSize() {
-  const size = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.quantityHeaderSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -507,7 +531,9 @@ function QuantityHeaderSize() {
 }
 
 function QuantityHeaderWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.quantityHeaderSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -527,7 +553,9 @@ function QuantityHeaderWeight() {
 }
 
 function QuantityHeaderColor() {
-  const color = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.quantityHeaderSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -547,7 +575,9 @@ function QuantityHeaderColor() {
 }
 
 function QuantityHeaderLabel() {
-  const label = useInvoiceStore(state => state.tableSettings.quantityHeaderSettings.label);
+  const label = useInvoiceStore(
+    state => state.tableSettings.quantityHeaderSettings.label
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -576,7 +606,9 @@ function QuantityHeaderLabel() {
 
 // Quantity Row Settings
 function QuantityRowAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.quantityRowSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.quantityRowSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -596,7 +628,9 @@ function QuantityRowAlign() {
 }
 
 function QuantityRowSize() {
-  const size = useInvoiceStore(state => state.tableSettings.quantityRowSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.quantityRowSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -616,7 +650,9 @@ function QuantityRowSize() {
 }
 
 function QuantityRowWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.quantityRowSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.quantityRowSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -636,7 +672,9 @@ function QuantityRowWeight() {
 }
 
 function QuantityRowColor() {
-  const color = useInvoiceStore(state => state.tableSettings.quantityRowSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.quantityRowSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -657,7 +695,9 @@ function QuantityRowColor() {
 
 // Unit Price Header Settings
 function UnitPriceHeaderAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.unitPriceHeaderSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -677,7 +717,9 @@ function UnitPriceHeaderAlign() {
 }
 
 function UnitPriceHeaderSize() {
-  const size = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.unitPriceHeaderSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -697,7 +739,9 @@ function UnitPriceHeaderSize() {
 }
 
 function UnitPriceHeaderWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.unitPriceHeaderSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -717,7 +761,9 @@ function UnitPriceHeaderWeight() {
 }
 
 function UnitPriceHeaderColor() {
-  const color = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.unitPriceHeaderSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -737,7 +783,9 @@ function UnitPriceHeaderColor() {
 }
 
 function UnitPriceHeaderLabel() {
-  const label = useInvoiceStore(state => state.tableSettings.unitPriceHeaderSettings.label);
+  const label = useInvoiceStore(
+    state => state.tableSettings.unitPriceHeaderSettings.label
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -766,7 +814,9 @@ function UnitPriceHeaderLabel() {
 
 // Unit Price Row Settings
 function UnitPriceRowAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.unitPriceRowSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -786,7 +836,9 @@ function UnitPriceRowAlign() {
 }
 
 function UnitPriceRowSize() {
-  const size = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.unitPriceRowSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -806,7 +858,9 @@ function UnitPriceRowSize() {
 }
 
 function UnitPriceRowWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.unitPriceRowSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -826,7 +880,9 @@ function UnitPriceRowWeight() {
 }
 
 function UnitPriceRowColor() {
-  const color = useInvoiceStore(state => state.tableSettings.unitPriceRowSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.unitPriceRowSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -847,7 +903,9 @@ function UnitPriceRowColor() {
 
 // Amount Header Settings
 function AmountHeaderAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.amountHeaderSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -867,7 +925,9 @@ function AmountHeaderAlign() {
 }
 
 function AmountHeaderSize() {
-  const size = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.amountHeaderSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -887,7 +947,9 @@ function AmountHeaderSize() {
 }
 
 function AmountHeaderWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.amountHeaderSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -907,7 +969,9 @@ function AmountHeaderWeight() {
 }
 
 function AmountHeaderColor() {
-  const color = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.amountHeaderSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -927,7 +991,9 @@ function AmountHeaderColor() {
 }
 
 function AmountHeaderLabel() {
-  const label = useInvoiceStore(state => state.tableSettings.amountHeaderSettings.label);
+  const label = useInvoiceStore(
+    state => state.tableSettings.amountHeaderSettings.label
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -956,7 +1022,9 @@ function AmountHeaderLabel() {
 
 // Amount Row Settings
 function AmountRowAlign() {
-  const align = useInvoiceStore(state => state.tableSettings.amountRowSettings.align);
+  const align = useInvoiceStore(
+    state => state.tableSettings.amountRowSettings.align
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -976,7 +1044,9 @@ function AmountRowAlign() {
 }
 
 function AmountRowSize() {
-  const size = useInvoiceStore(state => state.tableSettings.amountRowSettings.size);
+  const size = useInvoiceStore(
+    state => state.tableSettings.amountRowSettings.size
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -996,7 +1066,9 @@ function AmountRowSize() {
 }
 
 function AmountRowWeight() {
-  const weight = useInvoiceStore(state => state.tableSettings.amountRowSettings.weight);
+  const weight = useInvoiceStore(
+    state => state.tableSettings.amountRowSettings.weight
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (
@@ -1016,7 +1088,9 @@ function AmountRowWeight() {
 }
 
 function AmountRowColor() {
-  const color = useInvoiceStore(state => state.tableSettings.amountRowSettings.color);
+  const color = useInvoiceStore(
+    state => state.tableSettings.amountRowSettings.color
+  );
   const setTableSettings = useInvoiceStore(state => state.setTableSettings);
 
   return (

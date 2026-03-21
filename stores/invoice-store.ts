@@ -372,7 +372,9 @@ interface InvoiceActions {
   setInvoiceDateSettings: (
     settings:
       | Invoice["invoiceDateSettings"]
-      | ((prev: Invoice["invoiceDateSettings"]) => Invoice["invoiceDateSettings"])
+      | ((
+          prev: Invoice["invoiceDateSettings"]
+        ) => Invoice["invoiceDateSettings"])
   ) => void;
   setDueDate: (date: string) => void;
   setDueDateSettings: (

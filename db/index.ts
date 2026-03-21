@@ -318,6 +318,19 @@ export async function deleteImage(id: string): Promise<void> {
   }
 }
 
+export async function getAllImages(): Promise<StoredImage[]> {
+  try {
+    await ensureDbReady();
+    return await db.images.toArray();
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Failed to load images from local storage."
+    );
+  }
+}
+
 export async function getImageBlob(id: string): Promise<Blob | null> {
   try {
     await ensureDbReady();

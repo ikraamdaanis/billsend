@@ -236,6 +236,50 @@ export type SettingsType =
   | "terms"
   | "main";
 
+export type BillsendExportFile = {
+  meta: {
+    version: number;
+    exportedAt: string;
+    appName: "billsend";
+  };
+  templates: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    isDefault: boolean;
+    templateData: Invoice;
+    screenshotUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  invoices: Array<{
+    id: string;
+    name: string;
+    invoiceData: Invoice;
+    templateId: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  images: Array<{
+    id: string;
+    data: string;
+    type: string;
+    createdAt: string;
+  }>;
+};
+
+export type ImportAnalysis = {
+  templates: { total: number; new: number; conflicts: string[] };
+  invoices: { total: number; new: number; conflicts: string[] };
+  images: { total: number; new: number; duplicates: number };
+};
+
+export type ImportResult = {
+  templatesImported: number;
+  invoicesImported: number;
+  imagesImported: number;
+};
+
 export type InvoiceTemplate = {
   id: string;
   name: string;

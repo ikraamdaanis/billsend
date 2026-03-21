@@ -107,7 +107,9 @@ function SubtotalSettings() {
 
 function SubtotalLabelAlign() {
   const align = useInvoiceStore(state => state.subtotalSettings.label.align);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <AlignSettings
@@ -124,7 +126,9 @@ function SubtotalLabelAlign() {
 
 function SubtotalLabelSize() {
   const size = useInvoiceStore(state => state.subtotalSettings.label.size);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <SizeSettings
@@ -141,7 +145,9 @@ function SubtotalLabelSize() {
 
 function SubtotalLabelWeight() {
   const weight = useInvoiceStore(state => state.subtotalSettings.label.weight);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <FontWeightSettings
@@ -158,7 +164,9 @@ function SubtotalLabelWeight() {
 
 function SubtotalLabelColor() {
   const color = useInvoiceStore(state => state.subtotalSettings.label.color);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <ColorSettings
@@ -175,7 +183,9 @@ function SubtotalLabelColor() {
 
 function SubtotalValueAlign() {
   const align = useInvoiceStore(state => state.subtotalSettings.value.align);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <AlignSettings
@@ -192,7 +202,9 @@ function SubtotalValueAlign() {
 
 function SubtotalValueSize() {
   const size = useInvoiceStore(state => state.subtotalSettings.value.size);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <SizeSettings
@@ -209,7 +221,9 @@ function SubtotalValueSize() {
 
 function SubtotalValueWeight() {
   const weight = useInvoiceStore(state => state.subtotalSettings.value.weight);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <FontWeightSettings
@@ -226,7 +240,9 @@ function SubtotalValueWeight() {
 
 function SubtotalValueColor() {
   const color = useInvoiceStore(state => state.subtotalSettings.value.color);
-  const setSubtotalSettings = useInvoiceStore(state => state.setSubtotalSettings);
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
 
   return (
     <ColorSettings
@@ -581,7 +597,9 @@ function DiscountsSettings() {
 
 function DiscountsLabelAlign() {
   const align = useInvoiceStore(state => state.discountsSettings.label.align);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <AlignSettings
@@ -598,7 +616,9 @@ function DiscountsLabelAlign() {
 
 function DiscountsLabelSize() {
   const size = useInvoiceStore(state => state.discountsSettings.label.size);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <SizeSettings
@@ -615,7 +635,9 @@ function DiscountsLabelSize() {
 
 function DiscountsLabelWeight() {
   const weight = useInvoiceStore(state => state.discountsSettings.label.weight);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <FontWeightSettings
@@ -632,7 +654,9 @@ function DiscountsLabelWeight() {
 
 function DiscountsLabelColor() {
   const color = useInvoiceStore(state => state.discountsSettings.label.color);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <ColorSettings
@@ -649,7 +673,9 @@ function DiscountsLabelColor() {
 
 function DiscountsValueAlign() {
   const align = useInvoiceStore(state => state.discountsSettings.value.align);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <AlignSettings
@@ -666,7 +692,9 @@ function DiscountsValueAlign() {
 
 function DiscountsValueSize() {
   const size = useInvoiceStore(state => state.discountsSettings.value.size);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <SizeSettings
@@ -683,7 +711,9 @@ function DiscountsValueSize() {
 
 function DiscountsValueWeight() {
   const weight = useInvoiceStore(state => state.discountsSettings.value.weight);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <FontWeightSettings
@@ -700,7 +730,9 @@ function DiscountsValueWeight() {
 
 function DiscountsValueColor() {
   const color = useInvoiceStore(state => state.discountsSettings.value.color);
-  const setDiscountsSettings = useInvoiceStore(state => state.setDiscountsSettings);
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
 
   return (
     <ColorSettings
