@@ -26,6 +26,7 @@ import { getAllInvoices, getAllTemplates } from "db";
 import { isEqual } from "lodash-es";
 import {
   BookmarkIcon,
+  ChevronDownIcon,
   DownloadIcon,
   FileIcon,
   FilePlusIcon,
@@ -334,8 +335,9 @@ export function InvoiceFileMenu({
     <>
       <Menubar className="h-full rounded-none border-0 bg-transparent p-0 shadow-none">
         <MenubarMenu>
-          <MenubarTrigger className="text-foreground hover:bg-accent/50 data-[state=open]:bg-accent/50 rounded-none border-0 px-3 py-1.5 text-sm font-normal">
+          <MenubarTrigger className="text-foreground hover:bg-accent/50 data-[state=open]:bg-accent/50 flex items-center gap-1 rounded-none border-0 px-3 py-1.5 text-sm font-normal">
             File
+            <ChevronDownIcon className="size-3 opacity-50" />
           </MenubarTrigger>
           <MenubarContent>
             <MenubarItem onClick={handleNewInvoice} disabled={pending}>

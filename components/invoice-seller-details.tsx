@@ -1,11 +1,7 @@
 import { InvoiceInput } from "components/invoice-input";
 import { InvoiceTextArea } from "components/invoice-textarea";
-import {
-  AlignSettings,
-  ColorSettings,
-  FontWeightSettings,
-  SizeSettings
-} from "components/settings-fields";
+import { TextStyleControls } from "components/settings-fields";
+import { SettingsSection } from "components/ui/settings-section";
 import { useUI } from "context/ui-context";
 import { useSellerSlice } from "stores/invoice-selectors";
 import { useInvoiceStore } from "stores/invoice-store";
@@ -54,161 +50,49 @@ function SellerContent() {
 
 export function InvoiceSellerSettings() {
   return (
-    <div className="flex flex-col gap-4">
-      <div className="mt-4 flex flex-col gap-4">
-        <h3 className="text-sm font-medium">Label Settings</h3>
-        <div className="flex flex-col gap-2">
-          <SellerLabelAlign />
-          <SellerLabelSize />
-          <SellerLabelWeight />
-          <SellerLabelColor />
-        </div>
-        <h3 className="text-sm font-medium">Content Settings</h3>
-        <div className="flex flex-col gap-2">
-          <SellerContentAlign />
-          <SellerContentSize />
-          <SellerContentWeight />
-          <SellerContentColor />
-        </div>
-      </div>
+    <div className="flex flex-col gap-2">
+      <SettingsSection title="Label">
+        <SellerLabelStyles />
+      </SettingsSection>
+      <SettingsSection title="Content">
+        <SellerContentStyles />
+      </SettingsSection>
     </div>
   );
 }
 
-// Seller Label Settings
-function SellerLabelAlign() {
-  const align = useInvoiceStore(state => state.sellerSettings.label.align);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
+function SellerLabelStyles() {
+  const settings = useInvoiceStore(s => s.sellerSettings.label);
+  const set = useInvoiceStore(s => s.setSellerSettings);
 
   return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, align: value }
-        }))
-      }
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, label: { ...prev.label, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, label: { ...prev.label, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, label: { ...prev.label, color: v } }))}
     />
   );
 }
 
-function SellerLabelSize() {
-  const size = useInvoiceStore(state => state.sellerSettings.label.size);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
+function SellerContentStyles() {
+  const settings = useInvoiceStore(s => s.sellerSettings.content);
+  const set = useInvoiceStore(s => s.setSellerSettings);
 
   return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function SellerLabelWeight() {
-  const weight = useInvoiceStore(state => state.sellerSettings.label.weight);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function SellerLabelColor() {
-  const color = useInvoiceStore(state => state.sellerSettings.label.color);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, color: value }
-        }))
-      }
-    />
-  );
-}
-
-// Seller Content Settings
-function SellerContentAlign() {
-  const align = useInvoiceStore(state => state.sellerSettings.content.align);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          content: { ...prev.content, align: value }
-        }))
-      }
-    />
-  );
-}
-
-function SellerContentSize() {
-  const size = useInvoiceStore(state => state.sellerSettings.content.size);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          content: { ...prev.content, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function SellerContentWeight() {
-  const weight = useInvoiceStore(state => state.sellerSettings.content.weight);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          content: { ...prev.content, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function SellerContentColor() {
-  const color = useInvoiceStore(state => state.sellerSettings.content.color);
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setSellerSettings(prev => ({
-          ...prev,
-          content: { ...prev.content, color: value }
-        }))
-      }
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, content: { ...prev.content, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, content: { ...prev.content, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, content: { ...prev.content, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, content: { ...prev.content, color: v } }))}
     />
   );
 }

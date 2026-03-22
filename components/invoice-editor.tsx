@@ -29,7 +29,7 @@ import {
 import { useInvoiceDocument } from "context/invoice-document-context";
 import { useUI } from "context/ui-context";
 import { getInvoice, saveInvoice } from "db";
-import { ArrowLeftIcon } from "lucide-react";
+import { PenLineIcon, SlidersHorizontalIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -43,7 +43,7 @@ export function InvoiceEditor() {
       <div className="h-dvh w-full">
         <Toolbar setIsModalOpen={setIsModalOpen} />
         <div
-          className="relative flex w-full grid-cols-[1fr_260px] flex-col bg-zinc-200 lg:grid"
+          className="relative flex w-full grid-cols-[1fr_240px] flex-col bg-zinc-200 lg:grid"
           style={{
             height: `calc(100dvh - ${TOOLBAR_HEIGHT}px)`
           }}
@@ -123,9 +123,10 @@ function Toolbar({
         <button
           type="button"
           onClick={handleTitleClick}
-          className="hover:bg-accent cursor-pointer rounded-md px-2 py-1 transition-colors"
+          className="group hover:bg-accent flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 transition-colors"
         >
           <h2 className="text-foreground text-sm font-medium">{displayName}</h2>
+          <PenLineIcon className="text-muted-foreground size-3 opacity-0 transition-opacity group-hover:opacity-100" />
         </button>
       </div>
       <div className="ml-auto">
@@ -159,40 +160,19 @@ function CanvasArea() {
 
 function SettingsArea() {
   return (
-    <>
-      <SettingsToggleButton />
-      <section className="bg-background border-border relative z-20 hidden h-full overflow-y-auto border-l pb-4 lg:block">
-        <SettingsPanel />
-      </section>
-    </>
-  );
-}
-
-function SettingsToggleButton() {
-  const { activeSettings, setActiveSettings } = useUI();
-
-  if (activeSettings === "main") {
-    return null;
-  }
-
-  return (
-    <Button
-      variant="outline"
-      size="icon"
-      className="fixed top-18 right-[264px] z-30 hidden size-8 w-fit min-w-8 lg:flex"
-      onClick={() => setActiveSettings("main")}
-    >
-      <ArrowLeftIcon className="size-4" />
-    </Button>
+    <section className="bg-background border-border relative z-20 hidden h-full overflow-y-auto border-l pb-4 lg:block">
+      <SettingsPanel />
+    </section>
   );
 }
 
 function MobileSettingsDrawer() {
   return (
-    <div className="bg-background border-border fixed bottom-0 flex h-10 w-full items-center justify-center border-t lg:hidden">
+    <div className="bg-background border-border fixed bottom-0 flex h-12 w-full items-center justify-center border-t lg:hidden">
       <Drawer>
-        <DrawerTrigger className="h-full w-full cursor-pointer">
-          Open Settings
+        <DrawerTrigger className="text-muted-foreground flex h-full w-full cursor-pointer items-center justify-center gap-2 text-sm font-medium">
+          <SlidersHorizontalIcon className="size-4" />
+          Settings
         </DrawerTrigger>
         <DrawerContent>
           <DrawerTitle className="sr-only">Settings</DrawerTitle>
