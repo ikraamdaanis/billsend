@@ -1,17 +1,17 @@
 import {
-  AlignSettings,
-  ColorSettings,
-  FontWeightSettings,
-  SizeSettings
+  CompactColorSetting,
+  TextStyleControls
 } from "components/settings-fields";
+import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
-import { Separator } from "components/ui/separator";
+import { SettingsSection } from "components/ui/settings-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import type { LineItemTab } from "consts/events";
 import { LINE_ITEM_TABS, TAB_SELECT_EVENTS } from "consts/events";
-import { useInvoiceStore } from "stores/invoice-store";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useInvoiceStore } from "stores/invoice-store";
+import type { TextSettings } from "types";
 import { handleActiveTab } from "utils/handle-active-tab";
 
 export function LineItemsSettings() {
@@ -33,7 +33,6 @@ export function LineItemsSettings() {
     handleActiveTab({ tabsRef, value });
   }, []);
 
-  // Handle initial scroll
   useEffect(() => {
     const timer = setTimeout(() => {
       scrollToSelectedTab(activeTab);
@@ -42,7 +41,6 @@ export function LineItemsSettings() {
     return () => clearTimeout(timer);
   }, [activeTab, scrollToSelectedTab]);
 
-  // Listen for custom events to select tabs from outside this component
   useTabSelectEvent(TAB_SELECT_EVENTS.lineItems, tab => {
     if (isLineItemTab(tab)) {
       scrollToSelectedTab(tab);
@@ -96,143 +94,199 @@ export function LineItemsSettings() {
       </div>
       <TabsContent
         value={LINE_ITEM_TABS.description}
-        className="mt-4 flex flex-col gap-4"
+        className="flex flex-col gap-2"
       >
-        <DescriptionSettings />
+        <ColumnSettings
+          headerKey="descriptionHeaderSettings"
+          rowKey="descriptionRowSettings"
+          labelId="description-header-label"
+        />
       </TabsContent>
       <TabsContent
         value={LINE_ITEM_TABS.quantity}
-        className="mt-4 flex flex-col gap-4"
+        className="flex flex-col gap-2"
       >
-        <QuantitySettings />
+        <ColumnSettings
+          headerKey="quantityHeaderSettings"
+          rowKey="quantityRowSettings"
+          labelId="quantity-header-label"
+        />
       </TabsContent>
       <TabsContent
         value={LINE_ITEM_TABS.unitPrice}
-        className="mt-4 flex flex-col gap-4"
+        className="flex flex-col gap-2"
       >
-        <UnitPriceSettings />
+        <ColumnSettings
+          headerKey="unitPriceHeaderSettings"
+          rowKey="unitPriceRowSettings"
+          labelId="unit-price-header-label"
+        />
       </TabsContent>
       <TabsContent
         value={LINE_ITEM_TABS.amount}
-        className="mt-4 flex flex-col gap-4"
+        className="flex flex-col gap-2"
       >
-        <AmountSettings />
+        <ColumnSettings
+          headerKey="amountHeaderSettings"
+          rowKey="amountRowSettings"
+          labelId="amount-header-label"
+        />
       </TabsContent>
     </Tabs>
   );
 }
 
-// Description Settings
-function DescriptionSettings() {
+type HeaderSettingsKey =
+  | "descriptionHeaderSettings"
+  | "quantityHeaderSettings"
+  | "unitPriceHeaderSettings"
+  | "amountHeaderSettings";
+
+type RowSettingsKey =
+  | "descriptionRowSettings"
+  | "quantityRowSettings"
+  | "unitPriceRowSettings"
+  | "amountRowSettings";
+
+function ColumnSettings({
+  headerKey,
+  rowKey,
+  labelId
+}: {
+  headerKey: HeaderSettingsKey;
+  rowKey: RowSettingsKey;
+  labelId: string;
+}) {
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-medium">Header settings</h3>
-      <div className="flex flex-col gap-2">
-        <DescriptionHeaderAlign />
-        <DescriptionHeaderSize />
-        <DescriptionHeaderWeight />
-        <DescriptionHeaderColor />
-        <DescriptionHeaderLabel />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Row settings</h3>
-      <div className="flex flex-col gap-2">
-        <DescriptionRowAlign />
-        <DescriptionRowSize />
-        <DescriptionRowWeight />
-        <DescriptionRowColor />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Table design</h3>
-      <TableDesignSettings />
+    <>
+      <SettingsSection title="Header">
+        <HeaderStyles headerKey={headerKey} />
+        <HeaderLabelInput headerKey={headerKey} labelId={labelId} />
+      </SettingsSection>
+      <SettingsSection title="Row">
+        <RowStyles rowKey={rowKey} />
+      </SettingsSection>
+      <SettingsSection title="Table Design">
+        <TableDesignSettings />
+      </SettingsSection>
+    </>
+  );
+}
+
+function HeaderStyles({ headerKey }: { headerKey: HeaderSettingsKey }) {
+  const settings = useInvoiceStore(
+    s => s.tableSettings[headerKey] as TextSettings
+  );
+  const set = useInvoiceStore(s => s.setTableSettings);
+
+  return (
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v =>
+        set(prev => ({
+          ...prev,
+          [headerKey]: { ...prev[headerKey], align: v }
+        }))
+      }
+      onSizeChange={v =>
+        set(prev => ({
+          ...prev,
+          [headerKey]: { ...prev[headerKey], size: v }
+        }))
+      }
+      onWeightChange={v =>
+        set(prev => ({
+          ...prev,
+          [headerKey]: { ...prev[headerKey], weight: v }
+        }))
+      }
+      onColorChange={v =>
+        set(prev => ({
+          ...prev,
+          [headerKey]: { ...prev[headerKey], color: v }
+        }))
+      }
+    />
+  );
+}
+
+function HeaderLabelInput({
+  headerKey,
+  labelId
+}: {
+  headerKey: HeaderSettingsKey;
+  labelId: string;
+}) {
+  const label = useInvoiceStore(
+    s => (s.tableSettings[headerKey] as TextSettings & { label: string }).label
+  );
+  const set = useInvoiceStore(s => s.setTableSettings);
+
+  return (
+    <div className="grid grid-cols-[42px_1fr] items-center gap-x-2">
+      <Label htmlFor={labelId} className="text-muted-foreground text-[11px]">
+        Label
+      </Label>
+      <Input
+        type="text"
+        id={labelId}
+        value={label}
+        onChange={({ target: { value } }) =>
+          set(prev => ({
+            ...prev,
+            [headerKey]: { ...prev[headerKey], label: value }
+          }))
+        }
+        className="h-7 text-xs"
+      />
     </div>
   );
 }
 
-// Quantity Settings
-function QuantitySettings() {
-  return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-medium">Header settings</h3>
-      <div className="flex flex-col gap-2">
-        <QuantityHeaderAlign />
-        <QuantityHeaderSize />
-        <QuantityHeaderWeight />
-        <QuantityHeaderColor />
-        <QuantityHeaderLabel />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Row settings</h3>
-      <div className="flex flex-col gap-2">
-        <QuantityRowAlign />
-        <QuantityRowSize />
-        <QuantityRowWeight />
-        <QuantityRowColor />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Table design</h3>
-      <TableDesignSettings />
-    </div>
-  );
-}
+function RowStyles({ rowKey }: { rowKey: RowSettingsKey }) {
+  const settings = useInvoiceStore(s => s.tableSettings[rowKey]);
+  const set = useInvoiceStore(s => s.setTableSettings);
 
-// Unit Price Settings
-function UnitPriceSettings() {
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-medium">Header settings</h3>
-      <div className="flex flex-col gap-2">
-        <UnitPriceHeaderAlign />
-        <UnitPriceHeaderSize />
-        <UnitPriceHeaderWeight />
-        <UnitPriceHeaderColor />
-        <UnitPriceHeaderLabel />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Row settings</h3>
-      <div className="flex flex-col gap-2">
-        <UnitPriceRowAlign />
-        <UnitPriceRowSize />
-        <UnitPriceRowWeight />
-        <UnitPriceRowColor />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Table design</h3>
-      <TableDesignSettings />
-    </div>
-  );
-}
-
-// Amount Settings
-function AmountSettings() {
-  return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-medium">Header settings</h3>
-      <div className="flex flex-col gap-2">
-        <AmountHeaderAlign />
-        <AmountHeaderSize />
-        <AmountHeaderWeight />
-        <AmountHeaderColor />
-        <AmountHeaderLabel />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Row settings</h3>
-      <div className="flex flex-col gap-2">
-        <AmountRowAlign />
-        <AmountRowSize />
-        <AmountRowWeight />
-        <AmountRowColor />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Table design</h3>
-      <TableDesignSettings />
-    </div>
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v =>
+        set(prev => ({
+          ...prev,
+          [rowKey]: { ...prev[rowKey], align: v }
+        }))
+      }
+      onSizeChange={v =>
+        set(prev => ({
+          ...prev,
+          [rowKey]: { ...prev[rowKey], size: v }
+        }))
+      }
+      onWeightChange={v =>
+        set(prev => ({
+          ...prev,
+          [rowKey]: { ...prev[rowKey], weight: v }
+        }))
+      }
+      onColorChange={v =>
+        set(prev => ({
+          ...prev,
+          [rowKey]: { ...prev[rowKey], color: v }
+        }))
+      }
+    />
   );
 }
 
 function TableDesignSettings() {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <TableBackgroundColor />
       <TableBorderColor />
     </div>
@@ -240,871 +294,27 @@ function TableDesignSettings() {
 }
 
 function TableBackgroundColor() {
-  const backgroundColor = useInvoiceStore(
-    state => state.tableSettings.backgroundColor
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
+  const backgroundColor = useInvoiceStore(s => s.tableSettings.backgroundColor);
+  const set = useInvoiceStore(s => s.setTableSettings);
 
   return (
-    <ColorSettings
+    <CompactColorSetting
       value={backgroundColor}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          backgroundColor: value
-        }))
-      }
+      handleInput={v => set(prev => ({ ...prev, backgroundColor: v }))}
       label="Background"
     />
   );
 }
 
 function TableBorderColor() {
-  const borderColor = useInvoiceStore(state => state.tableSettings.borderColor);
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
+  const borderColor = useInvoiceStore(s => s.tableSettings.borderColor);
+  const set = useInvoiceStore(s => s.setTableSettings);
 
   return (
-    <ColorSettings
+    <CompactColorSetting
       value={borderColor}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          borderColor: value
-        }))
-      }
-      label="Border Color"
-    />
-  );
-}
-
-// Description Header Settings
-function DescriptionHeaderAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.descriptionHeaderSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionHeaderSettings: {
-            ...prev.descriptionHeaderSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionHeaderSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.descriptionHeaderSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionHeaderSettings: {
-            ...prev.descriptionHeaderSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionHeaderWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.descriptionHeaderSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionHeaderSettings: {
-            ...prev.descriptionHeaderSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionHeaderColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.descriptionHeaderSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionHeaderSettings: {
-            ...prev.descriptionHeaderSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionHeaderLabel() {
-  const label = useInvoiceStore(
-    state => state.tableSettings.descriptionHeaderSettings.label
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="description-header-label" className="font-medium">
-        Label
-      </Label>
-      <input
-        type="text"
-        id="description-header-label"
-        value={label}
-        onChange={({ target: { value } }) =>
-          setTableSettings(prev => ({
-            ...prev,
-            descriptionHeaderSettings: {
-              ...prev.descriptionHeaderSettings,
-              label: value
-            }
-          }))
-        }
-        className="w-full border p-2"
-      />
-    </div>
-  );
-}
-
-// Description Row Settings
-function DescriptionRowAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.descriptionRowSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionRowSettings: {
-            ...prev.descriptionRowSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionRowSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.descriptionRowSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionRowSettings: {
-            ...prev.descriptionRowSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionRowWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.descriptionRowSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionRowSettings: {
-            ...prev.descriptionRowSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function DescriptionRowColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.descriptionRowSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          descriptionRowSettings: {
-            ...prev.descriptionRowSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-// Quantity Header Settings
-function QuantityHeaderAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.quantityHeaderSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityHeaderSettings: {
-            ...prev.quantityHeaderSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityHeaderSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.quantityHeaderSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityHeaderSettings: {
-            ...prev.quantityHeaderSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityHeaderWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.quantityHeaderSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityHeaderSettings: {
-            ...prev.quantityHeaderSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityHeaderColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.quantityHeaderSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityHeaderSettings: {
-            ...prev.quantityHeaderSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityHeaderLabel() {
-  const label = useInvoiceStore(
-    state => state.tableSettings.quantityHeaderSettings.label
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="quantity-header-label" className="font-medium">
-        Label
-      </Label>
-      <input
-        type="text"
-        id="quantity-header-label"
-        value={label}
-        onChange={({ target: { value } }) =>
-          setTableSettings(prev => ({
-            ...prev,
-            quantityHeaderSettings: {
-              ...prev.quantityHeaderSettings,
-              label: value
-            }
-          }))
-        }
-        className="w-full border p-2"
-      />
-    </div>
-  );
-}
-
-// Quantity Row Settings
-function QuantityRowAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.quantityRowSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityRowSettings: {
-            ...prev.quantityRowSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityRowSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.quantityRowSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityRowSettings: {
-            ...prev.quantityRowSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityRowWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.quantityRowSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityRowSettings: {
-            ...prev.quantityRowSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function QuantityRowColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.quantityRowSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          quantityRowSettings: {
-            ...prev.quantityRowSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-// Unit Price Header Settings
-function UnitPriceHeaderAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.unitPriceHeaderSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceHeaderSettings: {
-            ...prev.unitPriceHeaderSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceHeaderSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.unitPriceHeaderSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceHeaderSettings: {
-            ...prev.unitPriceHeaderSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceHeaderWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.unitPriceHeaderSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceHeaderSettings: {
-            ...prev.unitPriceHeaderSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceHeaderColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.unitPriceHeaderSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceHeaderSettings: {
-            ...prev.unitPriceHeaderSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceHeaderLabel() {
-  const label = useInvoiceStore(
-    state => state.tableSettings.unitPriceHeaderSettings.label
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="unit-price-header-label" className="font-medium">
-        Label
-      </Label>
-      <input
-        type="text"
-        id="unit-price-header-label"
-        value={label}
-        onChange={({ target: { value } }) =>
-          setTableSettings(prev => ({
-            ...prev,
-            unitPriceHeaderSettings: {
-              ...prev.unitPriceHeaderSettings,
-              label: value
-            }
-          }))
-        }
-        className="w-full border p-2"
-      />
-    </div>
-  );
-}
-
-// Unit Price Row Settings
-function UnitPriceRowAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.unitPriceRowSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceRowSettings: {
-            ...prev.unitPriceRowSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceRowSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.unitPriceRowSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceRowSettings: {
-            ...prev.unitPriceRowSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceRowWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.unitPriceRowSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceRowSettings: {
-            ...prev.unitPriceRowSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function UnitPriceRowColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.unitPriceRowSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          unitPriceRowSettings: {
-            ...prev.unitPriceRowSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-// Amount Header Settings
-function AmountHeaderAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.amountHeaderSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountHeaderSettings: {
-            ...prev.amountHeaderSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountHeaderSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.amountHeaderSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountHeaderSettings: {
-            ...prev.amountHeaderSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountHeaderWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.amountHeaderSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountHeaderSettings: {
-            ...prev.amountHeaderSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountHeaderColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.amountHeaderSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountHeaderSettings: {
-            ...prev.amountHeaderSettings,
-            color: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountHeaderLabel() {
-  const label = useInvoiceStore(
-    state => state.tableSettings.amountHeaderSettings.label
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="amount-header-label" className="font-medium">
-        Label
-      </Label>
-      <input
-        type="text"
-        id="amount-header-label"
-        value={label}
-        onChange={({ target: { value } }) =>
-          setTableSettings(prev => ({
-            ...prev,
-            amountHeaderSettings: {
-              ...prev.amountHeaderSettings,
-              label: value
-            }
-          }))
-        }
-        className="w-full border p-2"
-      />
-    </div>
-  );
-}
-
-// Amount Row Settings
-function AmountRowAlign() {
-  const align = useInvoiceStore(
-    state => state.tableSettings.amountRowSettings.align
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountRowSettings: {
-            ...prev.amountRowSettings,
-            align: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountRowSize() {
-  const size = useInvoiceStore(
-    state => state.tableSettings.amountRowSettings.size
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountRowSettings: {
-            ...prev.amountRowSettings,
-            size: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountRowWeight() {
-  const weight = useInvoiceStore(
-    state => state.tableSettings.amountRowSettings.weight
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountRowSettings: {
-            ...prev.amountRowSettings,
-            weight: value
-          }
-        }))
-      }
-    />
-  );
-}
-
-function AmountRowColor() {
-  const color = useInvoiceStore(
-    state => state.tableSettings.amountRowSettings.color
-  );
-  const setTableSettings = useInvoiceStore(state => state.setTableSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTableSettings(prev => ({
-          ...prev,
-          amountRowSettings: {
-            ...prev.amountRowSettings,
-            color: value
-          }
-        }))
-      }
+      handleInput={v => set(prev => ({ ...prev, borderColor: v }))}
+      label="Border"
     />
   );
 }

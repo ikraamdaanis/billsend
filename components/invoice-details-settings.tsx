@@ -1,10 +1,5 @@
-import {
-  AlignSettings,
-  ColorSettings,
-  FontWeightSettings,
-  SizeSettings
-} from "components/settings-fields";
-import { Separator } from "components/ui/separator";
+import { TextStyleControls } from "components/settings-fields";
+import { SettingsSection } from "components/ui/settings-section";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
 import { useInvoiceStore } from "stores/invoice-store";
@@ -83,500 +78,149 @@ export function InvoiceDetailsSettings() {
 // Number Settings
 function InvoiceNumberSettings() {
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-sm font-medium">Label settings</h3>
-      <div className="flex flex-col gap-2">
-        <NumberLabelAlign />
-        <NumberLabelSize />
-        <NumberLabelWeight />
-        <NumberLabelColor />
-      </div>
-      <Separator />
-      <h3 className="text-sm font-medium">Value settings</h3>
-      <div className="flex flex-col gap-2">
-        <NumberValueAlign />
-        <NumberValueSize />
-        <NumberValueWeight />
-        <NumberValueColor />
-      </div>
+    <div className="flex flex-col gap-2">
+      <SettingsSection title="Label">
+        <NumberLabelStyles />
+      </SettingsSection>
+      <SettingsSection title="Value">
+        <NumberValueStyles />
+      </SettingsSection>
     </div>
+  );
+}
+
+function NumberLabelStyles() {
+  const settings = useInvoiceStore(s => s.numberSettings.label);
+  const set = useInvoiceStore(s => s.setNumberSettings);
+
+  return (
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, label: { ...prev.label, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, label: { ...prev.label, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, label: { ...prev.label, color: v } }))}
+    />
+  );
+}
+
+function NumberValueStyles() {
+  const settings = useInvoiceStore(s => s.numberSettings.value);
+  const set = useInvoiceStore(s => s.setNumberSettings);
+
+  return (
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, value: { ...prev.value, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, value: { ...prev.value, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, value: { ...prev.value, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, value: { ...prev.value, color: v } }))}
+    />
   );
 }
 
 // Invoice Date Settings
 function InvoiceDateSettings() {
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <h3 className="font-medium">Label Settings</h3>
-      <div className="flex flex-col gap-2">
-        <DateLabelAlign />
-        <DateLabelSize />
-        <DateLabelWeight />
-        <DateLabelColor />
-      </div>
-      <h3 className="font-medium">Value Settings</h3>
-      <div className="flex flex-col gap-2">
-        <DateValueAlign />
-        <DateValueSize />
-        <DateValueWeight />
-        <DateValueColor />
-      </div>
+    <div className="flex flex-col gap-2">
+      <SettingsSection title="Label">
+        <DateLabelStyles />
+      </SettingsSection>
+      <SettingsSection title="Value">
+        <DateValueStyles />
+      </SettingsSection>
     </div>
+  );
+}
+
+function DateLabelStyles() {
+  const settings = useInvoiceStore(s => s.invoiceDateSettings.label);
+  const set = useInvoiceStore(s => s.setInvoiceDateSettings);
+
+  return (
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, label: { ...prev.label, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, label: { ...prev.label, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, label: { ...prev.label, color: v } }))}
+    />
+  );
+}
+
+function DateValueStyles() {
+  const settings = useInvoiceStore(s => s.invoiceDateSettings.value);
+  const set = useInvoiceStore(s => s.setInvoiceDateSettings);
+
+  return (
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, value: { ...prev.value, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, value: { ...prev.value, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, value: { ...prev.value, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, value: { ...prev.value, color: v } }))}
+    />
   );
 }
 
 // Due Date Settings
 function InvoiceDueDateSettings() {
   return (
-    <div className="mt-4 flex flex-col gap-4">
-      <h3 className="font-medium">Label Settings</h3>
-      <div className="flex flex-col gap-2">
-        <DueDateLabelAlign />
-        <DueDateLabelSize />
-        <DueDateLabelWeight />
-        <DueDateLabelColor />
-      </div>
-      <h3 className="font-medium">Value Settings</h3>
-      <div className="flex flex-col gap-2">
-        <DueDateValueAlign />
-        <DueDateValueSize />
-        <DueDateValueWeight />
-        <DueDateValueColor />
-      </div>
+    <div className="flex flex-col gap-2">
+      <SettingsSection title="Label">
+        <DueDateLabelStyles />
+      </SettingsSection>
+      <SettingsSection title="Value">
+        <DueDateValueStyles />
+      </SettingsSection>
     </div>
   );
 }
 
-// Number Label Components
-function NumberLabelAlign() {
-  const align = useInvoiceStore(state => state.numberSettings.label.align);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
+function DueDateLabelStyles() {
+  const settings = useInvoiceStore(s => s.dueDateSettings.label);
+  const set = useInvoiceStore(s => s.setDueDateSettings);
 
   return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, align: value }
-        }))
-      }
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, label: { ...prev.label, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, label: { ...prev.label, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, label: { ...prev.label, color: v } }))}
     />
   );
 }
 
-function NumberLabelSize() {
-  const size = useInvoiceStore(state => state.numberSettings.label.size);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
+function DueDateValueStyles() {
+  const settings = useInvoiceStore(s => s.dueDateSettings.value);
+  const set = useInvoiceStore(s => s.setDueDateSettings);
 
   return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function NumberLabelWeight() {
-  const weight = useInvoiceStore(state => state.numberSettings.label.weight);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function NumberLabelColor() {
-  const color = useInvoiceStore(state => state.numberSettings.label.color);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, color: value }
-        }))
-      }
-    />
-  );
-}
-
-// Number Value Components
-function NumberValueAlign() {
-  const align = useInvoiceStore(state => state.numberSettings.value.align);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, align: value }
-        }))
-      }
-    />
-  );
-}
-
-function NumberValueSize() {
-  const size = useInvoiceStore(state => state.numberSettings.value.size);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function NumberValueWeight() {
-  const weight = useInvoiceStore(state => state.numberSettings.value.weight);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function NumberValueColor() {
-  const color = useInvoiceStore(state => state.numberSettings.value.color);
-  const setNumberSettings = useInvoiceStore(state => state.setNumberSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setNumberSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, color: value }
-        }))
-      }
-    />
-  );
-}
-
-// Invoice Date Label Components
-function DateLabelAlign() {
-  const align = useInvoiceStore(state => state.invoiceDateSettings.label.align);
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, align: value }
-        }))
-      }
-    />
-  );
-}
-
-function DateLabelSize() {
-  const size = useInvoiceStore(state => state.invoiceDateSettings.label.size);
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function DateLabelWeight() {
-  const weight = useInvoiceStore(
-    state => state.invoiceDateSettings.label.weight
-  );
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function DateLabelColor() {
-  const color = useInvoiceStore(state => state.invoiceDateSettings.label.color);
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, color: value }
-        }))
-      }
-    />
-  );
-}
-
-// Invoice Date Value Components
-function DateValueAlign() {
-  const align = useInvoiceStore(state => state.invoiceDateSettings.value.align);
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, align: value }
-        }))
-      }
-    />
-  );
-}
-
-function DateValueSize() {
-  const size = useInvoiceStore(state => state.invoiceDateSettings.value.size);
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function DateValueWeight() {
-  const weight = useInvoiceStore(
-    state => state.invoiceDateSettings.value.weight
-  );
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function DateValueColor() {
-  const color = useInvoiceStore(state => state.invoiceDateSettings.value.color);
-  const setInvoiceDateSettings = useInvoiceStore(
-    state => state.setInvoiceDateSettings
-  );
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setInvoiceDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, color: value }
-        }))
-      }
-    />
-  );
-}
-
-// Due Date Label Components
-function DueDateLabelAlign() {
-  const align = useInvoiceStore(state => state.dueDateSettings.label.align);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, align: value }
-        }))
-      }
-    />
-  );
-}
-
-function DueDateLabelSize() {
-  const size = useInvoiceStore(state => state.dueDateSettings.label.size);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function DueDateLabelWeight() {
-  const weight = useInvoiceStore(state => state.dueDateSettings.label.weight);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function DueDateLabelColor() {
-  const color = useInvoiceStore(state => state.dueDateSettings.label.color);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          label: { ...prev.label, color: value }
-        }))
-      }
-    />
-  );
-}
-
-// Due Date Value Components
-function DueDateValueAlign() {
-  const align = useInvoiceStore(state => state.dueDateSettings.value.align);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, align: value }
-        }))
-      }
-    />
-  );
-}
-
-function DueDateValueSize() {
-  const size = useInvoiceStore(state => state.dueDateSettings.value.size);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, size: value }
-        }))
-      }
-    />
-  );
-}
-
-function DueDateValueWeight() {
-  const weight = useInvoiceStore(state => state.dueDateSettings.value.weight);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, weight: value }
-        }))
-      }
-    />
-  );
-}
-
-function DueDateValueColor() {
-  const color = useInvoiceStore(state => state.dueDateSettings.value.color);
-  const setDueDateSettings = useInvoiceStore(state => state.setDueDateSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setDueDateSettings(prev => ({
-          ...prev,
-          value: { ...prev.value, color: value }
-        }))
-      }
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, value: { ...prev.value, align: v } }))}
+      onSizeChange={v => set(prev => ({ ...prev, value: { ...prev.value, size: v } }))}
+      onWeightChange={v => set(prev => ({ ...prev, value: { ...prev.value, weight: v } }))}
+      onColorChange={v => set(prev => ({ ...prev, value: { ...prev.value, color: v } }))}
     />
   );
 }

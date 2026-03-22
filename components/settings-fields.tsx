@@ -13,6 +13,143 @@ import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon } from "lucide-react";
 import { memo } from "react";
 import type { TextSettings } from "types";
 
+const fontSizes = [
+  8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60, 72,
+  96
+];
+
+const weights = ["Normal", "Medium", "Semibold", "Bold"];
+
+/**
+ * Compact text style controls — align + color on row 1, size + weight on row 2.
+ */
+export const TextStyleControls = memo(function TextStyleControls({
+  align,
+  size,
+  weight,
+  color,
+  onAlignChange,
+  onSizeChange,
+  onWeightChange,
+  onColorChange
+}: {
+  align: string;
+  size: string;
+  weight: string;
+  color: string;
+  onAlignChange: (value: TextSettings["align"]) => void;
+  onSizeChange: (value: TextSettings["size"]) => void;
+  onWeightChange: (value: TextSettings["weight"]) => void;
+  onColorChange: (value: TextSettings["color"]) => void;
+}) {
+  return (
+    <div className="grid grid-cols-[42px_1fr] items-center gap-x-2 gap-y-1.5">
+      <Label className="text-muted-foreground text-[11px]">Align</Label>
+      <ToggleGroup
+        type="single"
+        value={align}
+        onValueChange={val =>
+          onAlignChange(val as TextSettings["align"])
+        }
+        className="gap-0 rounded-md bg-zinc-100 dark:bg-zinc-900"
+      >
+        <ToggleGroupItem
+          value="left"
+          size="sm"
+          className="group h-7 w-7 px-0 hover:bg-zinc-200/80 dark:hover:bg-zinc-700"
+        >
+          <AlignLeftIcon className="size-3.5" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="center"
+          size="sm"
+          className="group h-7 w-7 px-0 hover:bg-zinc-200/80 dark:hover:bg-zinc-700"
+        >
+          <AlignCenterIcon className="size-3.5" />
+        </ToggleGroupItem>
+        <ToggleGroupItem
+          value="right"
+          size="sm"
+          className="group h-7 w-7 px-0 hover:bg-zinc-200/80 dark:hover:bg-zinc-700"
+        >
+          <AlignRightIcon className="size-3.5" />
+        </ToggleGroupItem>
+      </ToggleGroup>
+
+      <Label className="text-muted-foreground text-[11px]">Size</Label>
+      <Select value={size} onValueChange={onSizeChange}>
+        <SelectTrigger size="sm" className="h-7 w-full text-xs">
+          <SelectValue placeholder="Size" />
+        </SelectTrigger>
+        <SelectContent>
+          {fontSizes.map(s => (
+            <SelectItem key={s} value={s.toString()}>
+              {s}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Label className="text-muted-foreground text-[11px]">Weight</Label>
+      <Select
+        value={weight}
+        onValueChange={val =>
+          onWeightChange(val as TextSettings["weight"])
+        }
+      >
+        <SelectTrigger
+          size="sm"
+          className="h-7 w-full text-left text-xs"
+          style={{
+            fontWeight: weightMap[weight as keyof typeof weightMap]
+          }}
+        >
+          <SelectValue placeholder="Weight" />
+        </SelectTrigger>
+        <SelectContent>
+          {weights.map(w => (
+            <SelectItem
+              key={w}
+              value={w}
+              style={{
+                fontWeight: weightMap[w as keyof typeof weightMap]
+              }}
+            >
+              {w}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Label className="text-muted-foreground text-[11px]">Color</Label>
+      <div>
+        <ColorPicker color={color} onChange={onColorChange} />
+      </div>
+    </div>
+  );
+});
+
+/**
+ * Compact color setting — inline label + swatch on one row.
+ */
+export const CompactColorSetting = memo(function CompactColorSetting({
+  value,
+  handleInput,
+  label = "Color"
+}: {
+  value: string;
+  handleInput: (value: string) => void;
+  label?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between">
+      <Label className="text-muted-foreground text-xs">{label}</Label>
+      <ColorPicker color={value} onChange={handleInput} />
+    </div>
+  );
+});
+
+// Legacy individual exports — kept for backward compatibility
 export const AlignSettings = memo(function AlignSettings({
   value,
   handleInput
@@ -59,10 +196,6 @@ export const AlignSettings = memo(function AlignSettings({
   );
 });
 
-const fontSizes = [
-  8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60, 72, 96
-];
-
 export const SizeSettings = memo(function SizeSettings({
   value,
   handleInput
@@ -81,9 +214,9 @@ export const SizeSettings = memo(function SizeSettings({
             <SelectValue placeholder="Select size" />
           </SelectTrigger>
           <SelectContent>
-            {fontSizes.map(size => (
-              <SelectItem key={size} value={size.toString()}>
-                {size}
+            {fontSizes.map(s => (
+              <SelectItem key={s} value={s.toString()}>
+                {s}
               </SelectItem>
             ))}
           </SelectContent>
@@ -92,8 +225,6 @@ export const SizeSettings = memo(function SizeSettings({
     </div>
   );
 });
-
-const weights = ["Normal", "Medium", "Semibold", "Bold"];
 
 export const FontWeightSettings = memo(function FontWeightSettings({
   value,
@@ -121,15 +252,15 @@ export const FontWeightSettings = memo(function FontWeightSettings({
             <SelectValue placeholder="Select weight" />
           </SelectTrigger>
           <SelectContent>
-            {weights.map(weight => (
+            {weights.map(w => (
               <SelectItem
-                key={weight}
-                value={weight}
+                key={w}
+                value={w}
                 style={{
-                  fontWeight: weightMap[weight as keyof typeof weightMap]
+                  fontWeight: weightMap[w as keyof typeof weightMap]
                 }}
               >
-                {weight}
+                {w}
               </SelectItem>
             ))}
           </SelectContent>

@@ -1,10 +1,5 @@
 import { InvoiceInput } from "components/invoice-input";
-import {
-  AlignSettings,
-  ColorSettings,
-  FontWeightSettings,
-  SizeSettings
-} from "components/settings-fields";
+import { TextStyleControls } from "components/settings-fields";
 import { useUI } from "context/ui-context";
 import { useTitleSlice } from "stores/invoice-selectors";
 import { useInvoiceStore } from "stores/invoice-store";
@@ -27,68 +22,23 @@ export function InvoiceTitle() {
 }
 
 export function InvoiceTitleSettings() {
-  return (
-    <div className="flex flex-col gap-2">
-      <TitleAlign />
-      <TitleSize />
-      <TitleWeight />
-      <TitleColor />
-    </div>
-  );
+  return <TitleStyles />;
 }
 
-function TitleAlign() {
-  const align = useInvoiceStore(state => state.titleSettings.align);
-  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
+function TitleStyles() {
+  const settings = useInvoiceStore(s => s.titleSettings);
+  const set = useInvoiceStore(s => s.setTitleSettings);
 
   return (
-    <AlignSettings
-      value={align}
-      handleInput={value =>
-        setTitleSettings(prev => ({ ...prev, align: value }))
-      }
-    />
-  );
-}
-
-function TitleSize() {
-  const size = useInvoiceStore(state => state.titleSettings.size);
-  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
-
-  return (
-    <SizeSettings
-      value={size}
-      handleInput={value =>
-        setTitleSettings(prev => ({ ...prev, size: value }))
-      }
-    />
-  );
-}
-
-function TitleWeight() {
-  const weight = useInvoiceStore(state => state.titleSettings.weight);
-  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
-
-  return (
-    <FontWeightSettings
-      value={weight}
-      handleInput={value =>
-        setTitleSettings(prev => ({ ...prev, weight: value }))
-      }
-    />
-  );
-}
-
-function TitleColor() {
-  const color = useInvoiceStore(state => state.titleSettings.color);
-  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
-
-  return (
-    <ColorSettings
-      value={color}
-      handleInput={value =>
-        setTitleSettings(prev => ({ ...prev, color: value }))
-      }
+    <TextStyleControls
+      align={settings.align}
+      size={settings.size}
+      weight={settings.weight}
+      color={settings.color}
+      onAlignChange={v => set(prev => ({ ...prev, align: v }))}
+      onSizeChange={v => set(prev => ({ ...prev, size: v }))}
+      onWeightChange={v => set(prev => ({ ...prev, weight: v }))}
+      onColorChange={v => set(prev => ({ ...prev, color: v }))}
     />
   );
 }
