@@ -18,7 +18,7 @@ import {
 } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { PencilIcon } from "lucide-react";
-import { useTransition } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -43,7 +43,7 @@ export function RenameInvoiceDialog({
   currentName: string;
   onRename: (newName: string) => Promise<void>;
 }) {
-  const [pending, startTransition] = useTransition();
+  const [pending, setPending] = useState(false);
 
   const form = useForm<RenameInvoiceFormData>({
     resolver: zodResolver(renameInvoiceSchema),
@@ -51,22 +51,24 @@ export function RenameInvoiceDialog({
     values: { name: currentName }
   });
 
-  function handleSubmit(data: RenameInvoiceFormData) {
-    startTransition(async () => {
-      try {
-        await onRename(data.name.trim());
+  async function handleSubmit(data: RenameInvoiceFormData) {
+    setPending(true);
 
-        onOpenChange(false);
+    try {
+      await onRename(data.name.trim());
 
-        setTimeout(() => {
-          form.reset({ name: data.name.trim() });
-        }, 500);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to rename invoice"
-        );
-      }
-    });
+      onOpenChange(false);
+
+      setTimeout(() => {
+        form.reset({ name: data.name.trim() });
+        setPending(false);
+      }, 500);
+    } catch (error) {
+      setPending(false);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to rename invoice"
+      );
+    }
   }
 
   function handleCancel() {
@@ -123,8 +125,8 @@ export function RenameInvoiceDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? "Renaming..." : "Rename"}
+              <Button type="submit" isLoading={pending}>
+                Rename
               </Button>
             </DialogFooter>
           </form>
