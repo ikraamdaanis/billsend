@@ -60,7 +60,7 @@ export function DeleteTemplateModal({
         <DialogFooter className="flex items-center gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
@@ -73,7 +73,6 @@ export function DeleteTemplateModal({
             disabled={pending}
             className="flex items-center gap-2"
           >
-            <TrashIcon className="h-4 w-4" />
             {pending ? "Deleting..." : "Delete Template"}
           </Button>
         </DialogFooter>

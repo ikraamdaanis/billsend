@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Check,
   Download,
-  FileText,
   HardDrive,
   Lock,
   Palette,
@@ -19,9 +18,9 @@ function HomePage() {
     <div className="relative min-h-screen overflow-hidden bg-stone-50">
       {/* Ambient background gradients */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,rgba(250,105,92,0.12),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_80%_50%,rgba(250,105,92,0.06),transparent_40%)]" />
-        <div className="absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(ellipse_100%_100%_at_0%_100%,rgba(251,191,36,0.06),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,oklch(0.603_0.218_257.42/0.12),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_80%_50%,oklch(0.603_0.218_257.42/0.06),transparent_40%)]" />
+        <div className="absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(ellipse_100%_100%_at_0%_100%,oklch(0.419_0.152_257.57/0.06),transparent_50%)]" />
       </div>
 
       {/* Refined dot grid */}
@@ -38,10 +37,7 @@ function HomePage() {
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex h-14 items-center justify-between rounded-2xl border border-stone-200/60 bg-white/70 px-5 shadow-lg shadow-stone-900/5 backdrop-blur-xl">
             <Link to="/" className="flex items-center gap-2">
-              <div className="bg-brand-400 flex h-8 w-8 items-center justify-center rounded-lg">
-                <FileText className="h-4 w-4 text-white" />
-              </div>
-              <span className="font-bricolage-grotesque text-lg font-bold text-stone-900">
+              <span className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
                 billsend
               </span>
             </Link>
@@ -50,7 +46,7 @@ function HomePage() {
                 100% free &amp; private
               </span>
               <Link to="/create" preload="viewport">
-                <Button className="h-8 rounded-xl bg-stone-900 px-4 text-sm font-medium text-white hover:bg-stone-800">
+                <Button className="h-8 rounded-xl px-4 text-sm font-medium">
                   Create Invoice
                   <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                 </Button>
@@ -75,14 +71,14 @@ function HomePage() {
             <span className="relative">
               <span className="text-brand-500 relative z-10">simplified</span>
               <svg
-                className="absolute -bottom-2 left-0 h-3 w-full"
+                className="text-brand-500 absolute -bottom-2 left-0 h-3 w-full"
                 viewBox="0 0 200 12"
                 fill="none"
                 preserveAspectRatio="none"
               >
                 <path
                   d="M2 8.5C50 2 150 2 198 8.5"
-                  stroke="#fa695c"
+                  stroke="currentColor"
                   strokeWidth="3"
                   strokeLinecap="round"
                   className="animate-draw"
@@ -101,9 +97,9 @@ function HomePage() {
           {/* CTA */}
           <div className="animate-fade-in-up animation-delay-300 mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link to="/create" preload="viewport">
-              <Button className="group bg-brand-500 shadow-brand-500/25 hover:bg-brand-600 hover:shadow-brand-500/30 h-10 gap-2 rounded-xl px-5 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:shadow-xl">
+              <Button className="group h-10 gap-2 rounded-xl px-5">
                 Start creating
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <div className="flex items-center gap-2 text-sm text-stone-500">
@@ -143,7 +139,7 @@ function HomePage() {
           {/* Invoice mockup — desktop only */}
           <div className="animate-fade-in-up animation-delay-500 relative mx-auto mt-16 hidden max-w-xl lg:block">
             {/* Ambient glow behind card */}
-            <div className="from-brand-200/40 via-brand-100/30 absolute -inset-4 rounded-3xl bg-linear-to-br to-amber-100/40 blur-2xl" />
+            <div className="from-brand-200/40 via-brand-100/30 to-brand-50/40 absolute -inset-4 rounded-3xl bg-linear-to-br blur-2xl" />
             <div className="animate-float relative">
               {/* Main invoice card */}
               <div className="relative rounded-2xl border border-stone-200/80 bg-white p-6 shadow-2xl shadow-stone-900/10">
@@ -343,7 +339,7 @@ function HomePage() {
             {/* Background effects */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
               <div className="from-brand-500/20 absolute top-0 -left-1/4 h-full w-1/2 bg-linear-to-r to-transparent" />
-              <div className="absolute -right-1/4 bottom-0 h-full w-1/2 bg-linear-to-l from-amber-500/10 to-transparent" />
+              <div className="from-brand-400/10 absolute -right-1/4 bottom-0 h-full w-1/2 bg-linear-to-l to-transparent" />
               <div
                 className="absolute inset-0 opacity-20"
                 style={{
@@ -396,10 +392,7 @@ function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
             <div className="flex items-center gap-2">
-              <div className="bg-brand-400 flex h-7 w-7 items-center justify-center rounded-lg">
-                <FileText className="h-3.5 w-3.5 text-white" />
-              </div>
-              <span className="font-bricolage-grotesque text-base font-bold text-stone-900">
+              <span className="font-bricolage-grotesque text-brand-500 text-base font-bold">
                 billsend
               </span>
             </div>

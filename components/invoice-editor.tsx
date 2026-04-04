@@ -4,13 +4,13 @@ import { InvoiceCanvas } from "components/invoice-canvas";
 import { InvoiceClientDetails } from "components/invoice-client-details";
 import { InvoiceDetails } from "components/invoice-details";
 import { InvoiceFileMenu } from "components/invoice-file-menu";
-import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
 import { InvoiceImage } from "components/invoice-image";
 import { InvoiceLineItems } from "components/invoice-line-items";
 import { InvoicePricing } from "components/invoice-pricing";
 import { InvoiceSellerDetails } from "components/invoice-seller-details";
 import { InvoiceTerms } from "components/invoice-terms";
 import { InvoiceTitle } from "components/invoice-title";
+import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
 import { SettingsPanel } from "components/settings-panel";
 import { Button } from "components/ui/button";
 import {
@@ -198,7 +198,7 @@ function LeavePageDialog({
           Are you sure you want to leave this page and go back to the home page?
         </DialogDescription>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
             Cancel
           </Button>
           <Link to="/">

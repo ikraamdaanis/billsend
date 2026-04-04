@@ -149,7 +149,7 @@ export function OpenInvoiceDialog({
             {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}{" "}
             available
           </span>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="secondary" onClick={() => onOpenChange(false)}>
             Close
           </Button>
         </DialogFooter>

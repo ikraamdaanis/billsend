@@ -47,7 +47,7 @@ export function TemplateCard({
               <Button
                 type="button"
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 className="h-7 w-7 p-0"
                 onClick={e => e.stopPropagation()}
               >
@@ -88,7 +88,7 @@ export function TemplateCard({
             <Button
               type="button"
               size="sm"
-              variant="outline"
+              variant="secondary"
               className="h-7 px-3"
               onClick={e => {
                 e.stopPropagation();

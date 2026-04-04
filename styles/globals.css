@@ -10,17 +10,38 @@
   --font-geist: "Geist Variable", sans-serif;
   --font-bricolage-grotesque: "Bricolage Grotesque Variable", sans-serif;
 
-  --color-brand-50: #fef3f2;
-  --color-brand-100: #ffe3e1;
-  --color-brand-200: #ffcdc9;
-  --color-brand-300: #feaaa3;
-  --color-brand-400: #fa695c;
-  --color-brand-500: #f25041;
-  --color-brand-600: #df3223;
-  --color-brand-700: #bc2619;
-  --color-brand-800: #9b2419;
-  --color-brand-900: #81231b;
-  --color-brand-950: #460e09;
+  --brand-top: oklch(0.677 0.17 263.89);
+  --brand-bottom: oklch(0.419 0.152 257.57);
+  --brand-top-hover: oklch(0.603 0.218 257.42);
+  --brand-bottom-hover: oklch(0.322 0.117 257.5);
+  --brand-gradient: linear-gradient(
+    180deg,
+    var(--brand-top) 0%,
+    var(--brand-bottom) 100%
+  );
+
+  /* Original cyan → blue gradient */
+  --brand-cyan-blue-top: #2abde6;
+  --brand-cyan-blue-bottom: #4773d8;
+  --brand-cyan-blue-top-hover: #26a8d4;
+  --brand-cyan-blue-bottom-hover: #3a65c4;
+  --brand-cyan-blue-gradient: linear-gradient(
+    180deg,
+    var(--brand-cyan-blue-top) 0%,
+    var(--brand-cyan-blue-bottom) 100%
+  );
+
+  --color-brand-50: oklch(0.957 0.02 277);
+  --color-brand-100: oklch(0.925 0.036 273.72);
+  --color-brand-200: oklch(0.839 0.079 271.26);
+  --color-brand-300: oklch(0.762 0.121 268.88);
+  --color-brand-400: oklch(0.677 0.17 263.89);
+  --color-brand-500: oklch(0.603 0.218 257.42);
+  --color-brand-600: oklch(0.505 0.183 257.47);
+  --color-brand-700: oklch(0.419 0.152 257.57);
+  --color-brand-800: oklch(0.322 0.117 257.5);
+  --color-brand-900: oklch(0.235 0.085 257.39);
+  --color-brand-950: oklch(0.18 0.064 257.25);
 
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -64,7 +85,7 @@ code {
   --card-foreground: oklch(0.141 0.005 285.823);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
+  --primary: oklch(0.603 0.218 257.42);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
