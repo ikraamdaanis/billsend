@@ -202,7 +202,7 @@ function LeavePageDialog({
             Cancel
           </Button>
           <Link to="/">
-            <Button>Leave</Button>
+            <Button variant="destructive">Leave</Button>
           </Link>
         </DialogFooter>
       </DialogContent>

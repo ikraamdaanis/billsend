@@ -112,9 +112,7 @@ export function TemplateSelectionModal({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="secondary" onClick={() => onOpenChange(false)}>
-                  OK
-                </Button>
+                <Button onClick={() => onOpenChange(false)}>Done</Button>
               </div>
             </div>
           </DialogFooter>
