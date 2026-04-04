@@ -119,7 +119,7 @@ export function RenameInvoiceDialog({
             <DialogFooter>
               <Button
                 type="button"
-                variant="outline"
+                variant="secondary"
                 onClick={handleCancel}
                 disabled={pending}
               >

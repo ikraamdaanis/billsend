@@ -10,11 +10,11 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { useInvoiceActions } from "stores/invoice-selectors";
 import { FileTextIcon, SparklesIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useInvoiceActions } from "stores/invoice-selectors";
 import type { InvoiceTemplate } from "types";
 import { ensureItemIds } from "utils/ensure-item-ids";
 
@@ -112,8 +112,8 @@ export function TemplateSelectionModal({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancel
+                <Button variant="secondary" onClick={() => onOpenChange(false)}>
+                  OK
                 </Button>
               </div>
             </div>

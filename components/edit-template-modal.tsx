@@ -158,7 +158,7 @@ export function EditTemplateModal({
         <DialogFooter className="flex items-center gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={handleClose}
             disabled={pending}
           >

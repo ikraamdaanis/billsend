@@ -43,7 +43,7 @@ export function UnsavedChangesDialog({
             Cancel
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => {
               onAction("discard");
               onOpenChange(false);

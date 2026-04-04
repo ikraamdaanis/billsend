@@ -24,6 +24,10 @@ export const Route = createRootRouteWithContext<{
         content: "width=device-width, initial-scale=1"
       },
       {
+        name: "theme-color",
+        content: "#5e3d7a"
+      },
+      {
         title: "billsend"
       }
     ],

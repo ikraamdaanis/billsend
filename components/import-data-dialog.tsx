@@ -206,7 +206,7 @@ export function ImportDataDialog({
           {state === "preview" && (
             <Button onClick={handleImport}>Import</Button>
           )}
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleClose}>
             {state === "done" ? "Done" : "Cancel"}
           </Button>
         </DialogFooter>

@@ -689,7 +689,7 @@ export function InvoiceGenerator() {
         <div className="text-lg font-semibold">Invoice Preview</div>
         <div className="flex gap-2">
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             className="flex items-center gap-2"
             onClick={() => {
