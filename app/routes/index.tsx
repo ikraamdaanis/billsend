@@ -22,7 +22,6 @@ function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_80%_50%,oklch(0.603_0.218_257.42/0.06),transparent_40%)]" />
         <div className="absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(ellipse_100%_100%_at_0%_100%,oklch(0.419_0.152_257.57/0.06),transparent_50%)]" />
       </div>
-
       {/* Refined dot grid */}
       <div
         className="pointer-events-none fixed inset-0 opacity-[0.25]"
@@ -31,7 +30,6 @@ function HomePage() {
           backgroundSize: "32px 32px"
         }}
       />
-
       {/* Navigation — Floating glass pill */}
       <nav className="fixed top-5 z-50 w-full sm:top-6">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -55,7 +53,6 @@ function HomePage() {
           </div>
         </div>
       </nav>
-
       {/* Hero Section — Centered */}
       <section className="relative px-4 pt-32 pb-16 sm:px-6 sm:pt-40 lg:pt-48">
         <div className="mx-auto max-w-6xl text-center">
@@ -64,7 +61,6 @@ function HomePage() {
             <Lock className="h-3.5 w-3.5" />
             Your data never leaves your browser
           </div>
-
           {/* Heading */}
           <h1 className="animate-fade-in-up animation-delay-100 font-bricolage-grotesque text-[2.75rem] leading-[1.1] font-bold tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">
             Invoice creation,{" "}
@@ -86,20 +82,18 @@ function HomePage() {
               </svg>
             </span>
           </h1>
-
           {/* Subtext */}
           <p className="animate-fade-in-up animation-delay-200 mx-auto mt-6 max-w-150 text-lg leading-relaxed text-stone-600">
             A free, local-first invoice editor that respects your privacy. No
             accounts, no servers, no tracking. Just beautiful invoices in
             seconds.
           </p>
-
           {/* CTA */}
           <div className="animate-fade-in-up animation-delay-300 mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link to="/create" preload="viewport">
-              <Button className="group h-10 gap-2 rounded-xl px-5">
+              <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-xl px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
                 Start creating
-                <ArrowRight className="h-4 w-4" />
+                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
               </Button>
             </Link>
             <div className="flex items-center gap-2 text-sm text-stone-500">
@@ -107,7 +101,6 @@ function HomePage() {
               No sign-up required
             </div>
           </div>
-
           {/* Trust indicators */}
           <div className="animate-fade-in-up animation-delay-400 mx-auto mt-12 flex max-w-sm flex-wrap justify-center gap-6">
             <div className="flex items-center gap-3">
@@ -135,7 +128,6 @@ function HomePage() {
               </div>
             </div>
           </div>
-
           {/* Invoice mockup — desktop only */}
           <div className="animate-fade-in-up animation-delay-500 relative mx-auto mt-16 hidden max-w-xl lg:block">
             {/* Ambient glow behind card */}
@@ -172,11 +164,11 @@ function HomePage() {
                   </div>
                 </div>
                 {/* Total */}
-                <div className="flex items-center justify-between rounded-lg bg-stone-900 px-4 py-3">
-                  <span className="text-sm font-medium text-stone-400">
+                <div className="from-brand-50 to-brand-100/80 border-brand-200/60 flex items-center justify-between rounded-lg border bg-linear-to-r px-4 py-3">
+                  <span className="text-brand-600 text-sm font-medium">
                     Total Due
                   </span>
-                  <span className="font-bricolage-grotesque text-xl font-bold text-white">
+                  <span className="font-bricolage-grotesque text-brand-700 text-xl font-bold">
                     $2,450.00
                   </span>
                 </div>
@@ -204,7 +196,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-
       {/* Features — Bento Grid */}
       <section className="relative px-4 py-20 sm:px-6 sm:py-28">
         <div className="mx-auto max-w-6xl">
@@ -212,14 +203,13 @@ function HomePage() {
             <h2 className="font-bricolage-grotesque text-3xl font-bold text-stone-900 sm:text-4xl">
               Everything you need,
               <br />
-              <span className="text-stone-400">nothing you don&apos;t</span>
+              <span className="text-brand-500">nothing you don&apos;t</span>
             </h2>
             <p className="mt-4 text-lg text-stone-600">
               Designed for freelancers and small businesses who want to create
               professional invoices without the complexity.
             </p>
           </div>
-
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Large feature card — Local-first */}
             <div className="group relative overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-8 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-2 lg:col-span-2 lg:row-span-2">
@@ -258,7 +248,6 @@ function HomePage() {
                 </div>
               </div>
             </div>
-
             {/* Speed card */}
             <div className="group relative overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
               <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-amber-100/80 transition-transform duration-500 group-hover:scale-150" />
@@ -275,7 +264,6 @@ function HomePage() {
                 </p>
               </div>
             </div>
-
             {/* Customisation card */}
             <div className="group relative overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
               <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-violet-100/80 transition-transform duration-500 group-hover:scale-150" />
@@ -292,7 +280,6 @@ function HomePage() {
                 </p>
               </div>
             </div>
-
             {/* Templates card */}
             <div className="group relative overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
               <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-emerald-100/80 transition-transform duration-500 group-hover:scale-150" />
@@ -309,11 +296,10 @@ function HomePage() {
                 </p>
               </div>
             </div>
-
             {/* PDF export card — wide */}
-            <div className="group relative overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-2 lg:col-span-2">
+            <div className="group relative overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-1 lg:col-span-2">
               <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-sky-100/60 transition-transform duration-500 group-hover:scale-125" />
-              <div className="relative flex items-center gap-6">
+              <div className="relative flex flex-col gap-6">
                 <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-sky-100">
                   <Download className="h-7 w-7 text-sky-600" />
                 </div>
@@ -331,54 +317,53 @@ function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* CTA Section — Dark rounded card */}
-      <section className="relative px-4 py-16 sm:px-6 sm:py-24">
+      {/* CTA Section — Light gradient */}
+      <section className="relative px-4 pb-16 sm:px-6 sm:pb-24">
         <div className="mx-auto max-w-6xl">
-          <div className="relative overflow-hidden rounded-4xl bg-stone-900 p-10 sm:p-16">
-            {/* Background effects */}
+          <div className="border-brand-200/60 from-brand-50 to-brand-50/80 relative overflow-hidden rounded-4xl border bg-linear-to-br via-white p-10 sm:p-16">
+            {/* Ambient brand glow */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="from-brand-500/20 absolute top-0 -left-1/4 h-full w-1/2 bg-linear-to-r to-transparent" />
-              <div className="from-brand-400/10 absolute -right-1/4 bottom-0 h-full w-1/2 bg-linear-to-l to-transparent" />
+              <div className="bg-brand-200/30 absolute -top-24 -left-24 h-64 w-64 rounded-full blur-3xl" />
+              <div className="bg-brand-100/40 absolute -right-24 -bottom-24 h-64 w-64 rounded-full blur-3xl" />
               <div
-                className="absolute inset-0 opacity-20"
+                className="absolute inset-0 opacity-30"
                 style={{
-                  backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
+                  backgroundImage: `radial-gradient(circle at 1px 1px, oklch(0.603 0.218 257.42 / 0.08) 1px, transparent 0)`,
                   backgroundSize: "32px 32px"
                 }}
               />
             </div>
             <div className="relative flex flex-col items-center text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-white/70">
+              <div className="border-brand-200 bg-brand-50/80 text-brand-600 mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
                 <Zap className="h-3.5 w-3.5" />
                 Takes less than a minute
               </div>
-              <h2 className="font-bricolage-grotesque text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+              <h2 className="font-bricolage-grotesque text-3xl font-bold text-stone-900 sm:text-4xl lg:text-5xl">
                 Ready to create your
                 <br />
-                <span className="text-brand-400">first invoice?</span>
+                <span className="text-brand-500">first invoice?</span>
               </h2>
-              <p className="mt-5 max-w-md text-lg text-stone-400">
+              <p className="mt-5 max-w-md text-lg text-stone-600">
                 No sign-up, no credit card, no strings attached. Just start
                 creating beautiful invoices right now.
               </p>
               <Link to="/create" preload="viewport" className="mt-8">
-                <Button className="group h-10 gap-2 rounded-xl bg-white px-6 text-sm font-semibold text-stone-900 shadow-2xl transition-all duration-300 hover:scale-105 hover:bg-stone-50">
+                <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-xl px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
                   Create your invoice
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </Button>
               </Link>
               <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-stone-500">
                 <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-emerald-400" />
+                  <Check className="h-4 w-4 text-emerald-500" />
                   Free forever
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-emerald-400" />
+                  <Check className="h-4 w-4 text-emerald-500" />
                   No account needed
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-emerald-400" />
+                  <Check className="h-4 w-4 text-emerald-500" />
                   No tracking
                 </div>
               </div>
@@ -386,7 +371,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-
       {/* Footer */}
       <footer className="relative border-t border-stone-200 bg-white/60 backdrop-blur-sm">
         <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">

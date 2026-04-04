@@ -3,7 +3,6 @@ import { InvoicePDF } from "components/invoice-generator";
 import { Button } from "components/ui/button";
 import { useImageLoader } from "hooks/use-image-loader";
 import { cn } from "lib/utils";
-import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
@@ -63,7 +62,6 @@ export function DownloadInvoice({
       className={cn(className)}
       {...props}
     >
-      <DownloadIcon className="size-4" />
       Download
     </Button>
   );
