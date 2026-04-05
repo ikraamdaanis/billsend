@@ -11,7 +11,10 @@
     "format": "prettier",
     "check": "prettier --write . && eslint --fix",
     "ts-lint": "tsc --noEmit --incremental --watch",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "preview": "vite preview",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -60,6 +63,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.31.0",
     "@eslint/js": "^9.38.0",
     "@netlify/vite-plugin-tanstack-start": "^1.1.6",
     "@tanstack/eslint-config": "^0.3.0",
@@ -83,6 +87,7 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.46.2",
     "vite": "^7.1.7",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "wrangler": "^4.80.0"
   }
 }
