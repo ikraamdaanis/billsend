@@ -1,8 +1,5 @@
 import { currencySymbols } from "consts/currencies";
 import { addDays, format } from "date-fns";
-import { create } from "zustand";
-import { immer } from "zustand/middleware/immer";
-import { subscribeWithSelector } from "zustand/middleware";
 import type {
   Invoice,
   InvoiceClient,
@@ -14,6 +11,9 @@ import type {
   TextSettings
 } from "types";
 import { calculateInvoiceTotals } from "utils/calculate-invoice-totals";
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 // Build a Map for O(1) currency symbol lookups
 const currencySymbolMap = new Map(
@@ -578,12 +578,11 @@ export const useInvoiceStore = create<InvoiceStore>()(
       updateItem: (index, field, value) =>
         set(state => {
           const item = state.items[index];
-          if (item) {
-            (item as Record<string, unknown>)[field] = value;
-            // Recalculate item amount
-            item.amount = item.quantity * item.unitPrice;
-            recalculate(state);
-          }
+
+          (item as Record<string, unknown>)[field] = value;
+          // Recalculate item amount
+          item.amount = item.quantity * item.unitPrice;
+          recalculate(state);
         }),
 
       // Pricing

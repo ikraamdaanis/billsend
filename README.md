@@ -50,4 +50,4 @@ bun run ts-lint      # Type check (watch)
 
 ## Deployment
 
-Configured for **Netlify** (see `@netlify/vite-plugin-tanstack-start`).
+Use `bun run deploy` (build + `wrangler deploy`). Configure targets in `wrangler.jsonc`.
