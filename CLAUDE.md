@@ -16,7 +16,7 @@ Billsend is a free, local-first invoice generator that runs entirely in the brow
 - **Forms:** React Hook Form + Zod validation
 - **Icons:** lucide-react
 - **Package Manager:** Bun
-- **Deployment:** Netlify
+- **Deployment:** Cloudflare Workers (`wrangler deploy`)
 
 ## Commands
 

@@ -11,7 +11,4 @@ count.txt
 .output
 .vinxi
 .turbo
-
-# Local Netlify folder
-.netlify
 tsconfig.tsbuildinfo
