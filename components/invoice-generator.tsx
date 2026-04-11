@@ -23,9 +23,7 @@ import {
 } from "react";
 import { useInvoiceData } from "stores/invoice-selectors";
 import type { Invoice } from "types";
-import { getFontWeight } from "utils/get-font-weight";
-import { getTextStyles } from "utils/get-text-styles";
-import { scaleFontSize } from "utils/scale-font-size";
+import { pdfStyle } from "utils/pdf-styles";
 
 // Only register fonts on the client side
 if (typeof window !== "undefined") {
@@ -209,14 +207,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
           <View style={styles.headerContent}>
-            <Text
-              style={{
-                textAlign: invoice.titleSettings.align,
-                fontSize: scaleFontSize(invoice.titleSettings.size),
-                fontWeight: getFontWeight(invoice.titleSettings.weight),
-                color: invoice.titleSettings.color
-              }}
-            >
+            <Text style={pdfStyle(invoice.titleSettings)}>
               {invoice.title}
             </Text>
             <View style={styles.sellerInfo}>
@@ -224,24 +215,16 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
                 <Text
                   style={{
                     ...styles.clientTitle,
-                    ...getTextStyles({
-                      settings: invoice.sellerSettings.label,
-                      isPdf: true
-                    })
+                    ...pdfStyle(invoice.sellerSettings.label)
                   }}
                 >
                   {invoice.seller.label}
                 </Text>
               )}
-              {renderMultilineText(invoice.seller.content, {
-                textAlign: invoice.sellerSettings.content.align,
-                fontSize: scaleFontSize(invoice.sellerSettings.content.size),
-                fontWeight: getFontWeight(
-                  invoice.sellerSettings.content.weight
-                ),
-                color: invoice.sellerSettings.content.color,
-                marginBottom: 2
-              })}
+              {renderMultilineText(
+                invoice.seller.content,
+                pdfStyle(invoice.sellerSettings.content, { marginBottom: 2 })
+              )}
             </View>
           </View>
           {!!imageUrl && <PDFImage src={imageUrl} style={styles.logo} />}
@@ -251,10 +234,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{
                 ...styles.clientTitle,
-                ...getTextStyles({
-                  settings: invoice.clientSettings.label,
-                  isPdf: true
-                })
+                ...pdfStyle(invoice.clientSettings.label)
               }}
             >
               {invoice.client.label}
@@ -263,23 +243,17 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         </View>
         <View style={styles.detailsRow}>
           <View style={styles.clientInfo}>
-            {renderMultilineText(invoice.client.content, {
-              fontSize: scaleFontSize(invoice.clientSettings.content.size),
-              fontWeight: getFontWeight(invoice.clientSettings.content.weight),
-              color: invoice.clientSettings.content.color,
-              marginBottom: 2,
-              textAlign: invoice.clientSettings.content.align
-            })}
+            {renderMultilineText(
+              invoice.client.content,
+              pdfStyle(invoice.clientSettings.content, { marginBottom: 2 })
+            )}
           </View>
           <View style={styles.invoiceDetails}>
             <View style={styles.detailsField}>
               <Text
                 style={{
                   ...styles.detailsLabel,
-                  ...getTextStyles({
-                    settings: invoice.numberSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.numberSettings.label)
                 }}
               >
                 Invoice number:
@@ -287,10 +261,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.detailsValue,
-                  ...getTextStyles({
-                    settings: invoice.numberSettings.value,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.numberSettings.value)
                 }}
               >
                 {invoice.number}
@@ -300,10 +271,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.detailsLabel,
-                  ...getTextStyles({
-                    settings: invoice.invoiceDateSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.invoiceDateSettings.label)
                 }}
               >
                 Invoice date:
@@ -311,10 +279,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.detailsValue,
-                  ...getTextStyles({
-                    settings: invoice.invoiceDateSettings.value,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.invoiceDateSettings.value)
                 }}
               >
                 {invoice.invoiceDate}
@@ -324,10 +289,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.detailsLabel,
-                  ...getTextStyles({
-                    settings: invoice.dueDateSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.dueDateSettings.label)
                 }}
               >
                 Payment due:
@@ -335,10 +297,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.detailsValue,
-                  ...getTextStyles({
-                    settings: invoice.dueDateSettings.value,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.dueDateSettings.value)
                 }}
               >
                 {invoice.dueDate}
@@ -355,66 +314,36 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
           >
             <View style={[styles.tableCell, { width: "40%" }]}>
               <Text
-                style={{
-                  textAlign:
-                    invoice.tableSettings.descriptionHeaderSettings.align,
-                  fontSize: scaleFontSize(
-                    invoice.tableSettings.descriptionHeaderSettings.size
-                  ),
-                  fontWeight: getFontWeight(
-                    invoice.tableSettings.descriptionHeaderSettings.weight
-                  ),
-                  color: invoice.tableSettings.descriptionHeaderSettings.color
-                }}
+                style={pdfStyle(
+                  invoice.tableSettings.descriptionHeaderSettings
+                )}
               >
                 {invoice.tableSettings.descriptionHeaderSettings.label}
               </Text>
             </View>
             <View style={[styles.tableCell, { width: "20%" }]}>
               <Text
-                style={{
-                  textAlign: invoice.tableSettings.quantityHeaderSettings.align,
-                  fontSize: scaleFontSize(
-                    invoice.tableSettings.quantityHeaderSettings.size
-                  ),
-                  fontWeight: getFontWeight(
-                    invoice.tableSettings.quantityHeaderSettings.weight
-                  ),
-                  color: invoice.tableSettings.quantityHeaderSettings.color
-                }}
+                style={pdfStyle(
+                  invoice.tableSettings.quantityHeaderSettings
+                )}
               >
                 {invoice.tableSettings.quantityHeaderSettings.label}
               </Text>
             </View>
             <View style={[styles.tableCell, { width: "20%" }]}>
               <Text
-                style={{
-                  textAlign:
-                    invoice.tableSettings.unitPriceHeaderSettings.align,
-                  fontSize: scaleFontSize(
-                    invoice.tableSettings.unitPriceHeaderSettings.size
-                  ),
-                  fontWeight: getFontWeight(
-                    invoice.tableSettings.unitPriceHeaderSettings.weight
-                  ),
-                  color: invoice.tableSettings.unitPriceHeaderSettings.color
-                }}
+                style={pdfStyle(
+                  invoice.tableSettings.unitPriceHeaderSettings
+                )}
               >
                 {invoice.tableSettings.unitPriceHeaderSettings.label}
               </Text>
             </View>
             <View style={[styles.tableCell, { width: "20%" }]}>
               <Text
-                style={{
-                  textAlign: invoice.tableSettings.amountHeaderSettings.align,
-                  fontSize: scaleFontSize(
-                    invoice.tableSettings.amountHeaderSettings.size
-                  ),
-                  fontWeight: getFontWeight(
-                    invoice.tableSettings.amountHeaderSettings.weight
-                  ),
-                  color: invoice.tableSettings.amountHeaderSettings.color
-                }}
+                style={pdfStyle(
+                  invoice.tableSettings.amountHeaderSettings
+                )}
               >
                 {invoice.tableSettings.amountHeaderSettings.label}
               </Text>
@@ -430,67 +359,36 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               >
                 <View style={[styles.tableCell, { width: "40%" }]}>
                   <Text
-                    style={{
-                      textAlign:
-                        invoice.tableSettings.descriptionRowSettings.align,
-                      fontSize: scaleFontSize(
-                        invoice.tableSettings.descriptionRowSettings.size
-                      ),
-                      fontWeight: getFontWeight(
-                        invoice.tableSettings.descriptionRowSettings.weight
-                      ),
-                      color: invoice.tableSettings.descriptionRowSettings.color
-                    }}
+                    style={pdfStyle(
+                      invoice.tableSettings.descriptionRowSettings
+                    )}
                   >
                     {item.description}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, { width: "20%" }]}>
                   <Text
-                    style={{
-                      textAlign:
-                        invoice.tableSettings.quantityRowSettings.align,
-                      fontSize: scaleFontSize(
-                        invoice.tableSettings.quantityRowSettings.size
-                      ),
-                      fontWeight: getFontWeight(
-                        invoice.tableSettings.quantityRowSettings.weight
-                      ),
-                      color: invoice.tableSettings.quantityRowSettings.color
-                    }}
+                    style={pdfStyle(
+                      invoice.tableSettings.quantityRowSettings
+                    )}
                   >
                     {item.quantity}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, { width: "20%" }]}>
                   <Text
-                    style={{
-                      textAlign:
-                        invoice.tableSettings.unitPriceRowSettings.align,
-                      fontSize: scaleFontSize(
-                        invoice.tableSettings.unitPriceRowSettings.size
-                      ),
-                      fontWeight: getFontWeight(
-                        invoice.tableSettings.unitPriceRowSettings.weight
-                      ),
-                      color: invoice.tableSettings.unitPriceRowSettings.color
-                    }}
+                    style={pdfStyle(
+                      invoice.tableSettings.unitPriceRowSettings
+                    )}
                   >
                     {formatCurrency(item.unitPrice, invoice.currency)}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, { width: "20%" }]}>
                   <Text
-                    style={{
-                      textAlign: invoice.tableSettings.amountRowSettings.align,
-                      fontSize: scaleFontSize(
-                        invoice.tableSettings.amountRowSettings.size
-                      ),
-                      fontWeight: getFontWeight(
-                        invoice.tableSettings.amountRowSettings.weight
-                      ),
-                      color: invoice.tableSettings.amountRowSettings.color
-                    }}
+                    style={pdfStyle(
+                      invoice.tableSettings.amountRowSettings
+                    )}
                   >
                     {formatCurrency(
                       item.quantity * item.unitPrice,
@@ -507,10 +405,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{
                 ...styles.totalLabel,
-                ...getTextStyles({
-                  settings: invoice.subtotalSettings.label,
-                  isPdf: true
-                })
+                ...pdfStyle(invoice.subtotalSettings.label)
               }}
             >
               Subtotal
@@ -518,10 +413,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{
                 ...styles.totalValue,
-                ...getTextStyles({
-                  settings: invoice.subtotalSettings.value,
-                  isPdf: true
-                })
+                ...pdfStyle(invoice.subtotalSettings.value)
               }}
             >
               {formatCurrency(invoice.subtotal, invoice.currency)}
@@ -532,10 +424,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.totalLabel,
-                  ...getTextStyles({
-                    settings: invoice.taxSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.taxSettings.label)
                 }}
               >
                 Tax {invoice.tax.percentage}%
@@ -543,10 +432,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.totalValue,
-                  ...getTextStyles({
-                    settings: invoice.taxSettings.value,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.taxSettings.value)
                 }}
               >
                 {formatCurrency(invoice.tax.amount, invoice.currency)}
@@ -558,10 +444,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.totalLabel,
-                  ...getTextStyles({
-                    settings: invoice.feesSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.feesSettings.label)
                 }}
               >
                 Fees
@@ -569,10 +452,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.totalValue,
-                  ...getTextStyles({
-                    settings: invoice.feesSettings.value,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.feesSettings.value)
                 }}
               >
                 {formatCurrency(invoice.fees, invoice.currency)}
@@ -584,10 +464,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.totalLabel,
-                  ...getTextStyles({
-                    settings: invoice.discountsSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.discountsSettings.label)
                 }}
               >
                 Discounts
@@ -595,10 +472,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.totalValue,
-                  ...getTextStyles({
-                    settings: invoice.discountsSettings.value,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.discountsSettings.value)
                 }}
               >
                 {formatCurrency(invoice.discounts, invoice.currency)}
@@ -609,10 +483,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{
                 ...styles.totalLabel,
-                ...getTextStyles({
-                  settings: invoice.totalSettings.label,
-                  isPdf: true
-                })
+                ...pdfStyle(invoice.totalSettings.label)
               }}
             >
               Total
@@ -620,10 +491,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{
                 ...styles.totalValue,
-                ...getTextStyles({
-                  settings: invoice.totalSettings.value,
-                  isPdf: true
-                })
+                ...pdfStyle(invoice.totalSettings.value)
               }}
             >
               {formatCurrency(invoice.total, invoice.currency)}
@@ -636,10 +504,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{
                   ...styles.termsTitle,
-                  ...getTextStyles({
-                    settings: invoice.termsSettings.label,
-                    isPdf: true
-                  })
+                  ...pdfStyle(invoice.termsSettings.label)
                 }}
               >
                 {invoice.terms.label}
@@ -648,10 +513,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{
                 ...styles.termsContent,
-                ...getTextStyles({
-                  settings: invoice.termsSettings.content,
-                  isPdf: true
-                })
+                ...pdfStyle(invoice.termsSettings.content)
               }}
             >
               {invoice.terms.content}
