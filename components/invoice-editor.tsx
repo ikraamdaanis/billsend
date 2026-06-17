@@ -32,14 +32,11 @@ import {
 } from "context/invoice-document-context";
 import { useUI } from "context/ui-context";
 import { getInvoice, saveInvoice } from "db";
-import { useInvoiceHistory } from "hooks/use-invoice-history";
 import {
   CheckIcon,
   Loader2Icon,
   PenLineIcon,
-  Redo2Icon,
-  SlidersHorizontalIcon,
-  Undo2Icon
+  SlidersHorizontalIcon
 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -130,8 +127,6 @@ function Toolbar({
           saveDialogOpen={saveDialogOpen}
           onSaveDialogOpenChange={setSaveDialogOpen}
         />
-        <span className="bg-border hidden h-5 w-px sm:block" />
-        <UndoRedoButtons />
       </div>
       <div className="absolute left-1/2 -translate-x-1/2">
         <button
@@ -154,37 +149,6 @@ function Toolbar({
         onRename={handleRename}
       />
     </nav>
-  );
-}
-
-function UndoRedoButtons() {
-  const { undo, redo, canUndo, canRedo } = useInvoiceHistory();
-
-  return (
-    <div className="flex items-center gap-0.5">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="size-7"
-        onClick={undo}
-        disabled={!canUndo}
-        aria-label="Undo"
-        title="Undo (⌘Z)"
-      >
-        <Undo2Icon className="size-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        className="size-7"
-        onClick={redo}
-        disabled={!canRedo}
-        aria-label="Redo"
-        title="Redo (⇧⌘Z)"
-      >
-        <Redo2Icon className="size-4" />
-      </Button>
-    </div>
   );
 }
 
