@@ -27,20 +27,26 @@ import {
   DrawerTrigger
 } from "components/ui/drawer";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger
+} from "components/ui/select";
+import { currencySymbols } from "consts/currencies";
+import {
   updateCurrentInvoiceDocument,
   useInvoiceDocument
 } from "context/invoice-document-context";
 import { useUI } from "context/ui-context";
 import { getInvoice, saveInvoice } from "db";
-import {
-  CheckIcon,
-  Loader2Icon,
-  PenLineIcon,
-  SlidersHorizontalIcon
-} from "lucide-react";
+import { CheckIcon, Loader2Icon, SlidersHorizontalIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { useInvoiceDataAndActions } from "stores/invoice-selectors";
+import {
+  useCurrencySlice,
+  useInvoiceDataAndActions
+} from "stores/invoice-selectors";
+import type { Currency } from "types";
 
 const TOOLBAR_HEIGHT = 50;
 
@@ -128,15 +134,16 @@ function Toolbar({
           onSaveDialogOpenChange={setSaveDialogOpen}
         />
       </div>
-      <div className="absolute left-1/2 -translate-x-1/2">
+      <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1">
         <button
           type="button"
           onClick={handleTitleClick}
-          className="group hover:bg-accent flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 transition-colors"
+          className="hover:bg-accent flex cursor-text items-center rounded-md px-2 py-1 transition-colors"
         >
           <h2 className="text-foreground text-sm font-medium">{displayName}</h2>
-          <PenLineIcon className="text-muted-foreground size-3 opacity-0 transition-opacity group-hover:opacity-100" />
         </button>
+        <span className="bg-border h-4 w-px" aria-hidden="true" />
+        <CurrencyPicker />
       </div>
       <div className="ml-auto flex items-center gap-2">
         <SaveStatus onRequestSaveAs={() => setSaveDialogOpen(true)} />
@@ -214,6 +221,37 @@ function SaveStatus({ onRequestSaveAs }: { onRequestSaveAs: () => void }) {
       )}
       <span className="hidden sm:inline">{label}</span>
     </button>
+  );
+}
+
+function CurrencyPicker() {
+  const { currency, setCurrency } = useCurrencySlice();
+  const current = currencySymbols.find(item => item.code === currency);
+
+  return (
+    <Select
+      value={currency}
+      onValueChange={value => setCurrency(value as Currency)}
+    >
+      <SelectTrigger
+        aria-label="Currency"
+        className="hover:bg-accent focus-visible:bg-accent h-7 gap-1.5 rounded-md border-0 bg-transparent px-2 shadow-none focus-visible:ring-0 focus-visible:outline-none"
+      >
+        <span className="text-foreground text-sm font-medium">
+          {current?.symbol}
+        </span>
+        <span className="text-muted-foreground text-xs">
+          {current?.currency}
+        </span>
+      </SelectTrigger>
+      <SelectContent align="center" className="max-h-72">
+        {currencySymbols.map(({ code, symbol, currency: currencyName }) => (
+          <SelectItem key={code} value={code} className="text-xs">
+            {symbol} - {currencyName}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
