@@ -111,7 +111,7 @@ export function ImportDataDialog({
               )}
               <label
                 htmlFor="import-file-input"
-                className="border-border hover:bg-accent flex w-full cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed p-8 transition-colors"
+                className="border-border hover:bg-accent flex w-full cursor-pointer flex-col items-center gap-2 rounded-md border-2 border-dashed p-8 transition-colors"
               >
                 <UploadIcon className="text-muted-foreground h-8 w-8" />
                 <span className="text-sm font-medium">
