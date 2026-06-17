@@ -5,6 +5,7 @@ import { SettingsSection } from "components/ui/settings-section";
 import { useUI } from "context/ui-context";
 import { useClientSlice } from "stores/invoice-selectors";
 import { useInvoiceStore } from "stores/invoice-store";
+import { applyTextSetting } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceClientDetails() {
@@ -18,7 +19,8 @@ export function InvoiceClientDetails() {
 
 function ClientLabel() {
   const { client, clientSettings, setClient } = useClientSlice();
-  const { setActiveSettings } = useUI();
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceInput
@@ -26,7 +28,18 @@ function ClientLabel() {
       className="font-medium md:text-base"
       onChange={value => setClient(prev => ({ ...prev, label: value }))}
       placeholder="To"
-      onFocus={() => setActiveSettings("client")}
+      onFocus={event => {
+        setActiveSettings("client");
+        setActiveField({
+          anchorEl: event.currentTarget,
+          selector: state => state.clientSettings.label,
+          update: (key, value) =>
+            setClientSettings(prev => ({
+              ...prev,
+              label: applyTextSetting(prev.label, key, value)
+            }))
+        });
+      }}
       style={getTextStyles({ settings: clientSettings.label })}
     />
   );
@@ -34,14 +47,26 @@ function ClientLabel() {
 
 function ClientContent() {
   const { client, clientSettings, setClient } = useClientSlice();
-  const { setActiveSettings } = useUI();
+  const setClientSettings = useInvoiceStore(state => state.setClientSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceTextArea
       id="invoice-field-client"
       value={client.content}
       onChange={value => setClient(prev => ({ ...prev, content: value }))}
-      onFocus={() => setActiveSettings("client")}
+      onFocus={event => {
+        setActiveSettings("client");
+        setActiveField({
+          anchorEl: event.currentTarget,
+          selector: state => state.clientSettings.content,
+          update: (key, value) =>
+            setClientSettings(prev => ({
+              ...prev,
+              content: applyTextSetting(prev.content, key, value)
+            }))
+        });
+      }}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: clientSettings.content })}
       placeholder={client.placeholder}

@@ -3,18 +3,28 @@ import { TextStyleControls } from "components/settings-fields";
 import { useUI } from "context/ui-context";
 import { useTitleSlice } from "stores/invoice-selectors";
 import { useInvoiceStore } from "stores/invoice-store";
+import { applyTextSetting } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceTitle() {
   const { title, titleSettings, setTitle } = useTitleSlice();
-  const { setActiveSettings } = useUI();
+  const setTitleSettings = useInvoiceStore(state => state.setTitleSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceInput
       id="invoice-field-title"
       value={title}
       onChange={setTitle}
-      onFocus={() => setActiveSettings("title")}
+      onFocus={event => {
+        setActiveSettings("title");
+        setActiveField({
+          anchorEl: event.currentTarget,
+          selector: state => state.titleSettings,
+          update: (key, value) =>
+            setTitleSettings(prev => applyTextSetting(prev, key, value))
+        });
+      }}
       className="w-full text-5xl font-semibold"
       style={{ ...getTextStyles({ settings: titleSettings }) }}
       placeholder="Invoice"

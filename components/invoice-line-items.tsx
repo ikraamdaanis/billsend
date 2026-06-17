@@ -1,6 +1,5 @@
 import { InvoiceInput } from "components/invoice-input";
 import { Button } from "components/ui/button";
-import { useUI } from "context/ui-context";
 import { formatCurrency } from "consts/currencies";
 import type { LineItemTab } from "consts/events";
 import {
@@ -8,16 +7,18 @@ import {
   LINE_ITEM_TAB_SECTIONS,
   TAB_SELECT_EVENTS
 } from "consts/events";
+import { useUI } from "context/ui-context";
 import { cn } from "lib/utils";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
-import { useLineItemsSlice, useCurrencySymbol } from "stores/invoice-selectors";
+import { useCurrencySymbol, useLineItemsSlice } from "stores/invoice-selectors";
 import type {
   Invoice,
   InvoiceItem,
   TableColumnSettings,
   TextSettings
 } from "types";
+import { buildFieldUpdate } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 import { setActiveTab } from "utils/set-active-tab";
 
@@ -152,7 +153,7 @@ function TableHeader() {
 
 function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
   const { tableSettings, setTableSettings } = useLineItemsSlice();
-  const { setActiveSettings } = useUI();
+  const { setActiveSettings, setActiveField } = useUI();
 
   const headerSettings = tableSettings[
     column.headerSettingsKey
@@ -188,6 +189,15 @@ function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
       <InvoiceInput
         value={headerSettings.label || ""}
         onChange={handleChange}
+        onFocus={event => {
+          handleClick();
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state =>
+              state.tableSettings[column.headerSettingsKey] as TextSettings,
+            update: buildFieldUpdate(setTableSettings, column.headerSettingsKey)
+          });
+        }}
         className={column.headerInputClassName}
         placeholder={column.headerPlaceholder}
         style={getTextStyles({
@@ -244,18 +254,25 @@ function TableCell({
   index: number;
   amount: number;
 }) {
-  const { tableSettings, currency, updateItem } = useLineItemsSlice();
+  const { tableSettings, setTableSettings, currency, updateItem } =
+    useLineItemsSlice();
   const currencySymbol = useCurrencySymbol();
-  const { setActiveSettings } = useUI();
+  const { setActiveSettings, setActiveField } = useUI();
 
   const rowSettings = tableSettings[column.rowSettingsKey] as TextSettings;
 
-  function handleFocus() {
+  function selectRow(anchorEl: HTMLElement) {
     setActiveSettings("table");
     setActiveTab({
       eventType: TAB_SELECT_EVENTS.lineItems,
       tab: column.tab,
       option: LINE_ITEM_TAB_SECTIONS.row
+    });
+    setActiveField({
+      anchorEl,
+      selector: state =>
+        state.tableSettings[column.rowSettingsKey] as TextSettings,
+      update: buildFieldUpdate(setTableSettings, column.rowSettingsKey)
     });
   }
 
@@ -319,7 +336,10 @@ function TableCell({
 
   if (column.cell.kind === "amount") {
     return (
-      <div className={column.cell.wrapperClassName} onClick={handleFocus}>
+      <div
+        className={column.cell.wrapperClassName}
+        onClick={event => selectRow(event.currentTarget)}
+      >
         <span
           className={column.cell.displayClassName}
           style={getTextStyles({
@@ -359,7 +379,7 @@ function TableCell({
         onChange={handleChange}
         className={column.cell.inputClassName}
         onBlur={handleBlur}
-        onFocus={handleFocus}
+        onFocus={event => selectRow(event.currentTarget)}
         style={getTextStyles({
           settings: rowSettings
         })}

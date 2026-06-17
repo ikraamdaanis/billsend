@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { DownloadInvoice } from "components/download-invoice";
+import { FieldToolbar } from "components/field-toolbar";
 import { InvoiceCanvas } from "components/invoice-canvas";
 import { InvoiceClientDetails } from "components/invoice-client-details";
 import { InvoiceDetails } from "components/invoice-details";
@@ -58,15 +59,15 @@ export function InvoiceEditor() {
       <div className="h-dvh w-full">
         <Toolbar setIsModalOpen={setIsModalOpen} />
         <div
-          className="relative flex w-full grid-cols-[1fr_240px] flex-col bg-zinc-200 lg:grid"
+          className="relative flex w-full flex-col bg-zinc-200"
           style={{
             height: `calc(100dvh - ${TOOLBAR_HEIGHT}px)`
           }}
         >
           <CanvasArea />
-          <SettingsArea />
         </div>
       </div>
+      <FieldToolbar />
       <MobileSettingsDrawer />
       <LeavePageDialog
         isModalOpen={isModalOpen}
@@ -256,10 +257,11 @@ function CurrencyPicker() {
 }
 
 function CanvasArea() {
-  const { setActiveSettings } = useUI();
+  const { setActiveSettings, setActiveField } = useUI();
 
   function handleSectionClick() {
     setActiveSettings("main");
+    setActiveField(null);
   }
 
   return (
@@ -268,14 +270,6 @@ function CanvasArea() {
       <Mid />
       <Bottom />
     </InvoiceCanvas>
-  );
-}
-
-function SettingsArea() {
-  return (
-    <section className="bg-background border-border relative z-20 hidden h-full overflow-y-auto border-l pb-4 lg:block">
-      <SettingsPanel />
-    </section>
   );
 }
 

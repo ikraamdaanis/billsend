@@ -7,12 +7,21 @@ import {
   useMemo,
   useState
 } from "react";
-import type { SettingsType } from "types";
+import type { InvoiceStore } from "stores/invoice-store";
+import type { SettingsType, TextSettings } from "types";
 import { getCanvasLockState, setCanvasLockState } from "utils/canvas-lock";
+
+type ActiveField = {
+  anchorEl: HTMLElement;
+  selector: (state: InvoiceStore) => TextSettings;
+  update: (key: keyof TextSettings, value: string) => void;
+};
 
 type UIContextValue = {
   activeSettings: SettingsType;
   setActiveSettings: (settings: SettingsType) => void;
+  activeField: ActiveField | null;
+  setActiveField: (field: ActiveField | null) => void;
   canvasLock: boolean;
   setCanvasLock: (locked: boolean) => void;
 };
@@ -21,6 +30,7 @@ const UIContext = createContext<UIContextValue | null>(null);
 
 export function UIProvider({ children }: { children: ReactNode }) {
   const [activeSettings, setActiveSettings] = useState<SettingsType>("main");
+  const [activeField, setActiveField] = useState<ActiveField | null>(null);
   const [canvasLock, setCanvasLockState_internal] = useState(false);
 
   // Initialize canvas lock from cookie on mount
@@ -40,10 +50,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
     () => ({
       activeSettings,
       setActiveSettings,
+      activeField,
+      setActiveField,
       canvasLock,
       setCanvasLock
     }),
-    [activeSettings, canvasLock, setCanvasLock]
+    [activeSettings, activeField, canvasLock, setCanvasLock]
   );
 
   return <UIContext.Provider value={value}>{children}</UIContext.Provider>;
