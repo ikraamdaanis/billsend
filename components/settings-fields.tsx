@@ -167,7 +167,7 @@ export const AlignSettings = memo(function AlignSettings({
           type="single"
           value={value}
           onValueChange={val => handleInput(val as TextSettings["align"])}
-          className="gap-0 rounded-lg bg-zinc-200 dark:bg-zinc-900"
+          className="gap-0 rounded-md bg-zinc-200 dark:bg-zinc-900"
         >
           <ToggleGroupItem
             value="left"
