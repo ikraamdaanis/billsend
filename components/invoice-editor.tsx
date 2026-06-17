@@ -26,12 +26,24 @@ import {
   DrawerTitle,
   DrawerTrigger
 } from "components/ui/drawer";
-import { useInvoiceDocument } from "context/invoice-document-context";
+import {
+  updateCurrentInvoiceDocument,
+  useInvoiceDocument
+} from "context/invoice-document-context";
 import { useUI } from "context/ui-context";
 import { getInvoice, saveInvoice } from "db";
-import { PenLineIcon, SlidersHorizontalIcon } from "lucide-react";
-import { useState } from "react";
+import { useInvoiceHistory } from "hooks/use-invoice-history";
+import {
+  CheckIcon,
+  Loader2Icon,
+  PenLineIcon,
+  Redo2Icon,
+  SlidersHorizontalIcon,
+  Undo2Icon
+} from "lucide-react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { useInvoiceDataAndActions } from "stores/invoice-selectors";
 
 const TOOLBAR_HEIGHT = 50;
 
@@ -118,6 +130,8 @@ function Toolbar({
           saveDialogOpen={saveDialogOpen}
           onSaveDialogOpenChange={setSaveDialogOpen}
         />
+        <span className="bg-border hidden h-5 w-px sm:block" />
+        <UndoRedoButtons />
       </div>
       <div className="absolute left-1/2 -translate-x-1/2">
         <button
@@ -129,7 +143,8 @@ function Toolbar({
           <PenLineIcon className="text-muted-foreground size-3 opacity-0 transition-opacity group-hover:opacity-100" />
         </button>
       </div>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <SaveStatus onRequestSaveAs={() => setSaveDialogOpen(true)} />
         <DownloadInvoice />
       </div>
       <RenameInvoiceDialog
@@ -139,6 +154,102 @@ function Toolbar({
         onRename={handleRename}
       />
     </nav>
+  );
+}
+
+function UndoRedoButtons() {
+  const { undo, redo, canUndo, canRedo } = useInvoiceHistory();
+
+  return (
+    <div className="flex items-center gap-0.5">
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="size-7"
+        onClick={undo}
+        disabled={!canUndo}
+        aria-label="Undo"
+        title="Undo (⌘Z)"
+      >
+        <Undo2Icon className="size-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        className="size-7"
+        onClick={redo}
+        disabled={!canRedo}
+        aria-label="Redo"
+        title="Redo (⇧⌘Z)"
+      >
+        <Redo2Icon className="size-4" />
+      </Button>
+    </div>
+  );
+}
+
+function SaveStatus({ onRequestSaveAs }: { onRequestSaveAs: () => void }) {
+  const { currentDocumentId, hasUnsavedChanges, setLastSavedInvoice } =
+    useInvoiceDocument();
+  const { invoice } = useInvoiceDataAndActions();
+  const [saving, setSaving] = useState(false);
+
+  const handleClick = useCallback(() => {
+    if (!currentDocumentId) {
+      onRequestSaveAs();
+
+      return;
+    }
+
+    if (!hasUnsavedChanges) return;
+
+    setSaving(true);
+    updateCurrentInvoiceDocument(
+      currentDocumentId,
+      invoice,
+      setLastSavedInvoice
+    )
+      .then(() => toast.success("Invoice saved"))
+      .catch(error =>
+        toast.error(
+          error instanceof Error ? error.message : "Failed to save invoice"
+        )
+      )
+      .finally(() => setSaving(false));
+  }, [
+    currentDocumentId,
+    hasUnsavedChanges,
+    invoice,
+    setLastSavedInvoice,
+    onRequestSaveAs
+  ]);
+
+  const isSaved = Boolean(currentDocumentId) && !hasUnsavedChanges;
+  const label = saving
+    ? "Saving"
+    : isSaved
+      ? "Saved"
+      : currentDocumentId
+        ? "Unsaved changes"
+        : "Not saved";
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={saving || isSaved}
+      aria-label={label}
+      className="text-muted-foreground hover:bg-accent flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors disabled:cursor-default disabled:hover:bg-transparent"
+    >
+      {saving ? (
+        <Loader2Icon className="size-3.5 animate-spin" />
+      ) : isSaved ? (
+        <CheckIcon className="size-3.5 text-emerald-600" />
+      ) : (
+        <span className="size-1.5 rounded-full bg-amber-500" />
+      )}
+      <span className="hidden sm:inline">{label}</span>
+    </button>
   );
 }
 
