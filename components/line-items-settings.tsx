@@ -2,139 +2,16 @@ import {
   CompactColorSetting,
   TextStyleControls
 } from "components/settings-fields";
+import { SettingsSectionPicker } from "components/settings-section-picker";
 import { Input } from "components/ui/input";
 import { Label } from "components/ui/label";
 import { SettingsSection } from "components/ui/settings-section";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import type { LineItemTab } from "consts/events";
 import { LINE_ITEM_TABS, TAB_SELECT_EVENTS } from "consts/events";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useInvoiceStore } from "stores/invoice-store";
 import type { TextSettings } from "types";
-import { handleActiveTab } from "utils/handle-active-tab";
-
-export function LineItemsSettings() {
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<LineItemTab>(
-    LINE_ITEM_TABS.description
-  );
-
-  function isLineItemTab(value: string): value is LineItemTab {
-    return (Object.values(LINE_ITEM_TABS) as LineItemTab[]).includes(
-      value as LineItemTab
-    );
-  }
-
-  const scrollToSelectedTab = useCallback((value: LineItemTab) => {
-    if (!tabsRef.current) return;
-
-    setActiveTab(value);
-    handleActiveTab({ tabsRef, value });
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToSelectedTab(activeTab);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [activeTab, scrollToSelectedTab]);
-
-  useTabSelectEvent(TAB_SELECT_EVENTS.lineItems, tab => {
-    if (isLineItemTab(tab)) {
-      scrollToSelectedTab(tab);
-    }
-  });
-
-  function handleValueChange(value: string) {
-    if (isLineItemTab(value)) {
-      scrollToSelectedTab(value);
-    }
-  }
-
-  return (
-    <Tabs
-      defaultValue={LINE_ITEM_TABS.description}
-      className="w-full"
-      onValueChange={handleValueChange}
-      value={activeTab}
-    >
-      <div ref={tabsRef} className="scrollbar-thin overflow-x-auto pb-1">
-        <TabsList className="inline-flex w-auto min-w-full">
-          <TabsTrigger
-            value={LINE_ITEM_TABS.description}
-            className="min-w-[100px] flex-1"
-            data-value={LINE_ITEM_TABS.description}
-          >
-            Description
-          </TabsTrigger>
-          <TabsTrigger
-            value={LINE_ITEM_TABS.quantity}
-            className="min-w-[80px] flex-1"
-            data-value={LINE_ITEM_TABS.quantity}
-          >
-            Quantity
-          </TabsTrigger>
-          <TabsTrigger
-            value={LINE_ITEM_TABS.unitPrice}
-            className="min-w-[90px] flex-1"
-            data-value={LINE_ITEM_TABS.unitPrice}
-          >
-            Unit Price
-          </TabsTrigger>
-          <TabsTrigger
-            value={LINE_ITEM_TABS.amount}
-            className="min-w-[80px] flex-1"
-            data-value={LINE_ITEM_TABS.amount}
-          >
-            Amount
-          </TabsTrigger>
-        </TabsList>
-      </div>
-      <TabsContent
-        value={LINE_ITEM_TABS.description}
-        className="flex flex-col gap-2"
-      >
-        <ColumnSettings
-          headerKey="descriptionHeaderSettings"
-          rowKey="descriptionRowSettings"
-          labelId="description-header-label"
-        />
-      </TabsContent>
-      <TabsContent
-        value={LINE_ITEM_TABS.quantity}
-        className="flex flex-col gap-2"
-      >
-        <ColumnSettings
-          headerKey="quantityHeaderSettings"
-          rowKey="quantityRowSettings"
-          labelId="quantity-header-label"
-        />
-      </TabsContent>
-      <TabsContent
-        value={LINE_ITEM_TABS.unitPrice}
-        className="flex flex-col gap-2"
-      >
-        <ColumnSettings
-          headerKey="unitPriceHeaderSettings"
-          rowKey="unitPriceRowSettings"
-          labelId="unit-price-header-label"
-        />
-      </TabsContent>
-      <TabsContent
-        value={LINE_ITEM_TABS.amount}
-        className="flex flex-col gap-2"
-      >
-        <ColumnSettings
-          headerKey="amountHeaderSettings"
-          rowKey="amountRowSettings"
-          labelId="amount-header-label"
-        />
-      </TabsContent>
-    </Tabs>
-  );
-}
 
 type HeaderSettingsKey =
   | "descriptionHeaderSettings"
@@ -147,6 +24,85 @@ type RowSettingsKey =
   | "quantityRowSettings"
   | "unitPriceRowSettings"
   | "amountRowSettings";
+
+const COLUMN_CONFIG: Record<
+  LineItemTab,
+  {
+    label: string;
+    headerKey: HeaderSettingsKey;
+    rowKey: RowSettingsKey;
+    labelId: string;
+  }
+> = {
+  [LINE_ITEM_TABS.description]: {
+    label: "Description",
+    headerKey: "descriptionHeaderSettings",
+    rowKey: "descriptionRowSettings",
+    labelId: "description-header-label"
+  },
+  [LINE_ITEM_TABS.quantity]: {
+    label: "Quantity",
+    headerKey: "quantityHeaderSettings",
+    rowKey: "quantityRowSettings",
+    labelId: "quantity-header-label"
+  },
+  [LINE_ITEM_TABS.unitPrice]: {
+    label: "Unit Price",
+    headerKey: "unitPriceHeaderSettings",
+    rowKey: "unitPriceRowSettings",
+    labelId: "unit-price-header-label"
+  },
+  [LINE_ITEM_TABS.amount]: {
+    label: "Amount",
+    headerKey: "amountHeaderSettings",
+    rowKey: "amountRowSettings",
+    labelId: "amount-header-label"
+  }
+};
+
+function isLineItemTab(value: string): value is LineItemTab {
+  return (Object.values(LINE_ITEM_TABS) as LineItemTab[]).includes(
+    value as LineItemTab
+  );
+}
+
+export function LineItemsSettings() {
+  const [activeColumn, setActiveColumn] = useState<LineItemTab>(
+    LINE_ITEM_TABS.description
+  );
+
+  useTabSelectEvent(TAB_SELECT_EVENTS.lineItems, tab => {
+    if (isLineItemTab(tab)) {
+      setActiveColumn(tab);
+    }
+  });
+
+  const column = COLUMN_CONFIG[activeColumn];
+
+  return (
+    <div className="flex flex-col gap-3">
+      <SettingsSectionPicker
+        id="line-item-column"
+        label="Column"
+        value={activeColumn}
+        options={Object.entries(COLUMN_CONFIG).map(([value, config]) => ({
+          value,
+          label: config.label
+        }))}
+        onValueChange={value => {
+          if (isLineItemTab(value)) {
+            setActiveColumn(value);
+          }
+        }}
+      />
+      <ColumnSettings
+        headerKey={column.headerKey}
+        rowKey={column.rowKey}
+        labelId={column.labelId}
+      />
+    </div>
+  );
+}
 
 function ColumnSettings({
   headerKey,

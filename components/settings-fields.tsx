@@ -14,8 +14,7 @@ import { memo } from "react";
 import type { TextSettings } from "types";
 
 const fontSizes = [
-  8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60, 72,
-  96
+  8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 32, 36, 40, 48, 60, 72, 96
 ];
 
 const weights = ["Normal", "Medium", "Semibold", "Bold"];
@@ -48,9 +47,7 @@ export const TextStyleControls = memo(function TextStyleControls({
       <ToggleGroup
         type="single"
         value={align}
-        onValueChange={val =>
-          onAlignChange(val as TextSettings["align"])
-        }
+        onValueChange={val => onAlignChange(val as TextSettings["align"])}
         className="gap-0 rounded-md bg-zinc-100 dark:bg-zinc-900"
       >
         <ToggleGroupItem
@@ -93,9 +90,7 @@ export const TextStyleControls = memo(function TextStyleControls({
       <Label className="text-muted-foreground text-[11px]">Weight</Label>
       <Select
         value={weight}
-        onValueChange={val =>
-          onWeightChange(val as TextSettings["weight"])
-        }
+        onValueChange={val => onWeightChange(val as TextSettings["weight"])}
       >
         <SelectTrigger
           size="sm"
@@ -145,148 +140,6 @@ export const CompactColorSetting = memo(function CompactColorSetting({
     <div className="flex items-center justify-between">
       <Label className="text-muted-foreground text-xs">{label}</Label>
       <ColorPicker color={value} onChange={handleInput} />
-    </div>
-  );
-});
-
-// Legacy individual exports — kept for backward compatibility
-export const AlignSettings = memo(function AlignSettings({
-  value,
-  handleInput
-}: {
-  value: string;
-  handleInput: (value: TextSettings["align"]) => void;
-}) {
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-align" className="text-xs font-medium">
-        Align
-      </Label>
-      <div className="flex items-center justify-end gap-2">
-        <ToggleGroup
-          type="single"
-          value={value}
-          onValueChange={val => handleInput(val as TextSettings["align"])}
-          className="gap-0 rounded-md bg-zinc-200 dark:bg-zinc-900"
-        >
-          <ToggleGroupItem
-            value="left"
-            size="sm"
-            className="group hover:bg-zinc-100/80 dark:hover:bg-zinc-700"
-          >
-            <AlignLeftIcon className="transition group-hover:text-zinc-500 dark:group-hover:text-zinc-100" />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="center"
-            size="sm"
-            className="group hover:bg-zinc-100/80 dark:hover:bg-zinc-700"
-          >
-            <AlignCenterIcon className="transition group-hover:text-zinc-500 dark:group-hover:text-zinc-100" />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="right"
-            size="sm"
-            className="group hover:bg-zinc-100/80 dark:hover:bg-zinc-700"
-          >
-            <AlignRightIcon className="transition group-hover:text-zinc-500 dark:group-hover:text-zinc-100" />
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-    </div>
-  );
-});
-
-export const SizeSettings = memo(function SizeSettings({
-  value,
-  handleInput
-}: {
-  value: string;
-  handleInput: (value: TextSettings["size"]) => void;
-}) {
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-size" className="text-xs font-medium">
-        Size
-      </Label>
-      <div className="flex items-center justify-end gap-2">
-        <Select value={value} onValueChange={val => handleInput(val)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select size" />
-          </SelectTrigger>
-          <SelectContent>
-            {fontSizes.map(s => (
-              <SelectItem key={s} value={s.toString()}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-});
-
-export const FontWeightSettings = memo(function FontWeightSettings({
-  value,
-  handleInput
-}: {
-  value: string;
-  handleInput: (value: TextSettings["weight"]) => void;
-}) {
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-weight" className="text-xs font-medium">
-        Weight
-      </Label>
-      <div className="flex items-center justify-end gap-2">
-        <Select
-          value={value}
-          onValueChange={val => handleInput(val as TextSettings["weight"])}
-        >
-          <SelectTrigger
-            className="text-left"
-            style={{
-              fontWeight: weightMap[value as keyof typeof weightMap]
-            }}
-          >
-            <SelectValue placeholder="Select weight" />
-          </SelectTrigger>
-          <SelectContent>
-            {weights.map(w => (
-              <SelectItem
-                key={w}
-                value={w}
-                style={{
-                  fontWeight: weightMap[w as keyof typeof weightMap]
-                }}
-              >
-                {w}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-  );
-});
-
-export const ColorSettings = memo(function ColorSettings({
-  value,
-  handleInput,
-  label = "Color"
-}: {
-  value: string;
-  handleInput: (value: TextSettings["color"]) => void;
-  label?: string;
-}) {
-  return (
-    <div className="grid grid-cols-[minmax(100px,1fr)_1fr] items-center gap-2">
-      <Label htmlFor="text-color" className="text-xs font-medium">
-        {label}
-      </Label>
-      <div className="flex items-center justify-end gap-2">
-        <ColorPicker color={value} onChange={val => handleInput(val)} />
-      </div>
     </div>
   );
 });

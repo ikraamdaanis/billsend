@@ -1,80 +1,54 @@
 import { TextStyleControls } from "components/settings-fields";
+import { SettingsSectionPicker } from "components/settings-section-picker";
 import { SettingsSection } from "components/ui/settings-section";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "components/ui/tabs";
 import { TAB_SELECT_EVENTS } from "consts/events";
 import { useTabSelectEvent } from "hooks/use-tab-select-event";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useInvoiceStore } from "stores/invoice-store";
 import type { TextSettings } from "types";
-import { handleActiveTab } from "utils/handle-active-tab";
+
+const TOTAL_SECTIONS = [
+  { value: "subtotal", label: "Subtotal" },
+  { value: "tax", label: "Tax" },
+  { value: "fees", label: "Fees" },
+  { value: "discounts", label: "Discounts" },
+  { value: "total", label: "Total" }
+] as const;
+
+type TotalSection = (typeof TOTAL_SECTIONS)[number]["value"];
+
+function isTotalSection(value: string): value is TotalSection {
+  return TOTAL_SECTIONS.some(section => section.value === value);
+}
 
 export function InvoicePricingSettings() {
-  const tabsRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState("subtotal");
+  const [activeSection, setActiveSection] = useState<TotalSection>("subtotal");
 
-  const scrollToSelectedTab = useCallback((value: string) => {
-    if (!tabsRef.current) return;
-
-    setActiveTab(value);
-    handleActiveTab({ tabsRef, value });
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollToSelectedTab(activeTab);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [activeTab, scrollToSelectedTab]);
-
-  useTabSelectEvent(TAB_SELECT_EVENTS.totals, scrollToSelectedTab);
-
-  function handleValueChange(value: string) {
-    scrollToSelectedTab(value);
-  }
+  useTabSelectEvent(TAB_SELECT_EVENTS.totals, tab => {
+    if (isTotalSection(tab)) {
+      setActiveSection(tab);
+    }
+  });
 
   return (
-    <Tabs
-      defaultValue="subtotal"
-      className="w-full"
-      onValueChange={handleValueChange}
-      value={activeTab}
-    >
-      <div ref={tabsRef} className="scrollbar-thin overflow-x-auto pb-1">
-        <TabsList className="inline-flex w-auto min-w-full">
-          <TabsTrigger value="subtotal" data-value="subtotal">
-            Subtotal
-          </TabsTrigger>
-          <TabsTrigger value="tax" data-value="tax" className="min-w-16">
-            Tax
-          </TabsTrigger>
-          <TabsTrigger value="fees" data-value="fees" className="min-w-16">
-            Fees
-          </TabsTrigger>
-          <TabsTrigger value="discounts" data-value="discounts">
-            Discounts
-          </TabsTrigger>
-          <TabsTrigger value="total" data-value="total">
-            Total
-          </TabsTrigger>
-        </TabsList>
-      </div>
-      <TabsContent value="subtotal" className="mt-3 flex flex-col gap-2">
-        <SubtotalSettings />
-      </TabsContent>
-      <TabsContent value="tax" className="mt-3 flex flex-col gap-2">
-        <TaxSettings />
-      </TabsContent>
-      <TabsContent value="fees" className="mt-3 flex flex-col gap-2">
-        <FeesSettings />
-      </TabsContent>
-      <TabsContent value="discounts" className="mt-3 flex flex-col gap-2">
-        <DiscountsSettings />
-      </TabsContent>
-      <TabsContent value="total" className="mt-3 flex flex-col gap-2">
-        <TotalSettings />
-      </TabsContent>
-    </Tabs>
+    <div className="flex flex-col gap-3">
+      <SettingsSectionPicker
+        id="totals-section"
+        label="Row"
+        value={activeSection}
+        options={TOTAL_SECTIONS}
+        onValueChange={value => {
+          if (isTotalSection(value)) {
+            setActiveSection(value);
+          }
+        }}
+      />
+      {activeSection === "subtotal" && <SubtotalSettings />}
+      {activeSection === "tax" && <TaxSettings />}
+      {activeSection === "fees" && <FeesSettings />}
+      {activeSection === "discounts" && <DiscountsSettings />}
+      {activeSection === "total" && <TotalSettings />}
+    </div>
   );
 }
 
