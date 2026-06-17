@@ -71,7 +71,11 @@ function SettingsPanelHeader({
   );
 }
 
-function SettingsContent({ settingsType }: { settingsType: SettingsType }) {
+export function SettingsContent({
+  settingsType
+}: {
+  settingsType: SettingsType;
+}) {
   const settings: Record<SettingsType, ReactNode> = {
     title: <InvoiceTitleSettings />,
     seller: <InvoiceSellerSettings />,

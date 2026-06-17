@@ -20,7 +20,7 @@ const fontSizes = [
 const weights = ["Normal", "Medium", "Semibold", "Bold"];
 
 /**
- * Compact text style controls — align + color on row 1, size + weight on row 2.
+ * Horizontal text style toolbar — align, size, weight, and color in one row.
  */
 export const TextStyleControls = memo(function TextStyleControls({
   align,
@@ -42,8 +42,7 @@ export const TextStyleControls = memo(function TextStyleControls({
   onColorChange: (value: TextSettings["color"]) => void;
 }) {
   return (
-    <div className="grid grid-cols-[42px_1fr] items-center gap-x-2 gap-y-1.5">
-      <Label className="text-muted-foreground text-[11px]">Align</Label>
+    <div className="flex items-center gap-1">
       <ToggleGroup
         type="single"
         value={align}
@@ -72,29 +71,26 @@ export const TextStyleControls = memo(function TextStyleControls({
           <AlignRightIcon className="size-3.5" />
         </ToggleGroupItem>
       </ToggleGroup>
-
-      <Label className="text-muted-foreground text-[11px]">Size</Label>
+      <span className="bg-border mx-0.5 h-5 w-px" aria-hidden="true" />
       <Select value={size} onValueChange={onSizeChange}>
-        <SelectTrigger size="sm" className="h-7 w-full text-xs">
+        <SelectTrigger size="sm" className="h-7 w-[60px] px-2 text-xs">
           <SelectValue placeholder="Size" />
         </SelectTrigger>
         <SelectContent>
-          {fontSizes.map(s => (
-            <SelectItem key={s} value={s.toString()}>
-              {s}
+          {fontSizes.map(fontSize => (
+            <SelectItem key={fontSize} value={fontSize.toString()}>
+              {fontSize}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-
-      <Label className="text-muted-foreground text-[11px]">Weight</Label>
       <Select
         value={weight}
         onValueChange={val => onWeightChange(val as TextSettings["weight"])}
       >
         <SelectTrigger
           size="sm"
-          className="h-7 w-full text-left text-xs"
+          className="h-7 w-[96px] px-2 text-left text-xs"
           style={{
             fontWeight: weightMap[weight as keyof typeof weightMap]
           }}
@@ -102,24 +98,21 @@ export const TextStyleControls = memo(function TextStyleControls({
           <SelectValue placeholder="Weight" />
         </SelectTrigger>
         <SelectContent>
-          {weights.map(w => (
+          {weights.map(weightName => (
             <SelectItem
-              key={w}
-              value={w}
+              key={weightName}
+              value={weightName}
               style={{
-                fontWeight: weightMap[w as keyof typeof weightMap]
+                fontWeight: weightMap[weightName as keyof typeof weightMap]
               }}
             >
-              {w}
+              {weightName}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-
-      <Label className="text-muted-foreground text-[11px]">Color</Label>
-      <div>
-        <ColorPicker color={color} onChange={onColorChange} />
-      </div>
+      <span className="bg-border mx-0.5 h-5 w-px" aria-hidden="true" />
+      <ColorPicker color={color} onChange={onColorChange} />
     </div>
   );
 });

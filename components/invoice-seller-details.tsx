@@ -5,6 +5,7 @@ import { SettingsSection } from "components/ui/settings-section";
 import { useUI } from "context/ui-context";
 import { useSellerSlice } from "stores/invoice-selectors";
 import { useInvoiceStore } from "stores/invoice-store";
+import { applyTextSetting } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceSellerDetails() {
@@ -18,7 +19,8 @@ export function InvoiceSellerDetails() {
 
 function SellerLabel() {
   const { seller, sellerSettings, setSeller } = useSellerSlice();
-  const { setActiveSettings } = useUI();
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceInput
@@ -26,7 +28,18 @@ function SellerLabel() {
       className="font-medium md:text-base"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
       placeholder="From"
-      onFocus={() => setActiveSettings("seller")}
+      onFocus={event => {
+        setActiveSettings("seller");
+        setActiveField({
+          anchorEl: event.currentTarget,
+          selector: state => state.sellerSettings.label,
+          update: (key, value) =>
+            setSellerSettings(prev => ({
+              ...prev,
+              label: applyTextSetting(prev.label, key, value)
+            }))
+        });
+      }}
       style={getTextStyles({ settings: sellerSettings.label })}
     />
   );
@@ -34,14 +47,26 @@ function SellerLabel() {
 
 function SellerContent() {
   const { seller, sellerSettings, setSeller } = useSellerSlice();
-  const { setActiveSettings } = useUI();
+  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceTextArea
       id="invoice-field-seller"
       value={seller.content}
       onChange={value => setSeller(prev => ({ ...prev, content: value }))}
-      onFocus={() => setActiveSettings("seller")}
+      onFocus={event => {
+        setActiveSettings("seller");
+        setActiveField({
+          anchorEl: event.currentTarget,
+          selector: state => state.sellerSettings.content,
+          update: (key, value) =>
+            setSellerSettings(prev => ({
+              ...prev,
+              content: applyTextSetting(prev.content, key, value)
+            }))
+        });
+      }}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: sellerSettings.content })}
       placeholder={seller.placeholder}

@@ -4,6 +4,8 @@ import { formatCurrency } from "consts/currencies";
 import { TAB_SELECT_EVENTS } from "consts/events";
 import { useState } from "react";
 import { usePricingSlice, useCurrencySymbol } from "stores/invoice-selectors";
+import { useInvoiceStore } from "stores/invoice-store";
+import { buildFieldUpdate } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 import { handleCurrencyInput } from "utils/handle-currency-input";
 import { handlePercentageInput } from "utils/handle-percentage-input";
@@ -48,7 +50,10 @@ export function InvoicePricing() {
 
 function SubtotalRow() {
   const { subtotal, subtotalSettings, currency } = usePricingSlice();
-  const { setActiveSettings } = useUI();
+  const setSubtotalSettings = useInvoiceStore(
+    state => state.setSubtotalSettings
+  );
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <div
@@ -64,12 +69,28 @@ function SubtotalRow() {
       <span
         className="inline-block w-full cursor-pointer"
         style={getTextStyles({ settings: subtotalSettings.label })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.subtotalSettings.label,
+            update: buildFieldUpdate(setSubtotalSettings, "label")
+          });
+        }}
       >
         Subtotal
       </span>
       <span
         className="inline-block min-w-40 cursor-pointer text-right text-zinc-900"
         style={getTextStyles({ settings: subtotalSettings.value })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.subtotalSettings.value,
+            update: buildFieldUpdate(setSubtotalSettings, "value")
+          });
+        }}
       >
         {formatCurrency(subtotal, currency)}
       </span>
@@ -79,9 +100,19 @@ function SubtotalRow() {
 
 function TaxRow() {
   const { tax, taxSettings, currency, setTax } = usePricingSlice();
-  const { setActiveSettings } = useUI();
+  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   const [taxInput, setTaxInput] = useState(tax.percentage.toString());
+
+  function selectLabel(anchorEl: HTMLElement) {
+    setActiveSettings("totals");
+    setActiveField({
+      anchorEl,
+      selector: state => state.taxSettings.label,
+      update: buildFieldUpdate(setTaxSettings, "label")
+    });
+  }
 
   return (
     <div
@@ -101,6 +132,7 @@ function TaxRow() {
         <span
           className="inline-block cursor-pointer pr-0.5"
           style={getTextStyles({ settings: taxSettings.label })}
+          onClick={event => selectLabel(event.currentTarget)}
         >
           Tax{" "}
         </span>
@@ -123,7 +155,7 @@ function TaxRow() {
               settings: taxSettings.label,
               remove: ["align"]
             })}
-            onFocus={() => setActiveSettings("totals")}
+            onFocus={event => selectLabel(event.currentTarget)}
           />
           <span style={getTextStyles({ settings: taxSettings.label })}>%</span>
         </span>
@@ -131,6 +163,14 @@ function TaxRow() {
       <span
         className="ml-auto min-w-40 cursor-pointer items-center"
         style={getTextStyles({ settings: taxSettings.value })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.taxSettings.value,
+            update: buildFieldUpdate(setTaxSettings, "value")
+          });
+        }}
       >
         {formatCurrency(tax.amount, currency)}
       </span>
@@ -140,8 +180,9 @@ function TaxRow() {
 
 function FeesRow() {
   const { fees, feesSettings, setFees } = usePricingSlice();
+  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
   const currencySymbol = useCurrencySymbol();
-  const { setActiveSettings } = useUI();
+  const { setActiveSettings, setActiveField } = useUI();
 
   const [feesInput, setFeesInput] = useState(fees.toString());
 
@@ -159,6 +200,14 @@ function FeesRow() {
       <span
         className="inline-block w-full cursor-pointer"
         style={getTextStyles({ settings: feesSettings.label })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.feesSettings.label,
+            update: buildFieldUpdate(setFeesSettings, "label")
+          });
+        }}
       >
         Fees
       </span>
@@ -179,7 +228,14 @@ function FeesRow() {
             setFees(Number(numericValue));
           }}
           onBlur={() => handleInputBlur(feesInput, setFeesInput, setFees)}
-          onFocus={() => setActiveSettings("totals")}
+          onFocus={event => {
+            setActiveSettings("totals");
+            setActiveField({
+              anchorEl: event.currentTarget,
+              selector: state => state.feesSettings.value,
+              update: buildFieldUpdate(setFeesSettings, "value")
+            });
+          }}
         />
       </span>
     </div>
@@ -188,8 +244,11 @@ function FeesRow() {
 
 function DiscountsRow() {
   const { discounts, discountsSettings, setDiscounts } = usePricingSlice();
+  const setDiscountsSettings = useInvoiceStore(
+    state => state.setDiscountsSettings
+  );
   const currencySymbol = useCurrencySymbol();
-  const { setActiveSettings } = useUI();
+  const { setActiveSettings, setActiveField } = useUI();
 
   const [discountsInput, setDiscountsInput] = useState(discounts.toString());
 
@@ -207,6 +266,14 @@ function DiscountsRow() {
       <span
         className="inline-block w-full cursor-pointer"
         style={getTextStyles({ settings: discountsSettings.label })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.discountsSettings.label,
+            update: buildFieldUpdate(setDiscountsSettings, "label")
+          });
+        }}
       >
         Discounts
       </span>
@@ -228,7 +295,14 @@ function DiscountsRow() {
             handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
           }
           className="w-20 text-right"
-          onFocus={() => setActiveSettings("totals")}
+          onFocus={event => {
+            setActiveSettings("totals");
+            setActiveField({
+              anchorEl: event.currentTarget,
+              selector: state => state.discountsSettings.value,
+              update: buildFieldUpdate(setDiscountsSettings, "value")
+            });
+          }}
         />
       </span>
     </div>
@@ -237,7 +311,8 @@ function DiscountsRow() {
 
 function TotalRow() {
   const { total, totalSettings, currency } = usePricingSlice();
-  const { setActiveSettings } = useUI();
+  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
+  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <div
@@ -253,12 +328,28 @@ function TotalRow() {
       <span
         className="inline-block w-full cursor-pointer"
         style={getTextStyles({ settings: totalSettings.label })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.totalSettings.label,
+            update: buildFieldUpdate(setTotalSettings, "label")
+          });
+        }}
       >
         Total
       </span>
       <span
         className="inline-block min-w-40 cursor-pointer text-right font-bold"
         style={getTextStyles({ settings: totalSettings.value })}
+        onClick={event => {
+          setActiveSettings("totals");
+          setActiveField({
+            anchorEl: event.currentTarget,
+            selector: state => state.totalSettings.value,
+            update: buildFieldUpdate(setTotalSettings, "value")
+          });
+        }}
       >
         {formatCurrency(total, currency)}
       </span>
