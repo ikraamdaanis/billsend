@@ -38,6 +38,7 @@ function ClientContent() {
 
   return (
     <InvoiceTextArea
+      id="invoice-field-client"
       value={client.content}
       onChange={value => setClient(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("client")}
@@ -71,10 +72,18 @@ function ClientLabelStyles() {
       size={settings.size}
       weight={settings.weight}
       color={settings.color}
-      onAlignChange={v => set(prev => ({ ...prev, label: { ...prev.label, align: v } }))}
-      onSizeChange={v => set(prev => ({ ...prev, label: { ...prev.label, size: v } }))}
-      onWeightChange={v => set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))}
-      onColorChange={v => set(prev => ({ ...prev, label: { ...prev.label, color: v } }))}
+      onAlignChange={v =>
+        set(prev => ({ ...prev, label: { ...prev.label, align: v } }))
+      }
+      onSizeChange={v =>
+        set(prev => ({ ...prev, label: { ...prev.label, size: v } }))
+      }
+      onWeightChange={v =>
+        set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))
+      }
+      onColorChange={v =>
+        set(prev => ({ ...prev, label: { ...prev.label, color: v } }))
+      }
     />
   );
 }
@@ -89,10 +98,18 @@ function ClientContentStyles() {
       size={settings.size}
       weight={settings.weight}
       color={settings.color}
-      onAlignChange={v => set(prev => ({ ...prev, content: { ...prev.content, align: v } }))}
-      onSizeChange={v => set(prev => ({ ...prev, content: { ...prev.content, size: v } }))}
-      onWeightChange={v => set(prev => ({ ...prev, content: { ...prev.content, weight: v } }))}
-      onColorChange={v => set(prev => ({ ...prev, content: { ...prev.content, color: v } }))}
+      onAlignChange={v =>
+        set(prev => ({ ...prev, content: { ...prev.content, align: v } }))
+      }
+      onSizeChange={v =>
+        set(prev => ({ ...prev, content: { ...prev.content, size: v } }))
+      }
+      onWeightChange={v =>
+        set(prev => ({ ...prev, content: { ...prev.content, weight: v } }))
+      }
+      onColorChange={v =>
+        set(prev => ({ ...prev, content: { ...prev.content, color: v } }))
+      }
     />
   );
 }

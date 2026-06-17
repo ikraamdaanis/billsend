@@ -35,6 +35,7 @@ function TermsContent() {
 
   return (
     <InvoiceTextArea
+      id="invoice-field-terms"
       value={terms.content}
       onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       onFocus={() => setActiveSettings("terms")}

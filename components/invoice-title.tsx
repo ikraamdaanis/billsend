@@ -11,6 +11,7 @@ export function InvoiceTitle() {
 
   return (
     <InvoiceInput
+      id="invoice-field-title"
       value={title}
       onChange={setTitle}
       onFocus={() => setActiveSettings("title")}
