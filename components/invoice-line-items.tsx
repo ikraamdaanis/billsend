@@ -345,9 +345,15 @@ function TableCell({
     inputValue = `${currencySymbol}${item.unitPrice.toString()}`;
   }
 
+  const focusId =
+    index === 0 && column.id === "description"
+      ? "invoice-field-table"
+      : undefined;
+
   return (
     <div className={column.cell.wrapperClassName}>
       <InvoiceInput
+        id={focusId}
         value={inputValue}
         placeholder={column.cell.placeholder}
         onChange={handleChange}

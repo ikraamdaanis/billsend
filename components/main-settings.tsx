@@ -65,13 +65,22 @@ export function MainSettings() {
 function SectionNav() {
   const { setActiveSettings } = useUI();
 
+  function handleSelect(type: SettingsType) {
+    setActiveSettings(type);
+
+    const field = document.getElementById(`invoice-field-${type}`);
+    if (field) {
+      field.focus();
+    }
+  }
+
   return (
     <div className="flex flex-col gap-0.5">
       {SECTIONS.map(({ type, label, Icon }) => (
         <button
           key={type}
           type="button"
-          onClick={() => setActiveSettings(type)}
+          onClick={() => handleSelect(type)}
           className="group hover:bg-accent flex w-full cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-left transition-colors"
         >
           <span className="flex items-center gap-2">

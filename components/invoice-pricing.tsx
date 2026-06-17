@@ -106,6 +106,7 @@ function TaxRow() {
         </span>
         <span className="flex items-center">
           <InvoiceInput
+            id="invoice-field-totals"
             value={taxInput}
             onChange={value => {
               const numericValue = handlePercentageInput(value);

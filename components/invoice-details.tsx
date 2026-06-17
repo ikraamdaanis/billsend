@@ -40,6 +40,7 @@ function InvoiceNumber() {
         Invoice number:
       </div>
       <InvoiceInput
+        id="invoice-field-details"
         value={number}
         onChange={setNumber}
         className="h-[unset]! w-full py-0"
