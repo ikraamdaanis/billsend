@@ -1,44 +1,19 @@
-import { useCanvasTransform } from "hooks/use-canvas-transform";
 import type { CSSProperties, ReactNode } from "react";
 
 const CANVAS_STATIC_STYLES: CSSProperties = {
-  marginTop: "16px",
-  marginBottom: "16px",
   WebkitFontSmoothing: "antialiased",
-  MozOsxFontSmoothing: "grayscale",
-  backfaceVisibility: "hidden",
-  WebkitBackfaceVisibility: "hidden"
+  MozOsxFontSmoothing: "grayscale"
 };
 
-export function InvoiceCanvas({
-  children,
-  onSectionClick
-}: {
-  children: ReactNode;
-  onSectionClick?: () => void;
-}) {
-  const { containerRef, canvasRef, transform } = useCanvasTransform();
-
+export function InvoiceCanvas({ children }: { children: ReactNode }) {
   return (
-    <section
-      ref={containerRef}
-      className="relative h-full touch-none overflow-hidden"
-      onClick={onSectionClick}
-    >
+    <section className="relative h-full overflow-auto py-4">
       <div
-        className="absolute inset-0 flex items-center justify-center"
-        style={{
-          transform: `translate3d(${transform.x}px, ${transform.y}px, 0) translateZ(0)`
-        }}
+        className="mx-auto h-fit min-h-[297mm] w-[210mm] border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
+        onClick={event => event.stopPropagation()}
+        style={CANVAS_STATIC_STYLES}
       >
-        <div
-          ref={canvasRef}
-          className="h-fit w-[210mm] border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
-          onClick={event => event.stopPropagation()}
-          style={CANVAS_STATIC_STYLES}
-        >
-          {children}
-        </div>
+        {children}
       </div>
     </section>
   );
