@@ -1,15 +1,10 @@
 import { InvoiceInput } from "components/invoice-input";
-import { useUI } from "context/ui-context";
 import { formatCurrency } from "consts/currencies";
-import { TAB_SELECT_EVENTS } from "consts/events";
 import { useState } from "react";
 import { usePricingSlice, useCurrencySymbol } from "stores/invoice-selectors";
-import { useInvoiceStore } from "stores/invoice-store";
-import { buildFieldUpdate } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 import { handleCurrencyInput } from "utils/handle-currency-input";
 import { handlePercentageInput } from "utils/handle-percentage-input";
-import { setActiveTab } from "utils/set-active-tab";
 
 function handleInputBlur(
   currentInput: string,
@@ -32,13 +27,8 @@ function handleInputBlur(
  * Displays the pricing information for the invoice.
  */
 export function InvoicePricing() {
-  const { setActiveSettings } = useUI();
-
   return (
-    <div
-      className="space-y-1 text-right"
-      onClick={() => setActiveSettings("totals")}
-    >
+    <div className="flex flex-col gap-1 text-right">
       <SubtotalRow />
       <TaxRow />
       <FeesRow />
@@ -50,47 +40,18 @@ export function InvoicePricing() {
 
 function SubtotalRow() {
   const { subtotal, subtotalSettings, currency } = usePricingSlice();
-  const setSubtotalSettings = useInvoiceStore(
-    state => state.setSubtotalSettings
-  );
-  const { setActiveSettings, setActiveField } = useUI();
 
   return (
-    <div
-      className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
-      onClick={() => {
-        setActiveTab({
-          eventType: TAB_SELECT_EVENTS.totals,
-          tab: "subtotal"
-        });
-        setActiveSettings("totals");
-      }}
-    >
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <span
-        className="inline-block w-full cursor-pointer"
+        className="inline-block w-full"
         style={getTextStyles({ settings: subtotalSettings.label })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.subtotalSettings.label,
-            update: buildFieldUpdate(setSubtotalSettings, "label")
-          });
-        }}
       >
         Subtotal
       </span>
       <span
-        className="inline-block min-w-40 cursor-pointer text-right text-zinc-900"
+        className="inline-block min-w-40 text-right text-zinc-900"
         style={getTextStyles({ settings: subtotalSettings.value })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.subtotalSettings.value,
-            update: buildFieldUpdate(setSubtotalSettings, "value")
-          });
-        }}
       >
         {formatCurrency(subtotal, currency)}
       </span>
@@ -100,39 +61,18 @@ function SubtotalRow() {
 
 function TaxRow() {
   const { tax, taxSettings, currency, setTax } = usePricingSlice();
-  const setTaxSettings = useInvoiceStore(state => state.setTaxSettings);
-  const { setActiveSettings, setActiveField } = useUI();
 
   const [taxInput, setTaxInput] = useState(tax.percentage.toString());
 
-  function selectLabel(anchorEl: HTMLElement) {
-    setActiveSettings("totals");
-    setActiveField({
-      anchorEl,
-      selector: state => state.taxSettings.label,
-      update: buildFieldUpdate(setTaxSettings, "label")
-    });
-  }
-
   return (
-    <div
-      className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
-      onClick={() => {
-        setActiveTab({
-          eventType: TAB_SELECT_EVENTS.totals,
-          tab: "tax"
-        });
-        setActiveSettings("totals");
-      }}
-    >
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <div
         className="flex w-full items-center"
         style={{ justifyContent: taxSettings.label.align }}
       >
         <span
-          className="inline-block cursor-pointer pr-0.5"
+          className="inline-block pr-0.5"
           style={getTextStyles({ settings: taxSettings.label })}
-          onClick={event => selectLabel(event.currentTarget)}
         >
           Tax{" "}
         </span>
@@ -155,22 +95,13 @@ function TaxRow() {
               settings: taxSettings.label,
               remove: ["align"]
             })}
-            onFocus={event => selectLabel(event.currentTarget)}
           />
           <span style={getTextStyles({ settings: taxSettings.label })}>%</span>
         </span>
       </div>
       <span
-        className="ml-auto min-w-40 cursor-pointer items-center"
+        className="ml-auto min-w-40 items-center"
         style={getTextStyles({ settings: taxSettings.value })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.taxSettings.value,
-            update: buildFieldUpdate(setTaxSettings, "value")
-          });
-        }}
       >
         {formatCurrency(tax.amount, currency)}
       </span>
@@ -180,34 +111,15 @@ function TaxRow() {
 
 function FeesRow() {
   const { fees, feesSettings, setFees } = usePricingSlice();
-  const setFeesSettings = useInvoiceStore(state => state.setFeesSettings);
   const currencySymbol = useCurrencySymbol();
-  const { setActiveSettings, setActiveField } = useUI();
 
   const [feesInput, setFeesInput] = useState(fees.toString());
 
   return (
-    <div
-      className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
-      onClick={() => {
-        setActiveTab({
-          eventType: TAB_SELECT_EVENTS.totals,
-          tab: "fees"
-        });
-        setActiveSettings("totals");
-      }}
-    >
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <span
-        className="inline-block w-full cursor-pointer"
+        className="inline-block w-full"
         style={getTextStyles({ settings: feesSettings.label })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.feesSettings.label,
-            update: buildFieldUpdate(setFeesSettings, "label")
-          });
-        }}
       >
         Fees
       </span>
@@ -228,14 +140,6 @@ function FeesRow() {
             setFees(Number(numericValue));
           }}
           onBlur={() => handleInputBlur(feesInput, setFeesInput, setFees)}
-          onFocus={event => {
-            setActiveSettings("totals");
-            setActiveField({
-              anchorEl: event.currentTarget,
-              selector: state => state.feesSettings.value,
-              update: buildFieldUpdate(setFeesSettings, "value")
-            });
-          }}
         />
       </span>
     </div>
@@ -244,36 +148,15 @@ function FeesRow() {
 
 function DiscountsRow() {
   const { discounts, discountsSettings, setDiscounts } = usePricingSlice();
-  const setDiscountsSettings = useInvoiceStore(
-    state => state.setDiscountsSettings
-  );
   const currencySymbol = useCurrencySymbol();
-  const { setActiveSettings, setActiveField } = useUI();
 
   const [discountsInput, setDiscountsInput] = useState(discounts.toString());
 
   return (
-    <div
-      className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
-      onClick={() => {
-        setActiveTab({
-          eventType: TAB_SELECT_EVENTS.totals,
-          tab: "discounts"
-        });
-        setActiveSettings("totals");
-      }}
-    >
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <span
-        className="inline-block w-full cursor-pointer"
+        className="inline-block w-full"
         style={getTextStyles({ settings: discountsSettings.label })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.discountsSettings.label,
-            update: buildFieldUpdate(setDiscountsSettings, "label")
-          });
-        }}
       >
         Discounts
       </span>
@@ -295,14 +178,6 @@ function DiscountsRow() {
             handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
           }
           className="w-20 text-right"
-          onFocus={event => {
-            setActiveSettings("totals");
-            setActiveField({
-              anchorEl: event.currentTarget,
-              selector: state => state.discountsSettings.value,
-              update: buildFieldUpdate(setDiscountsSettings, "value")
-            });
-          }}
         />
       </span>
     </div>
@@ -311,45 +186,18 @@ function DiscountsRow() {
 
 function TotalRow() {
   const { total, totalSettings, currency } = usePricingSlice();
-  const setTotalSettings = useInvoiceStore(state => state.setTotalSettings);
-  const { setActiveSettings, setActiveField } = useUI();
 
   return (
-    <div
-      className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm"
-      onClick={() => {
-        setActiveTab({
-          eventType: TAB_SELECT_EVENTS.totals,
-          tab: "total"
-        });
-        setActiveSettings("totals");
-      }}
-    >
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <span
-        className="inline-block w-full cursor-pointer"
+        className="inline-block w-full"
         style={getTextStyles({ settings: totalSettings.label })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.totalSettings.label,
-            update: buildFieldUpdate(setTotalSettings, "label")
-          });
-        }}
       >
         Total
       </span>
       <span
-        className="inline-block min-w-40 cursor-pointer text-right font-bold"
+        className="inline-block min-w-40 text-right font-bold"
         style={getTextStyles({ settings: totalSettings.value })}
-        onClick={event => {
-          setActiveSettings("totals");
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state => state.totalSettings.value,
-            update: buildFieldUpdate(setTotalSettings, "value")
-          });
-        }}
       >
         {formatCurrency(total, currency)}
       </span>

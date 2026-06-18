@@ -1,13 +1,6 @@
 import { InvoiceInput } from "components/invoice-input";
 import { Button } from "components/ui/button";
 import { formatCurrency } from "consts/currencies";
-import type { LineItemTab } from "consts/events";
-import {
-  LINE_ITEM_TABS,
-  LINE_ITEM_TAB_SECTIONS,
-  TAB_SELECT_EVENTS
-} from "consts/events";
-import { useUI } from "context/ui-context";
 import { cn } from "lib/utils";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
@@ -18,9 +11,7 @@ import type {
   TableColumnSettings,
   TextSettings
 } from "types";
-import { buildFieldUpdate } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
-import { setActiveTab } from "utils/set-active-tab";
 
 type LineItemFieldKey = "description" | "quantity" | "unitPrice";
 
@@ -32,7 +23,6 @@ interface LineItemColumnConfig {
   rowSettingsKey: keyof Invoice["tableSettings"];
   headerPlaceholder: string;
   headerInputClassName: string;
-  tab: LineItemTab;
   cell: {
     kind: LineItemColumnKind;
     itemField?: LineItemFieldKey;
@@ -51,7 +41,6 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     headerPlaceholder: "Description",
     headerInputClassName:
       "relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
-    tab: LINE_ITEM_TABS.description,
     cell: {
       kind: "text",
       itemField: "description",
@@ -68,7 +57,6 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     headerPlaceholder: "Quantity",
     headerInputClassName:
       "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
-    tab: LINE_ITEM_TABS.quantity,
     cell: {
       kind: "integer",
       itemField: "quantity",
@@ -84,7 +72,6 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     headerPlaceholder: "Unit Price",
     headerInputClassName:
       "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
-    tab: LINE_ITEM_TABS.unitPrice,
     cell: {
       kind: "currency",
       itemField: "unitPrice",
@@ -100,10 +87,9 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     headerPlaceholder: "Amount",
     headerInputClassName:
       "relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:p-2",
-    tab: LINE_ITEM_TABS.amount,
     cell: {
       kind: "amount",
-      wrapperClassName: "col-span-1 cursor-pointer pr-2",
+      wrapperClassName: "col-span-1 pr-2",
       displayClassName: "inline-block h-full w-full font-medium"
     }
   }
@@ -153,7 +139,6 @@ function TableHeader() {
 
 function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
   const { tableSettings, setTableSettings } = useLineItemsSlice();
-  const { setActiveSettings, setActiveField } = useUI();
 
   const headerSettings = tableSettings[
     column.headerSettingsKey
@@ -169,19 +154,9 @@ function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
     }));
   }
 
-  function handleClick() {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: column.tab,
-      option: LINE_ITEM_TAB_SECTIONS.header
-    });
-  }
-
   return (
     <div
-      className="col-span-1 cursor-pointer text-sm font-medium"
-      onClick={handleClick}
+      className="col-span-1 text-sm font-medium"
       style={getTextStyles({
         settings: headerSettings
       })}
@@ -189,15 +164,6 @@ function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
       <InvoiceInput
         value={headerSettings.label || ""}
         onChange={handleChange}
-        onFocus={event => {
-          handleClick();
-          setActiveField({
-            anchorEl: event.currentTarget,
-            selector: state =>
-              state.tableSettings[column.headerSettingsKey] as TextSettings,
-            update: buildFieldUpdate(setTableSettings, column.headerSettingsKey)
-          });
-        }}
         className={column.headerInputClassName}
         placeholder={column.headerPlaceholder}
         style={getTextStyles({
@@ -254,27 +220,10 @@ function TableCell({
   index: number;
   amount: number;
 }) {
-  const { tableSettings, setTableSettings, currency, updateItem } =
-    useLineItemsSlice();
+  const { tableSettings, currency, updateItem } = useLineItemsSlice();
   const currencySymbol = useCurrencySymbol();
-  const { setActiveSettings, setActiveField } = useUI();
 
   const rowSettings = tableSettings[column.rowSettingsKey] as TextSettings;
-
-  function selectRow(anchorEl: HTMLElement) {
-    setActiveSettings("table");
-    setActiveTab({
-      eventType: TAB_SELECT_EVENTS.lineItems,
-      tab: column.tab,
-      option: LINE_ITEM_TAB_SECTIONS.row
-    });
-    setActiveField({
-      anchorEl,
-      selector: state =>
-        state.tableSettings[column.rowSettingsKey] as TextSettings,
-      update: buildFieldUpdate(setTableSettings, column.rowSettingsKey)
-    });
-  }
 
   function handleChange(value: string) {
     const itemField = column.cell.itemField;
@@ -336,10 +285,7 @@ function TableCell({
 
   if (column.cell.kind === "amount") {
     return (
-      <div
-        className={column.cell.wrapperClassName}
-        onClick={event => selectRow(event.currentTarget)}
-      >
+      <div className={column.cell.wrapperClassName}>
         <span
           className={column.cell.displayClassName}
           style={getTextStyles({
@@ -379,7 +325,6 @@ function TableCell({
         onChange={handleChange}
         className={column.cell.inputClassName}
         onBlur={handleBlur}
-        onFocus={event => selectRow(event.currentTarget)}
         style={getTextStyles({
           settings: rowSettings
         })}

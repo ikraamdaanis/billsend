@@ -226,16 +226,6 @@ export type InvoiceDocument = {
   updatedAt: Date;
 };
 
-export type SettingsType =
-  | "title"
-  | "details"
-  | "seller"
-  | "client"
-  | "table"
-  | "totals"
-  | "terms"
-  | "main";
-
 export type BillsendExportFile = {
   meta: {
     version: number;
