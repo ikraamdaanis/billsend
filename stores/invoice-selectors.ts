@@ -2,14 +2,27 @@ import { useShallow } from "zustand/react/shallow";
 import { useInvoiceStore, currencySymbolMap } from "stores/invoice-store";
 import type { Invoice } from "types";
 
-// Title slice - only re-renders when title or titleSettings change
+// Theme slice - global font / size / accent for the whole invoice
+export function useThemeSlice() {
+  return useInvoiceStore(
+    useShallow(state => ({
+      theme: state.theme,
+      setTheme: state.setTheme
+    }))
+  );
+}
+
+// Theme value only - for components that render styled text but don't edit it
+export function useTheme() {
+  return useInvoiceStore(state => state.theme);
+}
+
+// Title slice
 export function useTitleSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       title: state.title,
-      titleSettings: state.titleSettings,
-      setTitle: state.setTitle,
-      setTitleSettings: state.setTitleSettings
+      setTitle: state.setTitle
     }))
   );
 }
@@ -19,9 +32,7 @@ export function useSellerSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       seller: state.seller,
-      sellerSettings: state.sellerSettings,
-      setSeller: state.setSeller,
-      setSellerSettings: state.setSellerSettings
+      setSeller: state.setSeller
     }))
   );
 }
@@ -31,9 +42,7 @@ export function useClientSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       client: state.client,
-      clientSettings: state.clientSettings,
-      setClient: state.setClient,
-      setClientSettings: state.setClientSettings
+      setClient: state.setClient
     }))
   );
 }
@@ -43,17 +52,11 @@ export function useDetailsSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       number: state.number,
-      numberSettings: state.numberSettings,
       invoiceDate: state.invoiceDate,
-      invoiceDateSettings: state.invoiceDateSettings,
       dueDate: state.dueDate,
-      dueDateSettings: state.dueDateSettings,
       setNumber: state.setNumber,
-      setNumberSettings: state.setNumberSettings,
       setInvoiceDate: state.setInvoiceDate,
-      setInvoiceDateSettings: state.setInvoiceDateSettings,
-      setDueDate: state.setDueDate,
-      setDueDateSettings: state.setDueDateSettings
+      setDueDate: state.setDueDate
     }))
   );
 }
@@ -78,24 +81,14 @@ export function usePricingSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       subtotal: state.subtotal,
-      subtotalSettings: state.subtotalSettings,
       tax: state.tax,
-      taxSettings: state.taxSettings,
       fees: state.fees,
-      feesSettings: state.feesSettings,
       discounts: state.discounts,
-      discountsSettings: state.discountsSettings,
       total: state.total,
-      totalSettings: state.totalSettings,
       currency: state.currency,
       setTax: state.setTax,
-      setTaxSettings: state.setTaxSettings,
       setFees: state.setFees,
-      setFeesSettings: state.setFeesSettings,
-      setDiscounts: state.setDiscounts,
-      setDiscountsSettings: state.setDiscountsSettings,
-      setSubtotalSettings: state.setSubtotalSettings,
-      setTotalSettings: state.setTotalSettings
+      setDiscounts: state.setDiscounts
     }))
   );
 }
@@ -105,9 +98,7 @@ export function useTermsSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       terms: state.terms,
-      termsSettings: state.termsSettings,
-      setTerms: state.setTerms,
-      setTermsSettings: state.setTermsSettings
+      setTerms: state.setTerms
     }))
   );
 }
@@ -154,34 +145,23 @@ export function useInvoiceData(): Invoice {
     useShallow(state => ({
       id: state.id,
       title: state.title,
-      titleSettings: state.titleSettings,
       image: state.image,
       number: state.number,
-      numberSettings: state.numberSettings,
       invoiceDate: state.invoiceDate,
-      invoiceDateSettings: state.invoiceDateSettings,
       dueDate: state.dueDate,
-      dueDateSettings: state.dueDateSettings,
       seller: state.seller,
-      sellerSettings: state.sellerSettings,
       client: state.client,
-      clientSettings: state.clientSettings,
       items: state.items,
       tableSettings: state.tableSettings,
       subtotal: state.subtotal,
-      subtotalSettings: state.subtotalSettings,
       tax: state.tax,
-      taxSettings: state.taxSettings,
       fees: state.fees,
-      feesSettings: state.feesSettings,
       discounts: state.discounts,
-      discountsSettings: state.discountsSettings,
       total: state.total,
-      totalSettings: state.totalSettings,
       terms: state.terms,
-      termsSettings: state.termsSettings,
       pdfSettings: state.pdfSettings,
-      currency: state.currency
+      currency: state.currency,
+      theme: state.theme
     }))
   );
 }
@@ -201,124 +181,4 @@ export function useInvoiceDataAndActions() {
   const invoice = useInvoiceData();
   const actions = useInvoiceActions();
   return { invoice, ...actions };
-}
-
-// Individual field selectors for settings components
-// These provide maximum granularity for settings panels
-
-export function useTitleSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      titleSettings: state.titleSettings,
-      setTitleSettings: state.setTitleSettings
-    }))
-  );
-}
-
-export function useSellerSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      sellerSettings: state.sellerSettings,
-      setSellerSettings: state.setSellerSettings
-    }))
-  );
-}
-
-export function useClientSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      clientSettings: state.clientSettings,
-      setClientSettings: state.setClientSettings
-    }))
-  );
-}
-
-export function useNumberSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      numberSettings: state.numberSettings,
-      setNumberSettings: state.setNumberSettings
-    }))
-  );
-}
-
-export function useInvoiceDateSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      invoiceDateSettings: state.invoiceDateSettings,
-      setInvoiceDateSettings: state.setInvoiceDateSettings
-    }))
-  );
-}
-
-export function useDueDateSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      dueDateSettings: state.dueDateSettings,
-      setDueDateSettings: state.setDueDateSettings
-    }))
-  );
-}
-
-export function useTableSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      tableSettings: state.tableSettings,
-      setTableSettings: state.setTableSettings
-    }))
-  );
-}
-
-export function useSubtotalSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      subtotalSettings: state.subtotalSettings,
-      setSubtotalSettings: state.setSubtotalSettings
-    }))
-  );
-}
-
-export function useTaxSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      taxSettings: state.taxSettings,
-      setTaxSettings: state.setTaxSettings
-    }))
-  );
-}
-
-export function useFeesSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      feesSettings: state.feesSettings,
-      setFeesSettings: state.setFeesSettings
-    }))
-  );
-}
-
-export function useDiscountsSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      discountsSettings: state.discountsSettings,
-      setDiscountsSettings: state.setDiscountsSettings
-    }))
-  );
-}
-
-export function useTotalSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      totalSettings: state.totalSettings,
-      setTotalSettings: state.setTotalSettings
-    }))
-  );
-}
-
-export function useTermsSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      termsSettings: state.termsSettings,
-      setTermsSettings: state.setTermsSettings
-    }))
-  );
 }

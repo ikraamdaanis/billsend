@@ -1,6 +1,7 @@
 import { InvoiceInput } from "components/invoice-input";
 import { InvoiceTextArea } from "components/invoice-textarea";
-import { useClientSlice } from "stores/invoice-selectors";
+import { useClientSlice, useTheme } from "stores/invoice-selectors";
+import { getRoleSettings } from "utils/get-role-settings";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceClientDetails() {
@@ -13,7 +14,8 @@ export function InvoiceClientDetails() {
 }
 
 function ClientLabel() {
-  const { client, clientSettings, setClient } = useClientSlice();
+  const { client, setClient } = useClientSlice();
+  const theme = useTheme();
 
   return (
     <InvoiceInput
@@ -21,13 +23,16 @@ function ClientLabel() {
       className="font-medium md:text-base"
       onChange={value => setClient(prev => ({ ...prev, label: value }))}
       placeholder="To"
-      style={getTextStyles({ settings: clientSettings.label })}
+      style={getTextStyles({
+        settings: getRoleSettings(theme, "sectionLabel")
+      })}
     />
   );
 }
 
 function ClientContent() {
-  const { client, clientSettings, setClient } = useClientSlice();
+  const { client, setClient } = useClientSlice();
+  const theme = useTheme();
 
   return (
     <InvoiceTextArea
@@ -35,7 +40,9 @@ function ClientContent() {
       value={client.content}
       onChange={value => setClient(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
-      style={getTextStyles({ settings: clientSettings.content })}
+      style={getTextStyles({
+        settings: getRoleSettings(theme, "sectionContent")
+      })}
       placeholder={client.placeholder}
     />
   );

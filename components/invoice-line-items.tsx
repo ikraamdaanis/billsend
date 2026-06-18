@@ -4,13 +4,13 @@ import { formatCurrency } from "consts/currencies";
 import { cn } from "lib/utils";
 import { PlusIcon, TrashIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
-import { useCurrencySymbol, useLineItemsSlice } from "stores/invoice-selectors";
-import type {
-  Invoice,
-  InvoiceItem,
-  TableColumnSettings,
-  TextSettings
-} from "types";
+import {
+  useCurrencySymbol,
+  useLineItemsSlice,
+  useTheme
+} from "stores/invoice-selectors";
+import type { InvoiceItem, TableSettings, TextRole } from "types";
+import { getRoleSettings } from "utils/get-role-settings";
 import { getTextStyles } from "utils/get-text-styles";
 
 type LineItemFieldKey = "description" | "quantity" | "unitPrice";
@@ -18,9 +18,9 @@ type LineItemFieldKey = "description" | "quantity" | "unitPrice";
 type LineItemColumnKind = "text" | "integer" | "currency" | "amount";
 
 interface LineItemColumnConfig {
-  id: "description" | "quantity" | "unitPrice" | "amount";
-  headerSettingsKey: keyof Invoice["tableSettings"];
-  rowSettingsKey: keyof Invoice["tableSettings"];
+  id: keyof TableSettings["columnLabels"];
+  headerRole: TextRole;
+  rowRole: TextRole;
   headerPlaceholder: string;
   headerInputClassName: string;
   cell: {
@@ -36,8 +36,8 @@ interface LineItemColumnConfig {
 const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   {
     id: "description",
-    headerSettingsKey: "descriptionHeaderSettings",
-    rowSettingsKey: "descriptionRowSettings",
+    headerRole: "tableHeaderLeft",
+    rowRole: "tableRowLeft",
     headerPlaceholder: "Description",
     headerInputClassName:
       "relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
@@ -52,8 +52,8 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   },
   {
     id: "quantity",
-    headerSettingsKey: "quantityHeaderSettings",
-    rowSettingsKey: "quantityRowSettings",
+    headerRole: "tableHeaderCenter",
+    rowRole: "tableRowCenter",
     headerPlaceholder: "Quantity",
     headerInputClassName:
       "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
@@ -67,8 +67,8 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   },
   {
     id: "unitPrice",
-    headerSettingsKey: "unitPriceHeaderSettings",
-    rowSettingsKey: "unitPriceRowSettings",
+    headerRole: "tableHeaderCenter",
+    rowRole: "tableRowCenter",
     headerPlaceholder: "Unit Price",
     headerInputClassName:
       "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
@@ -82,8 +82,8 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   },
   {
     id: "amount",
-    headerSettingsKey: "amountHeaderSettings",
-    rowSettingsKey: "amountRowSettings",
+    headerRole: "tableHeaderRight",
+    rowRole: "tableRowRight",
     headerPlaceholder: "Amount",
     headerInputClassName:
       "relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:p-2",
@@ -139,36 +139,28 @@ function TableHeader() {
 
 function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
   const { tableSettings, setTableSettings } = useLineItemsSlice();
+  const theme = useTheme();
 
-  const headerSettings = tableSettings[
-    column.headerSettingsKey
-  ] as TableColumnSettings;
+  const label = tableSettings.columnLabels[column.id];
+  const style = getTextStyles({
+    settings: getRoleSettings(theme, column.headerRole)
+  });
 
   function handleChange(value: string) {
     setTableSettings(prev => ({
       ...prev,
-      [column.headerSettingsKey]: {
-        ...(prev[column.headerSettingsKey] as TableColumnSettings),
-        label: value
-      }
+      columnLabels: { ...prev.columnLabels, [column.id]: value }
     }));
   }
 
   return (
-    <div
-      className="col-span-1 text-sm font-medium"
-      style={getTextStyles({
-        settings: headerSettings
-      })}
-    >
+    <div className="col-span-1 text-sm font-medium" style={style}>
       <InvoiceInput
-        value={headerSettings.label || ""}
+        value={label}
         onChange={handleChange}
         className={column.headerInputClassName}
         placeholder={column.headerPlaceholder}
-        style={getTextStyles({
-          settings: headerSettings
-        })}
+        style={style}
       />
     </div>
   );
@@ -220,10 +212,13 @@ function TableCell({
   index: number;
   amount: number;
 }) {
-  const { tableSettings, currency, updateItem } = useLineItemsSlice();
+  const { currency, updateItem } = useLineItemsSlice();
   const currencySymbol = useCurrencySymbol();
+  const theme = useTheme();
 
-  const rowSettings = tableSettings[column.rowSettingsKey] as TextSettings;
+  const rowStyle = getTextStyles({
+    settings: getRoleSettings(theme, column.rowRole)
+  });
 
   function handleChange(value: string) {
     const itemField = column.cell.itemField;
@@ -286,12 +281,7 @@ function TableCell({
   if (column.cell.kind === "amount") {
     return (
       <div className={column.cell.wrapperClassName}>
-        <span
-          className={column.cell.displayClassName}
-          style={getTextStyles({
-            settings: rowSettings
-          })}
-        >
+        <span className={column.cell.displayClassName} style={rowStyle}>
           {formatCurrency(amount, currency)}
         </span>
       </div>
@@ -325,9 +315,7 @@ function TableCell({
         onChange={handleChange}
         className={column.cell.inputClassName}
         onBlur={handleBlur}
-        style={getTextStyles({
-          settings: rowSettings
-        })}
+        style={rowStyle}
       />
     </div>
   );

@@ -1,9 +1,11 @@
 import { InvoiceInput } from "components/invoice-input";
-import { useTitleSlice } from "stores/invoice-selectors";
+import { useTheme, useTitleSlice } from "stores/invoice-selectors";
+import { getRoleSettings } from "utils/get-role-settings";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceTitle() {
-  const { title, titleSettings, setTitle } = useTitleSlice();
+  const { title, setTitle } = useTitleSlice();
+  const theme = useTheme();
 
   return (
     <InvoiceInput
@@ -11,7 +13,7 @@ export function InvoiceTitle() {
       value={title}
       onChange={setTitle}
       className="w-full text-5xl font-semibold"
-      style={{ ...getTextStyles({ settings: titleSettings }) }}
+      style={getTextStyles({ settings: getRoleSettings(theme, "title") })}
       placeholder="Invoice"
     />
   );
