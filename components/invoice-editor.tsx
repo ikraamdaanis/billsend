@@ -9,6 +9,7 @@ import { InvoiceLineItems } from "components/invoice-line-items";
 import { InvoicePricing } from "components/invoice-pricing";
 import { InvoiceSellerDetails } from "components/invoice-seller-details";
 import { InvoiceTerms } from "components/invoice-terms";
+import { InvoiceThemeControls } from "components/invoice-theme-controls";
 import { InvoiceTitle } from "components/invoice-title";
 import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
 import { Button } from "components/ui/button";
@@ -134,6 +135,8 @@ function Toolbar({
         </button>
         <span className="bg-border h-4 w-px" aria-hidden="true" />
         <CurrencyPicker />
+        <span className="bg-border h-4 w-px" aria-hidden="true" />
+        <InvoiceThemeControls />
       </div>
       <div className="ml-auto flex items-center gap-2">
         <SaveStatus onRequestSaveAs={() => setSaveDialogOpen(true)} />
