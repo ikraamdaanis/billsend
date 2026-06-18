@@ -9,7 +9,6 @@ import { InvoiceLineItems } from "components/invoice-line-items";
 import { InvoicePricing } from "components/invoice-pricing";
 import { InvoiceSellerDetails } from "components/invoice-seller-details";
 import { InvoiceTerms } from "components/invoice-terms";
-import { InvoiceThemeControls } from "components/invoice-theme-controls";
 import { InvoiceTitle } from "components/invoice-title";
 import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
 import { Button } from "components/ui/button";
@@ -21,27 +20,28 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger
-} from "components/ui/select";
+  Menubar,
+  MenubarContent,
+  MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
+  MenubarTrigger
+} from "components/ui/menubar";
 import { currencySymbols } from "consts/currencies";
-import {
-  updateCurrentInvoiceDocument,
-  useInvoiceDocument
-} from "context/invoice-document-context";
+import { useInvoiceDocument } from "context/invoice-document-context";
 import { getInvoice, saveInvoice } from "db";
-import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import {
-  useCurrencySlice,
-  useInvoiceDataAndActions
-} from "stores/invoice-selectors";
-import type { Currency } from "types";
+import { useCurrencySlice, useThemeSlice } from "stores/invoice-selectors";
+import type { Currency, InvoiceSize } from "types";
 
-const TOOLBAR_HEIGHT = 50;
+const TOOLBAR_HEIGHT = 64;
+
+const SIZES: { value: InvoiceSize; name: string }[] = [
+  { value: "small", name: "Small" },
+  { value: "medium", name: "Medium" },
+  { value: "large", name: "Large" }
+];
 
 export function InvoiceEditor() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,11 +67,7 @@ export function InvoiceEditor() {
   );
 }
 
-function Toolbar({
-  setIsModalOpen
-}: {
-  setIsModalOpen: (open: boolean) => void;
-}) {
+function useToolbarController() {
   const { currentDocumentId, currentDocumentName, setCurrentDocumentName } =
     useInvoiceDocument();
   const displayName = currentDocumentName || "Untitled invoice";
@@ -83,9 +79,11 @@ function Toolbar({
 
     if (currentDocumentId) {
       const existingDoc = await getInvoice(currentDocumentId);
+
       if (!existingDoc) {
         throw new Error("Invoice document not found");
       }
+
       await saveInvoice({
         ...existingDoc,
         name: trimmedName,
@@ -105,146 +103,122 @@ function Toolbar({
     }
   }
 
+  return {
+    displayName,
+    renameDialogOpen,
+    setRenameDialogOpen,
+    saveDialogOpen,
+    setSaveDialogOpen,
+    handleRename,
+    handleTitleClick
+  };
+}
+
+function Toolbar({
+  setIsModalOpen
+}: {
+  setIsModalOpen: (open: boolean) => void;
+}) {
+  const toolbar = useToolbarController();
+
   return (
     <nav
-      className="bg-background border-border sticky top-0 z-50 flex w-full items-center justify-between border-b px-4"
+      className="bg-background border-border sticky top-0 z-50 flex w-full items-center gap-1 border-b px-3"
       style={{ height: `${TOOLBAR_HEIGHT}px` }}
     >
-      <div className="flex items-center gap-4">
-        <Button
-          variant="unstyled"
-          size="unstyled"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <h1 className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
-            billsend
-          </h1>
-        </Button>
-        <InvoiceFileMenu
-          saveDialogOpen={saveDialogOpen}
-          onSaveDialogOpenChange={setSaveDialogOpen}
-        />
-      </div>
-      <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1">
+      <button
+        type="button"
+        onClick={() => setIsModalOpen(true)}
+        aria-label="Homepage"
+        className="shrink-0"
+      >
+        <img src="/favicon.svg" alt="billsend" className="size-9 rounded-sm" />
+      </button>
+      <div className="flex min-w-0 flex-col justify-center">
         <button
           type="button"
-          onClick={handleTitleClick}
-          className="hover:bg-accent flex cursor-text items-center rounded-md px-2 py-1 transition-colors"
+          onClick={toolbar.handleTitleClick}
+          className="hover:bg-accent flex items-center self-start rounded-sm px-2 py-0 transition-colors"
         >
-          <h2 className="text-foreground text-sm font-medium">{displayName}</h2>
+          <h2 className="text-foreground truncate text-base font-medium">
+            {toolbar.displayName}
+          </h2>
         </button>
-        <span className="bg-border h-4 w-px" aria-hidden="true" />
-        <CurrencyPicker />
-        <span className="bg-border h-4 w-px" aria-hidden="true" />
-        <InvoiceThemeControls />
+        <Menubar className="rounded-sm">
+          <InvoiceFileMenu
+            saveDialogOpen={toolbar.saveDialogOpen}
+            onSaveDialogOpenChange={toolbar.setSaveDialogOpen}
+          />
+          <CurrencyMenu />
+          <SizeMenu />
+        </Menubar>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        <SaveStatus onRequestSaveAs={() => setSaveDialogOpen(true)} />
         <DownloadInvoice />
       </div>
       <RenameInvoiceDialog
-        open={renameDialogOpen}
-        onOpenChange={setRenameDialogOpen}
-        currentName={displayName}
-        onRename={handleRename}
+        open={toolbar.renameDialogOpen}
+        onOpenChange={toolbar.setRenameDialogOpen}
+        currentName={toolbar.displayName}
+        onRename={toolbar.handleRename}
       />
     </nav>
   );
 }
 
-function SaveStatus({ onRequestSaveAs }: { onRequestSaveAs: () => void }) {
-  const { currentDocumentId, hasUnsavedChanges, setLastSavedInvoice } =
-    useInvoiceDocument();
-  const { invoice } = useInvoiceDataAndActions();
-  const [saving, setSaving] = useState(false);
+function CurrencyMenu() {
+  const { currency, setCurrency } = useCurrencySlice();
 
-  const handleClick = useCallback(() => {
-    if (!currentDocumentId) {
-      onRequestSaveAs();
+  const scrollSelectedIntoView = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
 
-      return;
-    }
-
-    if (!hasUnsavedChanges) return;
-
-    setSaving(true);
-    updateCurrentInvoiceDocument(
-      currentDocumentId,
-      invoice,
-      setLastSavedInvoice
-    )
-      .then(() => toast.success("Invoice saved"))
-      .catch(error =>
-        toast.error(
-          error instanceof Error ? error.message : "Failed to save invoice"
-        )
-      )
-      .finally(() => setSaving(false));
-  }, [
-    currentDocumentId,
-    hasUnsavedChanges,
-    invoice,
-    setLastSavedInvoice,
-    onRequestSaveAs
-  ]);
-
-  const isSaved = Boolean(currentDocumentId) && !hasUnsavedChanges;
-  const label = saving
-    ? "Saving"
-    : isSaved
-      ? "Saved"
-      : currentDocumentId
-        ? "Unsaved changes"
-        : "Not saved";
+    requestAnimationFrame(() => node.scrollIntoView({ block: "center" }));
+  }, []);
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={saving || isSaved}
-      aria-label={label}
-      className="text-muted-foreground hover:bg-accent flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium transition-colors disabled:cursor-default disabled:hover:bg-transparent"
-    >
-      {saving ? (
-        <Loader2Icon className="size-3.5 animate-spin" />
-      ) : isSaved ? (
-        <CheckIcon className="size-3.5 text-emerald-600" />
-      ) : (
-        <span className="size-1.5 rounded-full bg-amber-500" />
-      )}
-      <span className="hidden sm:inline">{label}</span>
-    </button>
+    <MenubarMenu>
+      <MenubarTrigger>Currency</MenubarTrigger>
+      <MenubarContent className="w-auto">
+        <MenubarRadioGroup
+          value={currency}
+          onValueChange={value => setCurrency(value as Currency)}
+        >
+          {currencySymbols.map(({ code, symbol, currency: currencyName }) => (
+            <MenubarRadioItem
+              key={code}
+              value={code}
+              ref={code === currency ? scrollSelectedIntoView : undefined}
+            >
+              {symbol} {currencyName}
+            </MenubarRadioItem>
+          ))}
+        </MenubarRadioGroup>
+      </MenubarContent>
+    </MenubarMenu>
   );
 }
 
-function CurrencyPicker() {
-  const { currency, setCurrency } = useCurrencySlice();
-  const current = currencySymbols.find(item => item.code === currency);
+function SizeMenu() {
+  const { theme, setTheme } = useThemeSlice();
 
   return (
-    <Select
-      value={currency}
-      onValueChange={value => setCurrency(value as Currency)}
-    >
-      <SelectTrigger
-        aria-label="Currency"
-        className="hover:bg-accent focus-visible:bg-accent h-7 gap-1.5 rounded-md border-0 bg-transparent px-2 shadow-none focus-visible:ring-0 focus-visible:outline-none"
-      >
-        <span className="text-foreground text-sm font-medium">
-          {current?.symbol}
-        </span>
-        <span className="text-muted-foreground text-xs">
-          {current?.currency}
-        </span>
-      </SelectTrigger>
-      <SelectContent align="center" className="max-h-72">
-        {currencySymbols.map(({ code, symbol, currency: currencyName }) => (
-          <SelectItem key={code} value={code} className="text-xs">
-            {symbol} - {currencyName}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <MenubarMenu>
+      <MenubarTrigger>Size</MenubarTrigger>
+      <MenubarContent className="w-auto">
+        <MenubarRadioGroup
+          value={theme.size}
+          onValueChange={value =>
+            setTheme(prev => ({ ...prev, size: value as InvoiceSize }))
+          }
+        >
+          {SIZES.map(size => (
+            <MenubarRadioItem key={size.value} value={size.value}>
+              {size.name}
+            </MenubarRadioItem>
+          ))}
+        </MenubarRadioGroup>
+      </MenubarContent>
+    </MenubarMenu>
   );
 }
 

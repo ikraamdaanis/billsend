@@ -26,7 +26,7 @@ export function InvoiceThemeControls() {
 
           setTheme(prev => ({ ...prev, size: value as InvoiceSize }));
         }}
-        className="gap-0 rounded-md bg-zinc-100 dark:bg-zinc-900"
+        className="gap-0 rounded-sm bg-zinc-100 dark:bg-zinc-900"
       >
         {SIZES.map(size => (
           <ToggleGroupItem
@@ -35,7 +35,7 @@ export function InvoiceThemeControls() {
             size="sm"
             aria-label={size.title}
             title={size.title}
-            className="h-7 w-7 px-0 text-xs hover:bg-zinc-200/80 data-[state=on]:bg-white data-[state=on]:text-foreground data-[state=on]:shadow-sm dark:hover:bg-zinc-700 dark:data-[state=on]:bg-zinc-700"
+            className="data-[state=on]:text-foreground h-7 w-7 px-0 text-xs hover:bg-zinc-200/80 data-[state=on]:bg-white data-[state=on]:shadow-sm dark:hover:bg-zinc-700 dark:data-[state=on]:bg-zinc-700"
           >
             {size.label}
           </ToggleGroupItem>
