@@ -2,7 +2,7 @@ import { InvoiceInput } from "components/invoice-input";
 import { Button } from "components/ui/button";
 import { formatCurrency } from "consts/currencies";
 import { cn } from "lib/utils";
-import { PlusIcon, TrashIcon } from "lucide-react";
+import { MinusIcon, PlusIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
 import {
   useCurrencySymbol,
@@ -332,7 +332,7 @@ function RemoveItemButton({ itemId }: { itemId: string }) {
         className="h-8 w-8 py-2 hover:bg-zinc-100"
         onClick={() => removeItem(itemId)}
       >
-        <TrashIcon className="h-4 w-4 text-red-700" />
+        <MinusIcon className="h-4 w-4 text-red-700" />
       </Button>
     </div>
   );
