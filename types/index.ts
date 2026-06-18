@@ -97,27 +97,44 @@ export type TextSettings = {
   color: string;
 };
 
-export type TableColumnSettings = TextSettings & { label: string };
-
 export type TableSettings = {
-  headerSettings: TextSettings;
-  rowSettings: TextSettings;
-  descriptionHeaderSettings: TableColumnSettings;
-  descriptionRowSettings: TextSettings;
-  quantityHeaderSettings: TableColumnSettings;
-  quantityRowSettings: TextSettings;
-  unitPriceHeaderSettings: TableColumnSettings;
-  unitPriceRowSettings: TextSettings;
-  amountHeaderSettings: TableColumnSettings;
-  amountRowSettings: TextSettings;
+  columnLabels: {
+    description: string;
+    quantity: string;
+    unitPrice: string;
+    amount: string;
+  };
   backgroundColor: string;
   borderColor: string;
 };
 
-export type TotalsSettings = {
-  labelSettings: TextSettings;
-  valueSettings: TextSettings;
+export type InvoiceFont = "geist";
+
+export type InvoiceSize = "small" | "medium" | "large";
+
+export type InvoiceTheme = {
+  font: InvoiceFont;
+  size: InvoiceSize;
+  accent: string;
 };
+
+export type TextRole =
+  | "title"
+  | "sectionLabel"
+  | "sectionContent"
+  | "termsContent"
+  | "detailLabel"
+  | "detailValue"
+  | "tableHeaderLeft"
+  | "tableHeaderCenter"
+  | "tableHeaderRight"
+  | "tableRowLeft"
+  | "tableRowCenter"
+  | "tableRowRight"
+  | "totalsLabel"
+  | "totalsValue"
+  | "grandTotalLabel"
+  | "grandTotalValue";
 
 export type InvoiceItem = {
   id: string;
@@ -151,70 +168,26 @@ export type PdfSettings = {
 export type Invoice = {
   id: string;
   title: string;
-  titleSettings: TextSettings;
   image: string;
   number: string;
-  numberSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   invoiceDate: string;
-  invoiceDateSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   dueDate: string;
-  dueDateSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   seller: InvoiceSeller;
-  sellerSettings: {
-    label: TextSettings;
-    content: TextSettings;
-  };
   client: InvoiceClient;
-  clientSettings: {
-    label: TextSettings;
-    content: TextSettings;
-  };
   items: InvoiceItem[];
   tableSettings: TableSettings;
   subtotal: number;
-  subtotalSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   tax: {
     percentage: number;
     amount: number;
   };
-  taxSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   fees: number;
-  feesSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   discounts: number;
-  discountsSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   total: number;
-  totalSettings: {
-    label: TextSettings;
-    value: TextSettings;
-  };
   terms: InvoiceTerms;
-  termsSettings: {
-    label: TextSettings;
-    content: TextSettings;
-  };
   pdfSettings: PdfSettings;
   currency: Currency;
+  theme: InvoiceTheme;
 };
 
 export type InvoiceDocument = {

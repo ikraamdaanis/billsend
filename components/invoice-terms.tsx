@@ -1,6 +1,7 @@
 import { InvoiceInput } from "components/invoice-input";
 import { InvoiceTextArea } from "components/invoice-textarea";
-import { useTermsSlice } from "stores/invoice-selectors";
+import { useTermsSlice, useTheme } from "stores/invoice-selectors";
+import { getRoleSettings } from "utils/get-role-settings";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceTerms() {
@@ -13,7 +14,8 @@ export function InvoiceTerms() {
 }
 
 function TermsLabel() {
-  const { terms, termsSettings, setTerms } = useTermsSlice();
+  const { terms, setTerms } = useTermsSlice();
+  const theme = useTheme();
 
   return (
     <InvoiceInput
@@ -21,13 +23,16 @@ function TermsLabel() {
       className="mb-2 font-medium md:text-base"
       onChange={value => setTerms(prev => ({ ...prev, label: value }))}
       placeholder="Terms and conditions"
-      style={getTextStyles({ settings: termsSettings.label })}
+      style={getTextStyles({
+        settings: getRoleSettings(theme, "sectionLabel")
+      })}
     />
   );
 }
 
 function TermsContent() {
-  const { terms, termsSettings, setTerms } = useTermsSlice();
+  const { terms, setTerms } = useTermsSlice();
+  const theme = useTheme();
 
   return (
     <InvoiceTextArea
@@ -35,7 +40,9 @@ function TermsContent() {
       value={terms.content}
       onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full"
-      style={getTextStyles({ settings: termsSettings.content })}
+      style={getTextStyles({
+        settings: getRoleSettings(theme, "termsContent")
+      })}
       placeholder="Add terms and conditions "
     />
   );

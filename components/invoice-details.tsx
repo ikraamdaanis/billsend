@@ -1,5 +1,6 @@
 import { InvoiceInput } from "components/invoice-input";
-import { useDetailsSlice } from "stores/invoice-selectors";
+import { useDetailsSlice, useTheme } from "stores/invoice-selectors";
+import { getRoleSettings } from "utils/get-role-settings";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceDetails() {
@@ -13,13 +14,16 @@ export function InvoiceDetails() {
 }
 
 function InvoiceNumber() {
-  const { number, numberSettings, setNumber } = useDetailsSlice();
+  const { number, setNumber } = useDetailsSlice();
+  const theme = useTheme();
 
   return (
     <div className="flex items-center">
       <div
         className="min-w-32"
-        style={getTextStyles({ settings: numberSettings.label })}
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "detailLabel")
+        })}
       >
         Invoice number:
       </div>
@@ -28,7 +32,9 @@ function InvoiceNumber() {
         value={number}
         onChange={setNumber}
         className="h-[unset]! w-full py-0"
-        style={getTextStyles({ settings: numberSettings.value })}
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "detailValue")
+        })}
         placeholder="########"
       />
     </div>
@@ -36,14 +42,16 @@ function InvoiceNumber() {
 }
 
 function InvoiceDate() {
-  const { invoiceDate, invoiceDateSettings, setInvoiceDate } =
-    useDetailsSlice();
+  const { invoiceDate, setInvoiceDate } = useDetailsSlice();
+  const theme = useTheme();
 
   return (
     <div className="flex items-center">
       <div
         className="min-w-32"
-        style={getTextStyles({ settings: invoiceDateSettings.label })}
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "detailLabel")
+        })}
       >
         Invoice date:
       </div>
@@ -51,7 +59,9 @@ function InvoiceDate() {
         value={invoiceDate}
         onChange={setInvoiceDate}
         className="h-[unset]! w-full py-0"
-        style={getTextStyles({ settings: invoiceDateSettings.value })}
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "detailValue")
+        })}
         placeholder="Enter the invoice date"
       />
     </div>
@@ -59,13 +69,16 @@ function InvoiceDate() {
 }
 
 function InvoiceDueDate() {
-  const { dueDate, dueDateSettings, setDueDate } = useDetailsSlice();
+  const { dueDate, setDueDate } = useDetailsSlice();
+  const theme = useTheme();
 
   return (
     <div className="flex items-center">
       <div
         className="min-w-32"
-        style={getTextStyles({ settings: dueDateSettings.label })}
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "detailLabel")
+        })}
       >
         Payment due:
       </div>
@@ -73,7 +86,9 @@ function InvoiceDueDate() {
         value={dueDate}
         onChange={setDueDate}
         className="h-[unset]! w-full py-0"
-        style={getTextStyles({ settings: dueDateSettings.value })}
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "detailValue")
+        })}
         placeholder="Enter the payment due date"
       />
     </div>

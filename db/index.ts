@@ -1,6 +1,7 @@
 import type { Table } from "dexie";
 import Dexie from "dexie";
-import type { InvoiceDocument, InvoiceTemplate } from "types";
+import type { Invoice, InvoiceDocument, InvoiceTemplate } from "types";
+import { normalizeInvoice } from "utils/normalize-invoice";
 
 export interface StoredImage {
   id: string;
@@ -105,6 +106,34 @@ class InvoiceDatabase extends Dexie {
       invoices: "id, name, createdAt, updatedAt",
       images: "id"
     });
+    // Version 3: Replaced per-field text settings with a single global theme.
+    // Transform stored invoiceData/templateData into the new model: add a
+    // default theme, collapse the old table header settings into column labels,
+    // and drop the obsolete per-field *Settings keys.
+    this.version(3)
+      .stores({
+        templates: "id, name, createdAt, updatedAt",
+        invoices: "id, name, createdAt, updatedAt",
+        images: "id"
+      })
+      .upgrade(async tx => {
+        await tx
+          .table("invoices")
+          .toCollection()
+          .modify(invoice => {
+            invoice.invoiceData = normalizeInvoice(
+              invoice.invoiceData as Invoice
+            );
+          });
+        await tx
+          .table("templates")
+          .toCollection()
+          .modify(template => {
+            template.templateData = normalizeInvoice(
+              template.templateData as Invoice
+            );
+          });
+      });
   }
 }
 
