@@ -46,7 +46,7 @@ export function PopoverContent({
         <BasePopover.Popup
           data-slot="popover-content"
           className={cn(
-            "bg-popover text-popover-foreground w-72 origin-(--transform-origin) rounded-md border p-4 shadow-md outline-hidden transition-[transform,opacity] duration-150 data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0",
+            "bg-popover text-popover-foreground w-72 origin-(--transform-origin) rounded-sm border p-4 shadow-md outline-hidden transition-[transform,opacity] duration-150 data-ending-style:scale-100 data-ending-style:opacity-0 data-starting-style:scale-100 data-starting-style:opacity-0",
             className
           )}
           {...props}

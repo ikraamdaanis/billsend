@@ -105,13 +105,13 @@ export function ImportDataDialog({
           {state === "idle" && (
             <div className="flex flex-col items-center gap-4">
               {error && (
-                <div className="bg-destructive/10 text-destructive w-full rounded-md p-3 text-sm">
+                <div className="bg-destructive/10 text-destructive w-full rounded-sm p-3 text-sm">
                   {error}
                 </div>
               )}
               <label
                 htmlFor="import-file-input"
-                className="border-border hover:bg-accent flex w-full cursor-pointer flex-col items-center gap-2 rounded-md border-2 border-dashed p-8 transition-colors"
+                className="border-border hover:bg-accent flex w-full cursor-pointer flex-col items-center gap-2 rounded-sm border-2 border-dashed p-8 transition-colors"
               >
                 <UploadIcon className="text-muted-foreground h-8 w-8" />
                 <span className="text-sm font-medium">
@@ -141,12 +141,12 @@ export function ImportDataDialog({
           {state === "preview" && analysis && (
             <div className="flex flex-col gap-4">
               {error && (
-                <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+                <div className="bg-destructive/10 text-destructive rounded-sm p-3 text-sm">
                   {error}
                 </div>
               )}
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center justify-between rounded-sm border p-3">
                   <span className="text-sm">Templates</span>
                   <span className="text-muted-foreground text-sm">
                     {analysis.templates.total} total
@@ -154,7 +154,7 @@ export function ImportDataDialog({
                       ` (${analysis.templates.conflicts.length} to rename)`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center justify-between rounded-sm border p-3">
                   <span className="text-sm">Invoices</span>
                   <span className="text-muted-foreground text-sm">
                     {analysis.invoices.total} total
@@ -162,7 +162,7 @@ export function ImportDataDialog({
                       ` (${analysis.invoices.conflicts.length} to rename)`}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border p-3">
+                <div className="flex items-center justify-between rounded-sm border p-3">
                   <span className="text-sm">Images</span>
                   <span className="text-muted-foreground text-sm">
                     {analysis.images.total} total
@@ -170,7 +170,7 @@ export function ImportDataDialog({
                 </div>
               </div>
               {hasConflicts && (
-                <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
+                <div className="flex items-start gap-2 rounded-sm border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
                   <AlertTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span className="text-sm text-amber-800 dark:text-amber-200">
                     Some names already exist and will be renamed with an
