@@ -30,7 +30,7 @@ export function TemplateCard({
   onDelete: (template: InvoiceTemplate, event: MouseEvent) => void;
 }) {
   return (
-    <div className="group relative flex h-full flex-col rounded-md border-2 transition-all duration-200">
+    <div className="group relative flex h-full flex-col rounded-sm border-2 transition-all duration-200">
       <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-t-md bg-linear-to-br from-gray-50 to-gray-100 p-4">
         {renderTemplatePreview(template)}
       </div>
@@ -43,17 +43,19 @@ export function TemplateCard({
             {template.name}
           </h3>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                className="h-7 w-7 p-0"
-                onClick={e => e.stopPropagation()}
-              >
-                <MoreVerticalIcon className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="size-7 p-0"
+                  onClick={event => event.stopPropagation()}
+                >
+                  <MoreVerticalIcon className="size-4" />
+                </Button>
+              }
+            />
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={e => onEdit(template, e)}>
                 <PencilIcon className="mr-2 h-4 w-4" />

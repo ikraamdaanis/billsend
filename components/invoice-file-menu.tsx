@@ -4,12 +4,10 @@ import { SaveInvoiceDialog } from "components/save-invoice-dialog";
 import { SaveTemplateModal } from "components/save-template-modal";
 import { TemplateSelectionModal } from "components/template-selection-modal";
 import {
-  Menubar,
   MenubarContent,
   MenubarItem,
   MenubarMenu,
   MenubarSeparator,
-  MenubarShortcut,
   MenubarTrigger
 } from "components/ui/menubar";
 import type { UnsavedChangesAction } from "components/unsaved-changes-dialog";
@@ -26,7 +24,6 @@ import { getAllInvoices, getAllTemplates } from "db";
 import { isEqual } from "lodash-es";
 import {
   BookmarkIcon,
-  ChevronDownIcon,
   DownloadIcon,
   FileIcon,
   FilePlusIcon,
@@ -333,61 +330,52 @@ export function InvoiceFileMenu({
 
   return (
     <>
-      <Menubar className="h-full rounded-none border-0 bg-transparent p-0 shadow-none">
-        <MenubarMenu>
-          <MenubarTrigger className="text-foreground hover:bg-accent/50 data-[state=open]:bg-accent/50 flex items-center gap-1 rounded-none border-0 px-3 py-1.5 text-sm font-normal">
-            File
-            <ChevronDownIcon className="size-3 opacity-50" />
-          </MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem onClick={handleNewInvoice} disabled={pending}>
-              <FilePlusIcon className="mr-2 h-4 w-4" />
-              New Invoice
-              <MenubarShortcut>⌘N</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem onClick={handleOpenInvoice} disabled={pending}>
-              <FolderOpenIcon className="mr-2 h-4 w-4" />
-              Open Invoice
-              <MenubarShortcut>⌘O</MenubarShortcut>
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem onClick={handleSave} disabled={pending}>
-              <SaveIcon className="mr-2 h-4 w-4" />
-              Save
-              <MenubarShortcut>⌘S</MenubarShortcut>
-            </MenubarItem>
-            <MenubarItem onClick={handleSaveAs} disabled={pending}>
-              <FileIcon className="mr-2 h-4 w-4" />
-              Save As...
-              <MenubarShortcut>⇧⌘S</MenubarShortcut>
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
-              <BookmarkIcon className="mr-2 h-4 w-4" />
-              Open Template
-            </MenubarItem>
-            <MenubarItem
-              onClick={() => setSaveTemplateDialogOpen(true)}
-              disabled={pending}
-            >
-              <SaveIcon className="mr-2 h-4 w-4" />
-              Save As Template
-            </MenubarItem>
-            <MenubarSeparator />
-            <MenubarItem onClick={handleExport} disabled={pending}>
-              <DownloadIcon className="mr-2 h-4 w-4" />
-              Export Data
-            </MenubarItem>
-            <MenubarItem
-              onClick={() => setImportDialogOpen(true)}
-              disabled={pending}
-            >
-              <UploadIcon className="mr-2 h-4 w-4" />
-              Import Data
-            </MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
-      </Menubar>
+      <MenubarMenu>
+        <MenubarTrigger>File</MenubarTrigger>
+        <MenubarContent className="w-auto">
+          <MenubarItem onClick={handleNewInvoice} disabled={pending}>
+            <FilePlusIcon className="mr-2 h-4 w-4" />
+            New Invoice
+          </MenubarItem>
+          <MenubarItem onClick={handleOpenInvoice} disabled={pending}>
+            <FolderOpenIcon className="mr-2 h-4 w-4" />
+            Open Invoice
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem onClick={handleSave} disabled={pending}>
+            <SaveIcon className="mr-2 h-4 w-4" />
+            Save
+          </MenubarItem>
+          <MenubarItem onClick={handleSaveAs} disabled={pending}>
+            <FileIcon className="mr-2 h-4 w-4" />
+            Save As...
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
+            <BookmarkIcon className="mr-2 h-4 w-4" />
+            Open Template
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => setSaveTemplateDialogOpen(true)}
+            disabled={pending}
+          >
+            <SaveIcon className="mr-2 h-4 w-4" />
+            Save As Template
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem onClick={handleExport} disabled={pending}>
+            <DownloadIcon className="mr-2 h-4 w-4" />
+            Export Data
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => setImportDialogOpen(true)}
+            disabled={pending}
+          >
+            <UploadIcon className="mr-2 h-4 w-4" />
+            Import Data
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
       <OpenInvoiceDialog
         open={openDialogOpen}
         onOpenChange={setOpenDialogOpen}

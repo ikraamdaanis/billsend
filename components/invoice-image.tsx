@@ -179,7 +179,7 @@ export function InvoiceImage() {
         <div
           {...getRootProps()}
           className={cn(
-            "flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden rounded-md",
+            "flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden rounded-sm",
             isDragging
               ? "bg-brand-100 border-brand-500 border-2 border-dashed"
               : "bg-zinc-100",
@@ -194,9 +194,9 @@ export function InvoiceImage() {
                 alt="Invoice Image"
                 width={128}
                 height={128}
-                className="h-32 w-32 rounded-md object-cover"
+                className="h-32 w-32 rounded-sm object-cover"
               />
-              <div className="absolute inset-0 flex items-center justify-center rounded-md bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-center justify-center rounded-sm bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button
                   variant="destructive"
                   size="sm"
