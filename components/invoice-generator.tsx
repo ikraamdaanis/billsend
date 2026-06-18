@@ -515,7 +515,7 @@ export function InvoiceGenerator() {
       </div>
       <div
         key={key}
-        className="h-full w-full rounded-md border border-zinc-300 bg-white shadow-md"
+        className="h-full w-full rounded-sm border border-zinc-300 bg-white shadow-md"
       >
         <Suspense>
           <PDFViewer showToolbar={false} className="h-full w-full">

@@ -112,7 +112,7 @@ export function OpenInvoiceDialog({
               {invoices.map(invoice => (
                 <div
                   key={invoice.id}
-                  className={`hover:bg-accent flex cursor-pointer items-center justify-between rounded-md border p-4 transition-colors ${
+                  className={`hover:bg-accent flex cursor-pointer items-center justify-between rounded-sm border p-4 transition-colors ${
                     currentInvoiceId === invoice.id ? "bg-accent" : ""
                   }`}
                   onClick={() => handleSelectInvoice(invoice)}
