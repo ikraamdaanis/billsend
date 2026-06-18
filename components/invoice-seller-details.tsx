@@ -1,11 +1,6 @@
 import { InvoiceInput } from "components/invoice-input";
 import { InvoiceTextArea } from "components/invoice-textarea";
-import { TextStyleControls } from "components/settings-fields";
-import { SettingsSection } from "components/ui/settings-section";
-import { useUI } from "context/ui-context";
 import { useSellerSlice } from "stores/invoice-selectors";
-import { useInvoiceStore } from "stores/invoice-store";
-import { applyTextSetting } from "utils/apply-text-setting";
 import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceSellerDetails() {
@@ -19,8 +14,6 @@ export function InvoiceSellerDetails() {
 
 function SellerLabel() {
   const { seller, sellerSettings, setSeller } = useSellerSlice();
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceInput
@@ -28,18 +21,6 @@ function SellerLabel() {
       className="font-medium md:text-base"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
       placeholder="From"
-      onFocus={event => {
-        setActiveSettings("seller");
-        setActiveField({
-          anchorEl: event.currentTarget,
-          selector: state => state.sellerSettings.label,
-          update: (key, value) =>
-            setSellerSettings(prev => ({
-              ...prev,
-              label: applyTextSetting(prev.label, key, value)
-            }))
-        });
-      }}
       style={getTextStyles({ settings: sellerSettings.label })}
     />
   );
@@ -47,94 +28,15 @@ function SellerLabel() {
 
 function SellerContent() {
   const { seller, sellerSettings, setSeller } = useSellerSlice();
-  const setSellerSettings = useInvoiceStore(state => state.setSellerSettings);
-  const { setActiveSettings, setActiveField } = useUI();
 
   return (
     <InvoiceTextArea
       id="invoice-field-seller"
       value={seller.content}
       onChange={value => setSeller(prev => ({ ...prev, content: value }))}
-      onFocus={event => {
-        setActiveSettings("seller");
-        setActiveField({
-          anchorEl: event.currentTarget,
-          selector: state => state.sellerSettings.content,
-          update: (key, value) =>
-            setSellerSettings(prev => ({
-              ...prev,
-              content: applyTextSetting(prev.content, key, value)
-            }))
-        });
-      }}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
       style={getTextStyles({ settings: sellerSettings.content })}
       placeholder={seller.placeholder}
-    />
-  );
-}
-
-export function InvoiceSellerSettings() {
-  return (
-    <div className="flex flex-col gap-2">
-      <SettingsSection title="Label">
-        <SellerLabelStyles />
-      </SettingsSection>
-      <SettingsSection title="Content">
-        <SellerContentStyles />
-      </SettingsSection>
-    </div>
-  );
-}
-
-function SellerLabelStyles() {
-  const settings = useInvoiceStore(s => s.sellerSettings.label);
-  const set = useInvoiceStore(s => s.setSellerSettings);
-
-  return (
-    <TextStyleControls
-      align={settings.align}
-      size={settings.size}
-      weight={settings.weight}
-      color={settings.color}
-      onAlignChange={v =>
-        set(prev => ({ ...prev, label: { ...prev.label, align: v } }))
-      }
-      onSizeChange={v =>
-        set(prev => ({ ...prev, label: { ...prev.label, size: v } }))
-      }
-      onWeightChange={v =>
-        set(prev => ({ ...prev, label: { ...prev.label, weight: v } }))
-      }
-      onColorChange={v =>
-        set(prev => ({ ...prev, label: { ...prev.label, color: v } }))
-      }
-    />
-  );
-}
-
-function SellerContentStyles() {
-  const settings = useInvoiceStore(s => s.sellerSettings.content);
-  const set = useInvoiceStore(s => s.setSellerSettings);
-
-  return (
-    <TextStyleControls
-      align={settings.align}
-      size={settings.size}
-      weight={settings.weight}
-      color={settings.color}
-      onAlignChange={v =>
-        set(prev => ({ ...prev, content: { ...prev.content, align: v } }))
-      }
-      onSizeChange={v =>
-        set(prev => ({ ...prev, content: { ...prev.content, size: v } }))
-      }
-      onWeightChange={v =>
-        set(prev => ({ ...prev, content: { ...prev.content, weight: v } }))
-      }
-      onColorChange={v =>
-        set(prev => ({ ...prev, content: { ...prev.content, color: v } }))
-      }
     />
   );
 }

@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router";
 import { DownloadInvoice } from "components/download-invoice";
-import { FieldToolbar } from "components/field-toolbar";
 import { InvoiceCanvas } from "components/invoice-canvas";
 import { InvoiceClientDetails } from "components/invoice-client-details";
 import { InvoiceDetails } from "components/invoice-details";
@@ -12,7 +11,6 @@ import { InvoiceSellerDetails } from "components/invoice-seller-details";
 import { InvoiceTerms } from "components/invoice-terms";
 import { InvoiceTitle } from "components/invoice-title";
 import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
-import { SettingsPanel } from "components/settings-panel";
 import { Button } from "components/ui/button";
 import {
   Dialog,
@@ -21,12 +19,6 @@ import {
   DialogFooter,
   DialogTitle
 } from "components/ui/dialog";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTitle,
-  DrawerTrigger
-} from "components/ui/drawer";
 import {
   Select,
   SelectContent,
@@ -38,9 +30,8 @@ import {
   updateCurrentInvoiceDocument,
   useInvoiceDocument
 } from "context/invoice-document-context";
-import { useUI } from "context/ui-context";
 import { getInvoice, saveInvoice } from "db";
-import { CheckIcon, Loader2Icon, SlidersHorizontalIcon } from "lucide-react";
+import { CheckIcon, Loader2Icon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -67,8 +58,6 @@ export function InvoiceEditor() {
           <CanvasArea />
         </div>
       </div>
-      <FieldToolbar />
-      <MobileSettingsDrawer />
       <LeavePageDialog
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
@@ -257,36 +246,12 @@ function CurrencyPicker() {
 }
 
 function CanvasArea() {
-  const { setActiveSettings, setActiveField } = useUI();
-
-  function handleSectionClick() {
-    setActiveSettings("main");
-    setActiveField(null);
-  }
-
   return (
-    <InvoiceCanvas onSectionClick={handleSectionClick}>
+    <InvoiceCanvas>
       <Top />
       <Mid />
       <Bottom />
     </InvoiceCanvas>
-  );
-}
-
-function MobileSettingsDrawer() {
-  return (
-    <div className="bg-background border-border fixed bottom-0 flex h-12 w-full items-center justify-center border-t lg:hidden">
-      <Drawer>
-        <DrawerTrigger className="text-muted-foreground flex h-full w-full cursor-pointer items-center justify-center gap-2 text-sm font-medium">
-          <SlidersHorizontalIcon className="size-4" />
-          Settings
-        </DrawerTrigger>
-        <DrawerContent>
-          <DrawerTitle className="sr-only">Settings</DrawerTitle>
-          <SettingsPanel />
-        </DrawerContent>
-      </Drawer>
-    </div>
   );
 }
 
