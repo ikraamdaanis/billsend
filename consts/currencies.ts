@@ -57,12 +57,49 @@ export const currencySymbols = topCurrencies.map(currencyCode => {
   };
 });
 
-export function formatCurrency(
-  amount: number,
-  currencyCode: (typeof topCurrencies)[number]
-): string {
-  return amount.toLocaleString("en-US", {
-    style: "currency",
-    currency: currencyCode
+/**
+ * The invoice stores a currency symbol directly, deduped by symbol so the
+ * various dollar/yen currencies collapse to a single entry. Anything outside
+ * this list is entered through the custom-symbol modal.
+ */
+export const currencyOptions: { symbol: string; label: string }[] = [
+  { symbol: "£", label: "Pound" },
+  { symbol: "$", label: "Dollar" },
+  { symbol: "€", label: "Euro" },
+  { symbol: "¥", label: "Yen" },
+  { symbol: "CHF", label: "Franc" },
+  { symbol: "⃁", label: "Riyal" },
+  { symbol: "د.إ", label: "Dirham" }
+];
+
+/**
+ * Older invoices stored a currency code (e.g. "GBP"). Map those to the deduped
+ * symbol so previously saved documents keep rendering correctly.
+ */
+const LEGACY_CODE_TO_SYMBOL: Record<string, string> = {
+  GBP: "£",
+  USD: "$",
+  AUD: "$",
+  CAD: "$",
+  HKD: "$",
+  SGD: "$",
+  EUR: "€",
+  JPY: "¥",
+  CNY: "¥",
+  CHF: "CHF",
+  SAR: "⃁",
+  AED: "د.إ"
+};
+
+export function normalizeCurrency(currency: string): string {
+  return LEGACY_CODE_TO_SYMBOL[currency] ?? currency;
+}
+
+export function formatCurrency(amount: number, currency: string): string {
+  const formatted = amount.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
+
+  return `${normalizeCurrency(currency)}${formatted}`;
 }
