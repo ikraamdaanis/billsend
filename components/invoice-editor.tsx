@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { CustomCurrencyDialog } from "components/custom-currency-dialog";
 import { DownloadInvoice } from "components/download-invoice";
 import { InvoiceCanvas } from "components/invoice-canvas";
 import { InvoiceClientDetails } from "components/invoice-client-details";
@@ -22,18 +23,20 @@ import {
 import {
   Menubar,
   MenubarContent,
+  MenubarItem,
   MenubarMenu,
   MenubarRadioGroup,
   MenubarRadioItem,
+  MenubarSeparator,
   MenubarTrigger
 } from "components/ui/menubar";
-import { currencySymbols } from "consts/currencies";
+import { currencyOptions, normalizeCurrency } from "consts/currencies";
 import { useInvoiceDocument } from "context/invoice-document-context";
 import { getInvoice, saveInvoice } from "db";
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useCurrencySlice, useThemeSlice } from "stores/invoice-selectors";
-import type { Currency, InvoiceSize } from "types";
+import type { InvoiceSize } from "types";
 
 const TOOLBAR_HEIGHT = 64;
 
@@ -168,33 +171,36 @@ function Toolbar({
 
 function CurrencyMenu() {
   const { currency, setCurrency } = useCurrencySlice();
-
-  const scrollSelectedIntoView = useCallback((node: HTMLDivElement | null) => {
-    if (!node) return;
-
-    requestAnimationFrame(() => node.scrollIntoView({ block: "center" }));
-  }, []);
+  const [customOpen, setCustomOpen] = useState(false);
+  const selected = normalizeCurrency(currency);
+  const isCustom = !currencyOptions.some(option => option.symbol === selected);
 
   return (
-    <MenubarMenu>
-      <MenubarTrigger>Currency</MenubarTrigger>
-      <MenubarContent className="w-auto">
-        <MenubarRadioGroup
-          value={currency}
-          onValueChange={value => setCurrency(value as Currency)}
-        >
-          {currencySymbols.map(({ code, symbol, currency: currencyName }) => (
-            <MenubarRadioItem
-              key={code}
-              value={code}
-              ref={code === currency ? scrollSelectedIntoView : undefined}
-            >
-              {symbol} {currencyName}
-            </MenubarRadioItem>
-          ))}
-        </MenubarRadioGroup>
-      </MenubarContent>
-    </MenubarMenu>
+    <>
+      <MenubarMenu>
+        <MenubarTrigger>Currency</MenubarTrigger>
+        <MenubarContent className="w-auto">
+          <MenubarRadioGroup value={selected} onValueChange={setCurrency}>
+            {currencyOptions.map(({ symbol, label }) => (
+              <MenubarRadioItem key={symbol} value={symbol}>
+                <span className="w-8 shrink-0">{symbol}</span>
+                <span className="text-muted-foreground">{label}</span>
+              </MenubarRadioItem>
+            ))}
+          </MenubarRadioGroup>
+          <MenubarSeparator />
+          <MenubarItem inset onClick={() => setCustomOpen(true)}>
+            {isCustom ? `Custom (${selected})` : "Custom…"}
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+      <CustomCurrencyDialog
+        open={customOpen}
+        onOpenChange={setCustomOpen}
+        currentSymbol={selected}
+        onSubmit={setCurrency}
+      />
+    </>
   );
 }
 

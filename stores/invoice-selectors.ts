@@ -1,5 +1,6 @@
+import { normalizeCurrency } from "consts/currencies";
 import { useShallow } from "zustand/react/shallow";
-import { useInvoiceStore, currencySymbolMap } from "stores/invoice-store";
+import { useInvoiceStore } from "stores/invoice-store";
 import type { Invoice } from "types";
 
 // Theme slice - global font / size / accent for the whole invoice
@@ -125,7 +126,7 @@ export function useCurrencySlice() {
 
 // Currency symbol - derived value, only re-renders when currency changes
 export function useCurrencySymbol() {
-  return useInvoiceStore(state => currencySymbolMap.get(state.currency) ?? "$");
+  return useInvoiceStore(state => normalizeCurrency(state.currency));
 }
 
 // PDF settings slice
