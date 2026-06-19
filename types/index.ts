@@ -186,7 +186,7 @@ export type Invoice = {
   total: number;
   terms: InvoiceTerms;
   pdfSettings: PdfSettings;
-  currency: Currency;
+  currency: string;
   theme: InvoiceTheme;
 };
 
