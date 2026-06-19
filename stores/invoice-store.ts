@@ -1,4 +1,3 @@
-import { currencySymbols } from "consts/currencies";
 import { addDays, format } from "date-fns";
 import type {
   Invoice,
@@ -18,11 +17,6 @@ import {
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-
-// Build a Map for O(1) currency symbol lookups
-const currencySymbolMap = new Map(
-  currencySymbols.map(currency => [currency.code, currency.symbol])
-);
 
 export const invoiceDefault: Invoice = {
   id: "1",
@@ -77,7 +71,7 @@ export const invoiceDefault: Invoice = {
   pdfSettings: {
     backgroundColor: "#ffffff"
   },
-  currency: "GBP",
+  currency: "£",
   theme: DEFAULT_INVOICE_THEME
 };
 
@@ -310,6 +304,3 @@ export const useInvoiceStore = create<InvoiceStore>()(
     }))
   )
 );
-
-// Export currency symbol map for selectors
-export { currencySymbolMap };
