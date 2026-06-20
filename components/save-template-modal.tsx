@@ -175,10 +175,7 @@ export function SaveTemplateModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <SaveIcon className="h-5 w-5" />
-            Save as Template
-          </DialogTitle>
+          <DialogTitle>Save as Template</DialogTitle>
           <DialogDescription>
             Create a new template or overwrite an existing one with the current
             invoice data.

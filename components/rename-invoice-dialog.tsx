@@ -17,7 +17,6 @@ import {
   FormMessage
 } from "components/ui/form";
 import { Input } from "components/ui/input";
-import { PencilIcon } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -83,10 +82,7 @@ export function RenameInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PencilIcon className="h-5 w-5" />
-            Rename Invoice
-          </DialogTitle>
+          <DialogTitle>Rename Invoice</DialogTitle>
           <DialogDescription>
             Enter a new name for this invoice.
           </DialogDescription>

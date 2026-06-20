@@ -18,7 +18,6 @@ import {
 } from "components/ui/form";
 import { Input } from "components/ui/input";
 import { NativeSelect } from "components/ui/select";
-import { SaveIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import type { InvoiceDocument } from "types";
@@ -97,10 +96,7 @@ export function SaveInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <SaveIcon className="h-5 w-5" />
-            Save Invoice
-          </DialogTitle>
+          <DialogTitle>Save Invoice</DialogTitle>
           <DialogDescription>
             Save your invoice with a custom name or overwrite an existing one.
           </DialogDescription>
