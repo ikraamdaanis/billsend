@@ -27,7 +27,7 @@ function Menubar({ className, ...props }: MenubarPrimitive.Props) {
     <MenubarPrimitive
       data-slot="menubar"
       className={cn(
-        "flex h-8 items-center gap-0.5 rounded-sm p-[3px]",
+        "flex h-8 items-center gap-0.5 rounded-sm px-[3px]",
         className
       )}
       {...props}
@@ -158,16 +158,11 @@ function MenubarRadioItem({
       data-slot="menubar-radio-item"
       data-inset={inset}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground relative flex cursor-default items-center gap-1.5 rounded-sm py-1 pr-1.5 pl-7 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground aria-checked:bg-accent flex cursor-default items-center gap-1.5 rounded-sm px-1.5 py-1 text-sm whitespace-nowrap outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute left-1.5 flex size-4 items-center justify-center [&_svg:not([class*='size-'])]:size-4">
-        <MenuPrimitive.RadioItemIndicator>
-          <IconCheck />
-        </MenuPrimitive.RadioItemIndicator>
-      </span>
       {children}
     </MenuPrimitive.RadioItem>
   );
