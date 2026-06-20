@@ -8,7 +8,6 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { deleteTemplate } from "db";
-import { TrashIcon } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
 import type { InvoiceTemplate } from "types";
@@ -48,10 +47,7 @@ export function DeleteTemplateModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[500px]">
         <DialogHeader className="border-0">
-          <DialogTitle className="flex items-center gap-2">
-            <TrashIcon className="text-destructive h-5 w-5" />
-            Delete Template
-          </DialogTitle>
+          <DialogTitle>Delete Template</DialogTitle>
           <DialogDescription className="mt-2">
             Are you sure you want to delete the template &quot;{template.name}
             &quot;? This action cannot be undone.

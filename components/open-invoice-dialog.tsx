@@ -9,7 +9,8 @@ import {
 } from "components/ui/dialog";
 import { format } from "date-fns";
 import { deleteInvoice, getAllInvoices } from "db";
-import { FileTextIcon, TrashIcon } from "lucide-react";
+import { cn } from "lib/utils";
+import { FileTextIcon, FolderOpenIcon, TrashIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -81,12 +82,9 @@ export function OpenInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[90vh] w-[800px] flex-col">
+      <DialogContent className="flex max-h-[85vh] w-full flex-col rounded-[3px] sm:max-w-[640px]">
         <DialogHeader className="border-border border-b pb-4">
-          <DialogTitle className="flex items-center gap-2">
-            <FileTextIcon className="h-5 w-5" />
-            Open Invoice
-          </DialogTitle>
+          <DialogTitle>Open Invoice</DialogTitle>
           <DialogDescription>
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
@@ -98,7 +96,7 @@ export function OpenInvoiceDialog({
             </div>
           ) : invoices.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
-              <FileTextIcon className="text-muted-foreground mb-4 h-12 w-12" />
+              <FolderOpenIcon className="text-muted-foreground mb-4 size-12" />
               <h3 className="text-foreground mb-2 text-lg font-medium">
                 No invoices available
               </h3>
@@ -108,43 +106,67 @@ export function OpenInvoiceDialog({
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              {invoices.map(invoice => (
-                <div
-                  key={invoice.id}
-                  className={`hover:bg-accent flex cursor-pointer items-center justify-between rounded-sm border p-4 transition-colors ${
-                    currentInvoiceId === invoice.id ? "bg-accent" : ""
-                  }`}
-                  onClick={() => handleSelectInvoice(invoice)}
-                >
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{invoice.name}</span>
-                      {currentInvoiceId === invoice.id && (
-                        <span className="text-muted-foreground text-xs">
-                          (Current)
-                        </span>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-muted-foreground border-border border-b text-left text-xs">
+                  <th className="bg-popover sticky top-0 py-2 pr-4 font-medium whitespace-nowrap">
+                    Name
+                  </th>
+                  <th className="bg-popover sticky top-0 py-2 pr-4 font-medium whitespace-nowrap">
+                    Date modified
+                  </th>
+                  <th className="bg-popover sticky top-0 w-10 py-2">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map(invoice => {
+                  const isCurrent = currentInvoiceId === invoice.id;
+
+                  return (
+                    <tr
+                      key={invoice.id}
+                      onClick={() => handleSelectInvoice(invoice)}
+                      className={cn(
+                        "group/row hover:bg-accent border-border cursor-pointer border-b last:border-b-0",
+                        isCurrent && "bg-accent"
                       )}
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      Last modified:{" "}
-                      {format(new Date(invoice.updatedAt), "PPp")}
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={e => handleDeleteInvoice(invoice, e)}
-                    disabled={deletePendingId === invoice.id || pending}
-                  >
-                    <TrashIcon className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+                    >
+                      <td className="py-2.5 pr-4">
+                        <div className="flex items-center gap-2">
+                          <FileTextIcon className="text-muted-foreground size-4 shrink-0" />
+                          <span className="font-medium">{invoice.name}</span>
+                          {isCurrent && (
+                            <span className="text-muted-foreground text-xs">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="text-muted-foreground py-2.5 pr-4 whitespace-nowrap tabular-nums">
+                        {format(new Date(invoice.updatedAt), "PP, p")}
+                      </td>
+                      <td className="py-2.5 text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={event => handleDeleteInvoice(invoice, event)}
+                          disabled={deletePendingId === invoice.id || pending}
+                          className="text-muted-foreground hover:text-foreground opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100"
+                        >
+                          <TrashIcon className="size-4" />
+                          <span className="sr-only">Delete {invoice.name}</span>
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
-        <DialogFooter className="border-border flex w-full items-center justify-between border-t pt-4 sm:justify-between">
+        <DialogFooter className="flex-row items-center justify-between rounded-b-[3px] sm:justify-between">
           <span className="text-muted-foreground text-sm">
             {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}{" "}
             available

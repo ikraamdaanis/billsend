@@ -33,7 +33,7 @@ function HomePage() {
       {/* Navigation — Floating glass pill */}
       <nav className="fixed top-5 z-50 w-full sm:top-6">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex h-14 items-center justify-between rounded-sm border border-stone-200/60 bg-white/70 px-5 shadow-lg shadow-stone-900/5 backdrop-blur-xl">
+          <div className="flex h-14 items-center justify-between rounded-[3px] border border-stone-200/60 bg-white/70 px-5 shadow-lg shadow-stone-900/5 backdrop-blur-xl">
             <Link to="/" className="flex items-center gap-2">
               <span className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
                 billsend
@@ -44,7 +44,7 @@ function HomePage() {
                 100% free &amp; private
               </span>
               <Link to="/create" preload="viewport">
-                <Button className="h-8 rounded-sm px-4 text-sm font-medium">
+                <Button className="h-8 rounded-[3px] px-4 text-sm font-medium">
                   Create Invoice
                   <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                 </Button>
@@ -57,7 +57,7 @@ function HomePage() {
       <section className="relative px-4 pt-32 pb-16 sm:px-6 sm:pt-40 lg:pt-48">
         <div className="mx-auto max-w-6xl text-center">
           {/* Privacy badge */}
-          <div className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-sm border border-emerald-200 bg-emerald-50/80 px-4 py-1.5 text-sm font-medium text-emerald-700 backdrop-blur-sm">
+          <div className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-[3px] border border-emerald-200 bg-emerald-50/80 px-4 py-1.5 text-sm font-medium text-emerald-700 backdrop-blur-sm">
             <Lock className="h-3.5 w-3.5" />
             Your data never leaves your browser
           </div>
@@ -91,7 +91,7 @@ function HomePage() {
           {/* CTA */}
           <div className="animate-fade-in-up animation-delay-300 mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link to="/create" preload="viewport">
-              <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-sm px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+              <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-[3px] px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
                 Start creating
                 <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
               </Button>
@@ -104,7 +104,7 @@ function HomePage() {
           {/* Trust indicators */}
           <div className="animate-fade-in-up animation-delay-400 mx-auto mt-12 flex max-w-sm flex-wrap justify-center gap-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-stone-100">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-stone-100">
                 <Lock className="h-5 w-5 text-stone-600" />
               </div>
               <div className="text-left">
@@ -115,7 +115,7 @@ function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-stone-100">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-stone-100">
                 <Download className="h-5 w-5 text-stone-600" />
               </div>
               <div className="text-left">
@@ -131,10 +131,10 @@ function HomePage() {
           {/* Invoice mockup — desktop only */}
           <div className="animate-fade-in-up animation-delay-500 relative mx-auto mt-16 hidden max-w-xl lg:block">
             {/* Ambient glow behind card */}
-            <div className="from-brand-200/40 via-brand-100/30 to-brand-50/40 absolute -inset-4 rounded-sm bg-linear-to-br blur-2xl" />
+            <div className="from-brand-200/40 via-brand-100/30 to-brand-50/40 absolute -inset-4 rounded-[3px] bg-linear-to-br blur-2xl" />
             <div className="animate-float relative">
               {/* Main invoice card */}
-              <div className="relative rounded-sm border border-stone-200/80 bg-white p-6 shadow-2xl shadow-stone-900/10">
+              <div className="relative rounded-[3px] border border-stone-200/80 bg-white p-6 shadow-2xl shadow-stone-900/10">
                 {/* Invoice header */}
                 <div className="mb-6 flex items-start justify-between">
                   <div>
@@ -149,7 +149,7 @@ function HomePage() {
                   </div>
                 </div>
                 {/* Line items */}
-                <div className="mb-6 space-y-2 rounded-sm border border-stone-100 bg-stone-50/50 p-4">
+                <div className="mb-6 space-y-2 rounded-[3px] border border-stone-100 bg-stone-50/50 p-4">
                   <div className="flex justify-between">
                     <div className="h-3 w-40 rounded bg-stone-200" />
                     <div className="h-3 w-16 rounded bg-stone-200" />
@@ -164,7 +164,7 @@ function HomePage() {
                   </div>
                 </div>
                 {/* Total */}
-                <div className="from-brand-50 to-brand-100/80 border-brand-200/60 flex items-center justify-between rounded-sm border bg-linear-to-r px-4 py-3">
+                <div className="from-brand-50 to-brand-100/80 border-brand-200/60 flex items-center justify-between rounded-[3px] border bg-linear-to-r px-4 py-3">
                   <span className="text-brand-600 text-sm font-medium">
                     Total Due
                   </span>
@@ -174,9 +174,9 @@ function HomePage() {
                 </div>
               </div>
               {/* Floating chips */}
-              <div className="absolute -bottom-4 -left-4 rounded-sm border border-stone-200 bg-white px-4 py-3 shadow-lg">
+              <div className="absolute -bottom-4 -left-4 rounded-[3px] border border-stone-200 bg-white px-4 py-3 shadow-lg">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-emerald-100">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-emerald-100">
                     <Check className="h-4 w-4 text-emerald-600" />
                   </div>
                   <div className="text-sm font-medium text-stone-700">
@@ -184,7 +184,7 @@ function HomePage() {
                   </div>
                 </div>
               </div>
-              <div className="absolute -top-3 -right-3 rounded-sm border border-stone-200 bg-white px-4 py-2 shadow-lg">
+              <div className="absolute -top-3 -right-3 rounded-[3px] border border-stone-200 bg-white px-4 py-2 shadow-lg">
                 <div className="flex items-center gap-2 text-sm">
                   <Sparkles className="h-4 w-4 text-amber-500" />
                   <span className="font-medium text-stone-700">
@@ -212,10 +212,10 @@ function HomePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* Large feature card — Local-first */}
-            <div className="group relative overflow-hidden rounded-sm border border-stone-200/80 bg-white p-8 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-2 lg:col-span-2 lg:row-span-2">
-              <div className="from-brand-100 to-brand-50 absolute -top-20 -right-20 h-64 w-64 rounded-sm bg-linear-to-br opacity-50 transition-transform duration-700 group-hover:scale-125" />
+            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-8 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-2 lg:col-span-2 lg:row-span-2">
+              <div className="from-brand-100 to-brand-50 absolute -top-20 -right-20 h-64 w-64 rounded-[3px] bg-linear-to-br opacity-50 transition-transform duration-700 group-hover:scale-125" />
               <div className="relative flex h-full flex-col">
-                <div className="from-brand-400 to-brand-500 shadow-brand-400/25 mb-4 flex h-12 w-12 items-center justify-center rounded-sm bg-linear-to-br shadow-lg">
+                <div className="from-brand-400 to-brand-500 shadow-brand-400/25 mb-4 flex h-12 w-12 items-center justify-center rounded-[3px] bg-linear-to-br shadow-lg">
                   <HardDrive className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-bricolage-grotesque mb-2 text-2xl font-bold text-stone-900">
@@ -227,19 +227,19 @@ function HomePage() {
                   mining, no privacy concerns.
                 </p>
                 <div className="mt-auto grid grid-cols-3 gap-4">
-                  <div className="rounded-sm bg-stone-50 p-4 text-center">
+                  <div className="rounded-[3px] bg-stone-50 p-4 text-center">
                     <div className="font-bricolage-grotesque text-brand-500 text-2xl font-bold">
                       0
                     </div>
                     <div className="text-xs text-stone-500">Servers</div>
                   </div>
-                  <div className="rounded-sm bg-stone-50 p-4 text-center">
+                  <div className="rounded-[3px] bg-stone-50 p-4 text-center">
                     <div className="font-bricolage-grotesque text-brand-500 text-2xl font-bold">
                       0
                     </div>
                     <div className="text-xs text-stone-500">Trackers</div>
                   </div>
-                  <div className="rounded-sm bg-stone-50 p-4 text-center">
+                  <div className="rounded-[3px] bg-stone-50 p-4 text-center">
                     <div className="font-bricolage-grotesque text-brand-500 text-2xl font-bold">
                       100%
                     </div>
@@ -249,10 +249,10 @@ function HomePage() {
               </div>
             </div>
             {/* Speed card */}
-            <div className="group relative overflow-hidden rounded-sm border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-sm bg-amber-100/80 transition-transform duration-500 group-hover:scale-150" />
+            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
+              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-[3px] bg-amber-100/80 transition-transform duration-500 group-hover:scale-150" />
               <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-sm bg-amber-100">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[3px] bg-amber-100">
                   <Zap className="h-5 w-5 text-amber-600" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-stone-900">
@@ -265,10 +265,10 @@ function HomePage() {
               </div>
             </div>
             {/* Customisation card */}
-            <div className="group relative overflow-hidden rounded-sm border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-sm bg-violet-100/80 transition-transform duration-500 group-hover:scale-150" />
+            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
+              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-[3px] bg-violet-100/80 transition-transform duration-500 group-hover:scale-150" />
               <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-sm bg-violet-100">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[3px] bg-violet-100">
                   <Palette className="h-5 w-5 text-violet-600" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-stone-900">
@@ -281,10 +281,10 @@ function HomePage() {
               </div>
             </div>
             {/* Templates card */}
-            <div className="group relative overflow-hidden rounded-sm border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-sm bg-emerald-100/80 transition-transform duration-500 group-hover:scale-150" />
+            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
+              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-[3px] bg-emerald-100/80 transition-transform duration-500 group-hover:scale-150" />
               <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-sm bg-emerald-100">
+                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[3px] bg-emerald-100">
                   <Sparkles className="h-5 w-5 text-emerald-600" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold text-stone-900">
@@ -297,10 +297,10 @@ function HomePage() {
               </div>
             </div>
             {/* PDF export card — wide */}
-            <div className="group relative overflow-hidden rounded-sm border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-1 lg:col-span-2">
-              <div className="absolute -top-16 -right-16 h-48 w-48 rounded-sm bg-sky-100/60 transition-transform duration-500 group-hover:scale-125" />
+            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-1 lg:col-span-2">
+              <div className="absolute -top-16 -right-16 h-48 w-48 rounded-[3px] bg-sky-100/60 transition-transform duration-500 group-hover:scale-125" />
               <div className="relative flex flex-col gap-6">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm bg-sky-100">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[3px] bg-sky-100">
                   <Download className="h-7 w-7 text-sky-600" />
                 </div>
                 <div>
@@ -320,11 +320,11 @@ function HomePage() {
       {/* CTA Section — Light gradient */}
       <section className="relative px-4 pb-16 sm:px-6 sm:pb-24">
         <div className="mx-auto max-w-6xl">
-          <div className="border-brand-200/60 from-brand-50 to-brand-50/80 relative overflow-hidden rounded-sm border bg-linear-to-br via-white p-10 sm:p-16">
+          <div className="border-brand-200/60 from-brand-50 to-brand-50/80 relative overflow-hidden rounded-[3px] border bg-linear-to-br via-white p-10 sm:p-16">
             {/* Ambient brand glow */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="bg-brand-200/30 absolute -top-24 -left-24 h-64 w-64 rounded-sm blur-3xl" />
-              <div className="bg-brand-100/40 absolute -right-24 -bottom-24 h-64 w-64 rounded-sm blur-3xl" />
+              <div className="bg-brand-200/30 absolute -top-24 -left-24 h-64 w-64 rounded-[3px] blur-3xl" />
+              <div className="bg-brand-100/40 absolute -right-24 -bottom-24 h-64 w-64 rounded-[3px] blur-3xl" />
               <div
                 className="absolute inset-0 opacity-30"
                 style={{
@@ -334,7 +334,7 @@ function HomePage() {
               />
             </div>
             <div className="relative flex flex-col items-center text-center">
-              <div className="border-brand-200 bg-brand-50/80 text-brand-600 mb-6 inline-flex items-center gap-2 rounded-sm border px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
+              <div className="border-brand-200 bg-brand-50/80 text-brand-600 mb-6 inline-flex items-center gap-2 rounded-[3px] border px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
                 <Zap className="h-3.5 w-3.5" />
                 Takes less than a minute
               </div>
@@ -348,7 +348,7 @@ function HomePage() {
                 creating beautiful invoices right now.
               </p>
               <Link to="/create" preload="viewport" className="mt-8">
-                <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-sm px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
+                <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-[3px] px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
                   Create your invoice
                   <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </Button>

@@ -19,7 +19,7 @@ export function ColorPicker({
     <Popover>
       <PopoverTrigger
         aria-label="Pick a color"
-        className="size-7 min-w-7 rounded-sm border border-zinc-200 shadow-sm"
+        className="size-7 min-w-7 rounded-[3px] border border-zinc-200 shadow-sm"
         style={{ backgroundColor: color }}
       />
       <PopoverContent className="flex w-auto flex-col gap-2 p-3">

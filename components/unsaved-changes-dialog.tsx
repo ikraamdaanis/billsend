@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { AlertTriangleIcon } from "lucide-react";
 
 export type UnsavedChangesAction = "save" | "discard" | "cancel";
 
@@ -24,10 +23,7 @@ export function UnsavedChangesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangleIcon className="text-destructive h-5 w-5" />
-            Unsaved Changes
-          </DialogTitle>
+          <DialogTitle>Unsaved Changes</DialogTitle>
           <DialogDescription>
             You have unsaved changes. What would you like to do?
           </DialogDescription>

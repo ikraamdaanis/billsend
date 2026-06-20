@@ -108,7 +108,7 @@ export function InvoiceLineItems() {
       })}
     >
       <div
-        className="line-items-container flex flex-col divide-y rounded-sm border"
+        className="line-items-container flex flex-col divide-y rounded-[3px] border"
         style={{ borderColor: tableSettings.borderColor }}
       >
         <TableHeader />

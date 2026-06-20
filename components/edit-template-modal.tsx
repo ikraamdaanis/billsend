@@ -108,10 +108,7 @@ export function EditTemplateModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <PencilIcon className="h-5 w-5" />
-            Edit Template
-          </DialogTitle>
+          <DialogTitle>Edit Template</DialogTitle>
           <DialogDescription>
             Update the template name and description.
           </DialogDescription>
