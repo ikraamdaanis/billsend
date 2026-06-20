@@ -149,6 +149,7 @@ function MenubarRadioItem({
   className,
   children,
   inset,
+  closeOnClick = true,
   ...props
 }: MenuPrimitive.RadioItem.Props & {
   inset?: boolean;
@@ -157,6 +158,7 @@ function MenubarRadioItem({
     <MenuPrimitive.RadioItem
       data-slot="menubar-radio-item"
       data-inset={inset}
+      closeOnClick={closeOnClick}
       className={cn(
         "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground aria-checked:bg-accent flex cursor-default items-center gap-1.5 rounded-[3px] px-1.5 py-1 text-sm whitespace-nowrap outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
