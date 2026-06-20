@@ -26,7 +26,7 @@ export function InvoiceThemeControls() {
 
           setTheme(prev => ({ ...prev, size: value as InvoiceSize }));
         }}
-        className="gap-0 rounded-sm bg-zinc-100 dark:bg-zinc-900"
+        className="gap-0 rounded-[3px] bg-zinc-100 dark:bg-zinc-900"
       >
         {SIZES.map(size => (
           <ToggleGroupItem

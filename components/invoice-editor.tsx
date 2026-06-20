@@ -135,13 +135,17 @@ function Toolbar({
         aria-label="Homepage"
         className="shrink-0"
       >
-        <img src="/favicon.svg" alt="billsend" className="size-9 rounded-sm" />
+        <img
+          src="/favicon.svg"
+          alt="billsend"
+          className="size-9 rounded-[3px]"
+        />
       </button>
       <div className="flex min-w-0 flex-col justify-center">
         <button
           type="button"
           onClick={toolbar.handleTitleClick}
-          className="hover:bg-accent flex h-6 items-center self-start rounded-sm px-2 py-0 transition-colors"
+          className="hover:bg-accent flex h-6 items-center self-start rounded-[3px] px-2 py-0 transition-colors"
         >
           <h2 className="text-foreground truncate text-base font-medium">
             {toolbar.displayName}

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { FileTextIcon, SparklesIcon } from "lucide-react";
+import { FileTextIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -69,10 +69,7 @@ export function TemplateSelectionModal({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[90vh] w-[1280px] flex-col">
           <DialogHeader className="border-border border-b pb-4">
-            <DialogTitle className="flex items-center gap-2">
-              <SparklesIcon className="h-5 w-5" />
-              Choose a Template
-            </DialogTitle>
+            <DialogTitle>Choose a Template</DialogTitle>
             <DialogDescription>
               Select a template to start creating your invoice. You can
               customize it later.
