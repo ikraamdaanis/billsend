@@ -40,10 +40,10 @@ import type { InvoiceSize } from "types";
 
 const TOOLBAR_HEIGHT = 64;
 
-const SIZES: { value: InvoiceSize; name: string }[] = [
-  { value: "small", name: "Small" },
-  { value: "medium", name: "Medium" },
-  { value: "large", name: "Large" }
+const SIZES: { value: InvoiceSize; name: string; className: string }[] = [
+  { value: "small", name: "Small", className: "text-xs" },
+  { value: "medium", name: "Medium", className: "text-sm" },
+  { value: "large", name: "Large", className: "text-base" }
 ];
 
 export function InvoiceEditor() {
@@ -141,13 +141,13 @@ function Toolbar({
         <button
           type="button"
           onClick={toolbar.handleTitleClick}
-          className="hover:bg-accent flex items-center self-start rounded-sm px-2 py-0 transition-colors"
+          className="hover:bg-accent flex h-6 items-center self-start rounded-sm px-2 py-0 transition-colors"
         >
           <h2 className="text-foreground truncate text-base font-medium">
             {toolbar.displayName}
           </h2>
         </button>
-        <Menubar className="rounded-sm">
+        <Menubar className="h-6">
           <InvoiceFileMenu
             saveDialogOpen={toolbar.saveDialogOpen}
             onSaveDialogOpenChange={toolbar.setSaveDialogOpen}
@@ -219,7 +219,7 @@ function SizeMenu() {
         >
           {SIZES.map(size => (
             <MenubarRadioItem key={size.value} value={size.value}>
-              {size.name}
+              <span className={size.className}>{size.name}</span>
             </MenubarRadioItem>
           ))}
         </MenubarRadioGroup>
