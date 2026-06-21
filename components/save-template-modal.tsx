@@ -182,7 +182,7 @@ export function SaveTemplateModal({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4 px-4 pb-4">
             <div className="flex flex-col gap-2">
               <FormLabel htmlFor="template-select">Template</FormLabel>
               <NativeSelect
