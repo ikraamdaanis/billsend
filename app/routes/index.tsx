@@ -1,392 +1,472 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "components/ui/button";
+import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
-  Check,
-  Download,
-  HardDrive,
-  Lock,
+  Coins,
+  Database,
+  FileDown,
+  LayoutTemplate,
   Palette,
-  Sparkles,
-  Zap
+  ShieldCheck,
+  WifiOff
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
+const FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
+  {
+    icon: Database,
+    title: "Stays on your device",
+    description:
+      "Everything saves straight to your browser. Nothing is ever uploaded."
+  },
+  {
+    icon: FileDown,
+    title: "One-click PDF",
+    description:
+      "Export a clean, print-ready PDF in a single click, then email or print it yourself."
+  },
+  {
+    icon: LayoutTemplate,
+    title: "Reusable templates",
+    description:
+      "Save an invoice as a template and reuse it next time instead of starting over."
+  },
+  {
+    icon: Palette,
+    title: "Logo & accent colour",
+    description:
+      "Upload your logo, pick an accent colour, and set the text size."
+  },
+  {
+    icon: Coins,
+    title: "Any currency",
+    description:
+      "Pick a currency per invoice, with custom symbols when you need them."
+  },
+  {
+    icon: WifiOff,
+    title: "Works offline",
+    description:
+      "No network needed. It all runs on your machine, even with the wifi off."
+  }
+];
+
+const STEPS: { number: string; title: string; description: string }[] = [
+  {
+    number: "01",
+    title: "Create",
+    description: "Open the editor and fill in your details. No sign-up needed."
+  },
+  {
+    number: "02",
+    title: "Customise",
+    description:
+      "Add line items, set tax and currency, then add your logo and an accent colour."
+  },
+  {
+    number: "03",
+    title: "Export",
+    description:
+      "Download a clean PDF, ready to email or print whenever you like."
+  }
+];
+
+const STATS: { value: string; label: string }[] = [
+  { value: "0", label: "Servers" },
+  { value: "0", label: "Trackers" },
+  { value: "100%", label: "On-device" },
+  { value: "Free", label: "Forever" }
+];
+
 function HomePage() {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-stone-50">
-      {/* Ambient background gradients */}
-      <div className="pointer-events-none fixed inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-20%,oklch(0.603_0.218_257.42/0.12),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_80%_50%,oklch(0.603_0.218_257.42/0.06),transparent_40%)]" />
-        <div className="absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(ellipse_100%_100%_at_0%_100%,oklch(0.419_0.152_257.57/0.06),transparent_50%)]" />
+    <div className="min-h-svh bg-neutral-50 text-neutral-900 antialiased">
+      <SiteHeader />
+      <main>
+        <Hero />
+        <StatBand />
+        <Features />
+        <Steps />
+        <PrivacyPanel />
+        <FinalCta />
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+function SiteHeader() {
+  return (
+    <header className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/80 backdrop-blur-md">
+      <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-6">
+        <Link to="/" className="flex items-center gap-2 justify-self-start">
+          <span className="font-bricolage-grotesque text-brand-600 text-xl font-semibold tracking-tight">
+            billsend
+          </span>
+        </Link>
+        <nav className="hidden items-center gap-8 justify-self-center text-sm text-neutral-600 md:flex">
+          <a href="#features" className="hover:text-neutral-900">
+            Features
+          </a>
+          <a href="#how" className="hover:text-neutral-900">
+            How it works
+          </a>
+          <a href="#privacy" className="hover:text-neutral-900">
+            Privacy
+          </a>
+        </nav>
+        <Link to="/create" preload="viewport" className="justify-self-end">
+          <Button className="h-9 px-4 text-sm">
+            Create invoice
+            <ArrowRight className="size-4" />
+          </Button>
+        </Link>
       </div>
-      {/* Refined dot grid */}
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="relative overflow-hidden border-b border-neutral-200">
       <div
-        className="pointer-events-none fixed inset-0 opacity-[0.25]"
+        className="pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_90%_70%_at_50%_0%,black,transparent)] opacity-60"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(120,113,108,0.07) 1px, transparent 0)`,
-          backgroundSize: "32px 32px"
+          backgroundImage:
+            "linear-gradient(to right, oklch(0.92 0 0) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.92 0 0) 1px, transparent 1px)",
+          backgroundSize: "44px 44px"
         }}
       />
-      {/* Navigation — Floating glass pill */}
-      <nav className="fixed top-5 z-50 w-full sm:top-6">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="flex h-14 items-center justify-between rounded-[3px] border border-stone-200/60 bg-white/70 px-5 shadow-lg shadow-stone-900/5 backdrop-blur-xl">
-            <Link to="/" className="flex items-center gap-2">
-              <span className="font-bricolage-grotesque text-brand-500 text-lg font-bold">
-                billsend
-              </span>
-            </Link>
-            <div className="flex items-center gap-3">
-              <span className="hidden text-sm text-stone-500 sm:block">
-                100% free &amp; private
-              </span>
-              <Link to="/create" preload="viewport">
-                <Button className="h-8 rounded-[3px] px-4 text-sm font-medium">
-                  Create Invoice
-                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-      {/* Hero Section — Centered */}
-      <section className="relative px-4 pt-32 pb-16 sm:px-6 sm:pt-40 lg:pt-48">
-        <div className="mx-auto max-w-6xl text-center">
-          {/* Privacy badge */}
-          <div className="animate-fade-in-up mb-6 inline-flex items-center gap-2 rounded-[3px] border border-emerald-200 bg-emerald-50/80 px-4 py-1.5 text-sm font-medium text-emerald-700 backdrop-blur-sm">
-            <Lock className="h-3.5 w-3.5" />
-            Your data never leaves your browser
-          </div>
-          {/* Heading */}
-          <h1 className="animate-fade-in-up animation-delay-100 font-bricolage-grotesque text-[2.75rem] leading-[1.1] font-bold tracking-tight text-stone-900 sm:text-5xl lg:text-6xl">
-            Invoice creation,{" "}
-            <span className="relative">
-              <span className="text-brand-500 relative z-10">simplified</span>
-              <svg
-                className="text-brand-500 absolute -bottom-2 left-0 h-3 w-full"
-                viewBox="0 0 200 12"
-                fill="none"
-                preserveAspectRatio="none"
-              >
-                <path
-                  d="M2 8.5C50 2 150 2 198 8.5"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  className="animate-draw"
-                />
-              </svg>
-            </span>
+      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 lg:grid-cols-2 lg:gap-12 lg:py-28">
+        <div className="animate-fade-in-up flex flex-col items-start">
+          <span className="border-brand-200 bg-brand-50 text-brand-700 inline-flex items-center gap-2 rounded-[3px] border px-3 py-1 text-sm font-medium">
+            <ShieldCheck className="size-3.5" />
+            Runs entirely in your browser
+          </span>
+          <h1 className="font-display mt-6 text-5xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-6xl lg:text-7xl">
+            Make invoices fast,{" "}
+            <span className="text-brand-600">keep them private</span>
           </h1>
-          {/* Subtext */}
-          <p className="animate-fade-in-up animation-delay-200 mx-auto mt-6 max-w-150 text-lg leading-relaxed text-stone-600">
-            A free, local-first invoice editor that respects your privacy. No
-            accounts, no servers, no tracking. Just beautiful invoices in
-            seconds.
+          <p className="mt-6 max-w-[52ch] text-lg text-pretty text-neutral-600">
+            A free little invoice maker that runs entirely in your browser. No
+            accounts, no servers, and nothing ever leaves your device.
           </p>
-          {/* CTA */}
-          <div className="animate-fade-in-up animation-delay-300 mt-8 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link to="/create" preload="viewport">
-              <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-[3px] px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                Start creating
-                <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
+              <Button className="h-11 w-full px-6 text-sm sm:w-auto">
+                Create your first invoice
+                <ArrowRight className="size-4" />
               </Button>
             </Link>
-            <div className="flex items-center gap-2 text-sm text-stone-500">
-              <Check className="h-4 w-4 text-emerald-500" />
-              No sign-up required
-            </div>
+            <a href="#how" className="sm:ml-2">
+              <Button
+                variant="outline"
+                className="h-11 w-full px-6 text-sm sm:w-auto"
+              >
+                See how it works
+              </Button>
+            </a>
           </div>
-          {/* Trust indicators */}
-          <div className="animate-fade-in-up animation-delay-400 mx-auto mt-12 flex max-w-sm flex-wrap justify-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-stone-100">
-                <Lock className="h-5 w-5 text-stone-600" />
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-semibold text-stone-900">
-                  100% private
-                </div>
-                <div className="text-xs text-stone-500">Data stays local</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-stone-100">
-                <Download className="h-5 w-5 text-stone-600" />
-              </div>
-              <div className="text-left">
-                <div className="text-sm font-semibold text-stone-900">
-                  PDF export
-                </div>
-                <div className="text-xs text-stone-500">
-                  Professional quality
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Invoice mockup — desktop only */}
-          <div className="animate-fade-in-up animation-delay-500 relative mx-auto mt-16 hidden max-w-xl lg:block">
-            {/* Ambient glow behind card */}
-            <div className="from-brand-200/40 via-brand-100/30 to-brand-50/40 absolute -inset-4 rounded-[3px] bg-linear-to-br blur-2xl" />
-            <div className="animate-float relative">
-              {/* Main invoice card */}
-              <div className="relative rounded-[3px] border border-stone-200/80 bg-white p-6 shadow-2xl shadow-stone-900/10">
-                {/* Invoice header */}
-                <div className="mb-6 flex items-start justify-between">
-                  <div>
-                    <div className="bg-brand-400 h-8 w-24 rounded" />
-                    <div className="mt-3 h-3 w-32 rounded bg-stone-200" />
-                  </div>
-                  <div className="text-right">
-                    <div className="font-bricolage-grotesque text-2xl font-bold text-stone-900">
-                      INVOICE
-                    </div>
-                    <div className="mt-1 text-sm text-stone-500">#INV-0042</div>
-                  </div>
-                </div>
-                {/* Line items */}
-                <div className="mb-6 space-y-2 rounded-[3px] border border-stone-100 bg-stone-50/50 p-4">
-                  <div className="flex justify-between">
-                    <div className="h-3 w-40 rounded bg-stone-200" />
-                    <div className="h-3 w-16 rounded bg-stone-200" />
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="h-3 w-32 rounded bg-stone-200" />
-                    <div className="h-3 w-14 rounded bg-stone-200" />
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="h-3 w-36 rounded bg-stone-200" />
-                    <div className="h-3 w-12 rounded bg-stone-200" />
-                  </div>
-                </div>
-                {/* Total */}
-                <div className="from-brand-50 to-brand-100/80 border-brand-200/60 flex items-center justify-between rounded-[3px] border bg-linear-to-r px-4 py-3">
-                  <span className="text-brand-600 text-sm font-medium">
-                    Total Due
-                  </span>
-                  <span className="font-bricolage-grotesque text-brand-700 text-xl font-bold">
-                    $2,450.00
-                  </span>
-                </div>
-              </div>
-              {/* Floating chips */}
-              <div className="absolute -bottom-4 -left-4 rounded-[3px] border border-stone-200 bg-white px-4 py-3 shadow-lg">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-emerald-100">
-                    <Check className="h-4 w-4 text-emerald-600" />
-                  </div>
-                  <div className="text-sm font-medium text-stone-700">
-                    PDF ready
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -top-3 -right-3 rounded-[3px] border border-stone-200 bg-white px-4 py-2 shadow-lg">
-                <div className="flex items-center gap-2 text-sm">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  <span className="font-medium text-stone-700">
-                    Customisable
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          <p className="mt-6 font-mono text-sm text-neutral-500 tabular-nums">
+            Free · No sign-up · Works offline
+          </p>
         </div>
-      </section>
-      {/* Features — Bento Grid */}
-      <section className="relative px-4 py-20 sm:px-6 sm:py-28">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-14 max-w-2xl">
-            <h2 className="font-bricolage-grotesque text-3xl font-bold text-stone-900 sm:text-4xl">
-              Everything you need,
-              <br />
-              <span className="text-brand-500">nothing you don&apos;t</span>
-            </h2>
-            <p className="mt-4 text-lg text-stone-600">
-              Designed for freelancers and small businesses who want to create
-              professional invoices without the complexity.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Large feature card — Local-first */}
-            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-8 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-2 lg:col-span-2 lg:row-span-2">
-              <div className="from-brand-100 to-brand-50 absolute -top-20 -right-20 h-64 w-64 rounded-[3px] bg-linear-to-br opacity-50 transition-transform duration-700 group-hover:scale-125" />
-              <div className="relative flex h-full flex-col">
-                <div className="from-brand-400 to-brand-500 shadow-brand-400/25 mb-4 flex h-12 w-12 items-center justify-center rounded-[3px] bg-linear-to-br shadow-lg">
-                  <HardDrive className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="font-bricolage-grotesque mb-2 text-2xl font-bold text-stone-900">
-                  Local-first by design
-                </h3>
-                <p className="mb-8 max-w-md text-stone-600">
-                  Your invoices, templates, and client data are stored securely
-                  in your browser&apos;s IndexedDB. No cloud sync, no data
-                  mining, no privacy concerns.
-                </p>
-                <div className="mt-auto grid grid-cols-3 gap-4">
-                  <div className="rounded-[3px] bg-stone-50 p-4 text-center">
-                    <div className="font-bricolage-grotesque text-brand-500 text-2xl font-bold">
-                      0
-                    </div>
-                    <div className="text-xs text-stone-500">Servers</div>
-                  </div>
-                  <div className="rounded-[3px] bg-stone-50 p-4 text-center">
-                    <div className="font-bricolage-grotesque text-brand-500 text-2xl font-bold">
-                      0
-                    </div>
-                    <div className="text-xs text-stone-500">Trackers</div>
-                  </div>
-                  <div className="rounded-[3px] bg-stone-50 p-4 text-center">
-                    <div className="font-bricolage-grotesque text-brand-500 text-2xl font-bold">
-                      100%
-                    </div>
-                    <div className="text-xs text-stone-500">Private</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* Speed card */}
-            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-[3px] bg-amber-100/80 transition-transform duration-500 group-hover:scale-150" />
-              <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[3px] bg-amber-100">
-                  <Zap className="h-5 w-5 text-amber-600" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-stone-900">
-                  Lightning fast
-                </h3>
-                <p className="text-sm leading-relaxed text-stone-600">
-                  Everything runs instantly in your browser. No loading screens,
-                  no waiting for servers.
-                </p>
-              </div>
-            </div>
-            {/* Customisation card */}
-            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-[3px] bg-violet-100/80 transition-transform duration-500 group-hover:scale-150" />
-              <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[3px] bg-violet-100">
-                  <Palette className="h-5 w-5 text-violet-600" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-stone-900">
-                  Fully customisable
-                </h3>
-                <p className="text-sm leading-relaxed text-stone-600">
-                  Adjust colours, fonts, and layouts. Save your designs as
-                  reusable templates.
-                </p>
-              </div>
-            </div>
-            {/* Templates card */}
-            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5">
-              <div className="absolute -top-8 -right-8 h-24 w-24 rounded-[3px] bg-emerald-100/80 transition-transform duration-500 group-hover:scale-150" />
-              <div className="relative">
-                <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-[3px] bg-emerald-100">
-                  <Sparkles className="h-5 w-5 text-emerald-600" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-stone-900">
-                  Save templates
-                </h3>
-                <p className="text-sm leading-relaxed text-stone-600">
-                  Create once, reuse forever. Maintain consistent branding
-                  across all your invoices.
-                </p>
-              </div>
-            </div>
-            {/* PDF export card — wide */}
-            <div className="group relative overflow-hidden rounded-[3px] border border-stone-200/80 bg-white p-6 transition-all duration-500 hover:shadow-xl hover:shadow-stone-900/5 sm:col-span-1 lg:col-span-2">
-              <div className="absolute -top-16 -right-16 h-48 w-48 rounded-[3px] bg-sky-100/60 transition-transform duration-500 group-hover:scale-125" />
-              <div className="relative flex flex-col gap-6">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[3px] bg-sky-100">
-                  <Download className="h-7 w-7 text-sky-600" />
-                </div>
-                <div>
-                  <h3 className="mb-1 text-lg font-semibold text-stone-900">
-                    Professional PDF export
-                  </h3>
-                  <p className="text-sm leading-relaxed text-stone-600">
-                    Generate print-ready PDF invoices with one click. Perfect
-                    formatting, ready to send to your clients.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="animate-fade-in-up animation-delay-200 relative lg:pl-6">
+          <InvoicePreview />
         </div>
-      </section>
-      {/* CTA Section — Light gradient */}
-      <section className="relative px-4 pb-16 sm:px-6 sm:pb-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="border-brand-200/60 from-brand-50 to-brand-50/80 relative overflow-hidden rounded-[3px] border bg-linear-to-br via-white p-10 sm:p-16">
-            {/* Ambient brand glow */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-              <div className="bg-brand-200/30 absolute -top-24 -left-24 h-64 w-64 rounded-[3px] blur-3xl" />
-              <div className="bg-brand-100/40 absolute -right-24 -bottom-24 h-64 w-64 rounded-[3px] blur-3xl" />
-              <div
-                className="absolute inset-0 opacity-30"
-                style={{
-                  backgroundImage: `radial-gradient(circle at 1px 1px, oklch(0.603 0.218 257.42 / 0.08) 1px, transparent 0)`,
-                  backgroundSize: "32px 32px"
-                }}
-              />
-            </div>
-            <div className="relative flex flex-col items-center text-center">
-              <div className="border-brand-200 bg-brand-50/80 text-brand-600 mb-6 inline-flex items-center gap-2 rounded-[3px] border px-4 py-1.5 text-sm font-medium backdrop-blur-sm">
-                <Zap className="h-3.5 w-3.5" />
-                Takes less than a minute
-              </div>
-              <h2 className="font-bricolage-grotesque text-3xl font-bold text-stone-900 sm:text-4xl lg:text-5xl">
-                Ready to create your
-                <br />
-                <span className="text-brand-500">first invoice?</span>
-              </h2>
-              <p className="mt-5 max-w-md text-lg text-stone-600">
-                No sign-up, no credit card, no strings attached. Just start
-                creating beautiful invoices right now.
-              </p>
-              <Link to="/create" preload="viewport" className="mt-8">
-                <Button className="group shadow-brand-500/20 hover:shadow-brand-500/25 h-10 gap-2 rounded-[3px] px-6 text-sm shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl">
-                  Create your invoice
-                  <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-0.5" />
-                </Button>
-              </Link>
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-stone-500">
-                <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  Free forever
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  No account needed
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  No tracking
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Footer */}
-      <footer className="relative border-t border-stone-200 bg-white/60 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <div className="flex items-center gap-2">
-              <span className="font-bricolage-grotesque text-brand-500 text-base font-bold">
-                billsend
+      </div>
+    </section>
+  );
+}
+
+function InvoicePreview() {
+  return (
+    <div className="relative mx-auto w-full max-w-md">
+      <div className="animate-float rounded-[3px] border border-neutral-200 bg-white shadow-xl shadow-neutral-900/5">
+        <div className="flex items-start justify-between border-b border-neutral-200 p-6">
+          <div className="flex flex-col gap-2">
+            <div className="bg-brand-600 flex size-9 items-center justify-center rounded-[3px]">
+              <span className="font-display text-base font-semibold text-white">
+                b
               </span>
             </div>
-            <p className="text-sm text-stone-500">
-              &copy; {new Date().getFullYear()} billsend.io. All rights
-              reserved.
-            </p>
+            <div className="text-sm font-medium text-neutral-900">
+              Acme Studio
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-display text-2xl font-semibold tracking-tight text-neutral-900">
+              Invoice
+            </div>
+            <div className="mt-1 font-mono text-xs text-neutral-500 tabular-nums">
+              #INV-0042
+            </div>
           </div>
         </div>
-      </footer>
+        <div className="grid grid-cols-2 gap-4 border-b border-neutral-200 p-6 text-sm">
+          <div className="flex flex-col gap-1">
+            <div className="text-xs font-medium tracking-wide text-neutral-400 uppercase">
+              Billed to
+            </div>
+            <div className="text-neutral-700">Northwind Co.</div>
+          </div>
+          <div className="flex flex-col gap-1 text-right">
+            <div className="text-xs font-medium tracking-wide text-neutral-400 uppercase">
+              Due
+            </div>
+            <div className="font-mono text-neutral-700 tabular-nums">
+              30 Jun 2026
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 border-b border-neutral-200 p-6 text-sm">
+          <LineItem label="Brand identity design" amount="1,400.00" />
+          <LineItem label="Landing page build" amount="850.00" />
+          <LineItem label="Monthly retainer" amount="200.00" />
+        </div>
+        <div className="bg-brand-50 flex items-center justify-between p-6">
+          <span className="text-brand-700 text-sm font-medium">Total due</span>
+          <span className="font-display text-brand-700 text-xl font-semibold tabular-nums">
+            $2,450.00
+          </span>
+        </div>
+      </div>
+      <div className="absolute -bottom-4 -left-4 hidden items-center gap-2 rounded-[3px] border border-neutral-200 bg-white px-3 py-2 shadow-lg sm:flex">
+        <Database className="text-brand-600 size-4" />
+        <span className="text-sm font-medium text-neutral-700">
+          Saved locally
+        </span>
+      </div>
     </div>
+  );
+}
+
+function LineItem({ label, amount }: { label: string; amount: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="text-neutral-600">{label}</span>
+      <span className="font-mono text-neutral-900 tabular-nums">${amount}</span>
+    </div>
+  );
+}
+
+function StatBand() {
+  return (
+    <section className="border-b border-neutral-200">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="grid grid-cols-2 bg-neutral-200 sm:grid-cols-4">
+          {STATS.map((stat, index) => (
+            <div
+              key={stat.label}
+              className={`flex flex-col gap-1 bg-neutral-50 px-6 py-8 ${
+                index % 2 === 0 ? "border-r border-neutral-200" : ""
+              } ${index < 2 ? "border-b border-neutral-200 sm:border-b-0" : ""} sm:border-r sm:last:border-r-0`}
+            >
+              <span className="font-display text-brand-600 text-3xl font-semibold tracking-tight tabular-nums">
+                {stat.value}
+              </span>
+              <span className="text-sm text-neutral-500">{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Features() {
+  return (
+    <section
+      id="features"
+      className="border-b border-neutral-200 py-20 sm:py-28"
+    >
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="flex max-w-2xl flex-col gap-4">
+          <span className="text-brand-600 font-mono text-sm font-medium">
+            Features
+          </span>
+          <h2 className="font-display text-4xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-5xl">
+            Everything you need, nothing you don&apos;t
+          </h2>
+          <p className="max-w-[60ch] text-lg text-pretty text-neutral-600">
+            A small, fast tool for making invoices, nothing more. No
+            spreadsheets, no subscriptions, and no data leaving your computer.
+          </p>
+        </div>
+        <div className="mt-14 overflow-hidden rounded-[3px] border border-neutral-200 bg-neutral-200">
+          <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map(feature => (
+              <FeatureCell key={feature.title} feature={feature} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeatureCell({
+  feature
+}: {
+  feature: { icon: LucideIcon; title: string; description: string };
+}) {
+  const Icon = feature.icon;
+
+  return (
+    <div className="group flex flex-col gap-4 bg-neutral-50 p-8 transition-colors hover:bg-white">
+      <div className="border-brand-200 bg-brand-50 text-brand-600 flex size-10 items-center justify-center rounded-[3px] border">
+        <Icon className="size-5" />
+      </div>
+      <div className="flex flex-col gap-2">
+        <h3 className="text-lg font-semibold text-neutral-900">
+          {feature.title}
+        </h3>
+        <p className="text-sm text-pretty text-neutral-600">
+          {feature.description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Steps() {
+  return (
+    <section id="how" className="border-b border-neutral-200 py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="flex max-w-2xl flex-col gap-4">
+          <span className="text-brand-600 font-mono text-sm font-medium">
+            How it works
+          </span>
+          <h2 className="font-display text-4xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-5xl">
+            From blank page to PDF
+          </h2>
+        </div>
+        <div className="mt-14 grid gap-px overflow-hidden rounded-[3px] border border-neutral-200 bg-neutral-200 md:grid-cols-3">
+          {STEPS.map(step => (
+            <div
+              key={step.number}
+              className="flex flex-col gap-4 bg-neutral-50 p-8"
+            >
+              <span className="font-display text-brand-600 text-4xl font-semibold tracking-tight tabular-nums">
+                {step.number}
+              </span>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold text-neutral-900">
+                  {step.title}
+                </h3>
+                <p className="text-sm text-pretty text-neutral-600">
+                  {step.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PrivacyPanel() {
+  return (
+    <section
+      id="privacy"
+      className="border-b border-neutral-200 py-20 sm:py-28"
+    >
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="bg-brand-50/40 relative overflow-hidden rounded-[3px] border border-neutral-200 px-8 py-16 sm:px-16">
+          <div
+            className="pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_80%_80%_at_50%_0%,black,transparent)] opacity-70"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, oklch(0.92 0 0) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.92 0 0) 1px, transparent 1px)",
+              backgroundSize: "44px 44px"
+            }}
+          />
+          <div className="relative flex max-w-2xl flex-col gap-5">
+            <span className="text-brand-600 font-mono text-sm font-medium">
+              Private by default
+            </span>
+            <h2 className="font-display text-4xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-5xl">
+              Your data never touches a server
+            </h2>
+            <p className="max-w-[58ch] text-lg text-pretty text-neutral-600">
+              There is no backend. Your invoices, templates, and logos live in
+              your browser and stay on your device. Export them whenever you
+              like, clear them whenever you want. We genuinely cannot see them.
+            </p>
+          </div>
+          <div className="relative mt-12 grid gap-px overflow-hidden rounded-[3px] border border-neutral-200 bg-neutral-200 sm:grid-cols-3">
+            <Assurance
+              title="No accounts"
+              description="Open the app and start. There is nothing to sign up for."
+            />
+            <Assurance
+              title="No cloud sync"
+              description="Files are written to your machine, not someone else's."
+            />
+            <Assurance
+              title="No tracking"
+              description="Zero analytics scripts, zero third-party requests."
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Assurance({
+  title,
+  description
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2 bg-white p-6">
+      <div className="text-brand-600 flex items-center gap-2 text-sm font-medium">
+        <ShieldCheck className="size-4" />
+        {title}
+      </div>
+      <p className="text-sm text-pretty text-neutral-600">{description}</p>
+    </div>
+  );
+}
+
+function FinalCta() {
+  return (
+    <section className="border-b border-neutral-200 py-24 sm:py-32">
+      <div className="mx-auto flex max-w-3xl flex-col items-center px-6 text-center">
+        <h2 className="font-display text-4xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-5xl lg:text-6xl">
+          Ready to make an invoice?
+        </h2>
+        <p className="mt-5 max-w-[48ch] text-lg text-pretty text-neutral-600">
+          No sign-up, no catch. Make one in the next minute, for free.
+        </p>
+        <Link to="/create" preload="viewport" className="mt-8">
+          <Button className="h-11 px-6 text-sm">
+            Create your invoice
+            <ArrowRight className="size-4" />
+          </Button>
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="bg-neutral-50">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 sm:flex-row">
+        <span className="font-bricolage-grotesque text-brand-600 text-lg font-semibold tracking-tight">
+          billsend
+        </span>
+        <p className="font-mono text-sm text-neutral-500 tabular-nums">
+          © {new Date().getFullYear()} billsend.io · A local-first invoice tool
+        </p>
+      </div>
+    </footer>
   );
 }
