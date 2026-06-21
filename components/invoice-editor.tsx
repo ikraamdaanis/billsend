@@ -29,9 +29,13 @@ import {
   MenubarRadioGroup,
   MenubarRadioItem,
   MenubarSeparator,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
   MenubarTrigger
 } from "components/ui/menubar";
 import { currencyOptions, normalizeCurrency } from "consts/currencies";
+import { CanvasViewProvider, useCanvasView } from "context/canvas-view-context";
 import { useInvoiceDocument } from "context/invoice-document-context";
 import { getInvoice, saveInvoice } from "db";
 import { useState } from "react";
@@ -47,11 +51,22 @@ const SIZES: { value: InvoiceSize; name: string; className: string }[] = [
   { value: "large", name: "Large", className: "text-base" }
 ];
 
+const ZOOM_LEVELS: { value: string; name: string }[] = [
+  { value: "0.5", name: "50%" },
+  { value: "0.75", name: "75%" },
+  { value: "0.9", name: "90%" },
+  { value: "1", name: "100%" },
+  { value: "1.2", name: "120%" },
+  { value: "1.5", name: "150%" },
+  { value: "1.75", name: "175%" },
+  { value: "2", name: "200%" }
+];
+
 export function InvoiceEditor() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <>
+    <CanvasViewProvider>
       <div className="h-dvh w-full">
         <Toolbar setIsModalOpen={setIsModalOpen} />
         <div
@@ -67,7 +82,7 @@ export function InvoiceEditor() {
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
       />
-    </>
+    </CanvasViewProvider>
   );
 }
 
@@ -157,8 +172,8 @@ function Toolbar({
             saveDialogOpen={toolbar.saveDialogOpen}
             onSaveDialogOpenChange={toolbar.setSaveDialogOpen}
           />
-          <CurrencyMenu />
-          <SizeMenu />
+          <EditMenu />
+          <ViewMenu />
         </Menubar>
       </div>
       <div className="ml-auto flex items-center gap-2">
@@ -174,8 +189,9 @@ function Toolbar({
   );
 }
 
-function CurrencyMenu() {
+function EditMenu() {
   const { currency, setCurrency } = useCurrencySlice();
+  const { theme, setTheme } = useThemeSlice();
   const [customOpen, setCustomOpen] = useState(false);
   const selected = normalizeCurrency(currency);
   const isCustom = !currencyOptions.some(option => option.symbol === selected);
@@ -183,20 +199,42 @@ function CurrencyMenu() {
   return (
     <>
       <MenubarMenu>
-        <MenubarTrigger>Currency</MenubarTrigger>
-        <MenubarContent className="w-auto">
-          <MenubarRadioGroup value={selected} onValueChange={setCurrency}>
-            {currencyOptions.map(({ symbol, label }) => (
-              <MenubarRadioItem key={symbol} value={symbol}>
-                <span className="w-8 shrink-0">{symbol}</span>
-                <span className="text-muted-foreground">{label}</span>
-              </MenubarRadioItem>
-            ))}
-          </MenubarRadioGroup>
-          <MenubarSeparator />
-          <MenubarItem inset onClick={() => setCustomOpen(true)}>
-            {isCustom ? `Custom (${selected})` : "Custom…"}
-          </MenubarItem>
+        <MenubarTrigger>Edit</MenubarTrigger>
+        <MenubarContent>
+          <MenubarSub>
+            <MenubarSubTrigger>Currency</MenubarSubTrigger>
+            <MenubarSubContent className="w-auto">
+              <MenubarRadioGroup value={selected} onValueChange={setCurrency}>
+                {currencyOptions.map(({ symbol, label }) => (
+                  <MenubarRadioItem key={symbol} value={symbol}>
+                    <span className="w-8 shrink-0">{symbol}</span>
+                    <span className="text-muted-foreground">{label}</span>
+                  </MenubarRadioItem>
+                ))}
+              </MenubarRadioGroup>
+              <MenubarSeparator />
+              <MenubarItem inset onClick={() => setCustomOpen(true)}>
+                {isCustom ? `Custom (${selected})` : "Custom…"}
+              </MenubarItem>
+            </MenubarSubContent>
+          </MenubarSub>
+          <MenubarSub>
+            <MenubarSubTrigger>Size</MenubarSubTrigger>
+            <MenubarSubContent className="w-auto">
+              <MenubarRadioGroup
+                value={theme.size}
+                onValueChange={value =>
+                  setTheme(prev => ({ ...prev, size: value as InvoiceSize }))
+                }
+              >
+                {SIZES.map(size => (
+                  <MenubarRadioItem key={size.value} value={size.value}>
+                    <span className={size.className}>{size.name}</span>
+                  </MenubarRadioItem>
+                ))}
+              </MenubarRadioGroup>
+            </MenubarSubContent>
+          </MenubarSub>
         </MenubarContent>
       </MenubarMenu>
       <CustomCurrencyDialog
@@ -209,24 +247,25 @@ function CurrencyMenu() {
   );
 }
 
-function SizeMenu() {
-  const { theme, setTheme } = useThemeSlice();
+function ViewMenu() {
+  const { view, setView } = useCanvasView();
+  const value = view === "fit" ? "fit" : String(view);
 
   return (
     <MenubarMenu>
-      <MenubarTrigger>Size</MenubarTrigger>
+      <MenubarTrigger>View</MenubarTrigger>
       <MenubarContent className="w-auto">
         <MenubarRadioGroup
-          value={theme.size}
-          onValueChange={value =>
-            setTheme(prev => ({ ...prev, size: value as InvoiceSize }))
-          }
+          value={value}
+          onValueChange={next => setView(next === "fit" ? "fit" : Number(next))}
         >
-          {SIZES.map(size => (
-            <MenubarRadioItem key={size.value} value={size.value}>
-              <span className={size.className}>{size.name}</span>
+          {ZOOM_LEVELS.map(option => (
+            <MenubarRadioItem key={option.value} value={option.value}>
+              {option.name}
             </MenubarRadioItem>
           ))}
+          <MenubarSeparator />
+          <MenubarRadioItem value="fit">Fit</MenubarRadioItem>
         </MenubarRadioGroup>
       </MenubarContent>
     </MenubarMenu>
