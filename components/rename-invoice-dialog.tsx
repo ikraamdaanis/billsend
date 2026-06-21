@@ -88,30 +88,29 @@ export function RenameInvoiceDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={form.handleSubmit(handleSubmit)}
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Invoice Name <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter invoice name"
-                      autoFocus
-                      data-1p-ignore
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <div className="flex flex-col gap-4 px-4 pb-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Invoice Name <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter invoice name"
+                        autoFocus
+                        data-1p-ignore
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="button"
@@ -121,9 +120,7 @@ export function RenameInvoiceDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" isLoading={pending}>
-                Rename
-              </Button>
+              <Button type="submit">Rename</Button>
             </DialogFooter>
           </form>
         </Form>

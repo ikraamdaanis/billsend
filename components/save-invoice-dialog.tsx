@@ -102,40 +102,41 @@ export function SaveInvoiceDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={form.handleSubmit(handleSubmit)}
-          >
-            <div className="flex flex-col gap-2">
-              <FormLabel htmlFor="invoice-select">Invoice</FormLabel>
-              <NativeSelect
-                id="invoice-select"
-                value={selectedInvoiceId}
-                onChange={({ target: { value } }) => handleInvoiceSelect(value)}
-              >
-                <option value="new">Create New Invoice</option>
-                {existingInvoices.map(invoice => (
-                  <option key={invoice.id} value={invoice.id}>
-                    {invoice.name}
-                  </option>
-                ))}
-              </NativeSelect>
+          <form onSubmit={form.handleSubmit(handleSubmit)}>
+            <div className="flex flex-col gap-4 px-4 pb-4">
+              <div className="flex flex-col gap-2">
+                <FormLabel htmlFor="invoice-select">Invoice</FormLabel>
+                <NativeSelect
+                  id="invoice-select"
+                  value={selectedInvoiceId}
+                  onChange={({ target: { value } }) =>
+                    handleInvoiceSelect(value)
+                  }
+                >
+                  <option value="new">Create New Invoice</option>
+                  {existingInvoices.map(invoice => (
+                    <option key={invoice.id} value={invoice.id}>
+                      {invoice.name}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Invoice Name <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter invoice name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    Invoice Name <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter invoice name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <DialogFooter>
               <Button
                 type="button"
