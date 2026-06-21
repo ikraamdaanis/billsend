@@ -68,14 +68,14 @@ export function TemplateSelectionModal({
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="flex h-[90vh] w-[1280px] flex-col">
-          <DialogHeader className="border-border border-b pb-4">
+          <DialogHeader className="border-border border-b">
             <DialogTitle>Choose a Template</DialogTitle>
             <DialogDescription>
               Select a template to start creating your invoice. You can
               customize it later.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-4">
             {templates.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
                 <FileTextIcon className="text-muted-foreground mb-4 h-12 w-12" />
@@ -100,7 +100,7 @@ export function TemplateSelectionModal({
               </div>
             )}
           </div>
-          <DialogFooter className="border-border border-t pt-4">
+          <DialogFooter className="border-border">
             <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground text-sm">

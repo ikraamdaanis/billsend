@@ -52,20 +52,22 @@ export function CustomCurrencyDialog({
             Enter a symbol to use on this invoice, up to 4 characters.
           </DialogDescription>
         </DialogHeader>
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <Input
-            name="currency-symbol"
-            aria-label="Currency symbol"
-            value={value}
-            onChange={event =>
-              setValue(event.target.value.replace(/\p{N}/gu, "").slice(0, 4))
-            }
-            maxLength={4}
-            autoFocus
-            autoComplete="off"
-            placeholder="e.g. ₿"
-            className="max-sm:text-base"
-          />
+        <form onSubmit={handleSubmit}>
+          <div className="px-4 pb-4">
+            <Input
+              name="currency-symbol"
+              aria-label="Currency symbol"
+              value={value}
+              onChange={event =>
+                setValue(event.target.value.replace(/\p{N}/gu, "").slice(0, 4))
+              }
+              maxLength={4}
+              autoFocus
+              autoComplete="off"
+              placeholder="e.g. ₿"
+              className="max-sm:text-base"
+            />
+          </div>
           <DialogFooter>
             <Button
               type="button"

@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogFooter,
+  DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
 import {
@@ -252,10 +253,13 @@ function LeavePageDialog({
   return (
     <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
       <DialogContent className="w-md">
-        <DialogTitle>Leave this page?</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to leave this page and go back to the home page?
-        </DialogDescription>
+        <DialogHeader>
+          <DialogTitle>Leave this page?</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to leave this page and go back to the home
+            page?
+          </DialogDescription>
+        </DialogHeader>
         <DialogFooter>
           <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
             Cancel

@@ -98,7 +98,7 @@ export function ImportDataDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="px-4 pb-4">
           {state === "idle" && (
             <div className="flex flex-col items-center gap-4">
               {error && (

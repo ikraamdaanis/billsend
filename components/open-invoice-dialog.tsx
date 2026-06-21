@@ -8,9 +8,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { deleteInvoice, getAllInvoices } from "db";
+import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
 import { FolderOpenIcon } from "lucide-react";
-import type { MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { InvoiceDocument } from "types";
@@ -58,9 +57,7 @@ export function OpenInvoiceDialog({
     onOpenChange(false);
   }
 
-  function handleDeleteInvoice(invoice: InvoiceDocument, event: MouseEvent) {
-    event.stopPropagation();
-
+  function handleDeleteInvoice(invoice: InvoiceDocument) {
     startTransition(async () => {
       try {
         setDeletePendingId(invoice.id);
@@ -79,16 +76,32 @@ export function OpenInvoiceDialog({
     });
   }
 
+  async function handleRenameInvoice(
+    invoice: InvoiceDocument,
+    newName: string
+  ) {
+    try {
+      await saveInvoice({ ...invoice, name: newName, updatedAt: new Date() });
+      await loadInvoices();
+
+      toast.success("Invoice renamed successfully");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to rename invoice"
+      );
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl">
-        <DialogHeader className="border-border border-b pb-4">
+        <DialogHeader className="border-border border-b">
           <DialogTitle>Open Invoice</DialogTitle>
           <DialogDescription>
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-4">
           {loading ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-muted-foreground">Loading invoices...</p>
@@ -109,13 +122,14 @@ export function OpenInvoiceDialog({
               invoices={invoices}
               currentInvoiceId={currentInvoiceId}
               onSelectInvoice={handleSelectInvoice}
+              onRenameInvoice={handleRenameInvoice}
               onDeleteInvoice={handleDeleteInvoice}
               deletePendingId={deletePendingId}
               deleting={pending}
             />
           )}
         </div>
-        <DialogFooter className="flex-row items-center justify-between rounded-b-[3px] sm:justify-between">
+        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
           <span className="text-muted-foreground text-sm">
             {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}{" "}
             available
