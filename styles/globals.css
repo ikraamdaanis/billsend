@@ -3,6 +3,7 @@
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/playfair-display";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";
 
@@ -11,6 +12,7 @@
 @theme inline {
   --font-geist: "Geist Variable", sans-serif;
   --font-bricolage-grotesque: "Bricolage Grotesque Variable", sans-serif;
+  --font-display: "Playfair Display Variable", serif;
 
   --brand-top: oklch(0.677 0.17 263.89);
   --brand-bottom: oklch(0.419 0.152 257.57);
