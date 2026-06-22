@@ -178,12 +178,12 @@ export function OpenInvoiceDialog({
         </DialogHeader>
         <div className="flex flex-1 flex-col overflow-y-auto">
           {loading ? (
-            <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
+            <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
               <Loader2Icon className="size-4 shrink-0 animate-spin" />
               Loading invoices
             </div>
           ) : invoices.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+            <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
               <FolderOpenIcon className="text-muted-foreground/70 size-8 shrink-0" />
               <div className="flex flex-col gap-1.5">
                 <h3 className="text-foreground text-base font-medium">
