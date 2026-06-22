@@ -12,7 +12,8 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
-import { FolderOpenIcon, SparklesIcon } from "lucide-react";
+import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
+import type { MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { InvoiceDocument } from "types";
@@ -65,6 +66,14 @@ export function OpenInvoiceDialog({
   function handleOpenInvoice(invoice: InvoiceDocument) {
     onSelectInvoice(invoice);
     onOpenChange(false);
+  }
+
+  function handleListBackgroundClick(event: MouseEvent<HTMLDivElement>) {
+    if (selectedIds.length === 0) return;
+
+    if ((event.target as HTMLElement).closest("tr")) return;
+
+    setSelectedIds([]);
   }
 
   function handleOpenSelected() {
@@ -160,21 +169,27 @@ export function OpenInvoiceDialog({
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-1 flex-col overflow-y-auto">
+        <div
+          className="flex flex-1 flex-col overflow-y-auto"
+          onClick={handleListBackgroundClick}
+        >
           {loading ? (
-            <div className="flex h-full items-center justify-center">
-              <p className="text-muted-foreground">Loading invoices...</p>
+            <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
+              <Loader2Icon className="size-4 shrink-0 animate-spin" />
+              Loading invoices
             </div>
           ) : invoices.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center text-center">
-              <FolderOpenIcon className="text-muted-foreground mb-4 size-12" />
-              <h3 className="text-foreground mb-2 text-lg font-medium">
-                No invoices available
-              </h3>
-              <p className="text-muted-foreground">
-                You haven&#39;t saved any invoices yet. Create a new invoice and
-                save it to get started.
-              </p>
+            <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
+              <FolderOpenIcon className="text-muted-foreground/70 size-8 shrink-0" />
+              <div className="flex flex-col gap-1.5">
+                <h3 className="text-foreground text-base font-medium">
+                  No saved invoices yet
+                </h3>
+                <p className="text-muted-foreground max-w-sm text-sm">
+                  Save an invoice and it will appear here, ready to reopen
+                  anytime.
+                </p>
+              </div>
             </div>
           ) : (
             <>
