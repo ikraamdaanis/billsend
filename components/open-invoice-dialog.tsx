@@ -34,13 +34,14 @@ export function OpenInvoiceDialog({
   const [pending, startTransition] = useTransition();
   const [seeding, startSeedTransition] = useTransition();
   const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
-    null
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [pendingBulkDelete, setPendingBulkDelete] = useState<InvoiceDocument[]>(
+    []
   );
 
   useEffect(() => {
     if (open) {
-      setSelectedInvoiceId(null);
+      setSelectedIds([]);
       loadInvoices();
     }
   }, [open]);
@@ -67,8 +68,10 @@ export function OpenInvoiceDialog({
   }
 
   function handleOpenSelected() {
+    if (selectedIds.length !== 1) return;
+
     const selectedInvoice = invoices.find(
-      invoice => invoice.id === selectedInvoiceId
+      invoice => invoice.id === selectedIds[0]
     );
 
     if (!selectedInvoice) {
@@ -101,6 +104,7 @@ export function OpenInvoiceDialog({
         await deleteInvoice(invoice.id);
         await loadInvoices();
 
+        setSelectedIds(prev => prev.filter(id => id !== invoice.id));
         toast.success("Invoice deleted successfully");
       } catch (error) {
         toast.error(
@@ -108,6 +112,25 @@ export function OpenInvoiceDialog({
         );
       } finally {
         setDeletePendingId(null);
+      }
+    });
+  }
+
+  function handleConfirmBulkDelete() {
+    const targets = pendingBulkDelete;
+
+    startTransition(async () => {
+      try {
+        await Promise.all(targets.map(invoice => deleteInvoice(invoice.id)));
+        await loadInvoices();
+
+        setSelectedIds([]);
+        setPendingBulkDelete([]);
+        toast.success(`Deleted ${targets.length} invoices`);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete invoices"
+        );
       }
     });
   }
@@ -158,15 +181,12 @@ export function OpenInvoiceDialog({
               <InvoiceListTable
                 invoices={invoices}
                 currentInvoiceId={currentInvoiceId}
-                selectedInvoiceId={selectedInvoiceId}
-                onSelectInvoice={invoice =>
-                  setSelectedInvoiceId(current =>
-                    current === invoice.id ? null : invoice.id
-                  )
-                }
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
                 onOpenInvoice={handleOpenInvoice}
                 onRenameInvoice={handleRenameInvoice}
                 onDeleteInvoice={handleDeleteInvoice}
+                onDeleteInvoices={setPendingBulkDelete}
                 deletePendingId={deletePendingId}
                 deleting={pending}
               />
@@ -176,8 +196,9 @@ export function OpenInvoiceDialog({
         </div>
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
           <span className="text-muted-foreground text-sm">
-            {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}{" "}
-            available
+            {selectedIds.length > 0
+              ? `${selectedIds.length} selected`
+              : `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`}
           </span>
           <div className="flex items-center gap-2">
             {import.meta.env.DEV && (
@@ -193,11 +214,45 @@ export function OpenInvoiceDialog({
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Close
             </Button>
-            <Button disabled={!selectedInvoiceId} onClick={handleOpenSelected}>
+            <Button
+              disabled={selectedIds.length !== 1}
+              onClick={handleOpenSelected}
+            >
               Open
             </Button>
           </div>
         </DialogFooter>
+        <Dialog
+          open={pendingBulkDelete.length > 0}
+          onOpenChange={isOpen => {
+            if (!isOpen) setPendingBulkDelete([]);
+          }}
+        >
+          <DialogContent showCloseButton={false} className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                Delete {pendingBulkDelete.length} invoice
+                {pendingBulkDelete.length !== 1 ? "s" : ""}?
+              </DialogTitle>
+              <DialogDescription>
+                This permanently removes the selected invoices from this device.
+                This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setPendingBulkDelete([])}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmBulkDelete}
+                disabled={pending}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
