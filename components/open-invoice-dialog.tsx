@@ -1,4 +1,7 @@
-import { InvoiceListTable } from "components/invoice-list-table";
+import {
+  InvoiceListStripeFiller,
+  InvoiceListTable
+} from "components/invoice-list-table";
 import { Button } from "components/ui/button";
 import {
   Dialog,
@@ -9,10 +12,11 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
-import { FolderOpenIcon } from "lucide-react";
+import { FolderOpenIcon, SparklesIcon } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { InvoiceDocument } from "types";
+import { seedDummyInvoice } from "utils/seed-dummy-invoice";
 
 export function OpenInvoiceDialog({
   open,
@@ -28,10 +32,15 @@ export function OpenInvoiceDialog({
   const [invoices, setInvoices] = useState<InvoiceDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
+  const [seeding, startSeedTransition] = useTransition();
   const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     if (open) {
+      setSelectedInvoiceId(null);
       loadInvoices();
     }
   }, [open]);
@@ -52,9 +61,36 @@ export function OpenInvoiceDialog({
     }
   }
 
-  function handleSelectInvoice(invoice: InvoiceDocument) {
+  function handleOpenInvoice(invoice: InvoiceDocument) {
     onSelectInvoice(invoice);
     onOpenChange(false);
+  }
+
+  function handleOpenSelected() {
+    const selectedInvoice = invoices.find(
+      invoice => invoice.id === selectedInvoiceId
+    );
+
+    if (!selectedInvoice) {
+      return;
+    }
+
+    handleOpenInvoice(selectedInvoice);
+  }
+
+  function handleSeedDummyInvoice() {
+    startSeedTransition(async () => {
+      try {
+        await seedDummyInvoice();
+        await loadInvoices();
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to seed a dummy invoice."
+        );
+      }
+    });
   }
 
   function handleDeleteInvoice(invoice: InvoiceDocument) {
@@ -101,7 +137,7 @@ export function OpenInvoiceDialog({
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto pb-4">
+        <div className="flex flex-1 flex-col overflow-y-auto">
           {loading ? (
             <div className="flex h-full items-center justify-center">
               <p className="text-muted-foreground">Loading invoices...</p>
@@ -118,15 +154,24 @@ export function OpenInvoiceDialog({
               </p>
             </div>
           ) : (
-            <InvoiceListTable
-              invoices={invoices}
-              currentInvoiceId={currentInvoiceId}
-              onSelectInvoice={handleSelectInvoice}
-              onRenameInvoice={handleRenameInvoice}
-              onDeleteInvoice={handleDeleteInvoice}
-              deletePendingId={deletePendingId}
-              deleting={pending}
-            />
+            <>
+              <InvoiceListTable
+                invoices={invoices}
+                currentInvoiceId={currentInvoiceId}
+                selectedInvoiceId={selectedInvoiceId}
+                onSelectInvoice={invoice =>
+                  setSelectedInvoiceId(current =>
+                    current === invoice.id ? null : invoice.id
+                  )
+                }
+                onOpenInvoice={handleOpenInvoice}
+                onRenameInvoice={handleRenameInvoice}
+                onDeleteInvoice={handleDeleteInvoice}
+                deletePendingId={deletePendingId}
+                deleting={pending}
+              />
+              <InvoiceListStripeFiller rowCount={invoices.length} />
+            </>
           )}
         </div>
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
@@ -134,9 +179,24 @@ export function OpenInvoiceDialog({
             {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}{" "}
             available
           </span>
-          <Button variant="secondary" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
+          <div className="flex items-center gap-2">
+            {import.meta.env.DEV && (
+              <Button
+                variant="outline"
+                onClick={handleSeedDummyInvoice}
+                disabled={seeding}
+              >
+                <SparklesIcon />
+                Add dummy
+              </Button>
+            )}
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            <Button disabled={!selectedInvoiceId} onClick={handleOpenSelected}>
+              Open
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
