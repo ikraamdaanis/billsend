@@ -137,12 +137,12 @@ class InvoiceDatabase extends Dexie {
   }
 }
 
-export const db = new InvoiceDatabase();
+const db = new InvoiceDatabase();
 
 let dbOpenPromise: Promise<void> | null = null;
 
 // Ensure database is ready before use
-export async function ensureDbReady(): Promise<void> {
+async function ensureDbReady(): Promise<void> {
   if (db.isOpen()) return;
   if (dbOpenPromise) return dbOpenPromise;
 
@@ -202,21 +202,6 @@ export async function saveTemplate(template: InvoiceTemplate): Promise<string> {
       error instanceof Error
         ? error.message
         : "Failed to save template to local storage."
-    );
-  }
-}
-
-export async function getTemplate(
-  id: string
-): Promise<InvoiceTemplate | undefined> {
-  try {
-    await ensureDbReady();
-    return await db.templates.get(id);
-  } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load template from local storage."
     );
   }
 }
@@ -317,19 +302,6 @@ export async function saveImage(
       error instanceof Error
         ? error.message
         : "Failed to save image to local storage."
-    );
-  }
-}
-
-export async function getImage(id: string): Promise<StoredImage | undefined> {
-  try {
-    await ensureDbReady();
-    return await db.images.get(id);
-  } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load image from local storage."
     );
   }
 }
