@@ -1,5 +1,11 @@
 import { Button } from "components/ui/button";
 import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from "components/ui/context-menu";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -16,7 +22,7 @@ import {
   PencilIcon,
   TrashIcon
 } from "lucide-react";
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import type { InvoiceDocument } from "types";
 
@@ -41,21 +47,23 @@ export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
 export function InvoiceListTable({
   invoices,
   currentInvoiceId,
-  selectedInvoiceId,
-  onSelectInvoice,
+  selectedIds,
+  onSelectionChange,
   onOpenInvoice,
   onRenameInvoice,
   onDeleteInvoice,
+  onDeleteInvoices,
   deletePendingId,
   deleting
 }: {
   invoices: InvoiceDocument[];
   currentInvoiceId: string | null;
-  selectedInvoiceId: string | null;
-  onSelectInvoice: (invoice: InvoiceDocument) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   onOpenInvoice: (invoice: InvoiceDocument) => void;
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
   onDeleteInvoice: (invoice: InvoiceDocument) => void;
+  onDeleteInvoices: (invoices: InvoiceDocument[]) => void;
   deletePendingId: string | null;
   deleting: boolean;
 }) {
@@ -64,6 +72,7 @@ export function InvoiceListTable({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const editingIdRef = useRef<string | null>(null);
+  const anchorIdRef = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -139,6 +148,73 @@ export function InvoiceListTable({
     );
   });
 
+  const selectedSet = new Set(selectedIds);
+  const selectedInvoices = sortedInvoices.filter(invoice =>
+    selectedSet.has(invoice.id)
+  );
+
+  function selectRange(targetId: string) {
+    const anchorId = anchorIdRef.current;
+    const anchorIndex = sortedInvoices.findIndex(
+      invoice => invoice.id === anchorId
+    );
+    const targetIndex = sortedInvoices.findIndex(
+      invoice => invoice.id === targetId
+    );
+
+    if (anchorIndex === -1) {
+      onSelectionChange([targetId]);
+
+      return;
+    }
+
+    const start = Math.min(anchorIndex, targetIndex);
+    const end = Math.max(anchorIndex, targetIndex);
+
+    onSelectionChange(
+      sortedInvoices.slice(start, end + 1).map(invoice => invoice.id)
+    );
+  }
+
+  function handleRowClick(
+    event: MouseEvent<HTMLTableRowElement>,
+    invoice: InvoiceDocument
+  ) {
+    if (editingId) return;
+
+    if (event.shiftKey && anchorIdRef.current) {
+      selectRange(invoice.id);
+
+      return;
+    }
+
+    if (event.metaKey || event.ctrlKey) {
+      anchorIdRef.current = invoice.id;
+
+      onSelectionChange(
+        selectedSet.has(invoice.id)
+          ? selectedIds.filter(selectedId => selectedId !== invoice.id)
+          : [...selectedIds, invoice.id]
+      );
+
+      return;
+    }
+
+    anchorIdRef.current = invoice.id;
+
+    const isOnlySelection =
+      selectedSet.has(invoice.id) && selectedIds.length === 1;
+
+    onSelectionChange(isOnlySelection ? [] : [invoice.id]);
+  }
+
+  function handleRowContextMenu(invoice: InvoiceDocument) {
+    if (selectedSet.has(invoice.id)) return;
+
+    anchorIdRef.current = invoice.id;
+    onSelectionChange([invoice.id]);
+  }
+
   return (
     <table className="w-full text-sm">
       <thead>
@@ -167,122 +243,152 @@ export function InvoiceListTable({
       <tbody>
         {sortedInvoices.map((invoice, index) => {
           const isCurrent = currentInvoiceId === invoice.id;
-          const isSelected = selectedInvoiceId === invoice.id;
+          const isSelected = selectedSet.has(invoice.id);
           const isEditing = editingId === invoice.id;
           const isStriped = index % 2 === 1;
+          const showBulkDelete = isSelected && selectedIds.length > 1;
 
           return (
-            <tr
-              key={invoice.id}
-              onClick={() => {
-                if (isEditing) return;
+            <ContextMenu key={invoice.id}>
+              <ContextMenuTrigger
+                render={
+                  <tr
+                    onClick={event => handleRowClick(event, invoice)}
+                    onDoubleClick={() => {
+                      if (isEditing) return;
 
-                onSelectInvoice(invoice);
-              }}
-              onDoubleClick={() => {
-                if (isEditing) return;
-
-                onOpenInvoice(invoice);
-              }}
-              className={cn(
-                "group/row cursor-pointer",
-                !isSelected && isStriped && "bg-muted/50",
-                !isSelected && "hover:bg-accent",
-                isSelected && "bg-brand-500 text-primary-foreground"
-              )}
-            >
-              <td
-                className="py-2.5 pr-4 pl-4"
-                onClick={
-                  isEditing ? event => event.stopPropagation() : undefined
+                      onOpenInvoice(invoice);
+                    }}
+                    onContextMenu={() => handleRowContextMenu(invoice)}
+                    className={cn(
+                      "group/row cursor-pointer select-none",
+                      !isSelected && isStriped && "bg-muted/50",
+                      !isSelected && "hover:bg-accent",
+                      isSelected && "bg-brand-500 text-primary-foreground"
+                    )}
+                  />
                 }
               >
-                {isEditing ? (
-                  <Input
-                    ref={inputRef}
-                    aria-label="Invoice name"
-                    value={editingValue}
-                    onChange={event => setEditingValue(event.target.value)}
-                    onFocus={event => event.currentTarget.select()}
-                    onKeyDown={event => handleEditKeyDown(event, invoice)}
-                    onBlur={() => finishRename(invoice, true)}
-                    className="h-7 text-sm"
-                  />
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <FileTextIcon
-                      className={cn(
-                        "size-4 shrink-0",
-                        isSelected
-                          ? "text-primary-foreground"
-                          : "text-muted-foreground"
-                      )}
+                <td
+                  className="py-2.5 pr-4 pl-4"
+                  onClick={
+                    isEditing ? event => event.stopPropagation() : undefined
+                  }
+                >
+                  {isEditing ? (
+                    <Input
+                      ref={inputRef}
+                      aria-label="Invoice name"
+                      value={editingValue}
+                      onChange={event => setEditingValue(event.target.value)}
+                      onFocus={event => event.currentTarget.select()}
+                      onKeyDown={event => handleEditKeyDown(event, invoice)}
+                      onBlur={() => finishRename(invoice, true)}
+                      className="h-7 text-sm"
                     />
-                    <span className="font-medium">{invoice.name}</span>
-                    {isCurrent && (
-                      <span
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <FileTextIcon
                         className={cn(
-                          "text-sm",
+                          "size-4 shrink-0",
                           isSelected
-                            ? "text-primary-foreground/80"
+                            ? "text-primary-foreground"
                             : "text-muted-foreground"
                         )}
-                      >
-                        Current
-                      </span>
-                    )}
-                  </div>
-                )}
-              </td>
-              <td
-                className={cn(
-                  "py-2.5 pr-4 whitespace-nowrap tabular-nums",
-                  isSelected
-                    ? "text-primary-foreground/80"
-                    : "text-muted-foreground"
-                )}
-              >
-                {format(new Date(invoice.updatedAt), "PP, p")}
-              </td>
-              <td
-                className="py-2.5 pr-4 text-right"
-                onClick={event => event.stopPropagation()}
-              >
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        disabled={deletePendingId === invoice.id || deleting}
-                        className={cn(
-                          "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100",
-                          isSelected
-                            ? "text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
                       />
-                    }
+                      <span className="font-medium">{invoice.name}</span>
+                      {isCurrent && (
+                        <span
+                          className={cn(
+                            "text-sm",
+                            isSelected
+                              ? "text-primary-foreground/80"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          Current
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </td>
+                <td
+                  className={cn(
+                    "py-2.5 pr-4 whitespace-nowrap tabular-nums",
+                    isSelected
+                      ? "text-primary-foreground/80"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {format(new Date(invoice.updatedAt), "PP, p")}
+                </td>
+                <td
+                  className="py-2.5 pr-4 text-right"
+                  onClick={event => event.stopPropagation()}
+                >
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={deletePendingId === invoice.id || deleting}
+                          className={cn(
+                            "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100",
+                            isSelected
+                              ? "text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
+                              : "text-muted-foreground hover:text-foreground"
+                          )}
+                        />
+                      }
+                    >
+                      <MoreHorizontalIcon className="size-4" />
+                      <span className="sr-only">
+                        Actions for {invoice.name}
+                      </span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" finalFocus={false}>
+                      <DropdownMenuItem onClick={() => startRename(invoice)}>
+                        <PencilIcon />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onDeleteInvoice(invoice)}
+                      >
+                        <TrashIcon />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </td>
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                {showBulkDelete ? (
+                  <ContextMenuItem
+                    variant="destructive"
+                    onClick={() => onDeleteInvoices(selectedInvoices)}
                   >
-                    <MoreHorizontalIcon className="size-4" />
-                    <span className="sr-only">Actions for {invoice.name}</span>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" finalFocus={false}>
-                    <DropdownMenuItem onClick={() => startRename(invoice)}>
+                    <TrashIcon />
+                    Delete {selectedIds.length} invoices
+                  </ContextMenuItem>
+                ) : (
+                  <>
+                    <ContextMenuItem onClick={() => startRename(invoice)}>
                       <PencilIcon />
                       Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                    </ContextMenuItem>
+                    <ContextMenuItem
                       variant="destructive"
                       onClick={() => onDeleteInvoice(invoice)}
                     >
                       <TrashIcon />
                       Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </td>
-            </tr>
+                    </ContextMenuItem>
+                  </>
+                )}
+              </ContextMenuContent>
+            </ContextMenu>
           );
         })}
       </tbody>
