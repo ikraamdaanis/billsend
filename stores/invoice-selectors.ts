@@ -129,16 +129,6 @@ export function useCurrencySymbol() {
   return useInvoiceStore(state => normalizeCurrency(state.currency));
 }
 
-// PDF settings slice
-export function usePdfSettingsSlice() {
-  return useInvoiceStore(
-    useShallow(state => ({
-      pdfSettings: state.pdfSettings,
-      setPdfSettings: state.setPdfSettings
-    }))
-  );
-}
-
 // Full invoice data for serialization (save/load)
 // This extracts only the Invoice data, not actions
 export function useInvoiceData(): Invoice {
