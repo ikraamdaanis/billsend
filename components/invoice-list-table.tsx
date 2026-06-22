@@ -23,10 +23,27 @@ import type { InvoiceDocument } from "types";
 type SortKey = "name" | "updatedAt";
 type SortDirection = "asc" | "desc";
 
+const STRIPE_ROW_HEIGHT = 48;
+const STRIPE_COLOR = "color-mix(in oklab, var(--muted) 50%, transparent)";
+
+export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
+  const single = STRIPE_ROW_HEIGHT;
+  const double = STRIPE_ROW_HEIGHT * 2;
+  const stops =
+    rowCount % 2 === 1
+      ? `${STRIPE_COLOR} 0, ${STRIPE_COLOR} ${single}px, transparent ${single}px, transparent ${double}px`
+      : `transparent 0, transparent ${single}px, ${STRIPE_COLOR} ${single}px, ${STRIPE_COLOR} ${double}px`;
+  const backgroundImage = `repeating-linear-gradient(to bottom, ${stops})`;
+
+  return <div aria-hidden className="flex-1" style={{ backgroundImage }} />;
+}
+
 export function InvoiceListTable({
   invoices,
   currentInvoiceId,
+  selectedInvoiceId,
   onSelectInvoice,
+  onOpenInvoice,
   onRenameInvoice,
   onDeleteInvoice,
   deletePendingId,
@@ -34,7 +51,9 @@ export function InvoiceListTable({
 }: {
   invoices: InvoiceDocument[];
   currentInvoiceId: string | null;
+  selectedInvoiceId: string | null;
   onSelectInvoice: (invoice: InvoiceDocument) => void;
+  onOpenInvoice: (invoice: InvoiceDocument) => void;
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
   onDeleteInvoice: (invoice: InvoiceDocument) => void;
   deletePendingId: string | null;
@@ -48,9 +67,7 @@ export function InvoiceListTable({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!editingId) {
-      return;
-    }
+    if (!editingId) return;
 
     const frame = requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -78,9 +95,7 @@ export function InvoiceListTable({
   }
 
   function finishRename(invoice: InvoiceDocument, shouldSave: boolean) {
-    if (editingIdRef.current !== invoice.id) {
-      return;
-    }
+    if (editingIdRef.current !== invoice.id) return;
 
     editingIdRef.current = null;
     setEditingId(null);
@@ -150,23 +165,30 @@ export function InvoiceListTable({
         </tr>
       </thead>
       <tbody>
-        {sortedInvoices.map(invoice => {
+        {sortedInvoices.map((invoice, index) => {
           const isCurrent = currentInvoiceId === invoice.id;
+          const isSelected = selectedInvoiceId === invoice.id;
           const isEditing = editingId === invoice.id;
+          const isStriped = index % 2 === 1;
 
           return (
             <tr
               key={invoice.id}
               onClick={() => {
-                if (isEditing) {
-                  return;
-                }
+                if (isEditing) return;
 
                 onSelectInvoice(invoice);
               }}
+              onDoubleClick={() => {
+                if (isEditing) return;
+
+                onOpenInvoice(invoice);
+              }}
               className={cn(
-                "group/row hover:bg-accent border-border cursor-pointer border-b last:border-b-0",
-                isCurrent && "bg-accent"
+                "group/row cursor-pointer",
+                !isSelected && isStriped && "bg-muted/50",
+                !isSelected && "hover:bg-accent",
+                isSelected && "bg-brand-500 text-primary-foreground"
               )}
             >
               <td
@@ -188,17 +210,38 @@ export function InvoiceListTable({
                   />
                 ) : (
                   <div className="flex items-center gap-2">
-                    <FileTextIcon className="text-muted-foreground size-4 shrink-0" />
+                    <FileTextIcon
+                      className={cn(
+                        "size-4 shrink-0",
+                        isSelected
+                          ? "text-primary-foreground"
+                          : "text-muted-foreground"
+                      )}
+                    />
                     <span className="font-medium">{invoice.name}</span>
                     {isCurrent && (
-                      <span className="text-muted-foreground text-sm">
+                      <span
+                        className={cn(
+                          "text-sm",
+                          isSelected
+                            ? "text-primary-foreground/80"
+                            : "text-muted-foreground"
+                        )}
+                      >
                         Current
                       </span>
                     )}
                   </div>
                 )}
               </td>
-              <td className="text-muted-foreground py-2.5 pr-4 whitespace-nowrap tabular-nums">
+              <td
+                className={cn(
+                  "py-2.5 pr-4 whitespace-nowrap tabular-nums",
+                  isSelected
+                    ? "text-primary-foreground/80"
+                    : "text-muted-foreground"
+                )}
+              >
                 {format(new Date(invoice.updatedAt), "PP, p")}
               </td>
               <td
@@ -212,7 +255,12 @@ export function InvoiceListTable({
                         variant="ghost"
                         size="icon-sm"
                         disabled={deletePendingId === invoice.id || deleting}
-                        className="text-muted-foreground hover:text-foreground opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100"
+                        className={cn(
+                          "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100",
+                          isSelected
+                            ? "text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
                       />
                     }
                   >
