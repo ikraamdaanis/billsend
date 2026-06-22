@@ -2,26 +2,13 @@ import {
   Document,
   Font,
   Page,
-  pdf,
   Image as PDFImage,
   StyleSheet,
   Text,
   View
 } from "@react-pdf/renderer";
-import { Button } from "components/ui/button";
 import { formatCurrency } from "consts/currencies";
-import { useImageLoader } from "hooks/use-image-loader";
-import { DownloadIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import {
-  lazy,
-  Suspense,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition
-} from "react";
-import { useInvoiceData } from "stores/invoice-selectors";
 import type { Invoice, TextRole } from "types";
 import { getRoleSettings } from "utils/get-role-settings";
 import { pdfStyle } from "utils/pdf-styles";
@@ -50,13 +37,6 @@ if (typeof window !== "undefined") {
     ]
   });
 }
-
-// Dynamically import PDFViewer to reduce initial bundle size
-const PDFViewer = lazy(() =>
-  import("@react-pdf/renderer").then(module => ({
-    default: module.PDFViewer
-  }))
-);
 
 export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   // invoice.image should already be a blob URL or empty string
@@ -463,66 +443,5 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         )}
       </Page>
     </Document>
-  );
-}
-
-export function InvoiceGenerator() {
-  const invoice = useInvoiceData();
-  const imageUrl = useImageLoader(invoice.image);
-
-  const [_isPending, startTransition] = useTransition();
-  const [key, setKey] = useState(0);
-
-  // Create stable invoice with loaded image URL
-  const stableInvoice = useMemo(
-    () => ({ ...invoice, image: imageUrl }),
-    [invoice, imageUrl]
-  );
-
-  // Update key when invoice or image changes to force PDFViewer remount
-  useEffect(() => {
-    startTransition(() => {
-      setKey(prev => prev + 1);
-    });
-  }, [invoice, imageUrl]);
-
-  return (
-    <div className="mx-auto flex h-full w-full flex-col overflow-y-scroll border-t-8 border-t-neutral-200 bg-white p-8">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="text-lg font-semibold">Invoice Preview</div>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            className="flex items-center gap-2"
-            onClick={() => {
-              const blob = pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
-              blob.then(blobData => {
-                const url = URL.createObjectURL(blobData);
-                const link = document.createElement("a");
-                link.href = url;
-                link.target = "_blank";
-                link.click();
-                // Don't revoke URL immediately to allow tab to load
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              });
-            }}
-          >
-            <DownloadIcon className="h-4 w-4" />
-            Open PDF
-          </Button>
-        </div>
-      </div>
-      <div
-        key={key}
-        className="h-full w-full rounded-[3px] border border-zinc-300 bg-white shadow-md"
-      >
-        <Suspense>
-          <PDFViewer showToolbar={false} className="h-full w-full">
-            <InvoicePDF invoice={stableInvoice} />
-          </PDFViewer>
-        </Suspense>
-      </div>
-    </div>
   );
 }
