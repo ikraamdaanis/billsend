@@ -68,10 +68,14 @@ export function OpenInvoiceDialog({
     onOpenChange(false);
   }
 
-  function handleListBackgroundClick(event: MouseEvent<HTMLDivElement>) {
+  function handleDeselectClick(event: MouseEvent<HTMLDivElement>) {
     if (selectedIds.length === 0) return;
 
-    if ((event.target as HTMLElement).closest("tr")) return;
+    const target = event.target as HTMLElement;
+
+    if (target.closest("tr, button, a, input, textarea, [role='menuitem']")) {
+      return;
+    }
 
     setSelectedIds([]);
   }
@@ -162,17 +166,17 @@ export function OpenInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl">
+      <DialogContent
+        className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl"
+        onClick={handleDeselectClick}
+      >
         <DialogHeader className="border-border border-b">
           <DialogTitle>Open Invoice</DialogTitle>
           <DialogDescription>
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
         </DialogHeader>
-        <div
-          className="flex flex-1 flex-col overflow-y-auto"
-          onClick={handleListBackgroundClick}
-        >
+        <div className="flex flex-1 flex-col overflow-y-auto">
           {loading ? (
             <div className="text-muted-foreground flex h-full items-center justify-center gap-2 text-sm">
               <Loader2Icon className="size-4 shrink-0 animate-spin" />
