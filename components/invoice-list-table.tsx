@@ -71,6 +71,7 @@ export function InvoiceListTable({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
+  const [contextMenuRowId, setContextMenuRowId] = useState<string | null>(null);
   const editingIdRef = useRef<string | null>(null);
   const anchorIdRef = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -208,13 +209,6 @@ export function InvoiceListTable({
     onSelectionChange(isOnlySelection ? [] : [invoice.id]);
   }
 
-  function handleRowContextMenu(invoice: InvoiceDocument) {
-    if (selectedSet.has(invoice.id)) return;
-
-    anchorIdRef.current = invoice.id;
-    onSelectionChange([invoice.id]);
-  }
-
   return (
     <table className="w-full text-sm">
       <thead>
@@ -246,10 +240,18 @@ export function InvoiceListTable({
           const isSelected = selectedSet.has(invoice.id);
           const isEditing = editingId === invoice.id;
           const isStriped = index % 2 === 1;
+          const isContextFocused = contextMenuRowId === invoice.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
 
           return (
-            <ContextMenu key={invoice.id}>
+            <ContextMenu
+              key={invoice.id}
+              onOpenChange={isOpen =>
+                setContextMenuRowId(prev =>
+                  isOpen ? invoice.id : prev === invoice.id ? null : prev
+                )
+              }
+            >
               <ContextMenuTrigger
                 render={
                   <tr
@@ -259,12 +261,13 @@ export function InvoiceListTable({
 
                       onOpenInvoice(invoice);
                     }}
-                    onContextMenu={() => handleRowContextMenu(invoice)}
                     className={cn(
                       "group/row cursor-pointer select-none",
                       !isSelected && isStriped && "bg-muted/50",
                       !isSelected && "hover:bg-accent",
-                      isSelected && "bg-brand-500 text-primary-foreground"
+                      isSelected && "bg-brand-500 text-primary-foreground",
+                      isContextFocused &&
+                        "outline-brand-500 outline-2 -outline-offset-2"
                     )}
                   />
                 }
