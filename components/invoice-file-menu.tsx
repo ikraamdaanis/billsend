@@ -169,8 +169,6 @@ export function InvoiceFileMenu({
         setCurrentDocumentName(null);
         setLastSavedInvoice(null);
         setHasUnsavedChanges(false);
-
-        toast.success(`Applied template: ${template.name}`);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to apply template"

@@ -13,7 +13,6 @@ import {
 import { FileTextIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { useInvoiceActions } from "stores/invoice-selectors";
 import type { InvoiceTemplate } from "types";
 import { ensureItemIds } from "utils/ensure-item-ids";
@@ -47,7 +46,6 @@ export function TemplateSelectionModal({
     // Ensure all items have IDs (backward compatibility for templates without IDs)
     const templateWithIds = ensureItemIds(template.templateData);
     setInvoice(templateWithIds);
-    toast.success(`Applied template: ${template.name}`);
     onTemplateSelect?.(template);
     onOpenChange(false);
   }
@@ -67,7 +65,7 @@ export function TemplateSelectionModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex h-[90vh] w-[1280px] flex-col">
+        <DialogContent className="flex h-[90vh] w-[1280px] max-w-[calc(100vw-2rem)] flex-col sm:max-w-[calc(100vw-2rem)]">
           <DialogHeader className="border-border border-b">
             <DialogTitle>Choose a Template</DialogTitle>
             <DialogDescription>
