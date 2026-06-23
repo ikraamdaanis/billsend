@@ -229,8 +229,6 @@ export function InvoiceFileMenu({
           setCurrentDocumentName,
           setLastSavedInvoice
         );
-
-        toast.success(`Opened invoice: ${invoiceDoc.name}`);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to open invoice"
