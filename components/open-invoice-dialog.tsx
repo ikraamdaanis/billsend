@@ -34,15 +34,13 @@ export function OpenInvoiceDialog({
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
   const [seeding, startSeedTransition] = useTransition();
-  const [deletePendingId, setDeletePendingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [pendingBulkDelete, setPendingBulkDelete] = useState<InvoiceDocument[]>(
-    []
-  );
+  const [pendingDelete, setPendingDelete] = useState<InvoiceDocument[]>([]);
 
   useEffect(() => {
     if (open) {
       setSelectedIds([]);
+      setPendingDelete([]);
       loadInvoices();
     }
   }, [open]);
@@ -109,37 +107,22 @@ export function OpenInvoiceDialog({
     });
   }
 
-  function handleDeleteInvoice(invoice: InvoiceDocument) {
-    startTransition(async () => {
-      try {
-        setDeletePendingId(invoice.id);
-
-        await deleteInvoice(invoice.id);
-        await loadInvoices();
-
-        setSelectedIds(prev => prev.filter(id => id !== invoice.id));
-        toast.success("Invoice deleted successfully");
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to delete invoice"
-        );
-      } finally {
-        setDeletePendingId(null);
-      }
-    });
-  }
-
-  function handleConfirmBulkDelete() {
-    const targets = pendingBulkDelete;
+  function handleConfirmDelete() {
+    const targets = pendingDelete;
+    const targetIds = new Set(targets.map(invoice => invoice.id));
 
     startTransition(async () => {
       try {
         await Promise.all(targets.map(invoice => deleteInvoice(invoice.id)));
         await loadInvoices();
 
-        setSelectedIds([]);
-        setPendingBulkDelete([]);
-        toast.success(`Deleted ${targets.length} invoices`);
+        setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
+        setPendingDelete([]);
+        toast.success(
+          targets.length === 1
+            ? "Invoice deleted"
+            : `Deleted ${targets.length} invoices`
+        );
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to delete invoices"
@@ -204,74 +187,69 @@ export function OpenInvoiceDialog({
                 onSelectionChange={setSelectedIds}
                 onOpenInvoice={handleOpenInvoice}
                 onRenameInvoice={handleRenameInvoice}
-                onDeleteInvoice={handleDeleteInvoice}
-                onDeleteInvoices={setPendingBulkDelete}
-                deletePendingId={deletePendingId}
+                onDeleteInvoices={setPendingDelete}
                 deleting={pending}
               />
               <InvoiceListStripeFiller rowCount={invoices.length} />
             </>
           )}
         </div>
-        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-          <span className="text-muted-foreground text-sm">
-            {selectedIds.length > 0
-              ? `${selectedIds.length} selected`
-              : `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`}
-          </span>
-          <div className="flex items-center gap-2">
-            {import.meta.env.DEV && (
-              <Button
-                variant="outline"
-                onClick={handleSeedDummyInvoice}
-                disabled={seeding}
-              >
-                <SparklesIcon />
-                Add dummy
-              </Button>
-            )}
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-            <Button
-              disabled={selectedIds.length !== 1}
-              onClick={handleOpenSelected}
-            >
-              Open
-            </Button>
-          </div>
-        </DialogFooter>
-        <Dialog
-          open={pendingBulkDelete.length > 0}
-          onOpenChange={isOpen => {
-            if (!isOpen) setPendingBulkDelete([]);
-          }}
-        >
-          <DialogContent showCloseButton={false} className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>
-                Delete {pendingBulkDelete.length} invoice
-                {pendingBulkDelete.length !== 1 ? "s" : ""}?
-              </DialogTitle>
-              <DialogDescription>
-                This permanently removes the selected invoices from this device.
+        {pendingDelete.length > 0 ? (
+          <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+            <span className="text-foreground text-sm">
+              Delete {pendingDelete.length} invoice
+              {pendingDelete.length !== 1 ? "s" : ""}?{" "}
+              <span className="text-muted-foreground">
                 This cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => setPendingBulkDelete([])}>
+              </span>
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setPendingDelete([])}
+                disabled={pending}
+              >
                 Cancel
               </Button>
               <Button
                 variant="destructive"
-                onClick={handleConfirmBulkDelete}
+                onClick={handleConfirmDelete}
                 disabled={pending}
               >
                 Delete
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </div>
+          </DialogFooter>
+        ) : (
+          <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+            <span className="text-muted-foreground text-sm">
+              {selectedIds.length > 0
+                ? `${selectedIds.length} selected`
+                : `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`}
+            </span>
+            <div className="flex items-center gap-2">
+              {import.meta.env.DEV && (
+                <Button
+                  variant="outline"
+                  onClick={handleSeedDummyInvoice}
+                  disabled={seeding}
+                >
+                  <SparklesIcon />
+                  Add dummy
+                </Button>
+              )}
+              <Button variant="ghost" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+              <Button
+                disabled={selectedIds.length !== 1}
+                onClick={handleOpenSelected}
+              >
+                Open
+              </Button>
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

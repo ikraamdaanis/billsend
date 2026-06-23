@@ -51,9 +51,7 @@ export function InvoiceListTable({
   onSelectionChange,
   onOpenInvoice,
   onRenameInvoice,
-  onDeleteInvoice,
   onDeleteInvoices,
-  deletePendingId,
   deleting
 }: {
   invoices: InvoiceDocument[];
@@ -62,9 +60,7 @@ export function InvoiceListTable({
   onSelectionChange: (ids: string[]) => void;
   onOpenInvoice: (invoice: InvoiceDocument) => void;
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
-  onDeleteInvoice: (invoice: InvoiceDocument) => void;
   onDeleteInvoices: (invoices: InvoiceDocument[]) => void;
-  deletePendingId: string | null;
   deleting: boolean;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
@@ -335,7 +331,7 @@ export function InvoiceListTable({
                         <Button
                           variant="ghost"
                           size="icon-sm"
-                          disabled={deletePendingId === invoice.id || deleting}
+                          disabled={deleting}
                           className={cn(
                             "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100",
                             isSelected
@@ -357,7 +353,7 @@ export function InvoiceListTable({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         variant="destructive"
-                        onClick={() => onDeleteInvoice(invoice)}
+                        onClick={() => onDeleteInvoices([invoice])}
                       >
                         <TrashIcon />
                         Delete
@@ -383,7 +379,7 @@ export function InvoiceListTable({
                     </ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
-                      onClick={() => onDeleteInvoice(invoice)}
+                      onClick={() => onDeleteInvoices([invoice])}
                     >
                       <TrashIcon />
                       Delete
