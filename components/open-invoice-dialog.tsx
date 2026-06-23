@@ -66,10 +66,18 @@ export function OpenInvoiceDialog({
     onOpenChange(false);
   }
 
-  function handleDeselectClick(event: MouseEvent<HTMLDivElement>) {
-    if (selectedIds.length === 0) return;
-
+  function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
+
+    if (pendingDelete.length > 0) {
+      if (!target.closest("[data-slot='dialog-footer']")) {
+        setPendingDelete([]);
+      }
+
+      return;
+    }
+
+    if (selectedIds.length === 0) return;
 
     if (target.closest("tr, button, a, input, textarea, [role='menuitem']")) {
       return;
@@ -151,7 +159,7 @@ export function OpenInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl"
-        onClick={handleDeselectClick}
+        onClick={handleContentClick}
       >
         <DialogHeader className="border-border border-b">
           <DialogTitle>Open Invoice</DialogTitle>
