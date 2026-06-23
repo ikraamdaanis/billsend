@@ -1,4 +1,9 @@
-import type { Invoice, InvoiceTheme, TableSettings } from "types";
+import type {
+  Invoice,
+  InvoiceLabels,
+  InvoiceTheme,
+  TableSettings
+} from "types";
 
 export const DEFAULT_INVOICE_THEME: InvoiceTheme = {
   font: "geist",
@@ -13,6 +18,17 @@ const DEFAULT_COLUMN_LABELS: TableSettings["columnLabels"] = {
   amount: "Amount"
 };
 
+const DEFAULT_LABELS: InvoiceLabels = {
+  invoiceNumber: "Invoice No.",
+  invoiceDate: "Date",
+  paymentDue: "Due date",
+  subtotal: "Subtotal",
+  tax: "Tax",
+  fees: "Fees",
+  discounts: "Discounts",
+  total: "Total"
+};
+
 // The old per-column header settings each carried a `label`; the new model
 // keeps only those labels alongside the table colours.
 type LegacyTableSettings = {
@@ -25,9 +41,10 @@ type LegacyTableSettings = {
   borderColor?: string;
 };
 
-type LegacyInvoice = Omit<Invoice, "theme" | "tableSettings"> & {
+type LegacyInvoice = Omit<Invoice, "theme" | "tableSettings" | "labels"> & {
   theme?: Partial<InvoiceTheme>;
   tableSettings?: LegacyTableSettings;
+  labels?: Partial<InvoiceLabels>;
 };
 
 function normalizeTableSettings(
@@ -74,6 +91,7 @@ export function normalizeInvoice(raw: Invoice): Invoice {
     client: legacy.client,
     items: legacy.items,
     tableSettings: normalizeTableSettings(legacy.tableSettings),
+    labels: { ...DEFAULT_LABELS, ...legacy.labels },
     subtotal: legacy.subtotal,
     tax: legacy.tax,
     fees: legacy.fees,
