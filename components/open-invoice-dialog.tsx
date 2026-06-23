@@ -12,7 +12,6 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
-import { cn } from "lib/utils";
 import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
@@ -36,15 +35,30 @@ export function OpenInvoiceDialog({
   const [pending, startTransition] = useTransition();
   const [seeding, startSeedTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [pendingDelete, setPendingDelete] = useState<InvoiceDocument[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<
+    { mode: "selection" } | { mode: "single"; invoice: InvoiceDocument } | null
+  >(null);
 
   useEffect(() => {
     if (open) {
       setSelectedIds([]);
-      setPendingDelete([]);
+      setDeleteTarget(null);
       loadInvoices();
     }
   }, [open]);
+
+  useEffect(() => {
+    if (deleteTarget?.mode === "selection" && selectedIds.length === 0) {
+      setDeleteTarget(null);
+    }
+  }, [deleteTarget, selectedIds]);
+
+  const pendingDeleteInvoices =
+    deleteTarget === null
+      ? []
+      : deleteTarget.mode === "single"
+        ? [deleteTarget.invoice]
+        : invoices.filter(invoice => selectedIds.includes(invoice.id));
 
   async function loadInvoices() {
     try {
@@ -70,10 +84,16 @@ export function OpenInvoiceDialog({
   function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
 
-    if (pendingDelete.length > 0) {
-      if (!target.closest("[data-slot='delete-confirm']")) {
-        setPendingDelete([]);
-      }
+    if (pendingDeleteInvoices.length > 0) {
+      if (target.closest("[data-slot='delete-confirm']")) return;
+
+      const isSelectionGesture =
+        target.closest("tr") &&
+        (event.shiftKey || event.metaKey || event.ctrlKey);
+
+      if (isSelectionGesture) return;
+
+      setDeleteTarget(null);
 
       return;
     }
@@ -116,8 +136,25 @@ export function OpenInvoiceDialog({
     });
   }
 
+  function handleRequestDelete(targets: InvoiceDocument[]) {
+    if (targets.length === 0) return;
+
+    const followsSelection = targets.every(invoice =>
+      selectedIds.includes(invoice.id)
+    );
+
+    setDeleteTarget(
+      followsSelection
+        ? { mode: "selection" }
+        : { mode: "single", invoice: targets[0] }
+    );
+  }
+
   function handleConfirmDelete() {
-    const targets = pendingDelete;
+    const targets = pendingDeleteInvoices;
+
+    if (targets.length === 0) return;
+
     const targetIds = new Set(targets.map(invoice => invoice.id));
 
     startTransition(async () => {
@@ -126,7 +163,7 @@ export function OpenInvoiceDialog({
         await loadInvoices();
 
         setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
-        setPendingDelete([]);
+        setDeleteTarget(null);
         toast.success(
           targets.length === 1
             ? "Invoice deleted"
@@ -168,13 +205,8 @@ export function OpenInvoiceDialog({
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
         </DialogHeader>
-        <div className="relative flex flex-1 flex-col">
-          <div
-            className={cn(
-              "flex flex-1 flex-col overflow-y-auto",
-              invoices.length > 0 && "pb-14"
-            )}
-          >
+        <div className="relative flex min-h-0 flex-1 flex-col">
+          <div className="flex flex-1 flex-col overflow-y-auto">
             {loading ? (
               <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
                 <Loader2Icon className="size-4 shrink-0 animate-spin" />
@@ -202,20 +234,20 @@ export function OpenInvoiceDialog({
                   onSelectionChange={setSelectedIds}
                   onOpenInvoice={handleOpenInvoice}
                   onRenameInvoice={handleRenameInvoice}
-                  onDeleteInvoices={setPendingDelete}
+                  onDeleteInvoices={handleRequestDelete}
                 />
                 <InvoiceListStripeFiller rowCount={invoices.length} />
               </>
             )}
           </div>
-          {pendingDelete.length > 0 && (
+          {pendingDeleteInvoices.length > 0 && (
             <div
               data-slot="delete-confirm"
               className="border-border bg-popover absolute inset-x-3 bottom-2 z-10 flex items-center justify-between gap-3 rounded-[6px] border px-3 py-1.5 shadow-sm"
             >
               <span className="text-foreground text-sm">
-                Delete {pendingDelete.length} invoice
-                {pendingDelete.length !== 1 ? "s" : ""}?{" "}
+                Delete {pendingDeleteInvoices.length} invoice
+                {pendingDeleteInvoices.length !== 1 ? "s" : ""}?{" "}
                 <span className="text-muted-foreground">
                   This cannot be undone.
                 </span>
@@ -224,7 +256,7 @@ export function OpenInvoiceDialog({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setPendingDelete([])}
+                  onClick={() => setDeleteTarget(null)}
                   disabled={pending}
                 >
                   Cancel

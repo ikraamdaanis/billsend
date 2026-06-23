@@ -21,7 +21,7 @@ import type { InvoiceDocument } from "types";
 type SortKey = "name" | "updatedAt";
 type SortDirection = "asc" | "desc";
 
-const STRIPE_ROW_HEIGHT = 48;
+const STRIPE_ROW_HEIGHT = 40;
 const STRIPE_COLOR = "color-mix(in oklab, var(--muted) 50%, transparent)";
 
 export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
@@ -33,7 +33,9 @@ export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
       : `transparent 0, transparent ${single}px, ${STRIPE_COLOR} ${single}px, ${STRIPE_COLOR} ${double}px`;
   const backgroundImage = `repeating-linear-gradient(to bottom, ${stops})`;
 
-  return <div aria-hidden className="flex-1" style={{ backgroundImage }} />;
+  return (
+    <div aria-hidden className="min-h-14 flex-1" style={{ backgroundImage }} />
+  );
 }
 
 export function InvoiceListTable({
