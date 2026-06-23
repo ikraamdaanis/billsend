@@ -3,6 +3,7 @@ import type {
   Invoice,
   InvoiceClient,
   InvoiceItem,
+  InvoiceLabels,
   InvoiceSeller,
   InvoiceTerms,
   InvoiceTheme,
@@ -55,6 +56,16 @@ export const invoiceDefault: Invoice = {
     },
     backgroundColor: "#f9fafb",
     borderColor: "#e5e7eb"
+  },
+  labels: {
+    invoiceNumber: "Invoice No.",
+    invoiceDate: "Date",
+    paymentDue: "Due date",
+    subtotal: "Subtotal",
+    tax: "Tax",
+    fees: "Fees",
+    discounts: "Discounts",
+    total: "Total"
   },
   subtotal: 0,
   tax: {
@@ -125,6 +136,11 @@ interface InvoiceActions {
   setNumber: (number: string) => void;
   setInvoiceDate: (date: string) => void;
   setDueDate: (date: string) => void;
+
+  // Labels
+  setLabels: (
+    labels: InvoiceLabels | ((prev: InvoiceLabels) => InvoiceLabels)
+  ) => void;
 
   // Line Items
   setTableSettings: (
@@ -240,6 +256,12 @@ export const useInvoiceStore = create<InvoiceStore>()(
       setDueDate: date =>
         set(state => {
           state.dueDate = date;
+        }),
+
+      // Labels
+      setLabels: labels =>
+        set(state => {
+          state.labels = applyUpdater(state.labels, labels);
         }),
 
       // Line Items

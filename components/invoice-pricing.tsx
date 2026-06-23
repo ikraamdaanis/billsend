@@ -44,19 +44,20 @@ export function InvoicePricing() {
 }
 
 function SubtotalRow() {
-  const { subtotal, currency } = usePricingSlice();
+  const { subtotal, currency, labels, setLabels } = usePricingSlice();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
-      <span
-        className="inline-block w-full"
+      <InvoiceInput
+        value={labels.subtotal}
+        onChange={value => setLabels(prev => ({ ...prev, subtotal: value }))}
+        className="w-full min-w-fit"
         style={getTextStyles({ settings: labelSettings })}
-      >
-        Subtotal
-      </span>
+        placeholder="Subtotal"
+      />
       <span
         className="inline-block min-w-40 text-right text-zinc-900"
         style={getTextStyles({ settings: valueSettings })}
@@ -68,7 +69,7 @@ function SubtotalRow() {
 }
 
 function TaxRow() {
-  const { tax, currency, setTax } = usePricingSlice();
+  const { tax, currency, setTax, labels, setLabels } = usePricingSlice();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
@@ -81,12 +82,13 @@ function TaxRow() {
         className="flex w-full items-center"
         style={{ justifyContent: labelSettings.align }}
       >
-        <span
-          className="inline-block pr-0.5"
-          style={getTextStyles({ settings: labelSettings })}
-        >
-          Tax{" "}
-        </span>
+        <InvoiceInput
+          value={labels.tax}
+          onChange={value => setLabels(prev => ({ ...prev, tax: value }))}
+          className="field-sizing-content w-auto min-w-fit pr-0.5"
+          style={getTextStyles({ settings: labelSettings, remove: ["align"] })}
+          placeholder="Tax"
+        />
         <span className="flex items-center">
           <InvoiceInput
             id="invoice-field-totals"
@@ -121,7 +123,7 @@ function TaxRow() {
 }
 
 function FeesRow() {
-  const { fees, setFees } = usePricingSlice();
+  const { fees, setFees, labels, setLabels } = usePricingSlice();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
@@ -131,12 +133,13 @@ function FeesRow() {
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
-      <span
-        className="inline-block w-full"
+      <InvoiceInput
+        value={labels.fees}
+        onChange={value => setLabels(prev => ({ ...prev, fees: value }))}
+        className="w-full min-w-fit"
         style={getTextStyles({ settings: labelSettings })}
-      >
-        Fees
-      </span>
+        placeholder="Fees"
+      />
       <span
         className="ml-auto flex min-w-40 items-center"
         style={{ justifyContent: valueSettings.align }}
@@ -159,7 +162,7 @@ function FeesRow() {
 }
 
 function DiscountsRow() {
-  const { discounts, setDiscounts } = usePricingSlice();
+  const { discounts, setDiscounts, labels, setLabels } = usePricingSlice();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
@@ -169,12 +172,13 @@ function DiscountsRow() {
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
-      <span
-        className="inline-block w-full"
+      <InvoiceInput
+        value={labels.discounts}
+        onChange={value => setLabels(prev => ({ ...prev, discounts: value }))}
+        className="w-full min-w-fit"
         style={getTextStyles({ settings: labelSettings })}
-      >
-        Discounts
-      </span>
+        placeholder="Discounts"
+      />
       <span
         className="ml-auto flex min-w-40 items-center"
         style={{ justifyContent: valueSettings.align }}
@@ -198,19 +202,20 @@ function DiscountsRow() {
 }
 
 function TotalRow() {
-  const { total, currency } = usePricingSlice();
+  const { total, currency, labels, setLabels } = usePricingSlice();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "grandTotalLabel");
   const valueSettings = getRoleSettings(theme, "grandTotalValue");
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
-      <span
-        className="inline-block w-full"
+      <InvoiceInput
+        value={labels.total}
+        onChange={value => setLabels(prev => ({ ...prev, total: value }))}
+        className="w-full min-w-fit"
         style={getTextStyles({ settings: labelSettings })}
-      >
-        Total
-      </span>
+        placeholder="Total"
+      />
       <span
         className="inline-block min-w-40 text-right font-bold"
         style={getTextStyles({ settings: valueSettings })}

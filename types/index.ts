@@ -16,6 +16,17 @@ export type TableSettings = {
   borderColor: string;
 };
 
+export type InvoiceLabels = {
+  invoiceNumber: string;
+  invoiceDate: string;
+  paymentDue: string;
+  subtotal: string;
+  tax: string;
+  fees: string;
+  discounts: string;
+  total: string;
+};
+
 type InvoiceFont = "geist";
 
 export type InvoiceSize = "small" | "medium" | "large";
@@ -84,6 +95,7 @@ export type Invoice = {
   client: InvoiceClient;
   items: InvoiceItem[];
   tableSettings: TableSettings;
+  labels: InvoiceLabels;
   subtotal: number;
   tax: {
     percentage: number;
