@@ -13,11 +13,15 @@ import {
 } from "components/ui/dialog";
 import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
 import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
-import type { MouseEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { InvoiceDocument } from "types";
 import { seedDummyInvoice } from "utils/seed-dummy-invoice";
+
+function truncate(value: string, max: number): string {
+  return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+}
 
 export function OpenInvoiceDialog({
   open,
@@ -60,6 +64,16 @@ export function OpenInvoiceDialog({
         ? [deleteTarget.invoice]
         : invoices.filter(invoice => selectedIds.includes(invoice.id));
 
+  const deletePrompt =
+    pendingDeleteInvoices.length === 1
+      ? `Delete “${truncate(pendingDeleteInvoices[0].name, 42)}”?`
+      : `Delete ${pendingDeleteInvoices.length} invoices?`;
+
+  const footerLabel =
+    pendingDeleteInvoices.length > 0 || selectedIds.length === 0
+      ? `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`
+      : `${selectedIds.length} selected`;
+
   async function loadInvoices() {
     try {
       setLoading(true);
@@ -87,6 +101,8 @@ export function OpenInvoiceDialog({
     if (pendingDeleteInvoices.length > 0) {
       if (target.closest("[data-slot='delete-confirm']")) return;
 
+      if (target.closest("thead")) return;
+
       const isSelectionGesture =
         target.closest("tr") &&
         (event.shiftKey || event.metaKey || event.ctrlKey);
@@ -105,6 +121,14 @@ export function OpenInvoiceDialog({
     }
 
     setSelectedIds([]);
+  }
+
+  function handleContentKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape" && pendingDeleteInvoices.length > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      setDeleteTarget(null);
+    }
   }
 
   function handleOpenSelected() {
@@ -143,11 +167,14 @@ export function OpenInvoiceDialog({
       selectedIds.includes(invoice.id)
     );
 
-    setDeleteTarget(
-      followsSelection
-        ? { mode: "selection" }
-        : { mode: "single", invoice: targets[0] }
-    );
+    if (followsSelection) {
+      setDeleteTarget({ mode: "selection" });
+
+      return;
+    }
+
+    setSelectedIds([]);
+    setDeleteTarget({ mode: "single", invoice: targets[0] });
   }
 
   function handleConfirmDelete() {
@@ -198,6 +225,7 @@ export function OpenInvoiceDialog({
       <DialogContent
         className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl"
         onClick={handleContentClick}
+        onKeyDown={handleContentKeyDown}
       >
         <DialogHeader className="border-border border-b">
           <DialogTitle>Open Invoice</DialogTitle>
@@ -231,6 +259,7 @@ export function OpenInvoiceDialog({
                   invoices={invoices}
                   currentInvoiceId={currentInvoiceId}
                   selectedIds={selectedIds}
+                  deletingIds={pendingDeleteInvoices.map(invoice => invoice.id)}
                   onSelectionChange={setSelectedIds}
                   onOpenInvoice={handleOpenInvoice}
                   onRenameInvoice={handleRenameInvoice}
@@ -245,14 +274,13 @@ export function OpenInvoiceDialog({
               data-slot="delete-confirm"
               className="border-border bg-popover absolute inset-x-3 bottom-2 z-10 flex items-center justify-between gap-3 rounded-[6px] border px-3 py-1.5 shadow-sm"
             >
-              <span className="text-foreground text-sm">
-                Delete {pendingDeleteInvoices.length} invoice
-                {pendingDeleteInvoices.length !== 1 ? "s" : ""}?{" "}
+              <span className="text-foreground min-w-0 truncate text-sm">
+                {deletePrompt}{" "}
                 <span className="text-muted-foreground">
                   This cannot be undone.
                 </span>
               </span>
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -274,11 +302,7 @@ export function OpenInvoiceDialog({
           )}
         </div>
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-          <span className="text-muted-foreground text-sm">
-            {selectedIds.length > 0
-              ? `${selectedIds.length} selected`
-              : `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`}
-          </span>
+          <span className="text-muted-foreground text-sm">{footerLabel}</span>
           <div className="flex items-center gap-2">
             {import.meta.env.DEV && (
               <Button
@@ -295,6 +319,11 @@ export function OpenInvoiceDialog({
             </Button>
             <Button
               disabled={selectedIds.length !== 1}
+              title={
+                selectedIds.length !== 1
+                  ? "Select a single invoice to open"
+                  : undefined
+              }
               onClick={handleOpenSelected}
             >
               Open
