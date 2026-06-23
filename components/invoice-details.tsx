@@ -5,7 +5,7 @@ import { getTextStyles } from "utils/get-text-styles";
 
 export function InvoiceDetails() {
   return (
-    <div className="flex flex-col pt-7">
+    <div className="flex flex-col">
       <InvoiceNumber />
       <InvoiceDate />
       <InvoiceDueDate />
@@ -13,20 +13,46 @@ export function InvoiceDetails() {
   );
 }
 
+function DetailLabel({
+  value,
+  onChange,
+  placeholder
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+}) {
+  const theme = useTheme();
+  const labelStyle = getTextStyles({
+    settings: getRoleSettings(theme, "detailLabel")
+  });
+
+  return (
+    <div className="flex min-w-32 items-center" style={labelStyle}>
+      <InvoiceInput
+        value={value}
+        onChange={onChange}
+        className="field-sizing-content h-[unset]! w-auto min-w-fit py-0"
+        style={labelStyle}
+        placeholder={placeholder}
+      />
+    </div>
+  );
+}
+
 function InvoiceNumber() {
-  const { number, setNumber } = useDetailsSlice();
+  const { number, setNumber, labels, setLabels } = useDetailsSlice();
   const theme = useTheme();
 
   return (
     <div className="flex items-center">
-      <div
-        className="min-w-32"
-        style={getTextStyles({
-          settings: getRoleSettings(theme, "detailLabel")
-        })}
-      >
-        Invoice number:
-      </div>
+      <DetailLabel
+        value={labels.invoiceNumber}
+        onChange={value =>
+          setLabels(prev => ({ ...prev, invoiceNumber: value }))
+        }
+        placeholder="Invoice No."
+      />
       <InvoiceInput
         id="invoice-field-details"
         value={number}
@@ -42,19 +68,16 @@ function InvoiceNumber() {
 }
 
 function InvoiceDate() {
-  const { invoiceDate, setInvoiceDate } = useDetailsSlice();
+  const { invoiceDate, setInvoiceDate, labels, setLabels } = useDetailsSlice();
   const theme = useTheme();
 
   return (
     <div className="flex items-center">
-      <div
-        className="min-w-32"
-        style={getTextStyles({
-          settings: getRoleSettings(theme, "detailLabel")
-        })}
-      >
-        Invoice date:
-      </div>
+      <DetailLabel
+        value={labels.invoiceDate}
+        onChange={value => setLabels(prev => ({ ...prev, invoiceDate: value }))}
+        placeholder="Date"
+      />
       <InvoiceInput
         value={invoiceDate}
         onChange={setInvoiceDate}
@@ -69,19 +92,16 @@ function InvoiceDate() {
 }
 
 function InvoiceDueDate() {
-  const { dueDate, setDueDate } = useDetailsSlice();
+  const { dueDate, setDueDate, labels, setLabels } = useDetailsSlice();
   const theme = useTheme();
 
   return (
     <div className="flex items-center">
-      <div
-        className="min-w-32"
-        style={getTextStyles({
-          settings: getRoleSettings(theme, "detailLabel")
-        })}
-      >
-        Payment due:
-      </div>
+      <DetailLabel
+        value={labels.paymentDue}
+        onChange={value => setLabels(prev => ({ ...prev, paymentDue: value }))}
+        placeholder="Due date"
+      />
       <InvoiceInput
         value={dueDate}
         onChange={setDueDate}

@@ -55,9 +55,11 @@ export function useDetailsSlice() {
       number: state.number,
       invoiceDate: state.invoiceDate,
       dueDate: state.dueDate,
+      labels: state.labels,
       setNumber: state.setNumber,
       setInvoiceDate: state.setInvoiceDate,
-      setDueDate: state.setDueDate
+      setDueDate: state.setDueDate,
+      setLabels: state.setLabels
     }))
   );
 }
@@ -87,9 +89,11 @@ export function usePricingSlice() {
       discounts: state.discounts,
       total: state.total,
       currency: state.currency,
+      labels: state.labels,
       setTax: state.setTax,
       setFees: state.setFees,
-      setDiscounts: state.setDiscounts
+      setDiscounts: state.setDiscounts,
+      setLabels: state.setLabels
     }))
   );
 }
@@ -144,6 +148,7 @@ export function useInvoiceData(): Invoice {
       client: state.client,
       items: state.items,
       tableSettings: state.tableSettings,
+      labels: state.labels,
       subtotal: state.subtotal,
       tax: state.tax,
       fees: state.fees,

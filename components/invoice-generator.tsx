@@ -216,20 +216,18 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
           </View>
           {!!imageUrl && <PDFImage src={imageUrl} style={styles.logo} />}
         </View>
-        <View>
-          {invoice.client.label && (
-            <Text
-              style={{
-                ...styles.clientTitle,
-                ...roleStyle("sectionLabel")
-              }}
-            >
-              {invoice.client.label}
-            </Text>
-          )}
-        </View>
         <View style={styles.detailsRow}>
           <View style={styles.clientInfo}>
+            {invoice.client.label && (
+              <Text
+                style={{
+                  ...styles.clientTitle,
+                  ...roleStyle("sectionLabel")
+                }}
+              >
+                {invoice.client.label}
+              </Text>
+            )}
             {renderMultilineText(
               invoice.client.content,
               roleStyle("sectionContent", { marginBottom: 2 })
@@ -243,7 +241,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
                   ...roleStyle("detailLabel")
                 }}
               >
-                Invoice number:
+                {invoice.labels.invoiceNumber}
               </Text>
               <Text
                 style={{
@@ -261,7 +259,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
                   ...roleStyle("detailLabel")
                 }}
               >
-                Invoice date:
+                {invoice.labels.invoiceDate}
               </Text>
               <Text
                 style={{
@@ -279,7 +277,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
                   ...roleStyle("detailLabel")
                 }}
               >
-                Payment due:
+                {invoice.labels.paymentDue}
               </Text>
               <Text
                 style={{
@@ -358,7 +356,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         <View style={styles.totalSection}>
           <View style={styles.totalRow}>
             <Text style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}>
-              Subtotal
+              {invoice.labels.subtotal}
             </Text>
             <Text style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}>
               {formatCurrency(invoice.subtotal, invoice.currency)}
@@ -369,7 +367,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}
               >
-                Tax {invoice.tax.percentage}%
+                {invoice.labels.tax} {invoice.tax.percentage}%
               </Text>
               <Text
                 style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}
@@ -383,7 +381,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}
               >
-                Fees
+                {invoice.labels.fees}
               </Text>
               <Text
                 style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}
@@ -397,7 +395,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               <Text
                 style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}
               >
-                Discounts
+                {invoice.labels.discounts}
               </Text>
               <Text
                 style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}
@@ -410,7 +408,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             <Text
               style={{ ...styles.totalLabel, ...roleStyle("grandTotalLabel") }}
             >
-              Total
+              {invoice.labels.total}
             </Text>
             <Text
               style={{ ...styles.totalValue, ...roleStyle("grandTotalValue") }}
