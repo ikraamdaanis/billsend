@@ -211,7 +211,7 @@ export function OpenInvoiceDialog({
           {pendingDelete.length > 0 && (
             <div
               data-slot="delete-confirm"
-              className="border-border bg-popover absolute inset-x-3 bottom-2 z-10 flex items-center justify-between gap-3 rounded-[4px] border px-3 py-1.5 shadow-lg"
+              className="border-border bg-popover absolute inset-x-3 bottom-2 z-10 flex items-center justify-between gap-3 rounded-[6px] border px-3 py-1.5 shadow-sm"
             >
               <span className="text-foreground text-sm">
                 Delete {pendingDelete.length} invoice
