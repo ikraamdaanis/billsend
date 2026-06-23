@@ -4,7 +4,6 @@ import {
   ContextMenuItem,
   ContextMenuTrigger
 } from "components/ui/context-menu";
-import { Input } from "components/ui/input";
 import { format } from "date-fns";
 import { cn } from "lib/utils";
 import {
@@ -42,6 +41,7 @@ export function InvoiceListTable({
   invoices,
   currentInvoiceId,
   selectedIds,
+  deletingIds,
   onSelectionChange,
   onOpenInvoice,
   onRenameInvoice,
@@ -50,6 +50,7 @@ export function InvoiceListTable({
   invoices: InvoiceDocument[];
   currentInvoiceId: string | null;
   selectedIds: string[];
+  deletingIds: string[];
   onSelectionChange: (ids: string[]) => void;
   onOpenInvoice: (invoice: InvoiceDocument) => void;
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
@@ -60,9 +61,11 @@ export function InvoiceListTable({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [contextMenuRowId, setContextMenuRowId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const editingIdRef = useRef<string | null>(null);
   const anchorIdRef = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const tbodyRef = useRef<HTMLTableSectionElement>(null);
 
   useEffect(() => {
     if (!editingId) return;
@@ -88,8 +91,10 @@ export function InvoiceListTable({
 
   function startRename(invoice: InvoiceDocument) {
     editingIdRef.current = invoice.id;
+    anchorIdRef.current = invoice.id;
     setEditingId(invoice.id);
     setEditingValue(invoice.name);
+    onSelectionChange([invoice.id]);
   }
 
   function finishRename(invoice: InvoiceDocument, shouldSave: boolean) {
@@ -138,9 +143,17 @@ export function InvoiceListTable({
   });
 
   const selectedSet = new Set(selectedIds);
+  const deletingSet = new Set(deletingIds);
   const selectedInvoices = sortedInvoices.filter(invoice =>
     selectedSet.has(invoice.id)
   );
+
+  function focusRow(targetIndex: number) {
+    const row = tbodyRef.current?.querySelector<HTMLTableRowElement>(
+      `tr[data-index="${targetIndex}"]`
+    );
+    row?.focus();
+  }
 
   function selectRange(targetId: string) {
     const anchorId = anchorIdRef.current;
@@ -197,8 +210,96 @@ export function InvoiceListTable({
     onSelectionChange(isOnlySelection ? [] : [invoice.id]);
   }
 
+  function handleListKeyDown(event: KeyboardEvent<HTMLTableSectionElement>) {
+    if (editingId) return;
+
+    const rowElement = (event.target as HTMLElement).closest<HTMLElement>(
+      "tr[data-index]"
+    );
+
+    if (!rowElement) return;
+
+    const index = Number(rowElement.dataset.index);
+    const invoice = sortedInvoices[index];
+
+    if (!invoice) return;
+
+    const handled = () => {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      handled();
+
+      const lastIndex = sortedInvoices.length - 1;
+      const nextIndex =
+        event.key === "ArrowDown"
+          ? Math.min(index + 1, lastIndex)
+          : Math.max(index - 1, 0);
+
+      if (nextIndex === index) return;
+
+      const nextInvoice = sortedInvoices[nextIndex];
+      setActiveId(nextInvoice.id);
+      focusRow(nextIndex);
+
+      if (event.shiftKey) {
+        selectRange(nextInvoice.id);
+
+        return;
+      }
+
+      anchorIdRef.current = nextInvoice.id;
+      onSelectionChange([nextInvoice.id]);
+
+      return;
+    }
+
+    if (event.key === "Enter") {
+      handled();
+      onOpenInvoice(invoice);
+
+      return;
+    }
+
+    if (event.key === " ") {
+      handled();
+      anchorIdRef.current = invoice.id;
+
+      onSelectionChange(
+        selectedSet.has(invoice.id)
+          ? selectedIds.filter(selectedId => selectedId !== invoice.id)
+          : [...selectedIds, invoice.id]
+      );
+
+      return;
+    }
+
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a") {
+      handled();
+      onSelectionChange(
+        sortedInvoices.map(currentInvoice => currentInvoice.id)
+      );
+
+      return;
+    }
+
+    if (event.key === "Delete" || event.key === "Backspace") {
+      handled();
+      onDeleteInvoices(selectedIds.length > 0 ? selectedInvoices : [invoice]);
+
+      return;
+    }
+
+    if (event.key === "F2") {
+      handled();
+      startRename(invoice);
+    }
+  }
+
   return (
-    <table className="w-full text-sm">
+    <table role="grid" aria-multiselectable className="w-full text-sm">
       <thead>
         <tr className="text-muted-foreground border-border border-b text-left text-sm">
           <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 whitespace-nowrap">
@@ -219,14 +320,17 @@ export function InvoiceListTable({
           </th>
         </tr>
       </thead>
-      <tbody>
+      <tbody ref={tbodyRef} onKeyDownCapture={handleListKeyDown}>
         {sortedInvoices.map((invoice, index) => {
           const isCurrent = currentInvoiceId === invoice.id;
           const isSelected = selectedSet.has(invoice.id);
+          const isDeleting = deletingSet.has(invoice.id);
           const isEditing = editingId === invoice.id;
           const isStriped = index % 2 === 1;
           const isContextFocused = contextMenuRowId === invoice.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
+          const isTabbable =
+            activeId === invoice.id || (activeId === null && index === 0);
 
           return (
             <ContextMenu
@@ -240,72 +344,96 @@ export function InvoiceListTable({
               <ContextMenuTrigger
                 render={
                   <tr
+                    data-index={index}
+                    role="row"
+                    aria-selected={isSelected}
+                    tabIndex={isTabbable ? 0 : -1}
                     onClick={event => handleRowClick(event, invoice)}
                     onDoubleClick={() => {
                       if (isEditing) return;
 
                       onOpenInvoice(invoice);
                     }}
+                    onFocus={() => setActiveId(invoice.id)}
                     className={cn(
-                      "group/row cursor-pointer select-none",
-                      !isSelected && isStriped && "bg-muted/50",
-                      !isSelected && "hover:bg-accent",
-                      isSelected && "bg-brand-500 text-primary-foreground",
+                      "group/row cursor-pointer scroll-mt-9 outline-none select-none",
+                      !isSelected && !isDeleting && isStriped && "bg-muted/50",
+                      !isSelected && !isDeleting && "hover:bg-accent",
+                      isSelected &&
+                        !isDeleting &&
+                        "bg-brand-500 text-primary-foreground",
+                      isDeleting && "bg-destructive/10 text-destructive",
                       isContextFocused &&
-                        "outline-brand-500 outline-2 -outline-offset-2"
+                        !isDeleting &&
+                        "outline-brand-500 outline-2 -outline-offset-2",
+                      isDeleting &&
+                        "outline-destructive/50 outline-2 -outline-offset-2",
+                      isEditing && !isSelected && "bg-accent",
+                      "focus-visible:outline-brand-500 focus-visible:outline-2 focus-visible:-outline-offset-2"
                     )}
                   />
                 }
               >
                 <td
+                  role="gridcell"
                   className="py-2.5 pr-4 pl-4"
                   onClick={
                     isEditing ? event => event.stopPropagation() : undefined
                   }
                 >
-                  {isEditing ? (
-                    <Input
-                      ref={inputRef}
-                      aria-label="Invoice name"
-                      value={editingValue}
-                      onChange={event => setEditingValue(event.target.value)}
-                      onFocus={event => event.currentTarget.select()}
-                      onKeyDown={event => handleEditKeyDown(event, invoice)}
-                      onBlur={() => finishRename(invoice, true)}
-                      className="h-7 text-sm"
-                    />
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <FileTextIcon
-                        className={cn(
-                          "size-4 shrink-0",
-                          isSelected
+                  <div className="flex items-center gap-2">
+                    <FileTextIcon
+                      className={cn(
+                        "size-4 shrink-0",
+                        isDeleting
+                          ? "text-destructive"
+                          : isSelected
                             ? "text-primary-foreground"
                             : "text-muted-foreground"
-                        )}
-                      />
-                      <span className="font-medium">{invoice.name}</span>
-                      {isCurrent && (
-                        <span
-                          className={cn(
-                            "text-sm",
-                            isSelected
-                              ? "text-primary-foreground/80"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          Current
-                        </span>
                       )}
-                    </div>
-                  )}
+                    />
+                    {isEditing ? (
+                      <input
+                        ref={inputRef}
+                        name="invoiceName"
+                        aria-label="Invoice name"
+                        value={editingValue}
+                        onChange={event => setEditingValue(event.target.value)}
+                        onFocus={event => event.currentTarget.select()}
+                        onKeyDown={event => handleEditKeyDown(event, invoice)}
+                        onBlur={() => finishRename(invoice, true)}
+                        className="bg-background text-foreground outline-brand-500 -my-0.5 -ml-1 h-6 min-w-0 flex-1 rounded-[4px] px-1 text-sm font-medium outline-2 -outline-offset-1"
+                      />
+                    ) : (
+                      <>
+                        <span className="font-medium">{invoice.name}</span>
+                        {isCurrent && (
+                          <span
+                            className={cn(
+                              "text-sm",
+                              isDeleting
+                                ? "text-destructive/70"
+                                : isSelected
+                                  ? "text-primary-foreground/80"
+                                  : "text-muted-foreground"
+                            )}
+                          >
+                            Current
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </td>
                 <td
+                  role="gridcell"
                   className={cn(
                     "py-2.5 pr-4 whitespace-nowrap tabular-nums",
-                    isSelected
-                      ? "text-primary-foreground/80"
-                      : "text-muted-foreground"
+                    isDeleting
+                      ? "text-destructive/70"
+                      : isSelected
+                        ? "text-primary-foreground/80"
+                        : "text-muted-foreground"
                   )}
                 >
                   {format(new Date(invoice.updatedAt), "PP, p")}
@@ -323,14 +451,14 @@ export function InvoiceListTable({
                 ) : (
                   <>
                     <ContextMenuItem onClick={() => startRename(invoice)}>
-                      <PencilIcon />
+                      <PencilIcon className="size-3 shrink-0" />
                       Rename
                     </ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
                       onClick={() => onDeleteInvoices([invoice])}
                     >
-                      <TrashIcon />
+                      <TrashIcon className="size-3 shrink-0" />
                       Delete
                     </ContextMenuItem>
                   </>
