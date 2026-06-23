@@ -1,16 +1,9 @@
-import { Button } from "components/ui/button";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger
 } from "components/ui/context-menu";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
-} from "components/ui/dropdown-menu";
 import { Input } from "components/ui/input";
 import { format } from "date-fns";
 import { cn } from "lib/utils";
@@ -18,7 +11,6 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   FileTextIcon,
-  MoreHorizontalIcon,
   PencilIcon,
   TrashIcon
 } from "lucide-react";
@@ -51,8 +43,7 @@ export function InvoiceListTable({
   onSelectionChange,
   onOpenInvoice,
   onRenameInvoice,
-  onDeleteInvoices,
-  deleting
+  onDeleteInvoices
 }: {
   invoices: InvoiceDocument[];
   currentInvoiceId: string | null;
@@ -61,7 +52,6 @@ export function InvoiceListTable({
   onOpenInvoice: (invoice: InvoiceDocument) => void;
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
   onDeleteInvoices: (invoices: InvoiceDocument[]) => void;
-  deleting: boolean;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -225,9 +215,6 @@ export function InvoiceListTable({
               onClick={() => toggleSort("updatedAt")}
             />
           </th>
-          <th className="bg-popover sticky top-0 w-10 py-2 pr-4">
-            <span className="sr-only">Actions</span>
-          </th>
         </tr>
       </thead>
       <tbody>
@@ -320,46 +307,6 @@ export function InvoiceListTable({
                   )}
                 >
                   {format(new Date(invoice.updatedAt), "PP, p")}
-                </td>
-                <td
-                  className="py-2.5 pr-4 text-right"
-                  onClick={event => event.stopPropagation()}
-                >
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={deleting}
-                          className={cn(
-                            "opacity-0 group-hover/row:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100",
-                            isSelected
-                              ? "text-primary-foreground hover:bg-primary-foreground/20 hover:text-primary-foreground"
-                              : "text-muted-foreground hover:text-foreground"
-                          )}
-                        />
-                      }
-                    >
-                      <MoreHorizontalIcon className="size-4" />
-                      <span className="sr-only">
-                        Actions for {invoice.name}
-                      </span>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" finalFocus={false}>
-                      <DropdownMenuItem onClick={() => startRename(invoice)}>
-                        <PencilIcon />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onDeleteInvoices([invoice])}
-                      >
-                        <TrashIcon />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </td>
               </ContextMenuTrigger>
               <ContextMenuContent>
