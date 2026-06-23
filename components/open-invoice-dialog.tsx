@@ -12,6 +12,7 @@ import {
   DialogTitle
 } from "components/ui/dialog";
 import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
+import { cn } from "lib/utils";
 import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
@@ -70,7 +71,7 @@ export function OpenInvoiceDialog({
     const target = event.target as HTMLElement;
 
     if (pendingDelete.length > 0) {
-      if (!target.closest("[data-slot='dialog-footer']")) {
+      if (!target.closest("[data-slot='delete-confirm']")) {
         setPendingDelete([]);
       }
 
@@ -167,97 +168,107 @@ export function OpenInvoiceDialog({
             Select an invoice to open. You can also delete invoices from here.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-1 flex-col overflow-y-auto">
-          {loading ? (
-            <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
-              <Loader2Icon className="size-4 shrink-0 animate-spin" />
-              Loading invoices
-            </div>
-          ) : invoices.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-              <FolderOpenIcon className="text-muted-foreground/70 size-8 shrink-0" />
-              <div className="flex flex-col gap-1.5">
-                <h3 className="text-foreground text-base font-medium">
-                  No saved invoices yet
-                </h3>
-                <p className="text-muted-foreground max-w-sm text-sm">
-                  Save an invoice and it will appear here, ready to reopen
-                  anytime.
-                </p>
+        <div className="relative flex flex-1 flex-col">
+          <div
+            className={cn(
+              "flex flex-1 flex-col overflow-y-auto",
+              invoices.length > 0 && "pb-14"
+            )}
+          >
+            {loading ? (
+              <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
+                <Loader2Icon className="size-4 shrink-0 animate-spin" />
+                Loading invoices
+              </div>
+            ) : invoices.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+                <FolderOpenIcon className="text-muted-foreground/70 size-8 shrink-0" />
+                <div className="flex flex-col gap-1.5">
+                  <h3 className="text-foreground text-base font-medium">
+                    No saved invoices yet
+                  </h3>
+                  <p className="text-muted-foreground max-w-sm text-sm">
+                    Save an invoice and it will appear here, ready to reopen
+                    anytime.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <InvoiceListTable
+                  invoices={invoices}
+                  currentInvoiceId={currentInvoiceId}
+                  selectedIds={selectedIds}
+                  onSelectionChange={setSelectedIds}
+                  onOpenInvoice={handleOpenInvoice}
+                  onRenameInvoice={handleRenameInvoice}
+                  onDeleteInvoices={setPendingDelete}
+                />
+                <InvoiceListStripeFiller rowCount={invoices.length} />
+              </>
+            )}
+          </div>
+          {pendingDelete.length > 0 && (
+            <div
+              data-slot="delete-confirm"
+              className="border-border bg-popover absolute inset-x-3 bottom-2 z-10 flex items-center justify-between gap-3 rounded-[4px] border px-3 py-1.5 shadow-lg"
+            >
+              <span className="text-foreground text-sm">
+                Delete {pendingDelete.length} invoice
+                {pendingDelete.length !== 1 ? "s" : ""}?{" "}
+                <span className="text-muted-foreground">
+                  This cannot be undone.
+                </span>
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPendingDelete([])}
+                  disabled={pending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleConfirmDelete}
+                  disabled={pending}
+                >
+                  Delete
+                </Button>
               </div>
             </div>
-          ) : (
-            <>
-              <InvoiceListTable
-                invoices={invoices}
-                currentInvoiceId={currentInvoiceId}
-                selectedIds={selectedIds}
-                onSelectionChange={setSelectedIds}
-                onOpenInvoice={handleOpenInvoice}
-                onRenameInvoice={handleRenameInvoice}
-                onDeleteInvoices={setPendingDelete}
-                deleting={pending}
-              />
-              <InvoiceListStripeFiller rowCount={invoices.length} />
-            </>
           )}
         </div>
-        {pendingDelete.length > 0 ? (
-          <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-            <span className="text-foreground text-sm">
-              Delete {pendingDelete.length} invoice
-              {pendingDelete.length !== 1 ? "s" : ""}?{" "}
-              <span className="text-muted-foreground">
-                This cannot be undone.
-              </span>
-            </span>
-            <div className="flex items-center gap-2">
+        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+          <span className="text-muted-foreground text-sm">
+            {selectedIds.length > 0
+              ? `${selectedIds.length} selected`
+              : `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`}
+          </span>
+          <div className="flex items-center gap-2">
+            {import.meta.env.DEV && (
               <Button
-                variant="ghost"
-                onClick={() => setPendingDelete([])}
-                disabled={pending}
+                variant="outline"
+                onClick={handleSeedDummyInvoice}
+                disabled={seeding}
               >
-                Cancel
+                <SparklesIcon />
+                Add dummy
               </Button>
-              <Button
-                variant="destructive"
-                onClick={handleConfirmDelete}
-                disabled={pending}
-              >
-                Delete
-              </Button>
-            </div>
-          </DialogFooter>
-        ) : (
-          <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-            <span className="text-muted-foreground text-sm">
-              {selectedIds.length > 0
-                ? `${selectedIds.length} selected`
-                : `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`}
-            </span>
-            <div className="flex items-center gap-2">
-              {import.meta.env.DEV && (
-                <Button
-                  variant="outline"
-                  onClick={handleSeedDummyInvoice}
-                  disabled={seeding}
-                >
-                  <SparklesIcon />
-                  Add dummy
-                </Button>
-              )}
-              <Button variant="ghost" onClick={() => onOpenChange(false)}>
-                Close
-              </Button>
-              <Button
-                disabled={selectedIds.length !== 1}
-                onClick={handleOpenSelected}
-              >
-                Open
-              </Button>
-            </div>
-          </DialogFooter>
-        )}
+            )}
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+            <Button
+              disabled={selectedIds.length !== 1}
+              onClick={handleOpenSelected}
+            >
+              Open
+            </Button>
+          </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
