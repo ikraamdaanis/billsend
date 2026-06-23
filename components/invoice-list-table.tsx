@@ -301,8 +301,8 @@ export function InvoiceListTable({
   return (
     <table role="grid" aria-multiselectable className="w-full text-sm">
       <thead>
-        <tr className="text-muted-foreground border-border border-b text-left text-sm">
-          <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 whitespace-nowrap">
+        <tr className="text-muted-foreground text-left text-sm">
+          <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
             <SortHeader
               label="Name"
               active={sortKey === "name"}
@@ -310,7 +310,7 @@ export function InvoiceListTable({
               onClick={() => toggleSort("name")}
             />
           </th>
-          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap">
+          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
             <SortHeader
               label="Date modified"
               active={sortKey === "updatedAt"}
