@@ -255,7 +255,9 @@ export function InvoiceFileMenu({
 
   async function handleUnsavedAction(action: UnsavedChangesAction) {
     if (action === "discard") {
-      return runPendingAction();
+      runPendingAction();
+
+      return;
     }
 
     if (action !== "save") return;
