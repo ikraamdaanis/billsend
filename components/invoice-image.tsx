@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import { deleteImage, getImageBlob, saveImage } from "~/db";
+import {
+  cleanupOrphanedImages,
+  deleteImage,
+  getImageBlob,
+  saveImage
+} from "~/db";
 import { cn } from "~/lib/utils";
 import { useImageSlice } from "~/stores/invoice-selectors";
 
@@ -47,6 +52,9 @@ export function InvoiceImage() {
 
       // Store image ID in invoice state
       setImage(newImageId);
+
+      // Drop the replaced blob (and any other orphans), keeping the new one
+      void cleanupOrphanedImages([newImageId]);
     } catch (error) {
       // On error, revoke preview URL and clear
       if (currentUrlRef.current === previewUrl) {
