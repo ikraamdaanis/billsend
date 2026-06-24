@@ -12,7 +12,7 @@ Billsend is a free, local-first invoice generator that runs entirely in the brow
 - **Styling:** Tailwind CSS 4 + shadcn/ui (new-york style) + Radix UI primitives
 - **State:** Zustand (with Immer + subscribeWithSelector middleware) for invoice data; React Context for UI state
 - **Storage:** Dexie (IndexedDB wrapper) — no backend, no HTTP requests
-- **PDF:** @react-pdf/renderer (dynamically imported)
+- **PDF:** @react-pdf/renderer
 - **Forms:** React Hook Form + Zod validation
 - **Icons:** lucide-react
 - **Package Manager:** Bun
@@ -24,7 +24,6 @@ Billsend is a free, local-first invoice generator that runs entirely in the brow
 bun run dev          # Start dev server (port 3000)
 bun run build        # Production build
 bun run serve        # Preview production build
-bun run test         # Run Vitest tests
 bun run lint         # ESLint
 bun run format       # Prettier
 bun run check        # Format + lint fix

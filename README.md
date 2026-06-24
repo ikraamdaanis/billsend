@@ -21,9 +21,8 @@ A free, local-first invoice generator that runs entirely in your browser. Create
 - **Zustand** — invoice state (Immer)
 - **Dexie** — IndexedDB persistence
 - **React Hook Form** + **Zod** — forms and validation
-- **@react-pdf/renderer** — PDF export (dynamic import)
+- **@react-pdf/renderer** — PDF export
 - **Tailwind CSS 4** + **shadcn/ui** — styling and components
-- **Vitest** — tests
 
 ## Getting Started
 
@@ -40,7 +39,6 @@ The app runs at [http://localhost:3000](http://localhost:3000).
 bun run dev          # Dev server (port 3000)
 bun run build        # Production build
 bun run serve        # Preview production build
-bun run test         # Vitest
 bun run lint         # ESLint
 bun run format       # Prettier
 bun run check        # Format + lint fix
