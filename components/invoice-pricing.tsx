@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { InvoiceInput } from "~/components/invoice-input";
 import { formatCurrency } from "~/consts/currencies";
 import {
@@ -10,6 +10,7 @@ import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 import { handleCurrencyInput } from "~/utils/handle-currency-input";
 import { handlePercentageInput } from "~/utils/handle-percentage-input";
+import { reconcilePricingInput } from "~/utils/reconcile-pricing-input";
 
 function handleInputBlur(
   currentInput: string,
@@ -76,6 +77,10 @@ function TaxRow() {
 
   const [taxInput, setTaxInput] = useState(tax.percentage.toString());
 
+  useEffect(() => {
+    setTaxInput(prev => reconcilePricingInput(prev, tax.percentage));
+  }, [tax.percentage]);
+
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <div
@@ -131,6 +136,10 @@ function FeesRow() {
 
   const [feesInput, setFeesInput] = useState(fees.toString());
 
+  useEffect(() => {
+    setFeesInput(prev => reconcilePricingInput(prev, fees));
+  }, [fees]);
+
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
@@ -169,6 +178,10 @@ function DiscountsRow() {
   const valueSettings = getRoleSettings(theme, "totalsValue");
 
   const [discountsInput, setDiscountsInput] = useState(discounts.toString());
+
+  useEffect(() => {
+    setDiscountsInput(prev => reconcilePricingInput(prev, discounts));
+  }, [discounts]);
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
