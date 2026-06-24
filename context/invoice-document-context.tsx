@@ -7,18 +7,18 @@ import {
   saveInvoice
 } from "~/db";
 import { invoiceDefault } from "~/stores/invoice-store";
+import { useInvoiceData } from "~/stores/invoice-selectors";
 import type { Invoice, InvoiceDocument } from "~/types";
+import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
 
 type InvoiceDocumentContextValue = {
   currentDocumentId: string | null;
   currentDocumentName: string | null;
   lastSavedInvoice: Invoice | null;
-  hasUnsavedChanges: boolean;
   setCurrentDocumentId: (id: string | null) => void;
   setCurrentDocumentName: (name: string | null) => void;
   setLastSavedInvoice: (invoice: Invoice | null) => void;
-  setHasUnsavedChanges: (value: boolean) => void;
 };
 
 const InvoiceDocumentContext =
@@ -34,25 +34,17 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
   const [lastSavedInvoice, setLastSavedInvoice] = useState<Invoice | null>(
     null
   );
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const value = useMemo(
     () => ({
       currentDocumentId,
       currentDocumentName,
       lastSavedInvoice,
-      hasUnsavedChanges,
       setCurrentDocumentId,
       setCurrentDocumentName,
-      setLastSavedInvoice,
-      setHasUnsavedChanges
+      setLastSavedInvoice
     }),
-    [
-      currentDocumentId,
-      currentDocumentName,
-      lastSavedInvoice,
-      hasUnsavedChanges
-    ]
+    [currentDocumentId, currentDocumentName, lastSavedInvoice]
   );
 
   return (
@@ -69,7 +61,22 @@ export function useInvoiceDocument() {
       "useInvoiceDocument must be used within an InvoiceDocumentProvider"
     );
   }
+
   return context;
+}
+
+// Derived dirty state: compares the live invoice against its persisted baseline
+// (default for a blank document, last-saved snapshot for a loaded one). Kept as
+// a derivation so it can never desync from the store the way stored state could.
+export function useHasUnsavedChanges(): boolean {
+  const { currentDocumentId, lastSavedInvoice } = useInvoiceDocument();
+  const invoice = useInvoiceData();
+
+  return useMemo(
+    () =>
+      deriveHasUnsavedChanges(invoice, currentDocumentId, lastSavedInvoice),
+    [invoice, currentDocumentId, lastSavedInvoice]
+  );
 }
 
 // Utility functions (same as before, but now work with context setters)
