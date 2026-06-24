@@ -16,7 +16,11 @@ export function getTextStyles({
     color: settings.color,
     fontSize: isPdf ? scaleFontSize(settings.size || 0) : `${settings.size}px`,
     fontWeight: getFontWeight(settings.weight as FontWeight),
-    textAlign: settings.align
+    textAlign: settings.align,
+    fontFamily: settings.fontFamily,
+    fontVariantNumeric: settings.fontFamily?.includes("mono")
+      ? "tabular-nums"
+      : undefined
   };
 
   if (remove.includes("color")) {

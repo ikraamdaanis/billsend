@@ -7,6 +7,7 @@ import type { ComponentProps } from "react";
 import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
 import { useInvoiceData } from "stores/invoice-selectors";
+import { registerInvoicePdfFonts } from "utils/register-invoice-pdf-fonts";
 
 export function DownloadInvoice({
   className,
@@ -34,6 +35,7 @@ export function DownloadInvoice({
 
     startTransition(async () => {
       try {
+        registerInvoicePdfFonts();
         const blob = await pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
         const url = URL.createObjectURL(blob);
 
