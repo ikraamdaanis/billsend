@@ -1,8 +1,8 @@
 import { ImportDataDialog } from "components/import-data-dialog";
 import { OpenInvoiceDialog } from "components/open-invoice-dialog";
+import { OpenTemplateDialog } from "components/open-template-dialog";
 import { SaveInvoiceDialog } from "components/save-invoice-dialog";
 import { SaveTemplateModal } from "components/save-template-modal";
-import { TemplateSelectionModal } from "components/template-selection-modal";
 import {
   MenubarContent,
   MenubarItem,
@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { useInvoiceDataAndActions } from "stores/invoice-selectors";
 import { invoiceDefault } from "stores/invoice-store";
 import type { InvoiceDocument, InvoiceTemplate } from "types";
+import { ensureItemIds } from "utils/ensure-item-ids";
 import { exportAllData } from "utils/export-data";
 
 export function InvoiceFileMenu({
@@ -164,7 +165,7 @@ export function InvoiceFileMenu({
   function handleSelectTemplate(template: InvoiceTemplate) {
     startTransition(() => {
       try {
-        setInvoice(template.templateData);
+        setInvoice(ensureItemIds(template.templateData));
         setCurrentDocumentId(null);
         setCurrentDocumentName(null);
         setLastSavedInvoice(null);
@@ -278,7 +279,7 @@ export function InvoiceFileMenu({
       }
     }
     loadTemplates();
-  }, [templateDialogOpen, saveTemplateDialogOpen]);
+  }, [saveTemplateDialogOpen]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -390,11 +391,10 @@ export function InvoiceFileMenu({
         onOpenChange={setUnsavedDialogOpen}
         onAction={handleUnsavedAction}
       />
-      <TemplateSelectionModal
+      <OpenTemplateDialog
         open={templateDialogOpen}
         onOpenChange={setTemplateDialogOpen}
-        templates={templates}
-        onTemplateSelect={handleSelectTemplate}
+        onSelectTemplate={handleSelectTemplate}
       />
       <SaveTemplateModal
         open={saveTemplateDialogOpen}

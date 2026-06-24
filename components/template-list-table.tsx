@@ -9,52 +9,33 @@ import { cn } from "lib/utils";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-  FileTextIcon,
+  LayoutTemplateIcon,
   PencilIcon,
   TrashIcon
 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { InvoiceDocument } from "types";
+import type { InvoiceTemplate } from "types";
 
 type SortKey = "name" | "updatedAt";
 type SortDirection = "asc" | "desc";
 
-const STRIPE_ROW_HEIGHT = 40;
-const STRIPE_COLOR = "color-mix(in oklab, var(--muted) 50%, transparent)";
-
-export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
-  const single = STRIPE_ROW_HEIGHT;
-  const double = STRIPE_ROW_HEIGHT * 2;
-  const stops =
-    rowCount % 2 === 1
-      ? `${STRIPE_COLOR} 0, ${STRIPE_COLOR} ${single}px, transparent ${single}px, transparent ${double}px`
-      : `transparent 0, transparent ${single}px, ${STRIPE_COLOR} ${single}px, ${STRIPE_COLOR} ${double}px`;
-  const backgroundImage = `repeating-linear-gradient(to bottom, ${stops})`;
-
-  return (
-    <div aria-hidden className="min-h-14 flex-1" style={{ backgroundImage }} />
-  );
-}
-
-export function InvoiceListTable({
-  invoices,
-  currentInvoiceId,
+export function TemplateListTable({
+  templates,
   selectedIds,
   deletingIds,
   onSelectionChange,
-  onOpenInvoice,
-  onRenameInvoice,
-  onDeleteInvoices
+  onOpenTemplate,
+  onRenameTemplate,
+  onDeleteTemplates
 }: {
-  invoices: InvoiceDocument[];
-  currentInvoiceId: string | null;
+  templates: InvoiceTemplate[];
   selectedIds: string[];
   deletingIds: string[];
   onSelectionChange: (ids: string[]) => void;
-  onOpenInvoice: (invoice: InvoiceDocument) => void;
-  onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
-  onDeleteInvoices: (invoices: InvoiceDocument[]) => void;
+  onOpenTemplate: (template: InvoiceTemplate) => void;
+  onRenameTemplate: (template: InvoiceTemplate, newName: string) => void;
+  onDeleteTemplates: (templates: InvoiceTemplate[]) => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -89,35 +70,35 @@ export function InvoiceListTable({
     setSortDirection("asc");
   }
 
-  function startRename(invoice: InvoiceDocument) {
-    editingIdRef.current = invoice.id;
-    anchorIdRef.current = invoice.id;
-    setEditingId(invoice.id);
-    setEditingValue(invoice.name);
-    onSelectionChange([invoice.id]);
+  function startRename(template: InvoiceTemplate) {
+    editingIdRef.current = template.id;
+    anchorIdRef.current = template.id;
+    setEditingId(template.id);
+    setEditingValue(template.name);
+    onSelectionChange([template.id]);
   }
 
-  function finishRename(invoice: InvoiceDocument, shouldSave: boolean) {
-    if (editingIdRef.current !== invoice.id) return;
+  function finishRename(template: InvoiceTemplate, shouldSave: boolean) {
+    if (editingIdRef.current !== template.id) return;
 
     editingIdRef.current = null;
     setEditingId(null);
 
     const trimmed = editingValue.trim();
 
-    if (shouldSave && trimmed && trimmed !== invoice.name) {
-      onRenameInvoice(invoice, trimmed);
+    if (shouldSave && trimmed && trimmed !== template.name) {
+      onRenameTemplate(template, trimmed);
     }
   }
 
   function handleEditKeyDown(
     event: KeyboardEvent<HTMLInputElement>,
-    invoice: InvoiceDocument
+    template: InvoiceTemplate
   ) {
     if (event.key === "Enter") {
       event.preventDefault();
       event.stopPropagation();
-      finishRename(invoice, true);
+      finishRename(template, true);
 
       return;
     }
@@ -125,11 +106,11 @@ export function InvoiceListTable({
     if (event.key === "Escape") {
       event.preventDefault();
       event.stopPropagation();
-      finishRename(invoice, false);
+      finishRename(template, false);
     }
   }
 
-  const sortedInvoices = [...invoices].sort((a, b) => {
+  const sortedTemplates = [...templates].sort((a, b) => {
     const direction = sortDirection === "asc" ? 1 : -1;
 
     if (sortKey === "name") {
@@ -144,8 +125,8 @@ export function InvoiceListTable({
 
   const selectedSet = new Set(selectedIds);
   const deletingSet = new Set(deletingIds);
-  const selectedInvoices = sortedInvoices.filter(invoice =>
-    selectedSet.has(invoice.id)
+  const selectedTemplates = sortedTemplates.filter(template =>
+    selectedSet.has(template.id)
   );
 
   function focusRow(targetIndex: number) {
@@ -157,11 +138,11 @@ export function InvoiceListTable({
 
   function selectRange(targetId: string) {
     const anchorId = anchorIdRef.current;
-    const anchorIndex = sortedInvoices.findIndex(
-      invoice => invoice.id === anchorId
+    const anchorIndex = sortedTemplates.findIndex(
+      template => template.id === anchorId
     );
-    const targetIndex = sortedInvoices.findIndex(
-      invoice => invoice.id === targetId
+    const targetIndex = sortedTemplates.findIndex(
+      template => template.id === targetId
     );
 
     if (anchorIndex === -1) {
@@ -174,40 +155,40 @@ export function InvoiceListTable({
     const end = Math.max(anchorIndex, targetIndex);
 
     onSelectionChange(
-      sortedInvoices.slice(start, end + 1).map(invoice => invoice.id)
+      sortedTemplates.slice(start, end + 1).map(template => template.id)
     );
   }
 
   function handleRowClick(
     event: MouseEvent<HTMLTableRowElement>,
-    invoice: InvoiceDocument
+    template: InvoiceTemplate
   ) {
     if (editingId) return;
 
     if (event.shiftKey && anchorIdRef.current) {
-      selectRange(invoice.id);
+      selectRange(template.id);
 
       return;
     }
 
     if (event.metaKey || event.ctrlKey) {
-      anchorIdRef.current = invoice.id;
+      anchorIdRef.current = template.id;
 
       onSelectionChange(
-        selectedSet.has(invoice.id)
-          ? selectedIds.filter(selectedId => selectedId !== invoice.id)
-          : [...selectedIds, invoice.id]
+        selectedSet.has(template.id)
+          ? selectedIds.filter(selectedId => selectedId !== template.id)
+          : [...selectedIds, template.id]
       );
 
       return;
     }
 
-    anchorIdRef.current = invoice.id;
+    anchorIdRef.current = template.id;
 
     const isOnlySelection =
-      selectedSet.has(invoice.id) && selectedIds.length === 1;
+      selectedSet.has(template.id) && selectedIds.length === 1;
 
-    onSelectionChange(isOnlySelection ? [] : [invoice.id]);
+    onSelectionChange(isOnlySelection ? [] : [template.id]);
   }
 
   function handleListKeyDown(event: KeyboardEvent<HTMLTableSectionElement>) {
@@ -220,9 +201,9 @@ export function InvoiceListTable({
     if (!rowElement) return;
 
     const index = Number(rowElement.dataset.index);
-    const invoice = sortedInvoices[index];
+    const template = sortedTemplates[index];
 
-    if (!invoice) return;
+    if (!template) return;
 
     const handled = () => {
       event.preventDefault();
@@ -232,7 +213,7 @@ export function InvoiceListTable({
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
       handled();
 
-      const lastIndex = sortedInvoices.length - 1;
+      const lastIndex = sortedTemplates.length - 1;
       const nextIndex =
         event.key === "ArrowDown"
           ? Math.min(index + 1, lastIndex)
@@ -240,37 +221,37 @@ export function InvoiceListTable({
 
       if (nextIndex === index) return;
 
-      const nextInvoice = sortedInvoices[nextIndex];
-      setActiveId(nextInvoice.id);
+      const nextTemplate = sortedTemplates[nextIndex];
+      setActiveId(nextTemplate.id);
       focusRow(nextIndex);
 
       if (event.shiftKey) {
-        selectRange(nextInvoice.id);
+        selectRange(nextTemplate.id);
 
         return;
       }
 
-      anchorIdRef.current = nextInvoice.id;
-      onSelectionChange([nextInvoice.id]);
+      anchorIdRef.current = nextTemplate.id;
+      onSelectionChange([nextTemplate.id]);
 
       return;
     }
 
     if (event.key === "Enter") {
       handled();
-      onOpenInvoice(invoice);
+      onOpenTemplate(template);
 
       return;
     }
 
     if (event.key === " ") {
       handled();
-      anchorIdRef.current = invoice.id;
+      anchorIdRef.current = template.id;
 
       onSelectionChange(
-        selectedSet.has(invoice.id)
-          ? selectedIds.filter(selectedId => selectedId !== invoice.id)
-          : [...selectedIds, invoice.id]
+        selectedSet.has(template.id)
+          ? selectedIds.filter(selectedId => selectedId !== template.id)
+          : [...selectedIds, template.id]
       );
 
       return;
@@ -279,7 +260,7 @@ export function InvoiceListTable({
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a") {
       handled();
       onSelectionChange(
-        sortedInvoices.map(currentInvoice => currentInvoice.id)
+        sortedTemplates.map(currentTemplate => currentTemplate.id)
       );
 
       return;
@@ -287,14 +268,16 @@ export function InvoiceListTable({
 
     if (event.key === "Delete" || event.key === "Backspace") {
       handled();
-      onDeleteInvoices(selectedIds.length > 0 ? selectedInvoices : [invoice]);
+      onDeleteTemplates(
+        selectedIds.length > 0 ? selectedTemplates : [template]
+      );
 
       return;
     }
 
     if (event.key === "F2") {
       handled();
-      startRename(invoice);
+      startRename(template);
     }
   }
 
@@ -329,23 +312,22 @@ export function InvoiceListTable({
         </tr>
       </thead>
       <tbody ref={tbodyRef} onKeyDownCapture={handleListKeyDown}>
-        {sortedInvoices.map((invoice, index) => {
-          const isCurrent = currentInvoiceId === invoice.id;
-          const isSelected = selectedSet.has(invoice.id);
-          const isDeleting = deletingSet.has(invoice.id);
-          const isEditing = editingId === invoice.id;
+        {sortedTemplates.map((template, index) => {
+          const isSelected = selectedSet.has(template.id);
+          const isDeleting = deletingSet.has(template.id);
+          const isEditing = editingId === template.id;
           const isStriped = index % 2 === 1;
-          const isContextFocused = contextMenuRowId === invoice.id;
+          const isContextFocused = contextMenuRowId === template.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
           const isTabbable =
-            activeId === invoice.id || (activeId === null && index === 0);
+            activeId === template.id || (activeId === null && index === 0);
 
           return (
             <ContextMenu
-              key={invoice.id}
+              key={template.id}
               onOpenChange={isOpen =>
                 setContextMenuRowId(prev =>
-                  isOpen ? invoice.id : prev === invoice.id ? null : prev
+                  isOpen ? template.id : prev === template.id ? null : prev
                 )
               }
             >
@@ -356,13 +338,13 @@ export function InvoiceListTable({
                     role="row"
                     aria-selected={isSelected}
                     tabIndex={isTabbable ? 0 : -1}
-                    onClick={event => handleRowClick(event, invoice)}
+                    onClick={event => handleRowClick(event, template)}
                     onDoubleClick={() => {
                       if (isEditing) return;
 
-                      onOpenInvoice(invoice);
+                      onOpenTemplate(template);
                     }}
-                    onFocus={() => setActiveId(invoice.id)}
+                    onFocus={() => setActiveId(template.id)}
                     className={cn(
                       "group/row cursor-pointer scroll-mt-9 outline-none select-none",
                       !isSelected && !isDeleting && isStriped && "bg-muted/50",
@@ -390,7 +372,7 @@ export function InvoiceListTable({
                   }
                 >
                   <div className="flex min-w-0 items-center gap-2">
-                    <FileTextIcon
+                    <LayoutTemplateIcon
                       className={cn(
                         "size-4 shrink-0",
                         isDeleting
@@ -403,35 +385,19 @@ export function InvoiceListTable({
                     {isEditing ? (
                       <input
                         ref={inputRef}
-                        name="invoiceName"
-                        aria-label="Invoice name"
+                        name="templateName"
+                        aria-label="Template name"
                         value={editingValue}
                         onChange={event => setEditingValue(event.target.value)}
                         onFocus={event => event.currentTarget.select()}
-                        onKeyDown={event => handleEditKeyDown(event, invoice)}
-                        onBlur={() => finishRename(invoice, true)}
+                        onKeyDown={event => handleEditKeyDown(event, template)}
+                        onBlur={() => finishRename(template, true)}
                         className="bg-background text-foreground outline-brand-500 -my-0.5 -ml-1 h-6 w-full min-w-0 rounded-[3px] px-1 text-sm font-medium outline-2 -outline-offset-1"
                       />
                     ) : (
-                      <>
-                        <span className="min-w-0 truncate font-medium">
-                          {invoice.name}
-                        </span>
-                        {isCurrent && (
-                          <span
-                            className={cn(
-                              "shrink-0 text-sm",
-                              isDeleting
-                                ? "text-destructive/70"
-                                : isSelected
-                                  ? "text-primary-foreground/80"
-                                  : "text-muted-foreground"
-                            )}
-                          >
-                            Current
-                          </span>
-                        )}
-                      </>
+                      <span className="min-w-0 truncate font-medium">
+                        {template.name}
+                      </span>
                     )}
                   </div>
                 </td>
@@ -446,27 +412,27 @@ export function InvoiceListTable({
                         : "text-muted-foreground"
                   )}
                 >
-                  {format(new Date(invoice.updatedAt), "PP, p")}
+                  {format(new Date(template.updatedAt), "PP, p")}
                 </td>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 {showBulkDelete ? (
                   <ContextMenuItem
                     variant="destructive"
-                    onClick={() => onDeleteInvoices(selectedInvoices)}
+                    onClick={() => onDeleteTemplates(selectedTemplates)}
                   >
                     <TrashIcon />
-                    Delete {selectedIds.length} invoices
+                    Delete {selectedIds.length} templates
                   </ContextMenuItem>
                 ) : (
                   <>
-                    <ContextMenuItem onClick={() => startRename(invoice)}>
+                    <ContextMenuItem onClick={() => startRename(template)}>
                       <PencilIcon className="size-3 shrink-0" />
                       Rename
                     </ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
-                      onClick={() => onDeleteInvoices([invoice])}
+                      onClick={() => onDeleteTemplates([template])}
                     >
                       <TrashIcon className="size-3 shrink-0" />
                       Delete

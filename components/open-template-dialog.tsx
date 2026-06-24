@@ -1,7 +1,5 @@
-import {
-  InvoiceListStripeFiller,
-  InvoiceListTable
-} from "components/invoice-list-table";
+import { InvoiceListStripeFiller } from "components/invoice-list-table";
+import { TemplateListTable } from "components/template-list-table";
 import { Button } from "components/ui/button";
 import {
   Dialog,
@@ -11,43 +9,39 @@ import {
   DialogHeader,
   DialogTitle
 } from "components/ui/dialog";
-import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
-import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
+import { deleteTemplate, getAllTemplates, saveTemplate } from "db";
+import { FolderOpenIcon, Loader2Icon } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import type { InvoiceDocument } from "types";
-import { seedDummyInvoice } from "utils/seed-dummy-invoice";
+import type { InvoiceTemplate } from "types";
 
 function truncate(value: string, max: number): string {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;
 }
 
-export function OpenInvoiceDialog({
+export function OpenTemplateDialog({
   open,
   onOpenChange,
-  onSelectInvoice,
-  currentInvoiceId
+  onSelectTemplate
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectInvoice: (invoice: InvoiceDocument) => void;
-  currentInvoiceId: string | null;
+  onSelectTemplate: (template: InvoiceTemplate) => void;
 }) {
-  const [invoices, setInvoices] = useState<InvoiceDocument[]>([]);
+  const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
-  const [seeding, startSeedTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<
-    { mode: "selection" } | { mode: "single"; invoice: InvoiceDocument } | null
+    { mode: "selection" } | { mode: "single"; template: InvoiceTemplate } | null
   >(null);
 
   useEffect(() => {
     if (open) {
       setSelectedIds([]);
       setDeleteTarget(null);
-      loadInvoices();
+      loadTemplates();
     }
   }, [open]);
 
@@ -57,48 +51,48 @@ export function OpenInvoiceDialog({
     }
   }, [deleteTarget, selectedIds]);
 
-  const pendingDeleteInvoices =
+  const pendingDeleteTemplates =
     deleteTarget === null
       ? []
       : deleteTarget.mode === "single"
-        ? [deleteTarget.invoice]
-        : invoices.filter(invoice => selectedIds.includes(invoice.id));
+        ? [deleteTarget.template]
+        : templates.filter(template => selectedIds.includes(template.id));
 
   const deletePrompt =
-    pendingDeleteInvoices.length === 1
-      ? `Delete “${truncate(pendingDeleteInvoices[0].name, 42)}”?`
-      : `Delete ${pendingDeleteInvoices.length} invoices?`;
+    pendingDeleteTemplates.length === 1
+      ? `Delete “${truncate(pendingDeleteTemplates[0].name, 42)}”?`
+      : `Delete ${pendingDeleteTemplates.length} templates?`;
 
   const footerLabel =
-    pendingDeleteInvoices.length > 0 || selectedIds.length === 0
-      ? `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`
+    pendingDeleteTemplates.length > 0 || selectedIds.length === 0
+      ? `${templates.length} template${templates.length !== 1 ? "s" : ""} available`
       : `${selectedIds.length} selected`;
 
-  async function loadInvoices() {
+  async function loadTemplates() {
     try {
       setLoading(true);
-      const loadedInvoices = await getAllInvoices();
-      setInvoices(loadedInvoices);
+      const loadedTemplates = await getAllTemplates();
+      setTemplates(loadedTemplates);
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to load invoices from storage."
+          : "Failed to load templates from storage."
       );
     } finally {
       setLoading(false);
     }
   }
 
-  function handleOpenInvoice(invoice: InvoiceDocument) {
-    onSelectInvoice(invoice);
+  function handleOpenTemplate(template: InvoiceTemplate) {
+    onSelectTemplate(template);
     onOpenChange(false);
   }
 
   function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
 
-    if (pendingDeleteInvoices.length > 0) {
+    if (pendingDeleteTemplates.length > 0) {
       if (target.closest("[data-slot='delete-confirm']")) return;
 
       if (target.closest("thead")) return;
@@ -124,7 +118,7 @@ export function OpenInvoiceDialog({
   }
 
   function handleContentKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Escape" && pendingDeleteInvoices.length > 0) {
+    if (event.key === "Escape" && pendingDeleteTemplates.length > 0) {
       event.preventDefault();
       event.stopPropagation();
       setDeleteTarget(null);
@@ -134,37 +128,22 @@ export function OpenInvoiceDialog({
   function handleOpenSelected() {
     if (selectedIds.length !== 1) return;
 
-    const selectedInvoice = invoices.find(
-      invoice => invoice.id === selectedIds[0]
+    const selectedTemplate = templates.find(
+      template => template.id === selectedIds[0]
     );
 
-    if (!selectedInvoice) {
+    if (!selectedTemplate) {
       return;
     }
 
-    handleOpenInvoice(selectedInvoice);
+    handleOpenTemplate(selectedTemplate);
   }
 
-  function handleSeedDummyInvoice() {
-    startSeedTransition(async () => {
-      try {
-        await seedDummyInvoice();
-        await loadInvoices();
-      } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to seed a dummy invoice."
-        );
-      }
-    });
-  }
-
-  function handleRequestDelete(targets: InvoiceDocument[]) {
+  function handleRequestDelete(targets: InvoiceTemplate[]) {
     if (targets.length === 0) return;
 
-    const followsSelection = targets.every(invoice =>
-      selectedIds.includes(invoice.id)
+    const followsSelection = targets.every(template =>
+      selectedIds.includes(template.id)
     );
 
     if (followsSelection) {
@@ -174,48 +153,48 @@ export function OpenInvoiceDialog({
     }
 
     setSelectedIds([]);
-    setDeleteTarget({ mode: "single", invoice: targets[0] });
+    setDeleteTarget({ mode: "single", template: targets[0] });
   }
 
   function handleConfirmDelete() {
-    const targets = pendingDeleteInvoices;
+    const targets = pendingDeleteTemplates;
 
     if (targets.length === 0) return;
 
-    const targetIds = new Set(targets.map(invoice => invoice.id));
+    const targetIds = new Set(targets.map(template => template.id));
 
     startTransition(async () => {
       try {
-        await Promise.all(targets.map(invoice => deleteInvoice(invoice.id)));
-        await loadInvoices();
+        await Promise.all(targets.map(template => deleteTemplate(template.id)));
+        await loadTemplates();
 
         setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
         setDeleteTarget(null);
         toast.success(
           targets.length === 1
-            ? "Invoice deleted"
-            : `Deleted ${targets.length} invoices`
+            ? "Template deleted"
+            : `Deleted ${targets.length} templates`
         );
       } catch (error) {
         toast.error(
-          error instanceof Error ? error.message : "Failed to delete invoices"
+          error instanceof Error ? error.message : "Failed to delete templates"
         );
       }
     });
   }
 
-  async function handleRenameInvoice(
-    invoice: InvoiceDocument,
+  async function handleRenameTemplate(
+    template: InvoiceTemplate,
     newName: string
   ) {
     try {
-      await saveInvoice({ ...invoice, name: newName, updatedAt: new Date() });
-      await loadInvoices();
+      await saveTemplate({ ...template, name: newName, updatedAt: new Date() });
+      await loadTemplates();
 
-      toast.success("Invoice renamed successfully");
+      toast.success("Template renamed successfully");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to rename invoice"
+        error instanceof Error ? error.message : "Failed to rename template"
       );
     }
   }
@@ -228,9 +207,10 @@ export function OpenInvoiceDialog({
         onKeyDown={handleContentKeyDown}
       >
         <DialogHeader className="border-border border-b">
-          <DialogTitle>Open Invoice</DialogTitle>
+          <DialogTitle>Open Template</DialogTitle>
           <DialogDescription>
-            Select an invoice to open. You can also delete invoices from here.
+            Select a template to open. You can also rename or delete templates
+            from here.
           </DialogDescription>
         </DialogHeader>
         <div className="relative flex min-h-0 flex-1 flex-col">
@@ -238,38 +218,39 @@ export function OpenInvoiceDialog({
             {loading ? (
               <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
                 <Loader2Icon className="size-4 shrink-0 animate-spin" />
-                Loading invoices
+                Loading templates
               </div>
-            ) : invoices.length === 0 ? (
+            ) : templates.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
                 <FolderOpenIcon className="text-muted-foreground/70 size-8 shrink-0" />
                 <div className="flex flex-col gap-1.5">
                   <h3 className="text-foreground text-base font-medium">
-                    No saved invoices yet
+                    No saved templates yet
                   </h3>
                   <p className="text-muted-foreground max-w-sm text-sm">
-                    Save an invoice and it will appear here, ready to reopen
+                    Save a template and it will appear here, ready to reopen
                     anytime.
                   </p>
                 </div>
               </div>
             ) : (
               <>
-                <InvoiceListTable
-                  invoices={invoices}
-                  currentInvoiceId={currentInvoiceId}
+                <TemplateListTable
+                  templates={templates}
                   selectedIds={selectedIds}
-                  deletingIds={pendingDeleteInvoices.map(invoice => invoice.id)}
+                  deletingIds={pendingDeleteTemplates.map(
+                    template => template.id
+                  )}
                   onSelectionChange={setSelectedIds}
-                  onOpenInvoice={handleOpenInvoice}
-                  onRenameInvoice={handleRenameInvoice}
-                  onDeleteInvoices={handleRequestDelete}
+                  onOpenTemplate={handleOpenTemplate}
+                  onRenameTemplate={handleRenameTemplate}
+                  onDeleteTemplates={handleRequestDelete}
                 />
-                <InvoiceListStripeFiller rowCount={invoices.length} />
+                <InvoiceListStripeFiller rowCount={templates.length} />
               </>
             )}
           </div>
-          {pendingDeleteInvoices.length > 0 && (
+          {pendingDeleteTemplates.length > 0 && (
             <div
               data-slot="delete-confirm"
               className="border-border bg-popover absolute inset-x-3 bottom-2 z-10 flex items-center justify-between gap-3 rounded-[6px] border px-3 py-1.5 shadow-sm"
@@ -304,16 +285,6 @@ export function OpenInvoiceDialog({
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
           <span className="text-muted-foreground text-sm">{footerLabel}</span>
           <div className="flex items-center gap-2">
-            {import.meta.env.DEV && (
-              <Button
-                variant="outline"
-                onClick={handleSeedDummyInvoice}
-                disabled={seeding}
-              >
-                <SparklesIcon />
-                Add dummy
-              </Button>
-            )}
             <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Close
             </Button>
@@ -321,7 +292,7 @@ export function OpenInvoiceDialog({
               disabled={selectedIds.length !== 1}
               title={
                 selectedIds.length !== 1
-                  ? "Select a single invoice to open"
+                  ? "Select a single template to open"
                   : undefined
               }
               onClick={handleOpenSelected}
