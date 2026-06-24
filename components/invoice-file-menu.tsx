@@ -89,6 +89,8 @@ export function InvoiceFileMenu({
 
   const setSaveAsDialogOpen = useCallback(
     (open: boolean) => {
+      if (!open) setPendingAction(null);
+
       setInternalSaveAsDialogOpen(open);
       onExternalSaveDialogOpenChange?.(open);
     },
@@ -126,22 +128,30 @@ export function InvoiceFileMenu({
     });
   }, [runWithUnsavedGuard]);
 
-  const handleSave = useCallback(() => {
-    if (!currentDocumentId) return setSaveAsDialogOpen(true);
+  const handleSave = useCallback((): Promise<void> => {
+    if (!currentDocumentId) {
+      setSaveAsDialogOpen(true);
 
-    startTransition(async () => {
-      try {
-        await updateCurrentInvoiceDocument(
-          currentDocumentId,
-          invoice,
-          setLastSavedInvoice
-        );
-        toast.success("Invoice saved successfully");
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to save invoice"
-        );
-      }
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          await updateCurrentInvoiceDocument(
+            currentDocumentId,
+            invoice,
+            setLastSavedInvoice
+          );
+          toast.success("Invoice saved successfully");
+          resolve();
+        } catch (error) {
+          toast.error(
+            error instanceof Error ? error.message : "Failed to save invoice"
+          );
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      });
     });
   }, [currentDocumentId, invoice, setLastSavedInvoice, setSaveAsDialogOpen]);
 
@@ -178,6 +188,13 @@ export function InvoiceFileMenu({
     });
   }
 
+  function runPendingAction() {
+    if (!pendingAction) return;
+
+    pendingAction();
+    setPendingAction(null);
+  }
+
   async function handleSaveInvoice(name: string, overwriteId?: string) {
     return new Promise<void>((resolve, reject) => {
       startTransition(async () => {
@@ -192,7 +209,6 @@ export function InvoiceFileMenu({
             setCurrentDocumentName(name);
 
             toast.success("Invoice saved successfully");
-            resolve();
           } else {
             await saveCurrentInvoiceAsDocument(
               invoice,
@@ -204,9 +220,10 @@ export function InvoiceFileMenu({
             );
 
             toast.success("Invoice saved successfully");
-
-            resolve();
           }
+
+          runPendingAction();
+          resolve();
         } catch (error) {
           toast.error(
             error instanceof Error ? error.message : "Failed to save invoice"
@@ -236,23 +253,24 @@ export function InvoiceFileMenu({
     });
   }
 
-  function handleUnsavedAction(action: UnsavedChangesAction) {
-    if (action === "save") {
-      handleSave();
+  async function handleUnsavedAction(action: UnsavedChangesAction) {
+    if (action === "discard") {
+      return runPendingAction();
+    }
 
-      // Note: handleSave uses startTransition, so we execute pendingAction after a short delay
-      // to ensure the save has been initiated
-      setTimeout(() => {
-        if (pendingAction) {
-          pendingAction();
-          setPendingAction(null);
-        }
-      }, 100);
-    } else if (action === "discard") {
-      if (pendingAction) {
-        pendingAction();
-        setPendingAction(null);
-      }
+    if (action !== "save") return;
+
+    if (!currentDocumentId) {
+      setSaveAsDialogOpen(true);
+
+      return;
+    }
+
+    try {
+      await handleSave();
+      runPendingAction();
+    } catch {
+      setPendingAction(null);
     }
   }
 
