@@ -1,4 +1,3 @@
-import { isEqual } from "lodash-es";
 import {
   BookmarkIcon,
   DownloadIcon,
@@ -30,11 +29,11 @@ import {
   resetToNewInvoice,
   saveCurrentInvoiceAsDocument,
   updateCurrentInvoiceDocument,
+  useHasUnsavedChanges,
   useInvoiceDocument
 } from "~/context/invoice-document-context";
 import { getAllInvoices, getAllTemplates } from "~/db";
 import { useInvoiceDataAndActions } from "~/stores/invoice-selectors";
-import { invoiceDefault } from "~/stores/invoice-store";
 import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
 import { exportAllData } from "~/utils/export-data";
@@ -51,11 +50,9 @@ export function InvoiceFileMenu({
     currentDocumentId,
     setCurrentDocumentId,
     setCurrentDocumentName,
-    hasUnsavedChanges,
-    setHasUnsavedChanges,
-    lastSavedInvoice,
     setLastSavedInvoice
   } = useInvoiceDocument();
+  const hasUnsavedChanges = useHasUnsavedChanges();
 
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [internalSaveAsDialogOpen, setInternalSaveAsDialogOpen] =
@@ -105,15 +102,13 @@ export function InvoiceFileMenu({
         setCurrentDocumentName,
         setLastSavedInvoice
       );
-      setHasUnsavedChanges(false);
     });
   }, [
     runWithUnsavedGuard,
     setInvoice,
     setCurrentDocumentId,
     setCurrentDocumentName,
-    setLastSavedInvoice,
-    setHasUnsavedChanges
+    setLastSavedInvoice
   ]);
 
   const handleOpenInvoice = useCallback(() => {
@@ -179,7 +174,6 @@ export function InvoiceFileMenu({
         setCurrentDocumentId(null);
         setCurrentDocumentName(null);
         setLastSavedInvoice(null);
-        setHasUnsavedChanges(false);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to apply template"
@@ -327,23 +321,6 @@ export function InvoiceFileMenu({
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNewInvoice, handleOpenInvoice, handleSave, handleSaveAs]);
-
-  useEffect(() => {
-    // If we're in a blank invoice (no document ID), compare with default
-    if (currentDocumentId === null) {
-      const hasChanges = !isEqual(invoice, invoiceDefault);
-      return setHasUnsavedChanges(hasChanges);
-    }
-
-    // If we're in an existing invoice, compare with last saved version
-    if (lastSavedInvoice === null) {
-      // No saved version yet, so there are changes
-      return setHasUnsavedChanges(true);
-    }
-
-    const hasChanges = !isEqual(invoice, lastSavedInvoice);
-    setHasUnsavedChanges(hasChanges);
-  }, [invoice, currentDocumentId, lastSavedInvoice, setHasUnsavedChanges]);
 
   return (
     <>
