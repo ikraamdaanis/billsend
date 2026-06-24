@@ -1,5 +1,6 @@
 import { MinusIcon, PlusIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
+import { useState } from "react";
 import { InvoiceInput } from "~/components/invoice-input";
 import { Button } from "~/components/ui/button";
 import { formatCurrency } from "~/consts/currencies";
@@ -215,6 +216,7 @@ function TableCell({
   const { currency, updateItem } = useLineItemsSlice();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
+  const [isEditingCurrency, setIsEditingCurrency] = useState(false);
 
   const rowStyle = getTextStyles({
     settings: getRoleSettings(theme, column.rowRole)
@@ -270,12 +272,22 @@ function TableCell({
       return;
     }
 
+    setIsEditingCurrency(false);
+
     const hasDigits = /\d/.test(target.value);
     const number = Number(
       target.value.replace(currencySymbol, "").replace(/[^0-9.]/g, "")
     );
 
     updateItem(index, column.cell.itemField, hasDigits ? number : 0);
+  }
+
+  function handleFocus() {
+    if (column.cell.kind !== "currency") {
+      return;
+    }
+
+    setIsEditingCurrency(true);
   }
 
   if (column.cell.kind === "amount") {
@@ -298,7 +310,9 @@ function TableCell({
   }
 
   if (column.cell.kind === "currency") {
-    inputValue = `${currencySymbol}${item.unitPrice.toString()}`;
+    inputValue = isEditingCurrency
+      ? `${currencySymbol}${item.unitPrice.toString()}`
+      : formatCurrency(item.unitPrice, currency);
   }
 
   const focusId =
@@ -314,6 +328,7 @@ function TableCell({
         placeholder={column.cell.placeholder}
         onChange={handleChange}
         className={column.cell.inputClassName}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         style={rowStyle}
       />
