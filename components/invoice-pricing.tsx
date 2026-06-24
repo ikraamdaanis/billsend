@@ -29,6 +29,18 @@ function handleInputBlur(
   // Note: Totals are auto-recalculated by Zustand store actions
 }
 
+// Tracks a pricing field's local input string, refreshing it from the store
+// value whenever the active document is replaced (see reconcilePricingInput).
+function usePricingInput(storeValue: number) {
+  const [input, setInput] = useState(storeValue.toString());
+
+  useEffect(() => {
+    setInput(prev => reconcilePricingInput(prev, storeValue));
+  }, [storeValue]);
+
+  return [input, setInput] as const;
+}
+
 /**
  * Displays the pricing information for the invoice.
  */
@@ -75,11 +87,7 @@ function TaxRow() {
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
 
-  const [taxInput, setTaxInput] = useState(tax.percentage.toString());
-
-  useEffect(() => {
-    setTaxInput(prev => reconcilePricingInput(prev, tax.percentage));
-  }, [tax.percentage]);
+  const [taxInput, setTaxInput] = usePricingInput(tax.percentage);
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
@@ -134,11 +142,7 @@ function FeesRow() {
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
 
-  const [feesInput, setFeesInput] = useState(fees.toString());
-
-  useEffect(() => {
-    setFeesInput(prev => reconcilePricingInput(prev, fees));
-  }, [fees]);
+  const [feesInput, setFeesInput] = usePricingInput(fees);
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
@@ -177,11 +181,7 @@ function DiscountsRow() {
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
 
-  const [discountsInput, setDiscountsInput] = useState(discounts.toString());
-
-  useEffect(() => {
-    setDiscountsInput(prev => reconcilePricingInput(prev, discounts));
-  }, [discounts]);
+  const [discountsInput, setDiscountsInput] = usePricingInput(discounts);
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
