@@ -10,8 +10,12 @@ export function calculateInvoiceTotals(invoice: Invoice): Invoice {
     return { ...item, amount };
   });
 
-  // Calculate the sum of all items
-  const subtotal = itemsWithAmounts.reduce((sum, item) => sum + item.amount, 0);
+  // Calculate the sum of all items, rounded explicitly so floating-point drift
+  // from summing per-item amounts never leaks into the subtotal.
+  const subtotal =
+    Math.round(
+      itemsWithAmounts.reduce((sum, item) => sum + item.amount, 0) * 100
+    ) / 100;
 
   // Calculate tax amount
   const taxAmount =
@@ -21,18 +25,22 @@ export function calculateInvoiceTotals(invoice: Invoice): Invoice {
   const fees = Number(invoice.fees) || 0;
   const discounts = Number(invoice.discounts) || 0;
 
-  // Calculate total
-  const total =
-    Math.round((subtotal + taxAmount + fees - discounts) * 100) / 100;
+  // Calculate total. A discount can never push the grand total below zero: any
+  // discount beyond the chargeable amount (subtotal + tax + fees) is dropped
+  // rather than billed as a negative total.
+  const total = Math.max(
+    0,
+    Math.round((subtotal + taxAmount + fees - discounts) * 100) / 100
+  );
 
   return {
     ...invoice,
     items: itemsWithAmounts,
-    subtotal: subtotal,
+    subtotal,
     tax: {
       ...invoice.tax,
       amount: taxAmount
     },
-    total: total
+    total
   };
 }
