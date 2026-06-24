@@ -2,6 +2,7 @@ import type { Table } from "dexie";
 import Dexie from "dexie";
 import type { Invoice, InvoiceDocument, InvoiceTemplate } from "~/types";
 import { normalizeInvoice } from "~/utils/normalize-invoice";
+import { selectOrphanedImageIds } from "~/utils/select-orphaned-images";
 
 export interface StoredImage {
   id: string;
@@ -321,6 +322,48 @@ export async function getAllImages(): Promise<StoredImage[]> {
     throw createStorageError(
       error,
       "Failed to load images from local storage."
+    );
+  }
+}
+
+/**
+ * Delete image blobs that no saved invoice or template references.
+ *
+ * Pass any image ids that are in use but not yet persisted (e.g. the logo on
+ * the active in-memory invoice) via `keepImageIds` so they survive the sweep.
+ * Best-effort: failures are logged but never thrown, since this is background
+ * garbage collection that must not disrupt the upload/load/reset it follows.
+ */
+export async function cleanupOrphanedImages(
+  keepImageIds: string[] = []
+): Promise<void> {
+  try {
+    await ensureDbReady();
+
+    const [invoices, templates, images] = await Promise.all([
+      db.invoices.toArray(),
+      db.templates.toArray(),
+      db.images.toArray()
+    ]);
+
+    const referencedImageIds = [
+      ...invoices.map(invoice => invoice.invoiceData.image),
+      ...templates.map(template => template.templateData.image)
+    ];
+
+    const orphanedImageIds = selectOrphanedImageIds(
+      images.map(image => image.id),
+      referencedImageIds,
+      keepImageIds
+    );
+
+    if (orphanedImageIds.length === 0) return;
+
+    await db.images.bulkDelete(orphanedImageIds);
+  } catch (error) {
+    console.error(
+      "[InvoiceDatabase] Failed to clean up orphaned images",
+      error
     );
   }
 }

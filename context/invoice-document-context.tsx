@@ -1,6 +1,11 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useMemo, useState } from "react";
-import { getAllInvoices, getInvoice, saveInvoice } from "~/db";
+import {
+  cleanupOrphanedImages,
+  getAllInvoices,
+  getInvoice,
+  saveInvoice
+} from "~/db";
 import { invoiceDefault } from "~/stores/invoice-store";
 import type { Invoice, InvoiceDocument } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
@@ -108,6 +113,10 @@ export async function loadInvoiceDocument(
   setCurrentDocumentId(documentId);
   setCurrentDocumentName(document.name);
   setLastSaved(JSON.parse(JSON.stringify(invoice)));
+
+  // The previously-edited invoice's blob may now be abandoned; sweep orphans,
+  // keeping the freshly loaded document's image.
+  void cleanupOrphanedImages([invoice.image]);
 }
 
 export async function saveCurrentInvoiceAsDocument(
@@ -170,6 +179,10 @@ export function resetToNewInvoice(
   setCurrentDocumentId(null);
   setCurrentDocumentName(null);
   setLastSaved(null);
+
+  // The reset invoice references no image, so any blob not held by a saved
+  // invoice/template is now abandoned and safe to drop.
+  void cleanupOrphanedImages();
 }
 
 // Re-export getAllInvoices for use in components
