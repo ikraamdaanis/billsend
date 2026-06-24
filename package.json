@@ -13,7 +13,9 @@
     "check-types": "tsc --noEmit",
     "preview": "vite preview",
     "deploy": "bun run build && wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "sandcastle:build-image": "sandcastle docker build-image --dockerfile .sandcastle/Dockerfile",
+    "sandcastle": "tsx --env-file=.sandcastle/.env .sandcastle/main.mts"
   },
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-rc.0",
@@ -78,6 +80,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@ai-hero/sandcastle": "^0.10.0",
     "@cloudflare/vite-plugin": "^1.41.0",
     "@eslint/js": "^10.0.1",
     "@tanstack/eslint-config": "^0.4.0",
