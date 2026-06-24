@@ -9,6 +9,7 @@ import {
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
+import { RootErrorBoundary } from "~/components/root-error-boundary";
 import appCss from "~/styles/globals.css?url";
 
 export const Route = createRootRouteWithContext<{
@@ -46,7 +47,8 @@ export const Route = createRootRouteWithContext<{
     ]
   }),
   shellComponent: RootDocument,
-  notFoundComponent: NotFoundComponent
+  notFoundComponent: NotFoundComponent,
+  errorComponent: RootErrorBoundary
 });
 
 function NotFoundComponent() {
