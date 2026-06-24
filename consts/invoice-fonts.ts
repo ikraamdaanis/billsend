@@ -1,6 +1,10 @@
-import type { InvoiceFont, TextRole } from "types";
+import type { InvoiceFont } from "types";
+import type { FontWeight } from "utils/get-font-weight";
 
 export type InvoiceFontCategory = "sans-serif" | "serif" | "monospace";
+
+/** Tighter tracking for monospace faces on invoices. */
+export const MONOSPACE_LETTER_SPACING = "-0.04em";
 
 export interface InvoiceFontDefinition {
   id: InvoiceFont;
@@ -9,7 +13,27 @@ export interface InvoiceFontDefinition {
   cssFamily: string;
   pdfFamily: string;
   previewClassName: string;
+  weights: FontWeight[];
+  letterSpacing?: string;
 }
+
+export const FONT_WEIGHT_OPTIONS: {
+  value: FontWeight;
+  label: string;
+  className: string;
+}[] = [
+  { value: "Normal", label: "Regular", className: "font-normal" },
+  { value: "Medium", label: "Medium", className: "font-medium" },
+  { value: "Semibold", label: "Semibold", className: "font-semibold" },
+  { value: "Bold", label: "Bold", className: "font-bold" }
+];
+
+const STANDARD_WEIGHTS: FontWeight[] = [
+  "Normal",
+  "Medium",
+  "Semibold",
+  "Bold"
+];
 
 export const INVOICE_FONTS: InvoiceFontDefinition[] = [
   {
@@ -18,7 +42,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "sans-serif",
     cssFamily: '"Geist Variable", sans-serif',
     pdfFamily: "Invoice Geist",
-    previewClassName: "font-geist"
+    previewClassName: "font-geist",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "inter",
@@ -26,7 +51,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "sans-serif",
     cssFamily: '"Inter Variable", sans-serif',
     pdfFamily: "Invoice Inter",
-    previewClassName: "font-sans"
+    previewClassName: "font-sans",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "dm-sans",
@@ -34,7 +60,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "sans-serif",
     cssFamily: '"DM Sans Variable", sans-serif',
     pdfFamily: "Invoice DM Sans",
-    previewClassName: "font-dm-sans"
+    previewClassName: "font-dm-sans",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "ibm-plex-sans",
@@ -42,7 +69,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "sans-serif",
     cssFamily: '"IBM Plex Sans Variable", sans-serif',
     pdfFamily: "Invoice IBM Plex Sans",
-    previewClassName: "font-ibm-plex-sans"
+    previewClassName: "font-ibm-plex-sans",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "bricolage-grotesque",
@@ -50,7 +78,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "sans-serif",
     cssFamily: '"Bricolage Grotesque Variable", sans-serif',
     pdfFamily: "Invoice Bricolage Grotesque",
-    previewClassName: "font-bricolage-grotesque"
+    previewClassName: "font-bricolage-grotesque",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "lora",
@@ -58,7 +87,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "serif",
     cssFamily: '"Lora Variable", serif',
     pdfFamily: "Invoice Lora",
-    previewClassName: "font-lora"
+    previewClassName: "font-lora",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "libre-baskerville",
@@ -66,7 +96,8 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "serif",
     cssFamily: '"Libre Baskerville Variable", serif',
     pdfFamily: "Invoice Libre Baskerville",
-    previewClassName: "font-libre-baskerville"
+    previewClassName: "font-libre-baskerville",
+    weights: STANDARD_WEIGHTS
   },
   {
     id: "geist-mono",
@@ -74,7 +105,9 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "monospace",
     cssFamily: '"Geist Mono Variable", monospace',
     pdfFamily: "Invoice Geist Mono",
-    previewClassName: "font-geist-mono"
+    previewClassName: "font-geist-mono",
+    weights: STANDARD_WEIGHTS,
+    letterSpacing: MONOSPACE_LETTER_SPACING
   },
   {
     id: "jetbrains-mono",
@@ -82,7 +115,9 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "monospace",
     cssFamily: '"JetBrains Mono Variable", monospace',
     pdfFamily: "Invoice JetBrains Mono",
-    previewClassName: "font-jetbrains-mono"
+    previewClassName: "font-jetbrains-mono",
+    weights: STANDARD_WEIGHTS,
+    letterSpacing: MONOSPACE_LETTER_SPACING
   },
   {
     id: "ibm-plex-mono",
@@ -90,22 +125,11 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     category: "monospace",
     cssFamily: '"IBM Plex Mono", monospace',
     pdfFamily: "Invoice IBM Plex Mono",
-    previewClassName: "font-ibm-plex-mono"
+    previewClassName: "font-ibm-plex-mono",
+    weights: STANDARD_WEIGHTS,
+    letterSpacing: MONOSPACE_LETTER_SPACING
   }
 ];
-
-
-const NUMBER_FONT_ROLES = new Set<TextRole>([
-  "detailValue",
-  "tableRowCenter",
-  "tableRowRight",
-  "totalsValue",
-  "grandTotalValue"
-]);
-
-export function roleUsesNumberFont(role: TextRole): boolean {
-  return NUMBER_FONT_ROLES.has(role);
-}
 
 export function getInvoiceFontDefinition(
   fontId: InvoiceFont
@@ -113,19 +137,6 @@ export function getInvoiceFontDefinition(
   return INVOICE_FONTS.find(font => font.id === fontId) ?? INVOICE_FONTS[0];
 }
 
-export function resolveInvoiceFont(
-  theme: {
-    font: InvoiceFont;
-    textFontOverride: InvoiceFont | null;
-    numberFontOverride: InvoiceFont | null;
-  },
-  role: TextRole,
-  options?: { useNumberFont?: boolean }
-): InvoiceFontDefinition {
-  const useNumberFont = options?.useNumberFont ?? roleUsesNumberFont(role);
-  const fontId = useNumberFont
-    ? (theme.numberFontOverride ?? theme.font)
-    : (theme.textFontOverride ?? theme.font);
-
-  return getInvoiceFontDefinition(fontId);
+export function getAvailableFontWeights(fontId: InvoiceFont): FontWeight[] {
+  return getInvoiceFontDefinition(fontId).weights;
 }
