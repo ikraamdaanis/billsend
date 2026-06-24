@@ -1,3 +1,4 @@
+import { getAvailableFontWeights } from "consts/invoice-fonts";
 import type {
   Invoice,
   InvoiceFont,
@@ -5,11 +6,11 @@ import type {
   InvoiceTheme,
   TableSettings
 } from "types";
+import type { FontWeight } from "utils/get-font-weight";
 
 export const DEFAULT_INVOICE_THEME: InvoiceTheme = {
   font: "geist",
-  textFontOverride: null,
-  numberFontOverride: null,
+  fontWeight: "Normal",
   size: "medium",
   accent: "#1a1a1a"
 };
@@ -17,6 +18,8 @@ export const DEFAULT_INVOICE_THEME: InvoiceTheme = {
 type LegacyInvoiceTheme = Partial<InvoiceTheme> & {
   textFont?: InvoiceFont;
   numberFont?: InvoiceFont;
+  textFontOverride?: InvoiceFont | null;
+  numberFontOverride?: InvoiceFont | null;
 };
 
 const DEFAULT_COLUMN_LABELS: TableSettings["columnLabels"] = {
@@ -55,34 +58,18 @@ type LegacyInvoice = Omit<Invoice, "theme" | "tableSettings" | "labels"> & {
   labels?: Partial<InvoiceLabels>;
 };
 
-function isLegacyTheme(theme: LegacyInvoiceTheme): boolean {
-  return (
-    theme.textFont !== undefined &&
-    theme.font === undefined &&
-    theme.textFontOverride === undefined
-  );
-}
-
 function normalizeTheme(theme: LegacyInvoiceTheme = {}): InvoiceTheme {
-  if (!isLegacyTheme(theme)) {
-    return {
-      ...DEFAULT_INVOICE_THEME,
-      ...theme,
-      textFontOverride: theme.textFontOverride ?? null,
-      numberFontOverride: theme.numberFontOverride ?? null
-    };
-  }
-
-  const font = theme.textFont ?? DEFAULT_INVOICE_THEME.font;
-  const legacyNumber = theme.numberFont;
+  const font = theme.font ?? theme.textFont ?? DEFAULT_INVOICE_THEME.font;
+  const fontWeight = theme.fontWeight ?? DEFAULT_INVOICE_THEME.fontWeight;
+  const availableWeights = getAvailableFontWeights(font);
 
   return {
-    size: theme.size ?? DEFAULT_INVOICE_THEME.size,
-    accent: theme.accent ?? DEFAULT_INVOICE_THEME.accent,
     font,
-    textFontOverride: null,
-    numberFontOverride:
-      legacyNumber && legacyNumber !== font ? legacyNumber : null
+    fontWeight: availableWeights.includes(fontWeight)
+      ? fontWeight
+      : DEFAULT_INVOICE_THEME.fontWeight,
+    size: theme.size ?? DEFAULT_INVOICE_THEME.size,
+    accent: theme.accent ?? DEFAULT_INVOICE_THEME.accent
   };
 }
 

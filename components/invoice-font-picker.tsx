@@ -1,12 +1,13 @@
 import {
   MenubarRadioGroup,
   MenubarRadioItem,
-  MenubarSeparator,
   MenubarSub,
   MenubarSubContent,
   MenubarSubTrigger
 } from "components/ui/menubar";
 import {
+  FONT_WEIGHT_OPTIONS,
+  getAvailableFontWeights,
   getInvoiceFontDefinition,
   INVOICE_FONTS,
   type InvoiceFontDefinition
@@ -14,80 +15,68 @@ import {
 import { cn } from "lib/utils";
 import { useThemeSlice } from "stores/invoice-selectors";
 import type { InvoiceFont } from "types";
+import type { FontWeight } from "utils/get-font-weight";
 
-const FONT_OVERRIDE_DEFAULT = "__default__";
-
-export function InvoiceFontPickerMenu() {
+export function InvoiceFontFamilyMenu() {
   const { theme, setTheme } = useThemeSlice();
 
   return (
     <MenubarSub>
-      <MenubarSubTrigger>Typography</MenubarSubTrigger>
+      <MenubarSubTrigger>Font</MenubarSubTrigger>
       <MenubarSubContent className="w-52 p-1">
         <MenubarRadioGroup
           value={theme.font}
-          onValueChange={value =>
-            setTheme(prev => ({ ...prev, font: value as InvoiceFont }))
-          }
+          onValueChange={value => {
+            const font = value as InvoiceFont;
+            const available = getAvailableFontWeights(font);
+
+            setTheme(prev => ({
+              ...prev,
+              font,
+              fontWeight: available.includes(prev.fontWeight)
+                ? prev.fontWeight
+                : "Normal"
+            }));
+          }}
         >
           {INVOICE_FONTS.map(font => (
-            <FontMenuItem key={font.id} font={font} />
+            <FontFamilyMenuItem key={font.id} font={font} />
           ))}
         </MenubarRadioGroup>
-        <MenubarSeparator className="my-1" />
-        <FontOverrideSub
-          label="Text"
-          value={theme.textFontOverride}
-          onChange={value =>
-            setTheme(prev => ({ ...prev, textFontOverride: value }))
-          }
-        />
-        <FontOverrideSub
-          label="Numbers"
-          value={theme.numberFontOverride}
-          onChange={value =>
-            setTheme(prev => ({ ...prev, numberFontOverride: value }))
-          }
-        />
       </MenubarSubContent>
     </MenubarSub>
   );
 }
 
-function FontOverrideSub({
-  label,
-  value,
-  onChange
-}: {
-  label: string;
-  value: InvoiceFont | null;
-  onChange: (value: InvoiceFont | null) => void;
-}) {
-  const activeLabel = value
-    ? getInvoiceFontDefinition(value).name
-    : "Same as default";
+export function InvoiceFontWeightMenu() {
+  const { theme, setTheme } = useThemeSlice();
+  const font = getInvoiceFontDefinition(theme.font);
+  const weights = FONT_WEIGHT_OPTIONS.filter(option =>
+    getAvailableFontWeights(theme.font).includes(option.value)
+  );
 
   return (
     <MenubarSub>
-      <MenubarSubTrigger className="w-full items-center justify-between">
-        <span>{label}</span>
-        <span className="text-muted-foreground truncate">{activeLabel}</span>
-      </MenubarSubTrigger>
+      <MenubarSubTrigger>Weight</MenubarSubTrigger>
       <MenubarSubContent className="w-52 p-1">
         <MenubarRadioGroup
-          value={value ?? FONT_OVERRIDE_DEFAULT}
-          onValueChange={next =>
-            onChange(
-              next === FONT_OVERRIDE_DEFAULT ? null : (next as InvoiceFont)
-            )
+          value={theme.fontWeight}
+          onValueChange={value =>
+            setTheme(prev => ({
+              ...prev,
+              fontWeight: value as FontWeight
+            }))
           }
         >
-          <MenubarRadioItem value={FONT_OVERRIDE_DEFAULT} closeOnClick={false}>
-            Same as default
-          </MenubarRadioItem>
-          <MenubarSeparator className="my-1" />
-          {INVOICE_FONTS.map(font => (
-            <FontMenuItem key={font.id} font={font} />
+          {weights.map(weight => (
+            <MenubarRadioItem
+              key={weight.value}
+              value={weight.value}
+              closeOnClick={false}
+              className={cn(font.previewClassName, weight.className)}
+            >
+              {weight.label}
+            </MenubarRadioItem>
           ))}
         </MenubarRadioGroup>
       </MenubarSubContent>
@@ -95,7 +84,7 @@ function FontOverrideSub({
   );
 }
 
-function FontMenuItem({ font }: { font: InvoiceFontDefinition }) {
+function FontFamilyMenuItem({ font }: { font: InvoiceFontDefinition }) {
   return (
     <MenubarRadioItem
       value={font.id}

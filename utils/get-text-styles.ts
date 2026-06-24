@@ -3,6 +3,26 @@ import type { FontWeight } from "utils/get-font-weight";
 import { getFontWeight } from "utils/get-font-weight";
 import { scaleFontSize } from "utils/scale-font-size";
 
+function resolveLetterSpacing(
+  letterSpacing: string | undefined,
+  fontSize: number,
+  isPdf: boolean
+): string | number | undefined {
+  if (!letterSpacing) {
+    return undefined;
+  }
+
+  if (!isPdf) {
+    return letterSpacing;
+  }
+
+  if (letterSpacing.endsWith("em")) {
+    return parseFloat(letterSpacing) * fontSize;
+  }
+
+  return letterSpacing;
+}
+
 export function getTextStyles({
   settings,
   remove = [],
@@ -12,15 +32,23 @@ export function getTextStyles({
   remove?: (keyof TextSettings)[];
   isPdf?: boolean;
 }) {
+  const fontSize = isPdf
+    ? scaleFontSize(settings.size || 0)
+    : Number.parseFloat(settings.size || "0");
   const styles: Record<string, string | number | undefined> = {
     color: settings.color,
-    fontSize: isPdf ? scaleFontSize(settings.size || 0) : `${settings.size}px`,
+    fontSize: isPdf ? fontSize : `${settings.size}px`,
     fontWeight: getFontWeight(settings.weight as FontWeight),
     textAlign: settings.align,
     fontFamily: settings.fontFamily,
     fontVariantNumeric: settings.fontFamily?.includes("mono")
       ? "tabular-nums"
-      : undefined
+      : undefined,
+    letterSpacing: resolveLetterSpacing(
+      settings.letterSpacing,
+      fontSize,
+      isPdf
+    )
   };
 
   if (remove.includes("color")) {

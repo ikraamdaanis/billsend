@@ -69,6 +69,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
           style={{
             ...CANVAS_STATIC_STYLES,
             fontFamily: baseFont.cssFamily,
+            letterSpacing: baseFont.letterSpacing,
             transform: `scale(${zoom})`,
             transformOrigin: "top left"
           }}
