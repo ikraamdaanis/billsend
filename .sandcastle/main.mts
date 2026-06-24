@@ -380,14 +380,21 @@ function openPr(args: {
   closesIssue?: number;
   labels?: string[];
 }): string {
-  const labelFlags = (args.labels ?? [])
-    .map(label => `--label ${shellQuote(label)}`)
-    .join(" ");
   const url = sh(
     `gh pr create --base ${args.base} --head ${args.head} ` +
-      `--title ${shellQuote(args.title)} --body ${shellQuote(args.body)}` +
-      (labelFlags ? ` ${labelFlags}` : "")
+      `--title ${shellQuote(args.title)} --body ${shellQuote(args.body)}`
   ).trim();
+
+  // Apply labels best-effort. The PR and its pushed branch already exist by
+  // this point, so a label that is missing from the repo must never abort the
+  // run (that would strand the branch and the agent's work). Skip any that fail.
+  for (const label of args.labels ?? []) {
+    try {
+      sh(`gh pr edit ${url} --add-label ${shellQuote(label)}`);
+    } catch {
+      console.warn(`  skipped label '${label}' (not found in repo) on ${url}`);
+    }
+  }
 
   if (args.mergeMode === "auto") {
     mergePrAndCloseIssue({
