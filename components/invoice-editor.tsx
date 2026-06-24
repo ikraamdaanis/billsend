@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { CustomCurrencyDialog } from "components/custom-currency-dialog";
 import { DownloadInvoice } from "components/download-invoice";
-import { InvoiceFontPickerMenu } from "components/invoice-font-picker";
+import { InvoiceFontFamilyMenu, InvoiceFontWeightMenu } from "components/invoice-font-picker";
 import { InvoiceCanvas } from "components/invoice-canvas";
 import { InvoiceClientDetails } from "components/invoice-client-details";
 import { InvoiceDetails } from "components/invoice-details";
@@ -219,7 +219,8 @@ function EditMenu() {
               </MenubarItem>
             </MenubarSubContent>
           </MenubarSub>
-          <InvoiceFontPickerMenu />
+          <InvoiceFontFamilyMenu />
+          <InvoiceFontWeightMenu />
           <MenubarSub>
             <MenubarSubTrigger>Size</MenubarSubTrigger>
             <MenubarSubContent className="w-auto">

@@ -1,7 +1,17 @@
-import { resolveInvoiceFont } from "consts/invoice-fonts";
+import { getAvailableFontWeights, getInvoiceFontDefinition } from "consts/invoice-fonts";
 import type { InvoiceTheme, TextRole, TextSettings } from "types";
+import type { FontWeight } from "utils/get-font-weight";
 
 const DEFAULT_FONT_COLOUR = "#1a1a1a";
+
+const WEIGHT_STEPS: FontWeight[] = ["Normal", "Medium", "Semibold", "Bold"];
+
+const ROLE_WEIGHT_OFFSET: Record<FontWeight, number> = {
+  Normal: 0,
+  Medium: 1,
+  Semibold: 2,
+  Bold: 3
+};
 
 // Proportional type scale. Medium reproduces the original per-field sizes;
 // small and large scale every role together so the hierarchy stays intact.
@@ -60,24 +70,37 @@ const ROLE_BASE: Record<TextRole, RoleBase> = {
   }
 };
 
+function resolveRoleWeight(
+  theme: InvoiceTheme,
+  roleWeight: TextSettings["weight"]
+): TextSettings["weight"] {
+  const themeIndex = WEIGHT_STEPS.indexOf(theme.fontWeight);
+  const targetIndex = themeIndex + ROLE_WEIGHT_OFFSET[roleWeight];
+
+  return WEIGHT_STEPS[Math.min(targetIndex, WEIGHT_STEPS.length - 1)];
+}
+
 /**
  * Derive the concrete text styling for a role from the global invoice theme.
  * Returns a TextSettings so it drops straight into getTextStyles / pdfStyle.
  */
 export function getRoleSettings(
   theme: InvoiceTheme,
-  role: TextRole,
-  options?: { useNumberFont?: boolean }
+  role: TextRole
 ): TextSettings {
   const base = ROLE_BASE[role];
-  const font = resolveInvoiceFont(theme, role, options);
+  const font = getInvoiceFontDefinition(theme.font);
+  const weight = resolveRoleWeight(theme, base.weight);
+  const availableWeights = getAvailableFontWeights(theme.font);
+  const resolvedWeight = availableWeights.includes(weight) ? weight : "Normal";
 
   return {
     align: base.align,
     size: String(Math.round(base.size * SIZE_FACTOR[theme.size])),
-    weight: base.weight,
+    weight: resolvedWeight,
     color: base.accent ? theme.accent : DEFAULT_FONT_COLOUR,
     fontFamily: font.cssFamily,
-    pdfFontFamily: font.pdfFamily
+    pdfFontFamily: font.pdfFamily,
+    letterSpacing: font.letterSpacing
   };
 }

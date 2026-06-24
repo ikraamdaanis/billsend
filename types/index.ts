@@ -5,6 +5,7 @@ export type TextSettings = {
   color: string;
   fontFamily?: string;
   pdfFontFamily?: string;
+  letterSpacing?: string;
 };
 
 export type TableSettings = {
@@ -45,8 +46,7 @@ export type InvoiceSize = "small" | "medium" | "large";
 
 export type InvoiceTheme = {
   font: InvoiceFont;
-  textFontOverride: InvoiceFont | null;
-  numberFontOverride: InvoiceFont | null;
+  fontWeight: TextSettings["weight"];
   size: InvoiceSize;
   accent: string;
 };
