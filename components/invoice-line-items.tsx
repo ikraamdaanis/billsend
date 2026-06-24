@@ -1,17 +1,17 @@
-import { InvoiceInput } from "components/invoice-input";
-import { Button } from "components/ui/button";
-import { formatCurrency } from "consts/currencies";
-import { cn } from "lib/utils";
 import { MinusIcon, PlusIcon } from "lucide-react";
 import type { ChangeEvent } from "react";
+import { InvoiceInput } from "~/components/invoice-input";
+import { Button } from "~/components/ui/button";
+import { formatCurrency } from "~/consts/currencies";
+import { cn } from "~/lib/utils";
 import {
   useCurrencySymbol,
   useLineItemsSlice,
   useTheme
-} from "stores/invoice-selectors";
-import type { InvoiceItem, TableSettings, TextRole } from "types";
-import { getRoleSettings } from "utils/get-role-settings";
-import { getTextStyles } from "utils/get-text-styles";
+} from "~/stores/invoice-selectors";
+import type { InvoiceItem, TableSettings, TextRole } from "~/types";
+import { getRoleSettings } from "~/utils/get-role-settings";
+import { getTextStyles } from "~/utils/get-text-styles";
 
 type LineItemFieldKey = "description" | "quantity" | "unitPrice";
 

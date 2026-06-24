@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "components/ui/button";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
@@ -11,6 +10,7 @@ import {
   ShieldCheck,
   WifiOff
 } from "lucide-react";
+import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 

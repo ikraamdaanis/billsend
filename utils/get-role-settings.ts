@@ -1,6 +1,9 @@
-import { getAvailableFontWeights, getInvoiceFontDefinition } from "consts/invoice-fonts";
-import type { InvoiceTheme, TextRole, TextSettings } from "types";
-import type { FontWeight } from "utils/get-font-weight";
+import {
+  getAvailableFontWeights,
+  getInvoiceFontDefinition
+} from "~/consts/invoice-fonts";
+import type { InvoiceTheme, TextRole, TextSettings } from "~/types";
+import type { FontWeight } from "~/utils/get-font-weight";
 
 const DEFAULT_FONT_COLOUR = "#1a1a1a";
 

@@ -1,4 +1,7 @@
 import { addDays, format } from "date-fns";
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 import type {
   Invoice,
   InvoiceClient,
@@ -9,15 +12,12 @@ import type {
   InvoiceTheme,
   PdfSettings,
   TableSettings
-} from "types";
-import { calculateInvoiceTotals } from "utils/calculate-invoice-totals";
+} from "~/types";
+import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 import {
   DEFAULT_INVOICE_THEME,
   normalizeInvoice
-} from "utils/normalize-invoice";
-import { create } from "zustand";
-import { subscribeWithSelector } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
+} from "~/utils/normalize-invoice";
 
 export const invoiceDefault: Invoice = {
   id: "1",

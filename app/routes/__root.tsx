@@ -9,7 +9,7 @@ import {
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
-import appCss from "styles/globals.css?url";
+import appCss from "~/styles/globals.css?url";
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;

@@ -1,4 +1,6 @@
-import { Button } from "components/ui/button";
+import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,10 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "components/ui/dialog";
-import { Input } from "components/ui/input";
-import type { FormEvent } from "react";
-import { useEffect, useState } from "react";
+} from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
 
 /**
  * Lets the user type a free-form currency symbol (up to 4 characters) for the

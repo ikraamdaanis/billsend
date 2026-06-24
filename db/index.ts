@@ -1,7 +1,7 @@
 import type { Table } from "dexie";
 import Dexie from "dexie";
-import type { Invoice, InvoiceDocument, InvoiceTemplate } from "types";
-import { normalizeInvoice } from "utils/normalize-invoice";
+import type { Invoice, InvoiceDocument, InvoiceTemplate } from "~/types";
+import { normalizeInvoice } from "~/utils/normalize-invoice";
 
 export interface StoredImage {
   id: string;
@@ -65,6 +65,12 @@ function getFriendlyIndexedDbErrorMessage(error: unknown): string {
   if (message) return message;
 
   return "Unable to access local storage. Please check your browser settings and ensure IndexedDB is enabled.";
+}
+
+function createStorageError(error: unknown, fallbackMessage: string): Error {
+  return new Error(error instanceof Error ? error.message : fallbackMessage, {
+    cause: error
+  });
 }
 
 /**
@@ -164,14 +170,17 @@ async function ensureDbReady(): Promise<void> {
         const message = getErrorMessage(error);
 
         throw new Error(
-          `Database migration failed. Your data is safe, but the app cannot start. Please refresh the page.${message ? ` (${message})` : ""}`
+          `Database migration failed. Your data is safe, but the app cannot start. Please refresh the page.${message ? ` (${message})` : ""}`,
+          { cause: error }
         );
       }
 
       // Log raw error for debugging without breaking UX messaging.
       console.error("[InvoiceDatabase] Failed to open IndexedDB", error);
 
-      throw new Error(getFriendlyIndexedDbErrorMessage(error));
+      throw new Error(getFriendlyIndexedDbErrorMessage(error), {
+        cause: error
+      });
     } finally {
       dbOpenPromise = null;
     }
@@ -185,10 +194,9 @@ export async function getAllTemplates(): Promise<InvoiceTemplate[]> {
     await ensureDbReady();
     return await db.templates.toArray();
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load templates from local storage."
+    throw createStorageError(
+      error,
+      "Failed to load templates from local storage."
     );
   }
 }
@@ -198,10 +206,9 @@ export async function saveTemplate(template: InvoiceTemplate): Promise<string> {
     await ensureDbReady();
     return await db.templates.put(template);
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to save template to local storage."
+    throw createStorageError(
+      error,
+      "Failed to save template to local storage."
     );
   }
 }
@@ -211,10 +218,9 @@ export async function deleteTemplate(id: string): Promise<void> {
     await ensureDbReady();
     await db.templates.delete(id);
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to delete template from local storage."
+    throw createStorageError(
+      error,
+      "Failed to delete template from local storage."
     );
   }
 }
@@ -224,10 +230,9 @@ export async function getAllInvoices(): Promise<InvoiceDocument[]> {
     await ensureDbReady();
     return await db.invoices.toArray();
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load invoices from local storage."
+    throw createStorageError(
+      error,
+      "Failed to load invoices from local storage."
     );
   }
 }
@@ -237,11 +242,7 @@ export async function saveInvoice(invoice: InvoiceDocument): Promise<string> {
     await ensureDbReady();
     return await db.invoices.put(invoice);
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to save invoice to local storage."
-    );
+    throw createStorageError(error, "Failed to save invoice to local storage.");
   }
 }
 
@@ -252,10 +253,9 @@ export async function getInvoice(
     await ensureDbReady();
     return await db.invoices.get(id);
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load invoice from local storage."
+    throw createStorageError(
+      error,
+      "Failed to load invoice from local storage."
     );
   }
 }
@@ -265,10 +265,9 @@ export async function deleteInvoice(id: string): Promise<void> {
     await ensureDbReady();
     await db.invoices.delete(id);
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to delete invoice from local storage."
+    throw createStorageError(
+      error,
+      "Failed to delete invoice from local storage."
     );
   }
 }
@@ -298,11 +297,7 @@ export async function saveImage(
     }
     return id;
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to save image to local storage."
-    );
+    throw createStorageError(error, "Failed to save image to local storage.");
   }
 }
 
@@ -311,10 +306,9 @@ export async function deleteImage(id: string): Promise<void> {
     await ensureDbReady();
     await db.images.delete(id);
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to delete image from local storage."
+    throw createStorageError(
+      error,
+      "Failed to delete image from local storage."
     );
   }
 }
@@ -324,10 +318,9 @@ export async function getAllImages(): Promise<StoredImage[]> {
     await ensureDbReady();
     return await db.images.toArray();
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load images from local storage."
+    throw createStorageError(
+      error,
+      "Failed to load images from local storage."
     );
   }
 }
@@ -342,10 +335,6 @@ export async function getImageBlob(id: string): Promise<Blob | null> {
     // Convert ArrayBuffer back to Blob
     return new Blob([image.data], { type: image.type });
   } catch (error) {
-    throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Failed to load image from local storage."
-    );
+    throw createStorageError(error, "Failed to load image from local storage.");
   }
 }

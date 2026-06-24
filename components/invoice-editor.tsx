@@ -1,19 +1,24 @@
 import { Link } from "@tanstack/react-router";
-import { CustomCurrencyDialog } from "components/custom-currency-dialog";
-import { DownloadInvoice } from "components/download-invoice";
-import { InvoiceFontFamilyMenu, InvoiceFontWeightMenu } from "components/invoice-font-picker";
-import { InvoiceCanvas } from "components/invoice-canvas";
-import { InvoiceClientDetails } from "components/invoice-client-details";
-import { InvoiceDetails } from "components/invoice-details";
-import { InvoiceFileMenu } from "components/invoice-file-menu";
-import { InvoiceImage } from "components/invoice-image";
-import { InvoiceLineItems } from "components/invoice-line-items";
-import { InvoicePricing } from "components/invoice-pricing";
-import { InvoiceSellerDetails } from "components/invoice-seller-details";
-import { InvoiceTerms } from "components/invoice-terms";
-import { InvoiceTitle } from "components/invoice-title";
-import { RenameInvoiceDialog } from "components/rename-invoice-dialog";
-import { Button } from "components/ui/button";
+import { useState } from "react";
+import { toast } from "sonner";
+import { CustomCurrencyDialog } from "~/components/custom-currency-dialog";
+import { DownloadInvoice } from "~/components/download-invoice";
+import { InvoiceCanvas } from "~/components/invoice-canvas";
+import { InvoiceClientDetails } from "~/components/invoice-client-details";
+import { InvoiceDetails } from "~/components/invoice-details";
+import { InvoiceFileMenu } from "~/components/invoice-file-menu";
+import {
+  InvoiceFontFamilyMenu,
+  InvoiceFontWeightMenu
+} from "~/components/invoice-font-picker";
+import { InvoiceImage } from "~/components/invoice-image";
+import { InvoiceLineItems } from "~/components/invoice-line-items";
+import { InvoicePricing } from "~/components/invoice-pricing";
+import { InvoiceSellerDetails } from "~/components/invoice-seller-details";
+import { InvoiceTerms } from "~/components/invoice-terms";
+import { InvoiceTitle } from "~/components/invoice-title";
+import { RenameInvoiceDialog } from "~/components/rename-invoice-dialog";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +26,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "components/ui/dialog";
+} from "~/components/ui/dialog";
 import {
   Menubar,
   MenubarContent,
@@ -34,15 +39,16 @@ import {
   MenubarSubContent,
   MenubarSubTrigger,
   MenubarTrigger
-} from "components/ui/menubar";
-import { currencyOptions, normalizeCurrency } from "consts/currencies";
-import { CanvasViewProvider, useCanvasView } from "context/canvas-view-context";
-import { useInvoiceDocument } from "context/invoice-document-context";
-import { getInvoice, saveInvoice } from "db";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useCurrencySlice, useThemeSlice } from "stores/invoice-selectors";
-import type { InvoiceSize } from "types";
+} from "~/components/ui/menubar";
+import { currencyOptions, normalizeCurrency } from "~/consts/currencies";
+import {
+  CanvasViewProvider,
+  useCanvasView
+} from "~/context/canvas-view-context";
+import { useInvoiceDocument } from "~/context/invoice-document-context";
+import { getInvoice, saveInvoice } from "~/db";
+import { useCurrencySlice, useThemeSlice } from "~/stores/invoice-selectors";
+import type { InvoiceSize } from "~/types";
 
 const TOOLBAR_HEIGHT = 64;
 
