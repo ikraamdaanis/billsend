@@ -10,5 +10,6 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false
   },
-  "include": ["**/*.mts", "**/*.ts"]
+  "include": ["*.mts", "*.ts"],
+  "exclude": ["worktrees", "logs"]
 }
