@@ -34,10 +34,8 @@
 //   npx tsx .sandcastle/main.ts
 
 import * as sandcastle from "@ai-hero/sandcastle";
-import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
+import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
 import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { homedir } from "node:os";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -45,39 +43,34 @@ import { homedir } from "node:os";
 
 const MAX_ITERATIONS = 50;
 
+// We run with the `no-sandbox` provider rather than docker. On macOS, docker's
+// worktree mode bind-mounts the host worktree at a different container path
+// (/home/agent/workspace) while sharing the repo's .git, and the in-container
+// git rewrites the shared worktree gitdir pointer to the container path. That
+// leaves the host unable to recognise its own worktree ("is not a working
+// tree") and breaks every iteration. no-sandbox runs the agent directly in the
+// host worktree, so the agent's cwd and git's recorded path always agree.
+//
+// Trade-off: no container isolation. The agent runs on the host with
+// `bypassPermissions`, scoped to a per-issue git worktree under
+// .sandcastle/worktrees/. Acceptable for a personal repo; revisit if isolation
+// is needed (would require fixing docker's worktree path handling on macOS).
+//
+// `bun install` runs in each freshly-created worktree because node_modules is
+// gitignored and therefore absent from a new worktree checkout. The host bun
+// cache keeps this fast.
+const sandbox = noSandbox();
+const agent = sandcastle.claudeCode("claude-opus-4-8", {
+  permissionMode: "bypassPermissions"
+});
+
 const hooks = {
-  sandbox: {
-    onSandboxReady: [{ command: "bun install", timeoutMs: 300_000 }]
+  host: {
+    onWorktreeReady: [{ command: "bun install", timeoutMs: 300_000 }]
   }
 };
 
 const copyToWorktree: string[] = [];
-
-// Bind-mount the host's bun cache so `bun install` inside the container reuses
-// already-downloaded tarballs. Without this, a fresh install of a 1100+ package
-// project blows the hardcoded 60s onSandboxReady hook timeout.
-//
-// Also bind-mount the operator's global `~/.claude/CLAUDE.md` (if present) so
-// the in-container Claude Code agent applies their personal preferences on top
-// of the project's CLAUDE.md, the same way it does on the host. Read-only so
-// the agent can't modify host preferences. Mount the single file rather than
-// `~/.claude/` to avoid exposing memory, session transcripts, settings.json
-// (which holds API keys / MCP credentials), and other unrelated state. The
-// mount is skipped when the file is missing because sandcastle errors out at
-// sandbox creation if a hostPath does not exist.
-const globalClaudeMd = `${homedir()}/.claude/CLAUDE.md`;
-const sandboxMounts = [
-  { hostPath: "~/.bun/install/cache", sandboxPath: "~/.bun/install/cache" },
-  ...(existsSync(globalClaudeMd)
-    ? [
-        {
-          hostPath: "~/.claude/CLAUDE.md",
-          sandboxPath: "~/.claude/CLAUDE.md",
-          readonly: true
-        }
-      ]
-    : [])
-];
 
 const HOST_BRANCH = sh("git rev-parse --abbrev-ref HEAD").trim();
 
@@ -642,19 +635,17 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
 
   const childBranch = `sandcastle/issue-${issue.number}-${stamp()}`;
 
-  // Pre-create the child branch from plan.base. sandcastle's
-  // WorktreeDockerSandboxFactory drops `baseBranch` from branchStrategy
-  // (SandboxFactory.js calls WorktreeManager.create with { branch } only),
-  // so its fallback path forks from the host's HEAD, which is always
-  // `main` here. Creating the branch up front means sandcastle attaches to
-  // the existing ref instead of taking the buggy fallback.
+  // Pre-create the child branch from plan.base so the worktree is guaranteed
+  // to fork from the intended base (the PRD feature branch for children, main
+  // for standalone issues) rather than whatever HEAD happens to be. sandcastle
+  // then attaches its worktree to this existing ref.
   sh(`git branch ${childBranch} ${plan.base}`);
 
   // Phase 1: implement
   const implement = await sandcastle.run({
     hooks,
     copyToWorktree,
-    sandbox: docker({ mounts: sandboxMounts }),
+    sandbox,
     branchStrategy: {
       type: "branch",
       branch: childBranch,
@@ -663,7 +654,7 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
     name: `implementer-${issue.number}`,
     maxIterations: 100,
     idleTimeoutSeconds: 1200,
-    agent: sandcastle.claudeCode("claude-opus-4-8"),
+    agent,
     promptFile: "./.sandcastle/implement-prompt.md",
     promptArgs: { ISSUE: String(issue.number) }
   });
@@ -677,12 +668,12 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
   await sandcastle.run({
     hooks,
     copyToWorktree,
-    sandbox: docker({ mounts: sandboxMounts }),
+    sandbox,
     branchStrategy: { type: "branch", branch: childBranch },
     name: `reviewer-${issue.number}`,
     maxIterations: 1,
     idleTimeoutSeconds: 1200,
-    agent: sandcastle.claudeCode("claude-opus-4-8"),
+    agent,
     promptFile: "./.sandcastle/review-prompt.md",
     promptArgs: { BRANCH: childBranch, BASE_BRANCH: plan.base }
   });
