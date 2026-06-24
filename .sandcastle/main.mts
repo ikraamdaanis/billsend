@@ -667,7 +667,7 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
     copyToWorktree
   });
 
-  let implementedCommits = 0;
+  let implementedCommits: number;
 
   try {
     // Phase 1: implement
