@@ -34,8 +34,11 @@
 //   npx tsx .sandcastle/main.ts
 
 import * as sandcastle from "@ai-hero/sandcastle";
-import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
+import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 import { execSync } from "node:child_process";
+import { existsSync, rmSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -43,30 +46,41 @@ import { execSync } from "node:child_process";
 
 const MAX_ITERATIONS = 50;
 
-// We run with the `no-sandbox` provider rather than docker. On macOS, docker's
-// worktree mode bind-mounts the host worktree at a different container path
-// (/home/agent/workspace) while sharing the repo's .git, and the in-container
-// git rewrites the shared worktree gitdir pointer to the container path. That
-// leaves the host unable to recognise its own worktree ("is not a working
-// tree") and breaks every iteration. no-sandbox runs the agent directly in the
-// host worktree, so the agent's cwd and git's recorded path always agree.
+// Each issue is implemented and reviewed inside a docker container, isolated
+// from the host, on its own git worktree/branch. This follows sandcastle's
+// recommended pattern (the shipped sequential-reviewer template): one sandbox
+// per issue via createSandbox(), shared by both phases, torn down by close().
 //
-// Trade-off: no container isolation. The agent runs on the host with
-// `bypassPermissions`, scoped to a per-issue git worktree under
-// .sandcastle/worktrees/. Acceptable for a personal repo; revisit if isolation
-// is needed (would require fixing docker's worktree path handling on macOS).
+// `bun install` runs inside the container on sandbox start. The host bun cache
+// is bind-mounted so install resolves from already-downloaded tarballs instead
+// of re-fetching 1100+ packages, which would blow the hook timeout. We do NOT
+// copyToWorktree node_modules: at ~1.1GB the host-side copy is slow on macOS
+// and risks the copy timeout, and the cache-backed in-container install is both
+// correct (Linux-native binaries) and fast.
 //
-// `bun install` runs in each freshly-created worktree because node_modules is
-// gitignored and therefore absent from a new worktree checkout. The host bun
-// cache keeps this fast.
-const sandbox = noSandbox();
-const agent = sandcastle.claudeCode("claude-opus-4-8", {
-  permissionMode: "bypassPermissions"
-});
+// The operator's global ~/.claude/CLAUDE.md is mounted read-only so the
+// in-container agent applies personal preferences on top of the project's
+// CLAUDE.md. Mounting the single file (not ~/.claude/) avoids exposing session
+// state, settings.json (API keys / MCP creds), and other unrelated state.
+const globalClaudeMd = `${homedir()}/.claude/CLAUDE.md`;
+const sandboxMounts = [
+  { hostPath: "~/.bun/install/cache", sandboxPath: "~/.bun/install/cache" },
+  ...(existsSync(globalClaudeMd)
+    ? [
+        {
+          hostPath: "~/.claude/CLAUDE.md",
+          sandboxPath: "~/.claude/CLAUDE.md",
+          readonly: true
+        }
+      ]
+    : [])
+];
+
+const agent = sandcastle.claudeCode("claude-opus-4-8");
 
 const hooks = {
-  host: {
-    onWorktreeReady: [{ command: "bun install", timeoutMs: 300_000 }]
+  sandbox: {
+    onSandboxReady: [{ command: "bun install", timeoutMs: 300_000 }]
   }
 };
 
@@ -436,13 +450,9 @@ function mergePrAndCloseIssue(args: {
   closesIssue?: number;
 }) {
   // `gh pr merge --delete-branch` also tries to delete the local branch,
-  // which fails while the branch is still checked out in sandcastle's
-  // worktree. Remove the worktree first so the local cleanup succeeds.
-  const worktree = worktreePathForBranch(args.head);
-
-  if (worktree) {
-    sh(`git worktree remove --force ${worktree}`);
-  }
+  // which fails while the branch is still checked out in a worktree. Tear the
+  // worktree down first so the local cleanup succeeds.
+  tearDownWorktree(args.head);
 
   sh(`gh pr merge ${args.url} --rebase --delete-branch`);
 
@@ -635,48 +645,57 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
 
   const childBranch = `sandcastle/issue-${issue.number}-${stamp()}`;
 
-  // Pre-create the child branch from plan.base so the worktree is guaranteed
-  // to fork from the intended base (the PRD feature branch for children, main
-  // for standalone issues) rather than whatever HEAD happens to be. sandcastle
-  // then attaches its worktree to this existing ref.
-  sh(`git branch ${childBranch} ${plan.base}`);
-
-  // Phase 1: implement
-  const implement = await sandcastle.run({
+  // One docker sandbox per issue, shared by the implement and review phases and
+  // torn down in `finally`. createSandbox owns a dedicated git worktree on
+  // childBranch, forked from plan.base (the PRD feature branch for children,
+  // main for standalone issues). This mirrors the shipped sequential-reviewer
+  // template; letting sandcastle own the worktree lifecycle (rather than
+  // pre-creating the branch and removing the worktree by hand) is what keeps
+  // the worktree's git metadata consistent across the docker mount boundary.
+  const sandbox = await sandcastle.createSandbox({
+    branch: childBranch,
+    baseBranch: plan.base,
+    sandbox: docker({ mounts: sandboxMounts }),
     hooks,
-    copyToWorktree,
-    sandbox,
-    branchStrategy: {
-      type: "branch",
-      branch: childBranch,
-      baseBranch: plan.base
-    },
-    name: `implementer-${issue.number}`,
-    maxIterations: 100,
-    idleTimeoutSeconds: 1200,
-    agent,
-    promptFile: "./.sandcastle/implement-prompt.md",
-    promptArgs: { ISSUE: String(issue.number) }
+    copyToWorktree
   });
 
-  if (!implement.commits.length) {
-    console.log(`Implementer made no commits for #${issue.number}. Skipping.`);
-    continue;
+  let implementedCommits = 0;
+
+  try {
+    // Phase 1: implement
+    const implement = await sandbox.run({
+      name: `implementer-${issue.number}`,
+      maxIterations: 100,
+      idleTimeoutSeconds: 1200,
+      agent,
+      promptFile: "./.sandcastle/implement-prompt.md",
+      promptArgs: { ISSUE: String(issue.number) }
+    });
+
+    implementedCommits = implement.commits.length;
+
+    // Phase 2: review (cleanup pass on the same branch) — only if there is work
+    if (implementedCommits > 0) {
+      await sandbox.run({
+        name: `reviewer-${issue.number}`,
+        maxIterations: 1,
+        idleTimeoutSeconds: 1200,
+        agent,
+        promptFile: "./.sandcastle/review-prompt.md",
+        promptArgs: { BRANCH: childBranch, BASE_BRANCH: plan.base }
+      });
+    }
+  } finally {
+    await sandbox.close();
   }
 
-  // Phase 2: review (cleanup pass on the same branch)
-  await sandcastle.run({
-    hooks,
-    copyToWorktree,
-    sandbox,
-    branchStrategy: { type: "branch", branch: childBranch },
-    name: `reviewer-${issue.number}`,
-    maxIterations: 1,
-    idleTimeoutSeconds: 1200,
-    agent,
-    promptFile: "./.sandcastle/review-prompt.md",
-    promptArgs: { BRANCH: childBranch, BASE_BRANCH: plan.base }
-  });
+  if (implementedCommits === 0) {
+    console.log(`Implementer made no commits for #${issue.number}. Skipping.`);
+    sh(`git branch -D ${childBranch}`);
+
+    continue;
+  }
 
   // Phase 3: enforce formatting on the agent's diff, then push and open PR.
   // Nothing the agents run (lint = eslint only) checks Prettier, so the
@@ -687,11 +706,7 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
   // never sweep in the repo's pre-existing, unrelated drift. The branch must be
   // freed from its sandcastle worktree first so the host's main worktree can
   // check it out.
-  const childWorktree = worktreePathForBranch(childBranch);
-
-  if (childWorktree) {
-    sh(`git worktree remove --force ${childWorktree}`);
-  }
+  tearDownWorktree(childBranch);
 
   sh(`git checkout ${childBranch}`);
 
@@ -761,19 +776,24 @@ function sh(cmd: string): string {
   return execSync(cmd, { encoding: "utf8" });
 }
 
-function worktreePathForBranch(branch: string): string | null {
-  const out = sh(`git worktree list --porcelain`);
-  let currentPath: string | null = null;
+// Tear down the git worktree for `branch`, tolerant of the macOS docker quirk
+// where the in-container run rewrites the worktree's gitdir back-pointer to the
+// container path (/home/agent/workspace). That makes `git worktree remove
+// <hostPath>` fail with "is not a working tree", so instead we prune the stale
+// registration and delete any leftover host worktree directory. The branch ref
+// and its commits live in the shared .git and survive untouched, so the host
+// can check the branch out afterwards. Idempotent: the bracketing prunes clear
+// both a dangling container-path registration and a now-orphaned host dir.
+function tearDownWorktree(branch: string): void {
+  sh(`git worktree prune`);
 
-  for (const line of out.split("\n")) {
-    if (line.startsWith("worktree ")) {
-      currentPath = line.slice("worktree ".length);
-    } else if (line === `branch refs/heads/${branch}`) {
-      return currentPath;
-    }
+  const dir = join(".sandcastle", "worktrees", branch.replace(/\//g, "-"));
+
+  if (existsSync(dir)) {
+    rmSync(dir, { recursive: true, force: true });
   }
 
-  return null;
+  sh(`git worktree prune`);
 }
 
 function shellQuote(s: string): string {
