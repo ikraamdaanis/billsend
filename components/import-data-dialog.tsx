@@ -1,4 +1,7 @@
-import { Button } from "components/ui/button";
+import { AlertTriangleIcon, CheckCircleIcon, UploadIcon } from "lucide-react";
+import type { ChangeEvent } from "react";
+import { useRef, useState } from "react";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -6,16 +9,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "components/ui/dialog";
-import { AlertTriangleIcon, CheckCircleIcon, UploadIcon } from "lucide-react";
-import type { ChangeEvent } from "react";
-import { useRef, useState } from "react";
-import type { BillsendExportFile, ImportAnalysis, ImportResult } from "types";
+} from "~/components/ui/dialog";
+import type { BillsendExportFile, ImportAnalysis, ImportResult } from "~/types";
 import {
   analyzeImport,
   executeImport,
   parseExportFile
-} from "utils/import-data";
+} from "~/utils/import-data";
 
 type ImportState = "idle" | "analyzing" | "preview" | "importing" | "done";
 

@@ -1,7 +1,7 @@
-import { getImageBlob } from "db";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { revokeBlobUrl } from "utils/revoke-blob-url";
+import { getImageBlob } from "~/db";
+import { revokeBlobUrl } from "~/utils/revoke-blob-url";
 
 /**
  * Hook to load an image from IndexedDB and manage blob URL lifecycle.

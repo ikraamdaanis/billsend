@@ -1,7 +1,7 @@
-import { normalizeCurrency } from "consts/currencies";
 import { useShallow } from "zustand/react/shallow";
-import { useInvoiceStore } from "stores/invoice-store";
-import type { Invoice } from "types";
+import { normalizeCurrency } from "~/consts/currencies";
+import { useInvoiceStore } from "~/stores/invoice-store";
+import type { Invoice } from "~/types";
 
 // Theme slice - global font / size / accent for the whole invoice
 export function useThemeSlice() {

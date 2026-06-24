@@ -1,7 +1,7 @@
-import { InvoiceInput } from "components/invoice-input";
-import { useTheme, useTitleSlice } from "stores/invoice-selectors";
-import { getRoleSettings } from "utils/get-role-settings";
-import { getTextStyles } from "utils/get-text-styles";
+import { InvoiceInput } from "~/components/invoice-input";
+import { useTheme, useTitleSlice } from "~/stores/invoice-selectors";
+import { getRoleSettings } from "~/utils/get-role-settings";
+import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceTitle() {
   const { title, setTitle } = useTitleSlice();

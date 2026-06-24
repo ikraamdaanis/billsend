@@ -1,11 +1,4 @@
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "components/ui/context-menu";
 import { format } from "date-fns";
-import { cn } from "lib/utils";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -15,7 +8,14 @@ import {
 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { InvoiceDocument } from "types";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from "~/components/ui/context-menu";
+import { cn } from "~/lib/utils";
+import type { InvoiceDocument } from "~/types";
 
 type SortKey = "name" | "updatedAt";
 type SortDirection = "asc" | "desc";
@@ -220,9 +220,11 @@ export function InvoiceListTable({
     if (!rowElement) return;
 
     const index = Number(rowElement.dataset.index);
-    const invoice = sortedInvoices[index];
 
-    if (!invoice) return;
+    if (!Number.isInteger(index) || index < 0 || index >= sortedInvoices.length)
+      return;
+
+    const invoice = sortedInvoices[index];
 
     const handled = () => {
       event.preventDefault();

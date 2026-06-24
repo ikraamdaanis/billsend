@@ -1,7 +1,10 @@
-import { DeleteTemplateModal } from "components/delete-template-modal";
-import { EditTemplateModal } from "components/edit-template-modal";
-import { TemplateCard } from "components/template-card";
-import { Button } from "components/ui/button";
+import { FileTextIcon } from "lucide-react";
+import type { MouseEvent } from "react";
+import { useState } from "react";
+import { DeleteTemplateModal } from "~/components/delete-template-modal";
+import { EditTemplateModal } from "~/components/edit-template-modal";
+import { TemplateCard } from "~/components/template-card";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,13 +12,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "components/ui/dialog";
-import { FileTextIcon } from "lucide-react";
-import type { MouseEvent } from "react";
-import { useState } from "react";
-import { useInvoiceActions } from "stores/invoice-selectors";
-import type { InvoiceTemplate } from "types";
-import { ensureItemIds } from "utils/ensure-item-ids";
+} from "~/components/ui/dialog";
+import { useInvoiceActions } from "~/stores/invoice-selectors";
+import type { InvoiceTemplate } from "~/types";
+import { ensureItemIds } from "~/utils/ensure-item-ids";
 
 /**
  * TemplateSelectionModal allows users to select an invoice template from a list

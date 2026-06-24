@@ -1,7 +1,7 @@
-import type { TextSettings } from "types";
-import type { FontWeight } from "utils/get-font-weight";
-import { getFontWeight } from "utils/get-font-weight";
-import { scaleFontSize } from "utils/scale-font-size";
+import type { TextSettings } from "~/types";
+import type { FontWeight } from "~/utils/get-font-weight";
+import { getFontWeight } from "~/utils/get-font-weight";
+import { scaleFontSize } from "~/utils/scale-font-size";
 
 function resolveLetterSpacing(
   letterSpacing: string | undefined,
@@ -44,11 +44,7 @@ export function getTextStyles({
     fontVariantNumeric: settings.fontFamily?.includes("mono")
       ? "tabular-nums"
       : undefined,
-    letterSpacing: resolveLetterSpacing(
-      settings.letterSpacing,
-      fontSize,
-      isPdf
-    )
+    letterSpacing: resolveLetterSpacing(settings.letterSpacing, fontSize, isPdf)
   };
 
   if (remove.includes("color")) {

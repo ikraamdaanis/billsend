@@ -1,26 +1,3 @@
-import { ImportDataDialog } from "components/import-data-dialog";
-import { OpenInvoiceDialog } from "components/open-invoice-dialog";
-import { OpenTemplateDialog } from "components/open-template-dialog";
-import { SaveInvoiceDialog } from "components/save-invoice-dialog";
-import { SaveTemplateModal } from "components/save-template-modal";
-import {
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger
-} from "components/ui/menubar";
-import type { UnsavedChangesAction } from "components/unsaved-changes-dialog";
-import { UnsavedChangesDialog } from "components/unsaved-changes-dialog";
-import {
-  generateDefaultInvoiceName,
-  loadInvoiceDocument,
-  resetToNewInvoice,
-  saveCurrentInvoiceAsDocument,
-  updateCurrentInvoiceDocument,
-  useInvoiceDocument
-} from "context/invoice-document-context";
-import { getAllInvoices, getAllTemplates } from "db";
 import { isEqual } from "lodash-es";
 import {
   BookmarkIcon,
@@ -33,11 +10,34 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { useInvoiceDataAndActions } from "stores/invoice-selectors";
-import { invoiceDefault } from "stores/invoice-store";
-import type { InvoiceDocument, InvoiceTemplate } from "types";
-import { ensureItemIds } from "utils/ensure-item-ids";
-import { exportAllData } from "utils/export-data";
+import { ImportDataDialog } from "~/components/import-data-dialog";
+import { OpenInvoiceDialog } from "~/components/open-invoice-dialog";
+import { OpenTemplateDialog } from "~/components/open-template-dialog";
+import { SaveInvoiceDialog } from "~/components/save-invoice-dialog";
+import { SaveTemplateModal } from "~/components/save-template-modal";
+import {
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarTrigger
+} from "~/components/ui/menubar";
+import type { UnsavedChangesAction } from "~/components/unsaved-changes-dialog";
+import { UnsavedChangesDialog } from "~/components/unsaved-changes-dialog";
+import {
+  generateDefaultInvoiceName,
+  loadInvoiceDocument,
+  resetToNewInvoice,
+  saveCurrentInvoiceAsDocument,
+  updateCurrentInvoiceDocument,
+  useInvoiceDocument
+} from "~/context/invoice-document-context";
+import { getAllInvoices, getAllTemplates } from "~/db";
+import { useInvoiceDataAndActions } from "~/stores/invoice-selectors";
+import { invoiceDefault } from "~/stores/invoice-store";
+import type { InvoiceDocument, InvoiceTemplate } from "~/types";
+import { ensureItemIds } from "~/utils/ensure-item-ids";
+import { exportAllData } from "~/utils/export-data";
 
 export function InvoiceFileMenu({
   saveDialogOpen: externalSaveDialogOpen,

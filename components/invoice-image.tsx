@@ -1,11 +1,11 @@
-import { Button } from "components/ui/button";
-import { deleteImage, getImageBlob, saveImage } from "db";
-import { cn } from "lib/utils";
 import { Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
-import { useImageSlice } from "stores/invoice-selectors";
+import { Button } from "~/components/ui/button";
+import { deleteImage, getImageBlob, saveImage } from "~/db";
+import { cn } from "~/lib/utils";
+import { useImageSlice } from "~/stores/invoice-selectors";
 
 export function InvoiceImage() {
   const { image: imageId, setImage } = useImageSlice();

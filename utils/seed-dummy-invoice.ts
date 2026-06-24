@@ -1,14 +1,14 @@
-import { currencyOptions } from "consts/currencies";
 import { addDays, format } from "date-fns";
-import { saveInvoice } from "db";
-import { invoiceDefault } from "stores/invoice-store";
+import { currencyOptions } from "~/consts/currencies";
+import { saveInvoice } from "~/db";
+import { invoiceDefault } from "~/stores/invoice-store";
 import type {
   Invoice,
   InvoiceDocument,
   InvoiceSize,
   TableSettings
-} from "types";
-import { calculateInvoiceTotals } from "utils/calculate-invoice-totals";
+} from "~/types";
+import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 
 const COMPANY_NAMES = [
   "Acme Studio",
@@ -164,7 +164,7 @@ const SIZES: InvoiceSize[] = ["small", "medium", "large"];
 const TAX_RATES = [0, 5, 7.5, 10, 20];
 const DUE_IN_DAYS = [14, 30, 45, 60];
 
-function pickRandom<ItemType>(items: ItemType[]): ItemType {
+function pickRandom<TItem>(items: TItem[]): TItem {
   return items[Math.floor(Math.random() * items.length)];
 }
 

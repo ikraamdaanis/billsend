@@ -1,8 +1,12 @@
+import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import {
   InvoiceListStripeFiller,
   InvoiceListTable
-} from "components/invoice-list-table";
-import { Button } from "components/ui/button";
+} from "~/components/invoice-list-table";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "components/ui/dialog";
-import { deleteInvoice, getAllInvoices, saveInvoice } from "db";
-import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
-import type { KeyboardEvent, MouseEvent } from "react";
-import { useEffect, useState, useTransition } from "react";
-import { toast } from "sonner";
-import type { InvoiceDocument } from "types";
-import { seedDummyInvoice } from "utils/seed-dummy-invoice";
+} from "~/components/ui/dialog";
+import { deleteInvoice, getAllInvoices, saveInvoice } from "~/db";
+import type { InvoiceDocument } from "~/types";
+import { seedDummyInvoice } from "~/utils/seed-dummy-invoice";
 
 function truncate(value: string, max: number): string {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;

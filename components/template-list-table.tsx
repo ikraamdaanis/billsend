@@ -1,11 +1,4 @@
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger
-} from "components/ui/context-menu";
 import { format } from "date-fns";
-import { cn } from "lib/utils";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
@@ -15,7 +8,14 @@ import {
 } from "lucide-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import type { InvoiceTemplate } from "types";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger
+} from "~/components/ui/context-menu";
+import { cn } from "~/lib/utils";
+import type { InvoiceTemplate } from "~/types";
 
 type SortKey = "name" | "updatedAt";
 type SortDirection = "asc" | "desc";
@@ -201,9 +201,15 @@ export function TemplateListTable({
     if (!rowElement) return;
 
     const index = Number(rowElement.dataset.index);
-    const template = sortedTemplates[index];
 
-    if (!template) return;
+    if (
+      !Number.isInteger(index) ||
+      index < 0 ||
+      index >= sortedTemplates.length
+    )
+      return;
+
+    const template = sortedTemplates[index];
 
     const handled = () => {
       event.preventDefault();

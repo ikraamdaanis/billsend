@@ -1,8 +1,8 @@
-import { getInvoiceFontDefinition } from "consts/invoice-fonts";
-import { useCanvasView } from "context/canvas-view-context";
 import type { CSSProperties, ReactNode } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
-import { useTheme } from "stores/invoice-selectors";
+import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
+import { useCanvasView } from "~/context/canvas-view-context";
+import { useTheme } from "~/stores/invoice-selectors";
 
 const CANVAS_STATIC_STYLES: CSSProperties = {
   WebkitFontSmoothing: "antialiased",

@@ -6,13 +6,13 @@ import {
   Text,
   View
 } from "@react-pdf/renderer";
-import { formatCurrency } from "consts/currencies";
-import { getInvoiceFontDefinition } from "consts/invoice-fonts";
 import type { ComponentProps } from "react";
-import type { Invoice, TextRole } from "types";
-import { getRoleSettings } from "utils/get-role-settings";
-import { pdfStyle } from "utils/pdf-styles";
-import { registerInvoicePdfFonts } from "utils/register-invoice-pdf-fonts";
+import { formatCurrency } from "~/consts/currencies";
+import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
+import type { Invoice, TextRole } from "~/types";
+import { getRoleSettings } from "~/utils/get-role-settings";
+import { pdfStyle } from "~/utils/pdf-styles";
+import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
 
 registerInvoicePdfFonts();
 

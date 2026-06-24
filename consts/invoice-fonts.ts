@@ -1,5 +1,5 @@
-import type { InvoiceFont } from "types";
-import type { FontWeight } from "utils/get-font-weight";
+import type { InvoiceFont } from "~/types";
+import type { FontWeight } from "~/utils/get-font-weight";
 
 export type InvoiceFontCategory = "sans-serif" | "serif" | "monospace";
 
@@ -28,12 +28,7 @@ export const FONT_WEIGHT_OPTIONS: {
   { value: "Bold", label: "Bold", className: "font-bold" }
 ];
 
-const STANDARD_WEIGHTS: FontWeight[] = [
-  "Normal",
-  "Medium",
-  "Semibold",
-  "Bold"
-];
+const STANDARD_WEIGHTS: FontWeight[] = ["Normal", "Medium", "Semibold", "Bold"];
 
 export const INVOICE_FONTS: InvoiceFontDefinition[] = [
   {

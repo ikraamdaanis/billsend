@@ -1,4 +1,4 @@
-import type { Invoice } from "types";
+import type { Invoice } from "~/types";
 
 export function ensureItemIds(invoice: Invoice): Invoice {
   const hasAllIds = invoice.items.every(item => item.id);
