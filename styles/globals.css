@@ -5,13 +5,30 @@
 @import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/playfair-display";
 @import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/inter";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/ibm-plex-sans";
+@import "@fontsource-variable/lora";
+@import "@fontsource-variable/libre-baskerville";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource/ibm-plex-mono/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-geist: "Geist Variable", sans-serif;
+  --font-geist-mono: "Geist Mono Variable", monospace;
+  --font-jetbrains-mono: "JetBrains Mono Variable", monospace;
+  --font-ibm-plex-mono: "IBM Plex Mono", monospace;
   --font-bricolage-grotesque: "Bricolage Grotesque Variable", sans-serif;
+  --font-dm-sans: "DM Sans Variable", sans-serif;
+  --font-ibm-plex-sans: "IBM Plex Sans Variable", sans-serif;
+  --font-lora: "Lora Variable", serif;
+  --font-libre-baskerville: "Libre Baskerville Variable", serif;
   --font-display: "Playfair Display Variable", serif;
 
   --brand-top: oklch(0.677 0.17 263.89);

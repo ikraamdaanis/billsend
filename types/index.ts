@@ -3,6 +3,8 @@ export type TextSettings = {
   size: string;
   weight: "Normal" | "Medium" | "Semibold" | "Bold";
   color: string;
+  fontFamily?: string;
+  pdfFontFamily?: string;
 };
 
 export type TableSettings = {
@@ -27,12 +29,24 @@ export type InvoiceLabels = {
   total: string;
 };
 
-type InvoiceFont = "geist";
+export type InvoiceFont =
+  | "geist"
+  | "inter"
+  | "bricolage-grotesque"
+  | "dm-sans"
+  | "ibm-plex-sans"
+  | "lora"
+  | "libre-baskerville"
+  | "geist-mono"
+  | "jetbrains-mono"
+  | "ibm-plex-mono";
 
 export type InvoiceSize = "small" | "medium" | "large";
 
 export type InvoiceTheme = {
   font: InvoiceFont;
+  textFontOverride: InvoiceFont | null;
+  numberFontOverride: InvoiceFont | null;
   size: InvoiceSize;
   accent: string;
 };

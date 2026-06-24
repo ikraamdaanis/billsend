@@ -1,6 +1,5 @@
 import {
   Document,
-  Font,
   Page,
   Image as PDFImage,
   StyleSheet,
@@ -8,35 +7,14 @@ import {
   View
 } from "@react-pdf/renderer";
 import { formatCurrency } from "consts/currencies";
+import { getInvoiceFontDefinition } from "consts/invoice-fonts";
 import type { ComponentProps } from "react";
 import type { Invoice, TextRole } from "types";
 import { getRoleSettings } from "utils/get-role-settings";
 import { pdfStyle } from "utils/pdf-styles";
+import { registerInvoicePdfFonts } from "utils/register-invoice-pdf-fonts";
 
-// Only register fonts on the client side
-if (typeof window !== "undefined") {
-  Font.register({
-    family: "Geist",
-    fonts: [
-      {
-        src: "/fonts/Geist-Regular.ttf",
-        fontWeight: 400
-      },
-      {
-        src: "/fonts/Geist-Medium.ttf",
-        fontWeight: 500
-      },
-      {
-        src: "/fonts/Geist-SemiBold.ttf",
-        fontWeight: 600
-      },
-      {
-        src: "/fonts/Geist-Bold.ttf",
-        fontWeight: 700
-      }
-    ]
-  });
-}
+registerInvoicePdfFonts();
 
 export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   // invoice.image should already be a blob URL or empty string
@@ -49,9 +27,10 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   ) {
     return pdfStyle(getRoleSettings(theme, role), overrides);
   }
+  const baseFont = getInvoiceFontDefinition(theme.font);
   const styles = StyleSheet.create({
     page: {
-      fontFamily: "Geist",
+      fontFamily: baseFont.pdfFamily,
       fontSize: 12,
       padding: 40,
       backgroundColor: invoice.pdfSettings.backgroundColor

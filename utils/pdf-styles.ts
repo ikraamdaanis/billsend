@@ -15,7 +15,8 @@ export function pdfStyle(
     textAlign: settings.align,
     fontSize: scaleFontSize(settings.size ?? 0),
     fontWeight: getFontWeight((settings.weight ?? "Normal") as FontWeight),
-    color: settings.color
+    color: settings.color,
+    fontFamily: settings.pdfFontFamily ?? settings.fontFamily
   };
 
   return overrides ? { ...base, ...overrides } : base;

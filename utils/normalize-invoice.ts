@@ -1,5 +1,6 @@
 import type {
   Invoice,
+  InvoiceFont,
   InvoiceLabels,
   InvoiceTheme,
   TableSettings
@@ -7,8 +8,15 @@ import type {
 
 export const DEFAULT_INVOICE_THEME: InvoiceTheme = {
   font: "geist",
+  textFontOverride: null,
+  numberFontOverride: null,
   size: "medium",
   accent: "#1a1a1a"
+};
+
+type LegacyInvoiceTheme = Partial<InvoiceTheme> & {
+  textFont?: InvoiceFont;
+  numberFont?: InvoiceFont;
 };
 
 const DEFAULT_COLUMN_LABELS: TableSettings["columnLabels"] = {
@@ -42,10 +50,41 @@ type LegacyTableSettings = {
 };
 
 type LegacyInvoice = Omit<Invoice, "theme" | "tableSettings" | "labels"> & {
-  theme?: Partial<InvoiceTheme>;
+  theme?: LegacyInvoiceTheme;
   tableSettings?: LegacyTableSettings;
   labels?: Partial<InvoiceLabels>;
 };
+
+function isLegacyTheme(theme: LegacyInvoiceTheme): boolean {
+  return (
+    theme.textFont !== undefined &&
+    theme.font === undefined &&
+    theme.textFontOverride === undefined
+  );
+}
+
+function normalizeTheme(theme: LegacyInvoiceTheme = {}): InvoiceTheme {
+  if (!isLegacyTheme(theme)) {
+    return {
+      ...DEFAULT_INVOICE_THEME,
+      ...theme,
+      textFontOverride: theme.textFontOverride ?? null,
+      numberFontOverride: theme.numberFontOverride ?? null
+    };
+  }
+
+  const font = theme.textFont ?? DEFAULT_INVOICE_THEME.font;
+  const legacyNumber = theme.numberFont;
+
+  return {
+    size: theme.size ?? DEFAULT_INVOICE_THEME.size,
+    accent: theme.accent ?? DEFAULT_INVOICE_THEME.accent,
+    font,
+    textFontOverride: null,
+    numberFontOverride:
+      legacyNumber && legacyNumber !== font ? legacyNumber : null
+  };
+}
 
 function normalizeTableSettings(
   table: LegacyTableSettings = {}
@@ -100,6 +139,6 @@ export function normalizeInvoice(raw: Invoice): Invoice {
     terms: legacy.terms,
     pdfSettings: legacy.pdfSettings,
     currency: legacy.currency,
-    theme: { ...DEFAULT_INVOICE_THEME, ...legacy.theme }
+    theme: normalizeTheme(legacy.theme)
   };
 }
