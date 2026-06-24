@@ -299,10 +299,18 @@ export function InvoiceListTable({
   }
 
   return (
-    <table role="grid" aria-multiselectable className="w-full text-sm">
+    <table
+      role="grid"
+      aria-multiselectable
+      className="w-full table-fixed text-sm"
+    >
+      <colgroup>
+        <col />
+        <col className="w-43" />
+      </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-sm">
-          <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
+          <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 shadow-[inset_0_-1px_0_0_var(--border)]">
             <SortHeader
               label="Name"
               active={sortKey === "name"}
@@ -376,12 +384,12 @@ export function InvoiceListTable({
               >
                 <td
                   role="gridcell"
-                  className="py-2.5 pr-4 pl-4"
+                  className="overflow-hidden py-2.5 pr-4 pl-4"
                   onClick={
                     isEditing ? event => event.stopPropagation() : undefined
                   }
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <FileTextIcon
                       className={cn(
                         "size-4 shrink-0",
@@ -402,15 +410,17 @@ export function InvoiceListTable({
                         onFocus={event => event.currentTarget.select()}
                         onKeyDown={event => handleEditKeyDown(event, invoice)}
                         onBlur={() => finishRename(invoice, true)}
-                        className="bg-background text-foreground outline-brand-500 -my-0.5 -ml-1 h-6 min-w-0 flex-1 rounded-[4px] px-1 text-sm font-medium outline-2 -outline-offset-1"
+                        className="bg-background text-foreground outline-brand-500 -my-0.5 -ml-1 h-6 w-full min-w-0 rounded-[3px] px-1 text-sm font-medium outline-2 -outline-offset-1"
                       />
                     ) : (
                       <>
-                        <span className="font-medium">{invoice.name}</span>
+                        <span className="min-w-0 truncate font-medium">
+                          {invoice.name}
+                        </span>
                         {isCurrent && (
                           <span
                             className={cn(
-                              "text-sm",
+                              "shrink-0 text-sm",
                               isDeleting
                                 ? "text-destructive/70"
                                 : isSelected
