@@ -3,10 +3,7 @@ import { selectOrphanedImageIds } from "~/utils/select-orphaned-images";
 
 describe("selectOrphanedImageIds", () => {
   it("returns blobs that no saved document references", () => {
-    const orphans = selectOrphanedImageIds(
-      ["used", "orphan"],
-      ["used"]
-    );
+    const orphans = selectOrphanedImageIds(["used", "orphan"], ["used"]);
 
     expect(orphans).toEqual(["orphan"]);
   });
@@ -21,21 +18,13 @@ describe("selectOrphanedImageIds", () => {
   });
 
   it("keeps the active-but-unsaved image via the keep list", () => {
-    const orphans = selectOrphanedImageIds(
-      ["active", "stale"],
-      [],
-      ["active"]
-    );
+    const orphans = selectOrphanedImageIds(["active", "stale"], [], ["active"]);
 
     expect(orphans).toEqual(["stale"]);
   });
 
   it("ignores empty string references and keep ids", () => {
-    const orphans = selectOrphanedImageIds(
-      ["a", "b"],
-      ["", "a"],
-      [""]
-    );
+    const orphans = selectOrphanedImageIds(["a", "b"], ["", "a"], [""]);
 
     expect(orphans).toEqual(["b"]);
   });
