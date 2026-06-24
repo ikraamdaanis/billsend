@@ -6,8 +6,8 @@ import {
   getInvoice,
   saveInvoice
 } from "~/db";
-import { invoiceDefault } from "~/stores/invoice-store";
 import { useInvoiceData } from "~/stores/invoice-selectors";
+import { invoiceDefault } from "~/stores/invoice-store";
 import type { Invoice, InvoiceDocument } from "~/types";
 import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
@@ -73,8 +73,7 @@ export function useHasUnsavedChanges(): boolean {
   const invoice = useInvoiceData();
 
   return useMemo(
-    () =>
-      deriveHasUnsavedChanges(invoice, currentDocumentId, lastSavedInvoice),
+    () => deriveHasUnsavedChanges(invoice, currentDocumentId, lastSavedInvoice),
     [invoice, currentDocumentId, lastSavedInvoice]
   );
 }
