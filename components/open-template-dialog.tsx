@@ -1,6 +1,10 @@
-import { InvoiceListStripeFiller } from "components/invoice-list-table";
-import { TemplateListTable } from "components/template-list-table";
-import { Button } from "components/ui/button";
+import { FolderOpenIcon, Loader2Icon } from "lucide-react";
+import type { KeyboardEvent, MouseEvent } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { InvoiceListStripeFiller } from "~/components/invoice-list-table";
+import { TemplateListTable } from "~/components/template-list-table";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -8,13 +12,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle
-} from "components/ui/dialog";
-import { deleteTemplate, getAllTemplates, saveTemplate } from "db";
-import { FolderOpenIcon, Loader2Icon } from "lucide-react";
-import type { KeyboardEvent, MouseEvent } from "react";
-import { useEffect, useState, useTransition } from "react";
-import { toast } from "sonner";
-import type { InvoiceTemplate } from "types";
+} from "~/components/ui/dialog";
+import { deleteTemplate, getAllTemplates, saveTemplate } from "~/db";
+import type { InvoiceTemplate } from "~/types";
 
 function truncate(value: string, max: number): string {
   return value.length > max ? `${value.slice(0, max - 1)}…` : value;

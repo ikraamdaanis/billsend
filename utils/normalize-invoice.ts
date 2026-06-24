@@ -1,12 +1,11 @@
-import { getAvailableFontWeights } from "consts/invoice-fonts";
+import { getAvailableFontWeights } from "~/consts/invoice-fonts";
 import type {
   Invoice,
   InvoiceFont,
   InvoiceLabels,
   InvoiceTheme,
   TableSettings
-} from "types";
-import type { FontWeight } from "utils/get-font-weight";
+} from "~/types";
 
 export const DEFAULT_INVOICE_THEME: InvoiceTheme = {
   font: "geist",

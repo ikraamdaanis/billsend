@@ -1,8 +1,8 @@
-import { InvoiceInput } from "components/invoice-input";
-import { InvoiceTextArea } from "components/invoice-textarea";
-import { useClientSlice, useTheme } from "stores/invoice-selectors";
-import { getRoleSettings } from "utils/get-role-settings";
-import { getTextStyles } from "utils/get-text-styles";
+import { InvoiceInput } from "~/components/invoice-input";
+import { InvoiceTextArea } from "~/components/invoice-textarea";
+import { useClientSlice, useTheme } from "~/stores/invoice-selectors";
+import { getRoleSettings } from "~/utils/get-role-settings";
+import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceClientDetails() {
   return (

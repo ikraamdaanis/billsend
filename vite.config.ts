@@ -17,10 +17,6 @@ export default defineConfig({
         routesDirectory: "./routes"
       }
     }),
-    viteReact({
-      babel: {
-        plugins: ["babel-plugin-react-compiler"]
-      }
-    })
+    viteReact()
   ]
 });

@@ -1,7 +1,6 @@
-import type { TextSettings } from "types";
-import type { FontWeight } from "utils/get-font-weight";
-import { getFontWeight } from "utils/get-font-weight";
-import { scaleFontSize } from "utils/scale-font-size";
+import type { TextSettings } from "~/types";
+import { getFontWeight } from "~/utils/get-font-weight";
+import { scaleFontSize } from "~/utils/scale-font-size";
 
 /**
  * Convert TextSettings to a PDF-compatible style object.
@@ -15,7 +14,7 @@ export function pdfStyle(
   const base = {
     textAlign: settings.align,
     fontSize,
-    fontWeight: getFontWeight((settings.weight ?? "Normal") as FontWeight),
+    fontWeight: getFontWeight(settings.weight ?? "Normal"),
     color: settings.color,
     fontFamily: settings.pdfFontFamily ?? settings.fontFamily,
     letterSpacing: settings.letterSpacing?.endsWith("em")

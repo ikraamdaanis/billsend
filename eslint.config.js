@@ -1,6 +1,5 @@
 import eslint from "@eslint/js";
 import { tanstackConfig } from "@tanstack/eslint-config";
-import noRelativeImportPaths from "eslint-plugin-no-relative-import-paths";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -14,6 +13,11 @@ export default defineConfig([
   react.configs.flat["jsx-runtime"],
   reactHooks.configs.flat.recommended,
   {
+    settings: {
+      react: {
+        version: "19.2"
+      }
+    },
     languageOptions: {
       globals: {
         process: "readonly",
@@ -22,11 +26,18 @@ export default defineConfig([
         console: "readonly"
       }
     },
-    plugins: {
-      "no-relative-import-paths": noRelativeImportPaths
-    },
     rules: {
-      "no-relative-import-paths/no-relative-import-paths": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["./*", "../*"],
+              message: "Use the ~/ alias for project imports."
+            }
+          ]
+        }
+      ],
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
       "import/order": "off",

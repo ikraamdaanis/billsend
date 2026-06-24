@@ -4,18 +4,18 @@ import {
   MenubarSub,
   MenubarSubContent,
   MenubarSubTrigger
-} from "components/ui/menubar";
+} from "~/components/ui/menubar";
+import type { InvoiceFontDefinition } from "~/consts/invoice-fonts";
 import {
   FONT_WEIGHT_OPTIONS,
   getAvailableFontWeights,
   getInvoiceFontDefinition,
-  INVOICE_FONTS,
-  type InvoiceFontDefinition
-} from "consts/invoice-fonts";
-import { cn } from "lib/utils";
-import { useThemeSlice } from "stores/invoice-selectors";
-import type { InvoiceFont } from "types";
-import type { FontWeight } from "utils/get-font-weight";
+  INVOICE_FONTS
+} from "~/consts/invoice-fonts";
+import { cn } from "~/lib/utils";
+import { useThemeSlice } from "~/stores/invoice-selectors";
+import type { InvoiceFont } from "~/types";
+import type { FontWeight } from "~/utils/get-font-weight";
 
 export function InvoiceFontFamilyMenu() {
   const { theme, setTheme } = useThemeSlice();

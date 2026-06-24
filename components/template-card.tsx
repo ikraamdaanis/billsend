@@ -1,15 +1,15 @@
-import { Button } from "components/ui/button";
+import { format } from "date-fns";
+import { MoreVerticalIcon, PencilIcon, TrashIcon } from "lucide-react";
+import type { MouseEvent } from "react";
+import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from "components/ui/dropdown-menu";
-import { format } from "date-fns";
-import { cn } from "lib/utils";
-import { MoreVerticalIcon, PencilIcon, TrashIcon } from "lucide-react";
-import type { MouseEvent } from "react";
-import type { InvoiceTemplate } from "types";
+} from "~/components/ui/dropdown-menu";
+import { cn } from "~/lib/utils";
+import type { InvoiceTemplate } from "~/types";
 
 /**
  * TemplateCard displays a single invoice template with its name, description,

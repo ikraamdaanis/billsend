@@ -1,15 +1,15 @@
-import { InvoiceInput } from "components/invoice-input";
-import { formatCurrency } from "consts/currencies";
 import { useState } from "react";
+import { InvoiceInput } from "~/components/invoice-input";
+import { formatCurrency } from "~/consts/currencies";
 import {
-  usePricingSlice,
   useCurrencySymbol,
+  usePricingSlice,
   useTheme
-} from "stores/invoice-selectors";
-import { getRoleSettings } from "utils/get-role-settings";
-import { getTextStyles } from "utils/get-text-styles";
-import { handleCurrencyInput } from "utils/handle-currency-input";
-import { handlePercentageInput } from "utils/handle-percentage-input";
+} from "~/stores/invoice-selectors";
+import { getRoleSettings } from "~/utils/get-role-settings";
+import { getTextStyles } from "~/utils/get-text-styles";
+import { handleCurrencyInput } from "~/utils/handle-currency-input";
+import { handlePercentageInput } from "~/utils/handle-percentage-input";
 
 function handleInputBlur(
   currentInput: string,

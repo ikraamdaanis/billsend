@@ -1,13 +1,13 @@
 import { pdf } from "@react-pdf/renderer";
-import { InvoicePDF } from "components/invoice-generator";
-import { Button } from "components/ui/button";
-import { useImageLoader } from "hooks/use-image-loader";
-import { cn } from "lib/utils";
 import type { ComponentProps } from "react";
 import { useMemo, useTransition } from "react";
 import { toast } from "sonner";
-import { useInvoiceData } from "stores/invoice-selectors";
-import { registerInvoicePdfFonts } from "utils/register-invoice-pdf-fonts";
+import { InvoicePDF } from "~/components/invoice-generator";
+import { Button } from "~/components/ui/button";
+import { useImageLoader } from "~/hooks/use-image-loader";
+import { cn } from "~/lib/utils";
+import { useInvoiceData } from "~/stores/invoice-selectors";
+import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
 
 export function DownloadInvoice({
   className,

@@ -1,7 +1,7 @@
-import { Input } from "components/ui/input";
-import { cn } from "lib/utils";
 import type { ComponentProps } from "react";
 import { memo } from "react";
+import { Input } from "~/components/ui/input";
+import { cn } from "~/lib/utils";
 
 const InvoiceInputComponent = ({
   className,

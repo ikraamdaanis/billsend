@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { InvoiceEditor } from "components/invoice-editor";
-import { InvoiceDocumentProvider } from "context/invoice-document-context";
+import { InvoiceEditor } from "~/components/invoice-editor";
+import { InvoiceDocumentProvider } from "~/context/invoice-document-context";
 
 export const Route = createFileRoute("/create")({
   component: RouteComponent

@@ -1,4 +1,4 @@
-import type { Invoice } from "types";
+import type { Invoice } from "~/types";
 
 export function calculateInvoiceTotals(invoice: Invoice): Invoice {
   // Calculate items with amounts (immutable - create new item objects)
