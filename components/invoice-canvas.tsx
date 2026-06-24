@@ -1,6 +1,8 @@
+import { getInvoiceFontDefinition } from "consts/invoice-fonts";
 import { useCanvasView } from "context/canvas-view-context";
 import type { CSSProperties, ReactNode } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
+import { useTheme } from "stores/invoice-selectors";
 
 const CANVAS_STATIC_STYLES: CSSProperties = {
   WebkitFontSmoothing: "antialiased",
@@ -11,6 +13,8 @@ const FIT_PADDING = 32;
 
 export function InvoiceCanvas({ children }: { children: ReactNode }) {
   const { view } = useCanvasView();
+  const theme = useTheme();
+  const baseFont = getInvoiceFontDefinition(theme.font);
   const sectionRef = useRef<HTMLElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [pageSize, setPageSize] = useState({ width: 0, height: 0 });
@@ -64,6 +68,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
           onClick={event => event.stopPropagation()}
           style={{
             ...CANVAS_STATIC_STYLES,
+            fontFamily: baseFont.cssFamily,
             transform: `scale(${zoom})`,
             transformOrigin: "top left"
           }}

@@ -1,3 +1,4 @@
+import { resolveInvoiceFont } from "consts/invoice-fonts";
 import type { InvoiceTheme, TextRole, TextSettings } from "types";
 
 const DEFAULT_FONT_COLOUR = "#1a1a1a";
@@ -65,14 +66,18 @@ const ROLE_BASE: Record<TextRole, RoleBase> = {
  */
 export function getRoleSettings(
   theme: InvoiceTheme,
-  role: TextRole
+  role: TextRole,
+  options?: { useNumberFont?: boolean }
 ): TextSettings {
   const base = ROLE_BASE[role];
+  const font = resolveInvoiceFont(theme, role, options);
 
   return {
     align: base.align,
     size: String(Math.round(base.size * SIZE_FACTOR[theme.size])),
     weight: base.weight,
-    color: base.accent ? theme.accent : DEFAULT_FONT_COLOUR
+    color: base.accent ? theme.accent : DEFAULT_FONT_COLOUR,
+    fontFamily: font.cssFamily,
+    pdfFontFamily: font.pdfFamily
   };
 }

@@ -105,7 +105,9 @@ function TaxRow() {
             }
             className="w-10 p-0 text-right focus-visible:w-14"
             style={getTextStyles({
-              settings: labelSettings,
+              settings: getRoleSettings(theme, "totalsLabel", {
+                useNumberFont: true
+              }),
               remove: ["align"]
             })}
           />
