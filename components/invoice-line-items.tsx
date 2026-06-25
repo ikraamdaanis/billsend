@@ -3,14 +3,19 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { InvoiceInput } from "~/components/invoice-input";
 import { Button } from "~/components/ui/button";
-import { formatCurrency } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
 import {
   useCurrencySymbol,
   useLineItemsSlice,
   useTheme
 } from "~/stores/invoice-selectors";
-import type { InvoiceItem, TableSettings, TextRole } from "~/types";
+import type {
+  InvoiceItem,
+  InvoiceLineItemRow,
+  TableSettings,
+  TextRole
+} from "~/types";
+import { buildLineItemRow } from "~/utils/build-invoice-view-model";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 
@@ -180,8 +185,8 @@ function LineItems() {
 }
 
 function LineItem({ item, index }: { item: InvoiceItem; index: number }) {
-  const { items, tableSettings } = useLineItemsSlice();
-  const amount = Number(item.quantity) * Number(item.unitPrice);
+  const { items, tableSettings, currency } = useLineItemsSlice();
+  const viewRow = buildLineItemRow(item, currency);
 
   return (
     <div
@@ -194,7 +199,7 @@ function LineItem({ item, index }: { item: InvoiceItem; index: number }) {
           column={column}
           item={item}
           index={index}
-          amount={amount}
+          viewRow={viewRow}
         />
       ))}
       {items.length > 1 && <RemoveItemButton itemId={item.id} />}
@@ -206,14 +211,14 @@ function TableCell({
   column,
   item,
   index,
-  amount
+  viewRow
 }: {
   column: LineItemColumnConfig;
   item: InvoiceItem;
   index: number;
-  amount: number;
+  viewRow: InvoiceLineItemRow;
 }) {
-  const { currency, updateItem } = useLineItemsSlice();
+  const { updateItem } = useLineItemsSlice();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
   const [isEditingCurrency, setIsEditingCurrency] = useState(false);
@@ -294,7 +299,7 @@ function TableCell({
     return (
       <div className={column.cell.wrapperClassName}>
         <span className={column.cell.displayClassName} style={rowStyle}>
-          {formatCurrency(amount, currency)}
+          {viewRow.amount}
         </span>
       </div>
     );
@@ -312,7 +317,7 @@ function TableCell({
   if (column.cell.kind === "currency") {
     inputValue = isEditingCurrency
       ? `${currencySymbol}${item.unitPrice.toString()}`
-      : formatCurrency(item.unitPrice, currency);
+      : viewRow.unitPrice;
   }
 
   const focusId =
