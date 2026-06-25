@@ -25,10 +25,6 @@ import type { UnsavedChangesAction } from "~/components/unsaved-changes-dialog";
 import { UnsavedChangesDialog } from "~/components/unsaved-changes-dialog";
 import {
   generateDefaultInvoiceName,
-  loadInvoiceDocument,
-  resetToNewInvoice,
-  saveCurrentInvoiceAsDocument,
-  updateCurrentInvoiceDocument,
   useHasUnsavedChanges,
   useInvoiceDocument
 } from "~/context/invoice-document-context";
@@ -50,7 +46,11 @@ export function InvoiceFileMenu({
     currentDocumentId,
     setCurrentDocumentId,
     setCurrentDocumentName,
-    setLastSavedInvoice
+    setLastSavedInvoice,
+    load,
+    saveAs,
+    update,
+    reset
   } = useInvoiceDocument();
   const hasUnsavedChanges = useHasUnsavedChanges();
 
@@ -96,20 +96,9 @@ export function InvoiceFileMenu({
 
   const handleNewInvoice = useCallback(() => {
     runWithUnsavedGuard(() => {
-      resetToNewInvoice(
-        setInvoice,
-        setCurrentDocumentId,
-        setCurrentDocumentName,
-        setLastSavedInvoice
-      );
+      reset();
     });
-  }, [
-    runWithUnsavedGuard,
-    setInvoice,
-    setCurrentDocumentId,
-    setCurrentDocumentName,
-    setLastSavedInvoice
-  ]);
+  }, [runWithUnsavedGuard, reset]);
 
   const handleOpenInvoice = useCallback(() => {
     runWithUnsavedGuard(() => {
@@ -133,11 +122,7 @@ export function InvoiceFileMenu({
     return new Promise<void>((resolve, reject) => {
       startTransition(async () => {
         try {
-          await updateCurrentInvoiceDocument(
-            currentDocumentId,
-            invoice,
-            setLastSavedInvoice
-          );
+          await update();
           toast.success("Invoice saved successfully");
           resolve();
         } catch (error) {
@@ -148,7 +133,7 @@ export function InvoiceFileMenu({
         }
       });
     });
-  }, [currentDocumentId, invoice, setLastSavedInvoice, setSaveAsDialogOpen]);
+  }, [currentDocumentId, update, setSaveAsDialogOpen]);
 
   const handleSaveAs = useCallback(() => {
     setSaveAsDialogOpen(true);
@@ -194,24 +179,11 @@ export function InvoiceFileMenu({
       startTransition(async () => {
         try {
           if (overwriteId) {
-            await updateCurrentInvoiceDocument(
-              overwriteId,
-              invoice,
-              setLastSavedInvoice
-            );
-            setCurrentDocumentId(overwriteId);
-            setCurrentDocumentName(name);
+            await update({ documentId: overwriteId, name });
 
             toast.success("Invoice saved successfully");
           } else {
-            await saveCurrentInvoiceAsDocument(
-              invoice,
-              name,
-              null,
-              setCurrentDocumentId,
-              setCurrentDocumentName,
-              setLastSavedInvoice
-            );
+            await saveAs(name);
 
             toast.success("Invoice saved successfully");
           }
@@ -232,13 +204,7 @@ export function InvoiceFileMenu({
   function handleSelectInvoice(invoiceDoc: InvoiceDocument) {
     startTransition(async () => {
       try {
-        await loadInvoiceDocument(
-          invoiceDoc.id,
-          setInvoice,
-          setCurrentDocumentId,
-          setCurrentDocumentName,
-          setLastSavedInvoice
-        );
+        await load(invoiceDoc.id);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to open invoice"
