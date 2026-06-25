@@ -7,9 +7,9 @@ import {
   View
 } from "@react-pdf/renderer";
 import type { ComponentProps } from "react";
-import { formatCurrency } from "~/consts/currencies";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import type { Invoice, TextRole } from "~/types";
+import { buildInvoiceViewModel } from "~/utils/build-invoice-view-model";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { pdfStyle } from "~/utils/pdf-styles";
 import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
@@ -20,6 +20,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   // invoice.image should already be a blob URL or empty string
   const imageUrl = invoice.image || "";
   const theme = invoice.theme;
+  const { detailRows, lineItems, summaryRows } = buildInvoiceViewModel(invoice);
 
   function roleStyle(
     role: TextRole,
@@ -213,60 +214,26 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
             )}
           </View>
           <View style={styles.invoiceDetails}>
-            <View style={styles.detailsField}>
-              <Text
-                style={{
-                  ...styles.detailsLabel,
-                  ...roleStyle("detailLabel")
-                }}
-              >
-                {invoice.labels.invoiceNumber}
-              </Text>
-              <Text
-                style={{
-                  ...styles.detailsValue,
-                  ...roleStyle("detailValue")
-                }}
-              >
-                {invoice.number}
-              </Text>
-            </View>
-            <View style={styles.detailsField}>
-              <Text
-                style={{
-                  ...styles.detailsLabel,
-                  ...roleStyle("detailLabel")
-                }}
-              >
-                {invoice.labels.invoiceDate}
-              </Text>
-              <Text
-                style={{
-                  ...styles.detailsValue,
-                  ...roleStyle("detailValue")
-                }}
-              >
-                {invoice.invoiceDate}
-              </Text>
-            </View>
-            <View style={styles.detailsField}>
-              <Text
-                style={{
-                  ...styles.detailsLabel,
-                  ...roleStyle("detailLabel")
-                }}
-              >
-                {invoice.labels.paymentDue}
-              </Text>
-              <Text
-                style={{
-                  ...styles.detailsValue,
-                  ...roleStyle("detailValue")
-                }}
-              >
-                {invoice.dueDate}
-              </Text>
-            </View>
+            {detailRows.map(row => (
+              <View key={row.id} style={styles.detailsField}>
+                <Text
+                  style={{
+                    ...styles.detailsLabel,
+                    ...roleStyle("detailLabel")
+                  }}
+                >
+                  {row.label}
+                </Text>
+                <Text
+                  style={{
+                    ...styles.detailsValue,
+                    ...roleStyle("detailValue")
+                  }}
+                >
+                  {row.value}
+                </Text>
+              </View>
+            ))}
           </View>
         </View>
         <View style={[styles.table, { overflow: "hidden" }]}>
@@ -297,104 +264,65 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
               </Text>
             </View>
           </View>
-          {[...invoice.items].map((item, index) => {
-            const isLastItem = index === invoice.items.length - 1;
+          {lineItems.map((row, index) => {
+            const isLastItem = index === lineItems.length - 1;
 
             return (
               <View
-                key={item.id}
+                key={row.id}
                 style={isLastItem ? styles.tableLastRow : styles.tableRow}
               >
                 <View style={[styles.tableCell, { width: "40%" }]}>
                   <Text style={roleStyle("tableRowLeft")}>
-                    {item.description}
+                    {row.description}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, { width: "20%" }]}>
                   <Text style={roleStyle("tableRowCenter")}>
-                    {item.quantity}
+                    {row.quantity}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, { width: "20%" }]}>
                   <Text style={roleStyle("tableRowCenter")}>
-                    {formatCurrency(item.unitPrice, invoice.currency)}
+                    {row.unitPrice}
                   </Text>
                 </View>
                 <View style={[styles.tableCell, { width: "20%" }]}>
-                  <Text style={roleStyle("tableRowRight")}>
-                    {formatCurrency(
-                      item.quantity * item.unitPrice,
-                      invoice.currency
-                    )}
-                  </Text>
+                  <Text style={roleStyle("tableRowRight")}>{row.amount}</Text>
                 </View>
               </View>
             );
           })}
         </View>
         <View style={styles.totalSection}>
-          <View style={styles.totalRow}>
-            <Text style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}>
-              {invoice.labels.subtotal}
-            </Text>
-            <Text style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}>
-              {formatCurrency(invoice.subtotal, invoice.currency)}
-            </Text>
-          </View>
-          {invoice.tax.percentage > 0 && (
-            <View style={styles.totalRow}>
-              <Text
-                style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}
-              >
-                {invoice.labels.tax} {invoice.tax.percentage}%
-              </Text>
-              <Text
-                style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}
-              >
-                {formatCurrency(invoice.tax.amount, invoice.currency)}
-              </Text>
-            </View>
-          )}
-          {invoice.fees > 0 && (
-            <View style={styles.totalRow}>
-              <Text
-                style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}
-              >
-                {invoice.labels.fees}
-              </Text>
-              <Text
-                style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}
-              >
-                {formatCurrency(invoice.fees, invoice.currency)}
-              </Text>
-            </View>
-          )}
-          {invoice.discounts > 0 && (
-            <View style={styles.totalRow}>
-              <Text
-                style={{ ...styles.totalLabel, ...roleStyle("totalsLabel") }}
-              >
-                {invoice.labels.discounts}
-              </Text>
-              <Text
-                style={{ ...styles.totalValue, ...roleStyle("totalsValue") }}
-              >
-                {formatCurrency(invoice.discounts, invoice.currency)}
-              </Text>
-            </View>
-          )}
-          <View style={styles.totalRow}>
-            <Text
-              style={{ ...styles.totalLabel, ...roleStyle("grandTotalLabel") }}
-            >
-              {invoice.labels.total}
-            </Text>
-            <Text
-              style={{ ...styles.totalValue, ...roleStyle("grandTotalValue") }}
-            >
-              {formatCurrency(invoice.total, invoice.currency)}
-            </Text>
-          </View>
+          {summaryRows
+            .filter(row => row.isVisible)
+            .map(row => (
+              <View key={row.id} style={styles.totalRow}>
+                <Text
+                  style={{
+                    ...styles.totalLabel,
+                    ...roleStyle(
+                      row.isTotal ? "grandTotalLabel" : "totalsLabel"
+                    )
+                  }}
+                >
+                  {row.percentage === undefined
+                    ? row.label
+                    : `${row.label} ${row.percentage}%`}
+                </Text>
+                <Text
+                  style={{
+                    ...styles.totalValue,
+                    ...roleStyle(
+                      row.isTotal ? "grandTotalValue" : "totalsValue"
+                    )
+                  }}
+                >
+                  {row.value}
+                </Text>
+              </View>
+            ))}
         </View>
         {!!invoice.terms.content && (
           <View style={styles.termsSection}>
