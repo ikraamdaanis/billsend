@@ -3,15 +3,13 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { InvoiceInput } from "~/components/invoice-input";
 import { Button } from "~/components/ui/button";
+import { normalizeCurrency } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
-import {
-  useCurrencySymbol,
-  useLineItemsSlice,
-  useTheme
-} from "~/stores/invoice-selectors";
+import { useLineItemsSlice, useTheme } from "~/stores/invoice-selectors";
 import type {
   InvoiceItem,
   InvoiceLineItemRow,
+  InvoiceTheme,
   TableSettings,
   TextRole
 } from "~/types";
@@ -38,6 +36,12 @@ interface LineItemColumnConfig {
     displayClassName?: string;
   };
 }
+
+type UpdateItem = ReturnType<typeof useLineItemsSlice>["updateItem"];
+type RemoveItem = ReturnType<typeof useLineItemsSlice>["removeItem"];
+type SetTableSettings = ReturnType<
+  typeof useLineItemsSlice
+>["setTableSettings"];
 
 const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   {
@@ -102,10 +106,22 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
 ];
 
 /**
- * Displays the line items for the invoice.
+ * Displays the line items for the invoice. Subscribes to the line-items slice
+ * once here and passes each cell only the value and handlers it needs, so a
+ * single item edit does not fan out store subscriptions across every cell.
  */
 export function InvoiceLineItems() {
-  const { items, tableSettings } = useLineItemsSlice();
+  const {
+    items,
+    tableSettings,
+    currency,
+    addItem,
+    removeItem,
+    updateItem,
+    setTableSettings
+  } = useLineItemsSlice();
+  const theme = useTheme();
+  const currencySymbol = normalizeCurrency(currency);
 
   return (
     <div
@@ -117,17 +133,35 @@ export function InvoiceLineItems() {
         className="line-items-container flex flex-col divide-y rounded-[3px] border"
         style={{ borderColor: tableSettings.borderColor }}
       >
-        <TableHeader />
-        <LineItems />
+        <TableHeader
+          tableSettings={tableSettings}
+          theme={theme}
+          setTableSettings={setTableSettings}
+        />
+        <LineItems
+          items={items}
+          tableSettings={tableSettings}
+          currency={currency}
+          currencySymbol={currencySymbol}
+          theme={theme}
+          updateItem={updateItem}
+          removeItem={removeItem}
+        />
       </div>
-      <AddItemButton />
+      <AddItemButton addItem={addItem} />
     </div>
   );
 }
 
-function TableHeader() {
-  const { tableSettings } = useLineItemsSlice();
-
+function TableHeader({
+  tableSettings,
+  theme,
+  setTableSettings
+}: {
+  tableSettings: TableSettings;
+  theme: InvoiceTheme;
+  setTableSettings: SetTableSettings;
+}) {
   return (
     <div
       className="grid grid-cols-[repeat(4,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_120px_150px]"
@@ -137,17 +171,29 @@ function TableHeader() {
       }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
-        <TableHeaderCell key={column.id} column={column} />
+        <TableHeaderCell
+          key={column.id}
+          column={column}
+          label={tableSettings.columnLabels[column.id]}
+          theme={theme}
+          setTableSettings={setTableSettings}
+        />
       ))}
     </div>
   );
 }
 
-function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
-  const { tableSettings, setTableSettings } = useLineItemsSlice();
-  const theme = useTheme();
-
-  const label = tableSettings.columnLabels[column.id];
+function TableHeaderCell({
+  column,
+  label,
+  theme,
+  setTableSettings
+}: {
+  column: LineItemColumnConfig;
+  label: string;
+  theme: InvoiceTheme;
+  setTableSettings: SetTableSettings;
+}) {
   const style = getTextStyles({
     settings: getRoleSettings(theme, column.headerRole)
   });
@@ -172,20 +218,64 @@ function TableHeaderCell({ column }: { column: LineItemColumnConfig }) {
   );
 }
 
-function LineItems() {
-  const { items } = useLineItemsSlice();
-
+function LineItems({
+  items,
+  tableSettings,
+  currency,
+  currencySymbol,
+  theme,
+  updateItem,
+  removeItem
+}: {
+  items: InvoiceItem[];
+  tableSettings: TableSettings;
+  currency: string;
+  currencySymbol: string;
+  theme: InvoiceTheme;
+  updateItem: UpdateItem;
+  removeItem: RemoveItem;
+}) {
   return (
     <>
       {items.map((item, index) => (
-        <LineItem key={item.id} item={item} index={index} />
+        <LineItem
+          key={item.id}
+          item={item}
+          index={index}
+          itemCount={items.length}
+          tableSettings={tableSettings}
+          currency={currency}
+          currencySymbol={currencySymbol}
+          theme={theme}
+          updateItem={updateItem}
+          removeItem={removeItem}
+        />
       ))}
     </>
   );
 }
 
-function LineItem({ item, index }: { item: InvoiceItem; index: number }) {
-  const { items, tableSettings, currency } = useLineItemsSlice();
+function LineItem({
+  item,
+  index,
+  itemCount,
+  tableSettings,
+  currency,
+  currencySymbol,
+  theme,
+  updateItem,
+  removeItem
+}: {
+  item: InvoiceItem;
+  index: number;
+  itemCount: number;
+  tableSettings: TableSettings;
+  currency: string;
+  currencySymbol: string;
+  theme: InvoiceTheme;
+  updateItem: UpdateItem;
+  removeItem: RemoveItem;
+}) {
   const viewRow = buildLineItemRow(item, currency);
 
   return (
@@ -200,9 +290,14 @@ function LineItem({ item, index }: { item: InvoiceItem; index: number }) {
           item={item}
           index={index}
           viewRow={viewRow}
+          currencySymbol={currencySymbol}
+          theme={theme}
+          updateItem={updateItem}
         />
       ))}
-      {items.length > 1 && <RemoveItemButton itemId={item.id} />}
+      {itemCount > 1 && (
+        <RemoveItemButton itemId={item.id} removeItem={removeItem} />
+      )}
     </div>
   );
 }
@@ -211,16 +306,19 @@ function TableCell({
   column,
   item,
   index,
-  viewRow
+  viewRow,
+  currencySymbol,
+  theme,
+  updateItem
 }: {
   column: LineItemColumnConfig;
   item: InvoiceItem;
   index: number;
   viewRow: InvoiceLineItemRow;
+  currencySymbol: string;
+  theme: InvoiceTheme;
+  updateItem: UpdateItem;
 }) {
-  const { updateItem } = useLineItemsSlice();
-  const currencySymbol = useCurrencySymbol();
-  const theme = useTheme();
   const [isEditingCurrency, setIsEditingCurrency] = useState(false);
 
   const rowStyle = getTextStyles({
@@ -341,9 +439,13 @@ function TableCell({
   );
 }
 
-function RemoveItemButton({ itemId }: { itemId: string }) {
-  const { removeItem } = useLineItemsSlice();
-
+function RemoveItemButton({
+  itemId,
+  removeItem
+}: {
+  itemId: string;
+  removeItem: RemoveItem;
+}) {
   return (
     <div className="absolute -right-10">
       <Button
@@ -358,9 +460,11 @@ function RemoveItemButton({ itemId }: { itemId: string }) {
   );
 }
 
-function AddItemButton() {
-  const { addItem } = useLineItemsSlice();
-
+function AddItemButton({
+  addItem
+}: {
+  addItem: ReturnType<typeof useLineItemsSlice>["addItem"];
+}) {
   function handleAddItem() {
     addItem({
       id: crypto.randomUUID(),
