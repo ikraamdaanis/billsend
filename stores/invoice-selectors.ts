@@ -1,7 +1,36 @@
 import { useShallow } from "zustand/react/shallow";
 import { normalizeCurrency } from "~/consts/currencies";
+import type { InvoiceStore } from "~/stores/invoice-store";
 import { useInvoiceStore } from "~/stores/invoice-store";
 import type { Invoice } from "~/types";
+
+// Picks the persisted invoice fields out of the store state, dropping the
+// action methods. Shared by the useInvoiceData hook and imperative reads
+// (e.g. provider document actions) so the shape stays in one place.
+export function selectInvoiceData(state: InvoiceStore): Invoice {
+  return {
+    id: state.id,
+    title: state.title,
+    image: state.image,
+    number: state.number,
+    invoiceDate: state.invoiceDate,
+    dueDate: state.dueDate,
+    seller: state.seller,
+    client: state.client,
+    items: state.items,
+    tableSettings: state.tableSettings,
+    labels: state.labels,
+    subtotal: state.subtotal,
+    tax: state.tax,
+    fees: state.fees,
+    discounts: state.discounts,
+    total: state.total,
+    terms: state.terms,
+    pdfSettings: state.pdfSettings,
+    currency: state.currency,
+    theme: state.theme
+  };
+}
 
 // Theme slice - global font / size / accent for the whole invoice
 export function useThemeSlice() {
@@ -136,30 +165,7 @@ export function useCurrencySymbol() {
 // Full invoice data for serialization (save/load)
 // This extracts only the Invoice data, not actions
 export function useInvoiceData(): Invoice {
-  return useInvoiceStore(
-    useShallow(state => ({
-      id: state.id,
-      title: state.title,
-      image: state.image,
-      number: state.number,
-      invoiceDate: state.invoiceDate,
-      dueDate: state.dueDate,
-      seller: state.seller,
-      client: state.client,
-      items: state.items,
-      tableSettings: state.tableSettings,
-      labels: state.labels,
-      subtotal: state.subtotal,
-      tax: state.tax,
-      fees: state.fees,
-      discounts: state.discounts,
-      total: state.total,
-      terms: state.terms,
-      pdfSettings: state.pdfSettings,
-      currency: state.currency,
-      theme: state.theme
-    }))
-  );
+  return useInvoiceStore(useShallow(selectInvoiceData));
 }
 
 // Actions only (stable references, won't cause re-renders on data changes)
