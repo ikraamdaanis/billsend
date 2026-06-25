@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
   invoiceDetails: {
     flex: 1
   },
-  clientTitle: {
+  clientLabel: {
     marginBottom: 4,
     fontWeight: "medium",
     fontSize: 12
@@ -51,7 +51,7 @@ export function InvoicePdfDetails({
         {invoice.client.label && (
           <Text
             style={{
-              ...styles.clientTitle,
+              ...styles.clientLabel,
               ...pdfRoleStyle(theme, "sectionLabel")
             }}
           >
