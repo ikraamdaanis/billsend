@@ -187,11 +187,7 @@ export function InvoiceImage() {
         <div
           {...getRootProps()}
           role="button"
-          aria-label={
-            imageUrl
-              ? "Change invoice logo. Drop an image or activate to browse."
-              : "Upload invoice logo. Drop an image or activate to browse."
-          }
+          aria-label={`${imageUrl ? "Change" : "Upload"} invoice logo. Drop an image or activate to browse.`}
           className={cn(
             "flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden rounded-[3px]",
             isDragging
