@@ -2,16 +2,16 @@
 
 ## Project Overview
 
-Billsend is a free, local-first invoice generator that runs entirely in the browser. No accounts, no servers, no tracking — all data stays on the user's device in IndexedDB.
+Billsend is a free, local-first invoice generator that runs entirely in the browser. No accounts, no servers, no tracking; all data stays on the user's device in IndexedDB.
 
 ## Tech Stack
 
 - **Framework:** TanStack Start (React 19 + TanStack Router)
 - **Language:** TypeScript (strict mode)
-- **Build:** Vite 7 with React Compiler (Babel plugin)
+- **Build:** Vite 8 with React Compiler (Babel plugin)
 - **Styling:** Tailwind CSS 4 + shadcn/ui (new-york style) + Radix UI primitives
 - **State:** Zustand (with Immer + subscribeWithSelector middleware) for invoice data; React Context for UI state
-- **Storage:** Dexie (IndexedDB wrapper) — no backend, no HTTP requests
+- **Storage:** Dexie (IndexedDB wrapper); no backend, no HTTP requests
 - **PDF:** @react-pdf/renderer
 - **Forms:** React Hook Form + Zod validation
 - **Icons:** lucide-react
@@ -52,7 +52,7 @@ lib/                 # Helper utilities (cn() classname merger)
 
 ### Imports
 
-- **Absolute imports only** — no relative imports (enforced by ESLint). Uses tsconfig `baseUrl: "."`.
+- **Absolute imports only**; no relative imports (enforced by ESLint). Uses tsconfig `baseUrl: "."`.
 - Use `import type { X }` for type-only imports (enforced).
 
 ### Naming
@@ -83,7 +83,7 @@ lib/                 # Helper utilities (cn() classname merger)
 ### Zustand Store (invoice data)
 
 - Single store in `stores/invoice-store.ts` with Immer + subscribeWithSelector
-- Write mutable-looking code inside `set()` — Immer handles immutability
+- Write mutable-looking code inside `set()`; Immer handles immutability
 - Use `applyUpdater<T>()` helper for value-or-function updaters
 - Auto-recalculate totals via `recalculate()` when items/tax/fees/discounts change
 
@@ -95,14 +95,14 @@ lib/                 # Helper utilities (cn() classname merger)
 
 ### Context (UI state)
 
-- `UIProvider` — active settings tab, canvas lock
-- `InvoiceDocumentProvider` — current document ID/name, save/load operations
+- `UIProvider`: active settings tab, canvas lock
+- `InvoiceDocumentProvider`: current document ID/name, save/load operations
 
 ## Key Architecture Decisions
 
-- **No backend** — all persistence is IndexedDB via Dexie
-- **React Compiler enabled** — automatic memoization; avoid manual useMemo/useCallback unless necessary
+- **No backend**; all persistence is IndexedDB via Dexie
+- **React Compiler enabled**: automatic memoization; avoid manual useMemo/useCallback unless necessary
 - **Dynamic imports** for heavy components (e.g., PDFViewer) to reduce initial bundle
-- **No barrel exports** — import directly from the source file
+- **No barrel exports**; import directly from the source file
 - **date-fns** for dates (not dayjs or moment)
 - **lodash-es** for utilities (tree-shakeable ES module version)
