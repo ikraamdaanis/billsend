@@ -40,7 +40,7 @@ export function InvoicePdfItemsTable({
   });
 
   return (
-    <View style={[styles.table, { overflow: "hidden" }]}>
+    <View style={styles.table}>
       <View
         style={[
           styles.tableHeader,
