@@ -1,6 +1,6 @@
 # BillSend
 
-A free, local-first invoice generator that runs entirely in your browser. Create professional invoices with fully customisable templates—no account needed, no servers, no tracking. Your data never leaves your device.
+A free, local-first invoice generator that runs entirely in your browser. Create professional invoices with fully customisable templates. No account needed, no servers, no tracking. Your data never leaves your device.
 
 ## Features
 
@@ -9,20 +9,20 @@ A free, local-first invoice generator that runs entirely in your browser. Create
 - Save and load invoice documents locally
 - Export to PDF
 - 100% local storage using IndexedDB (Dexie)
-- Fast, offline-capable—everything runs in your browser
+- Fast, offline-capable; everything runs in your browser
 - No sign-up required, no accounts, no tracking
 
 ## Tech Stack
 
-- **React 19** — UI
-- **TanStack Start** — app framework (with TanStack Router)
-- **Vite 7** — build (React Compiler enabled)
-- **TypeScript** — strict mode
-- **Zustand** — invoice state (Immer)
-- **Dexie** — IndexedDB persistence
-- **React Hook Form** + **Zod** — forms and validation
-- **@react-pdf/renderer** — PDF export
-- **Tailwind CSS 4** + **shadcn/ui** — styling and components
+- **React 19**: UI
+- **TanStack Start**: app framework (with TanStack Router)
+- **Vite 8**: build (React Compiler enabled)
+- **TypeScript**: strict mode
+- **Zustand**: invoice state (Immer)
+- **Dexie**: IndexedDB persistence
+- **React Hook Form** + **Zod**: forms and validation
+- **@react-pdf/renderer**: PDF export
+- **Tailwind CSS 4** + **shadcn/ui**: styling and components
 
 ## Getting Started
 
