@@ -1,4 +1,4 @@
-import { Upload } from "lucide-react";
+import { IconUpload } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
@@ -222,7 +222,7 @@ export function InvoiceImage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-2 text-zinc-500">
-              <Upload className="mb-2 h-8 w-8" aria-hidden="true" />
+              <IconUpload className="mb-2 h-8 w-8" aria-hidden="true" />
               <span className="text-center text-xs">Upload logo</span>
             </div>
           )}

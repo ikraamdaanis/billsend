@@ -81,6 +81,7 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
       setCurrentDocumentId(savedId);
       setCurrentDocumentName(trimmedName);
       setLastSavedInvoice(structuredClone(invoice));
+      void cleanupOrphanedImages([invoice.image]);
 
       return savedId;
     },
@@ -118,6 +119,7 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
       }
 
       setLastSavedInvoice(structuredClone(invoice));
+      void cleanupOrphanedImages([invoice.image]);
     },
     [currentDocumentId]
   );

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SaveIcon } from "lucide-react";
+import { IconDeviceFloppy } from "@tabler/icons-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -249,7 +249,7 @@ export function SaveTemplateModal({
             disabled={pending}
             className="flex items-center gap-2"
           >
-            <SaveIcon className="h-4 w-4" />
+            <IconDeviceFloppy className="h-4 w-4" />
             {selectedTemplateId && selectedTemplateId !== "new"
               ? "Update Template"
               : "Create Template"}

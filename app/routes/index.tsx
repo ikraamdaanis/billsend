@@ -1,52 +1,52 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import type { LucideIcon } from "lucide-react";
+import type { Icon } from "@tabler/icons-react";
 import {
-  ArrowRight,
-  Coins,
-  Database,
-  FileDown,
-  LayoutTemplate,
-  Palette,
-  ShieldCheck,
-  WifiOff
-} from "lucide-react";
+  IconArrowRight,
+  IconCoins,
+  IconDatabase,
+  IconFileDownload,
+  IconPalette,
+  IconShieldCheck,
+  IconTemplate,
+  IconWifiOff
+} from "@tabler/icons-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
-const FEATURES: { icon: LucideIcon; title: string; description: string }[] = [
+const FEATURES: { icon: Icon; title: string; description: string }[] = [
   {
-    icon: Database,
+    icon: IconDatabase,
     title: "Stays on your device",
     description:
       "Everything saves straight to your browser. Nothing is ever uploaded."
   },
   {
-    icon: FileDown,
+    icon: IconFileDownload,
     title: "One-click PDF",
     description:
       "Export a clean, print-ready PDF in a single click, then email or print it yourself."
   },
   {
-    icon: LayoutTemplate,
+    icon: IconTemplate,
     title: "Reusable templates",
     description:
       "Save an invoice as a template and reuse it next time instead of starting over."
   },
   {
-    icon: Palette,
+    icon: IconPalette,
     title: "Logo & accent colour",
     description:
       "Upload your logo, pick an accent colour, and set the text size."
   },
   {
-    icon: Coins,
+    icon: IconCoins,
     title: "Any currency",
     description:
       "Pick a currency per invoice, with custom symbols when you need them."
   },
   {
-    icon: WifiOff,
+    icon: IconWifiOff,
     title: "Works offline",
     description:
       "No network needed. It all runs on your machine, even with the wifi off."
@@ -120,7 +120,7 @@ function SiteHeader() {
         <Link to="/create" preload="viewport" className="justify-self-end">
           <Button className="h-9 px-4 text-sm">
             Create invoice
-            <ArrowRight className="size-4" />
+            <IconArrowRight className="size-4" />
           </Button>
         </Link>
       </div>
@@ -142,7 +142,7 @@ function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 lg:grid-cols-2 lg:gap-12 lg:py-28">
         <div className="animate-fade-in-up flex flex-col items-start">
           <span className="border-brand-200 bg-brand-50 text-brand-700 inline-flex items-center gap-2 rounded-[3px] border px-3 py-1 text-sm font-medium">
-            <ShieldCheck className="size-3.5" />
+            <IconShieldCheck className="size-3.5" />
             Runs entirely in your browser
           </span>
           <h1 className="font-display mt-6 text-5xl font-semibold tracking-tight text-balance text-neutral-900 sm:text-6xl lg:text-7xl">
@@ -157,7 +157,7 @@ function Hero() {
             <Link to="/create" preload="viewport">
               <Button className="h-11 w-full px-6 text-sm sm:w-auto">
                 Create your first invoice
-                <ArrowRight className="size-4" />
+                <IconArrowRight className="size-4" />
               </Button>
             </Link>
             <a href="#how" className="sm:ml-2">
@@ -234,7 +234,7 @@ function InvoicePreview() {
         </div>
       </div>
       <div className="absolute -bottom-4 -left-4 hidden items-center gap-2 rounded-[3px] border border-neutral-200 bg-white px-3 py-2 shadow-lg sm:flex">
-        <Database className="text-brand-600 size-4" />
+        <IconDatabase className="text-brand-600 size-4" />
         <span className="text-sm font-medium text-neutral-700">
           Saved locally
         </span>
@@ -310,7 +310,7 @@ function Features() {
 function FeatureCell({
   feature
 }: {
-  feature: { icon: LucideIcon; title: string; description: string };
+  feature: { icon: Icon; title: string; description: string };
 }) {
   const Icon = feature.icon;
 
@@ -427,7 +427,7 @@ function Assurance({
   return (
     <div className="flex flex-col gap-2 bg-white p-6">
       <div className="text-brand-600 flex items-center gap-2 text-sm font-medium">
-        <ShieldCheck className="size-4" />
+        <IconShieldCheck className="size-4" />
         {title}
       </div>
       <p className="text-sm text-pretty text-neutral-600">{description}</p>
@@ -448,7 +448,7 @@ function FinalCta() {
         <Link to="/create" preload="viewport" className="mt-8">
           <Button className="h-11 px-6 text-sm">
             Create your invoice
-            <ArrowRight className="size-4" />
+            <IconArrowRight className="size-4" />
           </Button>
         </Link>
       </div>
