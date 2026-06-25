@@ -1,5 +1,4 @@
 import type { TextSettings } from "~/types";
-import type { FontWeight } from "~/utils/get-font-weight";
 import { getFontWeight } from "~/utils/get-font-weight";
 import { scaleFontSize } from "~/utils/scale-font-size";
 
@@ -38,7 +37,7 @@ export function getTextStyles({
   const styles: Record<string, string | number | undefined> = {
     color: settings.color,
     fontSize: isPdf ? fontSize : `${settings.size}px`,
-    fontWeight: getFontWeight(settings.weight as FontWeight),
+    fontWeight: getFontWeight(settings.weight ?? "Normal"),
     textAlign: settings.align,
     fontFamily: settings.fontFamily,
     fontVariantNumeric: settings.fontFamily?.includes("mono")

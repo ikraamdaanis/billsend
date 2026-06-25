@@ -287,8 +287,18 @@ export const useInvoiceStore = create<InvoiceStore>()(
         set(state => {
           const item = state.items[index];
 
-          (item as Record<string, unknown>)[field] = value;
-          // Recalculate item amount
+          switch (field) {
+            case "id":
+            case "description":
+              item[field] = String(value);
+              break;
+            case "quantity":
+            case "unitPrice":
+            case "amount":
+              item[field] = Number(value);
+              break;
+          }
+
           item.amount = item.quantity * item.unitPrice;
           recalculate(state);
         }),
