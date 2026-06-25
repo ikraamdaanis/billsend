@@ -1,11 +1,11 @@
-import { format } from "date-fns";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  LayoutTemplateIcon,
-  PencilIcon,
-  TrashIcon
-} from "lucide-react";
+  IconArrowDown,
+  IconArrowUp,
+  IconPencil,
+  IconTemplate,
+  IconTrash
+} from "@tabler/icons-react";
+import { format } from "date-fns";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -378,7 +378,7 @@ export function TemplateListTable({
                   }
                 >
                   <div className="flex min-w-0 items-center gap-2">
-                    <LayoutTemplateIcon
+                    <IconTemplate
                       className={cn(
                         "size-4 shrink-0",
                         isDeleting
@@ -427,20 +427,20 @@ export function TemplateListTable({
                     variant="destructive"
                     onClick={() => onDeleteTemplates(selectedTemplates)}
                   >
-                    <TrashIcon />
+                    <IconTrash />
                     Delete {selectedIds.length} templates
                   </ContextMenuItem>
                 ) : (
                   <>
                     <ContextMenuItem onClick={() => startRename(template)}>
-                      <PencilIcon className="size-3 shrink-0" />
+                      <IconPencil className="size-3 shrink-0" />
                       Rename
                     </ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
                       onClick={() => onDeleteTemplates([template])}
                     >
-                      <TrashIcon className="size-3 shrink-0" />
+                      <IconTrash className="size-3 shrink-0" />
                       Delete
                     </ContextMenuItem>
                   </>
@@ -475,9 +475,9 @@ function SortHeader({
       {label}
       {active &&
         (direction === "asc" ? (
-          <ArrowUpIcon className="size-3.5" />
+          <IconArrowUp className="size-3.5" />
         ) : (
-          <ArrowDownIcon className="size-3.5" />
+          <IconArrowDown className="size-3.5" />
         ))}
     </button>
   );

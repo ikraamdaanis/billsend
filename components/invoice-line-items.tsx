@@ -1,4 +1,4 @@
-import { MinusIcon, PlusIcon } from "lucide-react";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { InvoiceInput } from "~/components/invoice-input";
@@ -132,23 +132,27 @@ export function InvoiceLineItems() {
       <div
         role="table"
         aria-label="Invoice line items"
-        className="line-items-container flex flex-col divide-y rounded-[3px] border"
+        className="line-items-container flex flex-col rounded-[3px] border"
         style={{ borderColor: tableSettings.borderColor }}
       >
-        <TableHeader
-          tableSettings={tableSettings}
-          theme={theme}
-          setTableSettings={setTableSettings}
-        />
-        <LineItems
-          items={items}
-          tableSettings={tableSettings}
-          currency={currency}
-          currencySymbol={currencySymbol}
-          theme={theme}
-          updateItem={updateItem}
-          removeItem={removeItem}
-        />
+        <div role="rowgroup" className="flex flex-col">
+          <TableHeader
+            tableSettings={tableSettings}
+            theme={theme}
+            setTableSettings={setTableSettings}
+          />
+        </div>
+        <div role="rowgroup" className="flex flex-col">
+          <LineItems
+            items={items}
+            tableSettings={tableSettings}
+            currency={currency}
+            currencySymbol={currencySymbol}
+            theme={theme}
+            updateItem={updateItem}
+            removeItem={removeItem}
+          />
+        </div>
       </div>
       <AddItemButton addItem={addItem} />
     </div>
@@ -289,7 +293,7 @@ function LineItem({
   return (
     <div
       role="row"
-      className="relative grid grid-cols-[repeat(4,1fr)] items-center gap-2 lg:grid-cols-[1fr_80px_120px_150px]"
+      className="relative grid grid-cols-[repeat(4,1fr)] items-center gap-2 border-t lg:grid-cols-[1fr_80px_120px_150px]"
       style={{ borderColor: tableSettings.borderColor }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
@@ -480,7 +484,7 @@ function RemoveItemButton({
         className="h-8 w-8 py-2 hover:bg-zinc-100"
         onClick={() => removeItem(itemId)}
       >
-        <MinusIcon className="h-4 w-4 text-red-700" aria-hidden="true" />
+        <IconMinus className="h-4 w-4 text-red-700" aria-hidden="true" />
       </Button>
     </div>
   );
@@ -502,7 +506,7 @@ function AddItemButton({
 
   return (
     <Button size="sm" className="my-4 w-fit" onClick={handleAddItem}>
-      <PlusIcon aria-hidden="true" />
+      <IconPlus aria-hidden="true" />
       Add item
     </Button>
   );
