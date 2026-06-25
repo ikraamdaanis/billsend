@@ -19,6 +19,7 @@ function SellerLabel() {
 
   return (
     <InvoiceInput
+      aria-label="Seller section label"
       value={seller.label}
       className="font-medium md:text-base"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
@@ -37,6 +38,7 @@ function SellerContent() {
   return (
     <InvoiceTextArea
       id="invoice-field-seller"
+      aria-label={`${seller.label || "Seller"} details`}
       value={seller.content}
       onChange={value => setSeller(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
