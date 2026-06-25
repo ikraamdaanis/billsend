@@ -36,7 +36,7 @@
 import * as sandcastle from "@ai-hero/sandcastle";
 import { docker } from "@ai-hero/sandcastle/sandboxes/docker";
 import { execSync } from "node:child_process";
-import { existsSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -697,8 +697,13 @@ for (let i = 1; i <= MAX_ITERATIONS; i++) {
     await sandbox.close();
   }
 
+  // Repair any host-repo corruption the docker run left in the shared .git
+  // before running further host git commands (both the skip and commit paths).
+  healHostRepo();
+
   if (implementedCommits === 0) {
     console.log(`Implementer made no commits for #${issue.number}. Skipping.`);
+    tearDownWorktree(childBranch);
     sh(`git branch -D ${childBranch}`);
 
     continue;
@@ -781,6 +786,34 @@ console.log("\nAll done.");
 
 function sh(cmd: string): string {
   return execSync(cmd, { encoding: "utf8" });
+}
+
+// Repair host-repo corruption that a docker run can leave in the SHARED .git on
+// macOS: the in-container git writes `core.worktree = /home/agent/workspace` into
+// .git/config and points .git/HEAD at the child branch. Both make every
+// subsequent host git command fail ("Invalid path .../home/agent"), and git
+// itself can't fix it because it chokes on the bad core.worktree. So patch the
+// files directly, then reset the index back to the host branch. No-op when the
+// run left things clean. Committed objects and refs are never touched.
+function healHostRepo(): void {
+  const configPath = join(".git", "config");
+  const config = readFileSync(configPath, "utf8");
+  const cleaned = config
+    .split("\n")
+    .filter(line => !/^\s*worktree\s*=/.test(line))
+    .join("\n");
+
+  if (cleaned !== config) {
+    writeFileSync(configPath, cleaned);
+  }
+
+  writeFileSync(join(".git", "HEAD"), `ref: refs/heads/${HOST_BRANCH}\n`);
+
+  try {
+    sh(`git reset --mixed`);
+  } catch {
+    // index already consistent; nothing to do
+  }
 }
 
 // Tear down the git worktree for `branch`, tolerant of the macOS docker quirk
