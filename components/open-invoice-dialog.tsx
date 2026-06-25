@@ -1,4 +1,4 @@
-import { FolderOpenIcon, Loader2Icon, SparklesIcon } from "lucide-react";
+import { IconFolderOpen, IconLoader2, IconSparkles } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -237,12 +237,12 @@ export function OpenInvoiceDialog({
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             {loading ? (
               <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
-                <Loader2Icon className="size-4 shrink-0 animate-spin" />
+                <IconLoader2 className="size-4 shrink-0 animate-spin" />
                 Loading invoices
               </div>
             ) : invoices.length === 0 ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-                <FolderOpenIcon className="text-muted-foreground/70 size-8 shrink-0" />
+                <IconFolderOpen className="text-muted-foreground/70 size-8 shrink-0" />
                 <div className="flex flex-col gap-1.5">
                   <h3 className="text-foreground text-base font-medium">
                     No saved invoices yet
@@ -310,7 +310,7 @@ export function OpenInvoiceDialog({
                 onClick={handleSeedDummyInvoice}
                 disabled={seeding}
               >
-                <SparklesIcon />
+                <IconSparkles />
                 Add dummy
               </Button>
             )}

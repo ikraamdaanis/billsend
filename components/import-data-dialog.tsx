@@ -1,4 +1,8 @@
-import { AlertTriangleIcon, CheckCircleIcon, UploadIcon } from "lucide-react";
+import {
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconUpload
+} from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -110,7 +114,7 @@ export function ImportDataDialog({
                 htmlFor="import-file-input"
                 className="border-border hover:bg-accent flex w-full cursor-pointer flex-col items-center gap-2 rounded-[3px] border-2 border-dashed p-8 transition-colors"
               >
-                <UploadIcon className="text-muted-foreground h-8 w-8" />
+                <IconUpload className="text-muted-foreground h-8 w-8" />
                 <span className="text-sm font-medium">
                   Select a .json export file
                 </span>
@@ -168,7 +172,7 @@ export function ImportDataDialog({
               </div>
               {hasConflicts && (
                 <div className="flex items-start gap-2 rounded-[3px] border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
-                  <AlertTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <IconAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span className="text-sm text-amber-800 dark:text-amber-200">
                     Some names already exist and will be renamed with an
                     &quot;(imported)&quot; suffix.
@@ -186,7 +190,7 @@ export function ImportDataDialog({
 
           {state === "done" && result && (
             <div className="flex flex-col items-center gap-4 py-4">
-              <CheckCircleIcon className="h-10 w-10 text-green-600" />
+              <IconCircleCheck className="h-10 w-10 text-green-600" />
               <p className="text-center text-sm">
                 Successfully imported {result.invoicesImported} invoice
                 {result.invoicesImported !== 1 ? "s" : ""},{" "}

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PencilIcon } from "lucide-react";
+import { IconPencil } from "@tabler/icons-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -167,7 +167,7 @@ export function EditTemplateModal({
             disabled={pending}
             className="flex items-center gap-2"
           >
-            <PencilIcon className="h-4 w-4" />
+            <IconPencil className="h-4 w-4" />
             Update Template
           </Button>
         </DialogFooter>

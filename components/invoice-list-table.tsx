@@ -1,11 +1,11 @@
-import { format } from "date-fns";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  FileTextIcon,
-  PencilIcon,
-  TrashIcon
-} from "lucide-react";
+  IconArrowDown,
+  IconArrowUp,
+  IconFileText,
+  IconPencil,
+  IconTrash
+} from "@tabler/icons-react";
+import { format } from "date-fns";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -392,7 +392,7 @@ export function InvoiceListTable({
                   }
                 >
                   <div className="flex min-w-0 items-center gap-2">
-                    <FileTextIcon
+                    <IconFileText
                       className={cn(
                         "size-4 shrink-0",
                         isDeleting
@@ -457,20 +457,20 @@ export function InvoiceListTable({
                     variant="destructive"
                     onClick={() => onDeleteInvoices(selectedInvoices)}
                   >
-                    <TrashIcon />
+                    <IconTrash />
                     Delete {selectedIds.length} invoices
                   </ContextMenuItem>
                 ) : (
                   <>
                     <ContextMenuItem onClick={() => startRename(invoice)}>
-                      <PencilIcon className="size-3 shrink-0" />
+                      <IconPencil className="size-3 shrink-0" />
                       Rename
                     </ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
                       onClick={() => onDeleteInvoices([invoice])}
                     >
-                      <TrashIcon className="size-3 shrink-0" />
+                      <IconTrash className="size-3 shrink-0" />
                       Delete
                     </ContextMenuItem>
                   </>
@@ -505,9 +505,9 @@ function SortHeader({
       {label}
       {active &&
         (direction === "asc" ? (
-          <ArrowUpIcon className="size-3.5" />
+          <IconArrowUp className="size-3.5" />
         ) : (
-          <ArrowDownIcon className="size-3.5" />
+          <IconArrowDown className="size-3.5" />
         ))}
     </button>
   );
