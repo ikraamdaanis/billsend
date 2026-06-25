@@ -124,6 +124,36 @@ export type Invoice = {
   theme: InvoiceTheme;
 };
 
+export type InvoiceDetailRow = {
+  id: "number" | "invoiceDate" | "dueDate";
+  labelKey: "invoiceNumber" | "invoiceDate" | "paymentDue";
+  label: string;
+  value: string;
+};
+
+export type InvoiceLineItemRow = {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: string;
+  amount: string;
+};
+
+export type InvoiceSummaryRow = {
+  id: "subtotal" | "tax" | "fees" | "discounts" | "total";
+  label: string;
+  value: string;
+  percentage?: number;
+  isVisible: boolean;
+  isTotal: boolean;
+};
+
+export type InvoiceViewModel = {
+  detailRows: InvoiceDetailRow[];
+  lineItems: InvoiceLineItemRow[];
+  summaryRows: InvoiceSummaryRow[];
+};
+
 export type InvoiceDocument = {
   id: string;
   name: string;
