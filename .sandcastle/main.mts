@@ -61,7 +61,7 @@ const MAX_ITERATIONS = 50;
 // The operator's global ~/.claude/CLAUDE.md is mounted read-only so the
 // in-container agent applies personal preferences on top of the project's
 // CLAUDE.md. Mounting the single file (not ~/.claude/) avoids exposing session
-// state, settings.json (API keys / MCP creds), and other unrelated state.
+// state, settings.json (API keys / MCP credentials), and other unrelated state.
 const globalClaudeMd = `${homedir()}/.claude/CLAUDE.md`;
 const sandboxMounts = [
   { hostPath: "~/.bun/install/cache", sandboxPath: "~/.bun/install/cache" },
