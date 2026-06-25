@@ -4,7 +4,7 @@ import type { Invoice } from "~/types";
 import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 
 function cloneDefault(): Invoice {
-  return JSON.parse(JSON.stringify(invoiceDefault));
+  return structuredClone(invoiceDefault);
 }
 
 describe("deriveHasUnsavedChanges", () => {

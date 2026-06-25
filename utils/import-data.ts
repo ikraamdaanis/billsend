@@ -176,9 +176,10 @@ export async function executeImport(
     templateIdMap.set(t.id, newId);
     const resolvedName = resolveConflictName(t.name, existingTemplateNames);
 
-    const templateData = JSON.parse(JSON.stringify(t.templateData));
-    if (templateData.image && imageIdMap.has(templateData.image)) {
-      templateData.image = imageIdMap.get(templateData.image);
+    const templateData = structuredClone(t.templateData);
+    const mappedTemplateImage = imageIdMap.get(templateData.image);
+    if (mappedTemplateImage) {
+      templateData.image = mappedTemplateImage;
     }
 
     const template: InvoiceTemplate = {
@@ -199,15 +200,15 @@ export async function executeImport(
     const newId = crypto.randomUUID();
     const resolvedName = resolveConflictName(i.name, existingInvoiceNames);
 
-    const invoiceData = JSON.parse(JSON.stringify(i.invoiceData));
-    if (invoiceData.image && imageIdMap.has(invoiceData.image)) {
-      invoiceData.image = imageIdMap.get(invoiceData.image);
+    const invoiceData = structuredClone(i.invoiceData);
+    const mappedInvoiceImage = imageIdMap.get(invoiceData.image);
+    if (mappedInvoiceImage) {
+      invoiceData.image = mappedInvoiceImage;
     }
 
-    const newTemplateId =
-      i.templateId && templateIdMap.has(i.templateId)
-        ? templateIdMap.get(i.templateId)!
-        : i.templateId;
+    const newTemplateId = i.templateId
+      ? (templateIdMap.get(i.templateId) ?? i.templateId)
+      : i.templateId;
 
     const invoice: InvoiceDocument = {
       id: newId,
