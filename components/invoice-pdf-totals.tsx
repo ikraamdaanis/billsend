@@ -1,0 +1,87 @@
+import { StyleSheet, Text, View } from "@react-pdf/renderer";
+import type { Invoice, InvoiceSummaryRow, InvoiceTheme } from "~/types";
+import { pdfRoleStyle } from "~/utils/pdf-styles";
+
+const styles = StyleSheet.create({
+  totalSection: {
+    marginTop: 20,
+    paddingTop: 10,
+    alignItems: "flex-end"
+  },
+  totalRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginBottom: 5,
+    width: "40%"
+  },
+  totalLabel: {
+    width: "40%"
+  },
+  totalValue: {
+    width: "60%"
+  }
+});
+
+function InvoicePdfTotalRow({
+  theme,
+  label,
+  value,
+  isTotal
+}: {
+  theme: InvoiceTheme;
+  label: string;
+  value: string;
+  isTotal: boolean;
+}) {
+  return (
+    <View style={styles.totalRow}>
+      <Text
+        style={{
+          ...styles.totalLabel,
+          ...pdfRoleStyle(theme, isTotal ? "grandTotalLabel" : "totalsLabel")
+        }}
+      >
+        {label}
+      </Text>
+      <Text
+        style={{
+          ...styles.totalValue,
+          ...pdfRoleStyle(theme, isTotal ? "grandTotalValue" : "totalsValue")
+        }}
+      >
+        {value}
+      </Text>
+    </View>
+  );
+}
+
+export function InvoicePdfTotals({
+  invoice,
+  summaryRows
+}: {
+  invoice: Invoice;
+  summaryRows: InvoiceSummaryRow[];
+}) {
+  const theme = invoice.theme;
+
+  return (
+    <View style={styles.totalSection}>
+      {summaryRows
+        .filter(row => row.isVisible)
+        .map(row => (
+          <InvoicePdfTotalRow
+            key={row.id}
+            theme={theme}
+            label={
+              row.percentage === undefined
+                ? row.label
+                : `${row.label} ${row.percentage}%`
+            }
+            value={row.value}
+            isTotal={row.isTotal}
+          />
+        ))}
+    </View>
+  );
+}
