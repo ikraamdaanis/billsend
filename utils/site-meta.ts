@@ -1,7 +1,7 @@
 const SITE_URL = "https://billsend.io";
-const SITE_NAME = "Billsend";
+const SITE_NAME = "billsend";
 
-export const SITE_TITLE = "Billsend: Free, Private Invoice Generator";
+export const SITE_TITLE = "billsend: Free, Private Invoice Generator";
 
 export const SITE_DESCRIPTION =
   "Create and download professional invoices for free, right in your browser. No accounts, no servers, and nothing ever leaves your device.";

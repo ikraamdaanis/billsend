@@ -98,7 +98,7 @@ export function ImportDataDialog({
         <DialogHeader>
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
-            Import invoices, templates, and images from a Billsend export file.
+            Import invoices, templates, and images from a billsend export file.
           </DialogDescription>
         </DialogHeader>
 
