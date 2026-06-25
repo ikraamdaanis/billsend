@@ -1,4 +1,4 @@
-import { FileTextIcon } from "lucide-react";
+import { IconFileText } from "@tabler/icons-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
 import { DeleteTemplateModal } from "~/components/delete-template-modal";
@@ -76,7 +76,7 @@ export function TemplateSelectionModal({
           <div className="flex-1 overflow-y-auto p-4">
             {templates.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <FileTextIcon className="text-muted-foreground mb-4 h-12 w-12" />
+                <IconFileText className="text-muted-foreground mb-4 h-12 w-12" />
                 <h3 className="text-foreground mb-2 text-lg font-medium">
                   No templates available
                 </h3>

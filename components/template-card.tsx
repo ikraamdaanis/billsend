@@ -1,5 +1,5 @@
+import { IconDotsVertical, IconPencil, IconTrash } from "@tabler/icons-react";
 import { format } from "date-fns";
-import { MoreVerticalIcon, PencilIcon, TrashIcon } from "lucide-react";
 import type { MouseEvent } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -52,20 +52,20 @@ export function TemplateCard({
                   className="size-7 p-0"
                   onClick={event => event.stopPropagation()}
                 >
-                  <MoreVerticalIcon className="size-4" />
+                  <IconDotsVertical className="size-4" />
                 </Button>
               }
             />
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={e => onEdit(template, e)}>
-                <PencilIcon className="mr-2 h-4 w-4" />
+                <IconPencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={e => onDelete(template, e)}
                 className="text-destructive focus:text-destructive"
               >
-                <TrashIcon className="mr-2 h-4 w-4" />
+                <IconTrash className="mr-2 h-4 w-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

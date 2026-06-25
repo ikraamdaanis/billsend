@@ -1,12 +1,12 @@
 import {
-  BookmarkIcon,
-  DownloadIcon,
-  FileIcon,
-  FilePlusIcon,
-  FolderOpenIcon,
-  SaveIcon,
-  UploadIcon
-} from "lucide-react";
+  IconBookmark,
+  IconDeviceFloppy,
+  IconDownload,
+  IconFile,
+  IconFilePlus,
+  IconFolderOpen,
+  IconUpload
+} from "@tabler/icons-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ImportDataDialog } from "~/components/import-data-dialog";
@@ -294,44 +294,44 @@ export function InvoiceFileMenu({
         <MenubarTrigger>File</MenubarTrigger>
         <MenubarContent className="w-auto">
           <MenubarItem onClick={handleNewInvoice} disabled={pending}>
-            <FilePlusIcon className="mr-2 h-4 w-4" />
+            <IconFilePlus className="mr-2 h-4 w-4" />
             New Invoice
           </MenubarItem>
           <MenubarItem onClick={handleOpenInvoice} disabled={pending}>
-            <FolderOpenIcon className="mr-2 h-4 w-4" />
+            <IconFolderOpen className="mr-2 h-4 w-4" />
             Open Invoice
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem onClick={handleSave} disabled={pending}>
-            <SaveIcon className="mr-2 h-4 w-4" />
+            <IconDeviceFloppy className="mr-2 h-4 w-4" />
             Save
           </MenubarItem>
           <MenubarItem onClick={handleSaveAs} disabled={pending}>
-            <FileIcon className="mr-2 h-4 w-4" />
+            <IconFile className="mr-2 h-4 w-4" />
             Save As...
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
-            <BookmarkIcon className="mr-2 h-4 w-4" />
+            <IconBookmark className="mr-2 h-4 w-4" />
             Open Template
           </MenubarItem>
           <MenubarItem
             onClick={() => setSaveTemplateDialogOpen(true)}
             disabled={pending}
           >
-            <SaveIcon className="mr-2 h-4 w-4" />
+            <IconDeviceFloppy className="mr-2 h-4 w-4" />
             Save As Template
           </MenubarItem>
           <MenubarSeparator />
           <MenubarItem onClick={handleExport} disabled={pending}>
-            <DownloadIcon className="mr-2 h-4 w-4" />
+            <IconDownload className="mr-2 h-4 w-4" />
             Export Data
           </MenubarItem>
           <MenubarItem
             onClick={() => setImportDialogOpen(true)}
             disabled={pending}
           >
-            <UploadIcon className="mr-2 h-4 w-4" />
+            <IconUpload className="mr-2 h-4 w-4" />
             Import Data
           </MenubarItem>
         </MenubarContent>
