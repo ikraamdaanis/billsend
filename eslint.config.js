@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import { tanstackConfig } from "@tanstack/eslint-config";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
@@ -12,6 +13,7 @@ export default defineConfig([
   react.configs.flat.recommended,
   react.configs.flat["jsx-runtime"],
   reactHooks.configs.flat.recommended,
+  jsxA11y.flatConfigs.recommended,
   {
     settings: {
       react: {
@@ -40,6 +42,7 @@ export default defineConfig([
       ],
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
+      "jsx-a11y/no-autofocus": "off",
       "import/order": "off",
       "sort-imports": "off",
       "@typescript-eslint/consistent-type-imports": "error",
@@ -81,6 +84,19 @@ export default defineConfig([
     files: ["**/*.{jsx,tsx}"],
     rules: {
       "no-console": "warn"
+    }
+  },
+  {
+    files: ["components/ui/**"],
+    rules: {
+      "jsx-a11y/label-has-associated-control": "off"
+    }
+  },
+  {
+    files: ["components/invoice-canvas.tsx"],
+    rules: {
+      "jsx-a11y/no-static-element-interactions": "off",
+      "jsx-a11y/click-events-have-key-events": "off"
     }
   },
   globalIgnores(["build/**", "dist/**", "**/node_modules/", "**/*.js"])

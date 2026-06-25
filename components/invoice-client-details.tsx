@@ -19,6 +19,7 @@ function ClientLabel() {
 
   return (
     <InvoiceInput
+      aria-label="Client section label"
       value={client.label}
       className="font-medium md:text-base"
       onChange={value => setClient(prev => ({ ...prev, label: value }))}
@@ -37,6 +38,7 @@ function ClientContent() {
   return (
     <InvoiceTextArea
       id="invoice-field-client"
+      aria-label={`${client.label || "Client"} details`}
       value={client.content}
       onChange={value => setClient(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"

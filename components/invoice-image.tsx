@@ -186,6 +186,12 @@ export function InvoiceImage() {
       {({ getRootProps, getInputProps }) => (
         <div
           {...getRootProps()}
+          role="button"
+          aria-label={
+            imageUrl
+              ? "Change invoice logo. Drop an image or activate to browse."
+              : "Upload invoice logo. Drop an image or activate to browse."
+          }
           className={cn(
             "flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden rounded-[3px]",
             isDragging
@@ -199,7 +205,7 @@ export function InvoiceImage() {
             <div className="group relative">
               <img
                 src={imageUrl}
-                alt="Invoice Image"
+                alt="Invoice logo"
                 width={128}
                 height={128}
                 className="h-32 w-32 rounded-[3px] object-cover"
@@ -220,7 +226,7 @@ export function InvoiceImage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-2 text-zinc-500">
-              <Upload className="mb-2 h-8 w-8" />
+              <Upload className="mb-2 h-8 w-8" aria-hidden="true" />
               <span className="text-center text-xs">Upload logo</span>
             </div>
           )}
