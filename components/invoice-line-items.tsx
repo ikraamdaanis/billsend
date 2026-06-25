@@ -130,6 +130,8 @@ export function InvoiceLineItems() {
       })}
     >
       <div
+        role="table"
+        aria-label="Invoice line items"
         className="line-items-container flex flex-col divide-y rounded-[3px] border"
         style={{ borderColor: tableSettings.borderColor }}
       >
@@ -164,6 +166,7 @@ function TableHeader({
 }) {
   return (
     <div
+      role="row"
       className="grid grid-cols-[repeat(4,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_120px_150px]"
       style={{
         backgroundColor: tableSettings.backgroundColor,
@@ -206,8 +209,13 @@ function TableHeaderCell({
   }
 
   return (
-    <div className="col-span-1 text-sm font-medium" style={style}>
+    <div
+      role="columnheader"
+      className="col-span-1 text-sm font-medium"
+      style={style}
+    >
       <InvoiceInput
+        aria-label={`${column.headerPlaceholder} column label`}
         value={label}
         onChange={handleChange}
         className={column.headerInputClassName}
@@ -280,6 +288,7 @@ function LineItem({
 
   return (
     <div
+      role="row"
       className="relative grid grid-cols-[repeat(4,1fr)] items-center gap-2 lg:grid-cols-[1fr_80px_120px_150px]"
       style={{ borderColor: tableSettings.borderColor }}
     >
@@ -287,6 +296,7 @@ function LineItem({
         <TableCell
           key={`${item.id}-${column.id}`}
           column={column}
+          columnLabel={tableSettings.columnLabels[column.id]}
           item={item}
           index={index}
           viewRow={viewRow}
@@ -296,7 +306,11 @@ function LineItem({
         />
       ))}
       {itemCount > 1 && (
-        <RemoveItemButton itemId={item.id} removeItem={removeItem} />
+        <RemoveItemButton
+          itemId={item.id}
+          index={index}
+          removeItem={removeItem}
+        />
       )}
     </div>
   );
@@ -304,6 +318,7 @@ function LineItem({
 
 function TableCell({
   column,
+  columnLabel,
   item,
   index,
   viewRow,
@@ -312,6 +327,7 @@ function TableCell({
   updateItem
 }: {
   column: LineItemColumnConfig;
+  columnLabel: string;
   item: InvoiceItem;
   index: number;
   viewRow: InvoiceLineItemRow;
@@ -393,10 +409,16 @@ function TableCell({
     setIsEditingCurrency(true);
   }
 
+  const cellLabel = columnLabel || column.headerPlaceholder;
+
   if (column.cell.kind === "amount") {
     return (
-      <div className={column.cell.wrapperClassName}>
-        <span className={column.cell.displayClassName} style={rowStyle}>
+      <div role="cell" className={column.cell.wrapperClassName}>
+        <span
+          className={column.cell.displayClassName}
+          style={rowStyle}
+          aria-label={`${cellLabel}, item ${index + 1}`}
+        >
           {viewRow.amount}
         </span>
       </div>
@@ -424,9 +446,10 @@ function TableCell({
       : undefined;
 
   return (
-    <div className={column.cell.wrapperClassName}>
+    <div role="cell" className={column.cell.wrapperClassName}>
       <InvoiceInput
         id={focusId}
+        aria-label={`${cellLabel}, item ${index + 1}`}
         value={inputValue}
         placeholder={column.cell.placeholder}
         onChange={handleChange}
@@ -441,9 +464,11 @@ function TableCell({
 
 function RemoveItemButton({
   itemId,
+  index,
   removeItem
 }: {
   itemId: string;
+  index: number;
   removeItem: RemoveItem;
 }) {
   return (
@@ -451,10 +476,11 @@ function RemoveItemButton({
       <Button
         size="sm"
         variant="ghost"
+        aria-label={`Remove item ${index + 1}`}
         className="h-8 w-8 py-2 hover:bg-zinc-100"
         onClick={() => removeItem(itemId)}
       >
-        <MinusIcon className="h-4 w-4 text-red-700" />
+        <MinusIcon className="h-4 w-4 text-red-700" aria-hidden="true" />
       </Button>
     </div>
   );
@@ -476,7 +502,7 @@ function AddItemButton({
 
   return (
     <Button size="sm" className="my-4 w-fit" onClick={handleAddItem}>
-      <PlusIcon />
+      <PlusIcon aria-hidden="true" />
       Add item
     </Button>
   );

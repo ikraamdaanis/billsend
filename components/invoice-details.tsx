@@ -53,6 +53,7 @@ function DetailRow({ row }: { row: InvoiceDetailRow }) {
     <div className="flex items-center">
       <div className="flex min-w-32 items-center" style={labelStyle}>
         <InvoiceInput
+          aria-label={`${placeholders.label} field label`}
           value={row.label}
           onChange={handleLabelChange}
           className="field-sizing-content h-[unset]! w-auto min-w-fit py-0"
@@ -62,6 +63,7 @@ function DetailRow({ row }: { row: InvoiceDetailRow }) {
       </div>
       <InvoiceInput
         id={row.id === "number" ? "invoice-field-details" : undefined}
+        aria-label={row.label || placeholders.label}
         value={row.value}
         onChange={setValue}
         className="h-[unset]! w-full py-0"
