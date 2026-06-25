@@ -171,12 +171,15 @@ export async function executeImport(
 
   // Import templates with new IDs
   const templateIdMap = new Map<string, string>();
-  for (const t of parsed.templates) {
+  for (const templateExport of parsed.templates) {
     const newId = crypto.randomUUID();
-    templateIdMap.set(t.id, newId);
-    const resolvedName = resolveConflictName(t.name, existingTemplateNames);
+    templateIdMap.set(templateExport.id, newId);
+    const resolvedName = resolveConflictName(
+      templateExport.name,
+      existingTemplateNames
+    );
 
-    const templateData = structuredClone(t.templateData);
+    const templateData = structuredClone(templateExport.templateData);
     const mappedTemplateImage = imageIdMap.get(templateData.image);
     if (mappedTemplateImage) {
       templateData.image = mappedTemplateImage;
@@ -185,38 +188,42 @@ export async function executeImport(
     const template: InvoiceTemplate = {
       id: newId,
       name: resolvedName,
-      description: t.description,
+      description: templateExport.description,
       isDefault: false,
       templateData,
-      screenshotUrl: t.screenshotUrl,
-      createdAt: new Date(t.createdAt),
-      updatedAt: new Date(t.updatedAt)
+      screenshotUrl: templateExport.screenshotUrl,
+      createdAt: new Date(templateExport.createdAt),
+      updatedAt: new Date(templateExport.updatedAt)
     };
     await saveTemplate(template);
   }
 
   // Import invoices with new IDs
-  for (const i of parsed.invoices) {
+  for (const invoiceExport of parsed.invoices) {
     const newId = crypto.randomUUID();
-    const resolvedName = resolveConflictName(i.name, existingInvoiceNames);
+    const resolvedName = resolveConflictName(
+      invoiceExport.name,
+      existingInvoiceNames
+    );
 
-    const invoiceData = structuredClone(i.invoiceData);
+    const invoiceData = structuredClone(invoiceExport.invoiceData);
     const mappedInvoiceImage = imageIdMap.get(invoiceData.image);
     if (mappedInvoiceImage) {
       invoiceData.image = mappedInvoiceImage;
     }
 
-    const newTemplateId = i.templateId
-      ? (templateIdMap.get(i.templateId) ?? i.templateId)
-      : i.templateId;
+    const newTemplateId = invoiceExport.templateId
+      ? (templateIdMap.get(invoiceExport.templateId) ??
+        invoiceExport.templateId)
+      : invoiceExport.templateId;
 
     const invoice: InvoiceDocument = {
       id: newId,
       name: resolvedName,
       invoiceData,
       templateId: newTemplateId,
-      createdAt: new Date(i.createdAt),
-      updatedAt: new Date(i.updatedAt)
+      createdAt: new Date(invoiceExport.createdAt),
+      updatedAt: new Date(invoiceExport.updatedAt)
     };
     await saveInvoice(invoice);
   }
