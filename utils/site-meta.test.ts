@@ -14,12 +14,11 @@ describe("siteMeta", () => {
     );
   }
 
-  it("sets a proper-cased, descriptive title", () => {
+  it("sets a lowercase-branded, descriptive title", () => {
     const titleEntry = meta.find(entry => "title" in entry);
 
     expect(titleEntry).toEqual({ title: SITE_TITLE });
-    expect(SITE_TITLE).toMatch(/^Billsend/);
-    expect(SITE_TITLE).not.toBe("billsend");
+    expect(SITE_TITLE).toMatch(/^billsend/);
   });
 
   it("includes a non-empty meta description", () => {

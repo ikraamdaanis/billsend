@@ -71,7 +71,7 @@ export async function parseExportFile(file: File): Promise<BillsendExportFile> {
   const result = billsendExportSchema.safeParse(json);
   if (!result.success) {
     const firstError = result.error.issues[0]?.message ?? "Unknown error";
-    throw new Error(`The file is not a valid Billsend export: ${firstError}`);
+    throw new Error(`The file is not a valid billsend export: ${firstError}`);
   }
 
   return result.data as unknown as BillsendExportFile;
