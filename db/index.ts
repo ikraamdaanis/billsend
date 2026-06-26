@@ -334,9 +334,22 @@ export async function getAllImages(): Promise<StoredImage[]> {
  * Best-effort: failures are logged but never thrown, since this is background
  * garbage collection that must not disrupt the upload/load/reset it follows.
  */
-export async function cleanupOrphanedImages(
+// Serialises orphan sweeps so overlapping callers (upload, load, save, reset)
+// can't interleave their read-then-bulkDelete and drop a blob another sweep was
+// about to keep. runOrphanCleanup never throws, so the chain never rejects.
+let orphanCleanupChain: Promise<void> = Promise.resolve();
+
+export function cleanupOrphanedImages(
   keepImageIds: string[] = []
 ): Promise<void> {
+  orphanCleanupChain = orphanCleanupChain.then(() =>
+    runOrphanCleanup(keepImageIds)
+  );
+
+  return orphanCleanupChain;
+}
+
+async function runOrphanCleanup(keepImageIds: string[]): Promise<void> {
   try {
     await ensureDbReady();
 

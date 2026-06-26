@@ -52,13 +52,18 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
 }
 
 function makeItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
-  return {
+  const base = {
     id: crypto.randomUUID(),
     description: "Item",
     quantity: 1,
     unitPrice: 0,
-    amount: 0,
     ...overrides
+  };
+
+  return {
+    ...base,
+    amount:
+      overrides.amount ?? Math.round(base.quantity * base.unitPrice * 100) / 100
   };
 }
 
@@ -221,6 +226,22 @@ describe("buildInvoiceViewModel", () => {
       expect(byId.fees.value).toBe("£12.00");
       expect(byId.discounts.value).toBe("£4.00");
       expect(byId.total.value).toBe("£115.50");
+    });
+
+    it("caps the displayed discount so the rows reconcile when over-discounted", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          subtotal: 100,
+          tax: { percentage: 10, amount: 10 },
+          fees: 5,
+          discounts: 1000,
+          total: 0
+        })
+      );
+      const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));
+
+      expect(byId.discounts.value).toBe("£115.00");
+      expect(byId.total.value).toBe("£0.00");
     });
 
     it("flags only the total row as the grand total", () => {
