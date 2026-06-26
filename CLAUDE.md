@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Billsend is a free, local-first invoice generator that runs entirely in the browser. No accounts, no servers, no tracking; all data stays on the user's device in IndexedDB.
+billsend is a free, local-first invoice generator that runs entirely in the browser. No accounts, no servers, no tracking; all data stays on the user's device in IndexedDB.
 
 ## Tech Stack
 

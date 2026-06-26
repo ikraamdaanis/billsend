@@ -1,4 +1,4 @@
-# BillSend
+# billsend
 
 A free, local-first invoice generator that runs entirely in your browser. Create professional invoices with fully customisable templates. No account needed, no servers, no tracking. Your data never leaves your device.
 
