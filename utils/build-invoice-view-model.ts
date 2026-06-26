@@ -52,7 +52,7 @@ export function buildLineItemRow(
     description: item.description,
     quantity: item.quantity,
     unitPrice: formatCurrency(item.unitPrice, currency),
-    amount: formatCurrency(item.quantity * item.unitPrice, currency)
+    amount: formatCurrency(item.amount, currency)
   };
 }
 
@@ -66,6 +66,13 @@ function buildSummaryRows(input: {
   currency: string;
 }): InvoiceSummaryRow[] {
   const { labels, currency } = input;
+
+  // The grand total is clamped at zero when a discount exceeds the chargeable
+  // amount (subtotal + tax + fees). Cap the displayed discount to the same
+  // ceiling so the summary rows still reconcile (subtotal + tax + fees -
+  // discount === total) instead of showing a discount the total doesn't reflect.
+  const chargeable = input.subtotal + input.tax.amount + input.fees;
+  const effectiveDiscount = Math.min(input.discounts, chargeable);
 
   return [
     {
@@ -93,7 +100,7 @@ function buildSummaryRows(input: {
     {
       id: "discounts",
       label: labels.discounts,
-      value: formatCurrency(input.discounts, currency),
+      value: formatCurrency(effectiveDiscount, currency),
       isVisible: input.discounts > 0,
       isTotal: false
     },

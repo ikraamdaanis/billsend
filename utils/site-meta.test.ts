@@ -37,7 +37,7 @@ describe("siteMeta", () => {
   });
 
   it("includes Twitter card tags with an absolute image", () => {
-    expect(findByName("twitter:card")?.content).toBe("summary");
+    expect(findByName("twitter:card")?.content).toBe("summary_large_image");
     expect(findByName("twitter:title")?.content).toBe(SITE_TITLE);
     expect(findByName("twitter:description")?.content).toBe(SITE_DESCRIPTION);
     expect(findByName("twitter:image")?.content).toMatch(/^https:\/\//);
