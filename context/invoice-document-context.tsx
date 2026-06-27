@@ -56,10 +56,14 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
 
     const invoice = ensureItemIds(structuredClone(document.invoiceData));
     useInvoiceStore.getState().setInvoice(invoice);
+    // Snapshot the baseline from the store after setInvoice ran it through
+    // normalize + recalculate, so the dirty check compares like-for-like and
+    // a freshly loaded document can't read as dirty.
+    const normalized = selectInvoiceData(useInvoiceStore.getState());
     setCurrentDocumentId(documentId);
     setCurrentDocumentName(document.name);
-    setLastSavedInvoice(structuredClone(invoice));
-    void cleanupOrphanedImages([invoice.image]);
+    setLastSavedInvoice(structuredClone(normalized));
+    void cleanupOrphanedImages([normalized.image]);
   }, []);
 
   // Persists the live invoice as a brand-new document and makes it current.
