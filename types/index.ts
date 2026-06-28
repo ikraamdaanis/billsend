@@ -74,8 +74,9 @@ export type InvoiceItem = {
   description: string;
   quantity: number;
   unitPrice: number;
-  amount: number;
 };
+
+export type InvoiceItemWithAmount = InvoiceItem & { amount: number };
 
 export type InvoiceSeller = {
   label: string;
@@ -110,14 +111,11 @@ export type Invoice = {
   items: InvoiceItem[];
   tableSettings: TableSettings;
   labels: InvoiceLabels;
-  subtotal: number;
   tax: {
     percentage: number;
-    amount: number;
   };
   fees: number;
   discounts: number;
-  total: number;
   terms: InvoiceTerms;
   pdfSettings: PdfSettings;
   currency: string;
@@ -152,6 +150,13 @@ export type InvoiceViewModel = {
   detailRows: InvoiceDetailRow[];
   lineItems: InvoiceLineItemRow[];
   summaryRows: InvoiceSummaryRow[];
+};
+
+export type InvoiceTotals = {
+  items: InvoiceItemWithAmount[];
+  subtotal: number;
+  taxAmount: number;
+  total: number;
 };
 
 export type InvoiceDocument = {

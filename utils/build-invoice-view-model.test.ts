@@ -33,11 +33,9 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       discounts: "Discounts",
       total: "Total"
     },
-    subtotal: 0,
-    tax: { percentage: 0, amount: 0 },
+    tax: { percentage: 0 },
     fees: 0,
     discounts: 0,
-    total: 0,
     terms: { label: "Terms", content: "" },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
@@ -52,18 +50,12 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
 }
 
 function makeItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
-  const base = {
+  return {
     id: crypto.randomUUID(),
     description: "Item",
     quantity: 1,
     unitPrice: 0,
     ...overrides
-  };
-
-  return {
-    ...base,
-    amount:
-      overrides.amount ?? Math.round(base.quantity * base.unitPrice * 100) / 100
   };
 }
 
@@ -190,7 +182,7 @@ describe("buildInvoiceViewModel", () => {
     it("shows tax, fees, and discounts once they have a value", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
-          tax: { percentage: 20, amount: 20 },
+          tax: { percentage: 20 },
           fees: 5,
           discounts: 3
         })
@@ -208,14 +200,13 @@ describe("buildInvoiceViewModel", () => {
       ]);
     });
 
-    it("formats each summary value and carries the tax percentage", () => {
+    it("derives and formats each summary value and carries the tax percentage", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
-          subtotal: 100,
-          tax: { percentage: 7.5, amount: 7.5 },
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          tax: { percentage: 7.5 },
           fees: 12,
-          discounts: 4,
-          total: 115.5
+          discounts: 4
         })
       );
       const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));
@@ -231,11 +222,10 @@ describe("buildInvoiceViewModel", () => {
     it("caps the displayed discount so the rows reconcile when over-discounted", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
-          subtotal: 100,
-          tax: { percentage: 10, amount: 10 },
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          tax: { percentage: 10 },
           fees: 5,
-          discounts: 1000,
-          total: 0
+          discounts: 1000
         })
       );
       const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));

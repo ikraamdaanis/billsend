@@ -141,6 +141,33 @@ class InvoiceDatabase extends Dexie {
             );
           });
       });
+    // Version 4: Stopped persisting derived money fields (subtotal, total,
+    // per-item amount, tax.amount); they are now computed at render. Re-run
+    // normalizeInvoice, which strips those keys from stored data.
+    this.version(4)
+      .stores({
+        templates: "id, name, createdAt, updatedAt",
+        invoices: "id, name, createdAt, updatedAt",
+        images: "id"
+      })
+      .upgrade(async tx => {
+        await tx
+          .table("invoices")
+          .toCollection()
+          .modify(invoice => {
+            invoice.invoiceData = normalizeInvoice(
+              invoice.invoiceData as Invoice
+            );
+          });
+        await tx
+          .table("templates")
+          .toCollection()
+          .modify(template => {
+            template.templateData = normalizeInvoice(
+              template.templateData as Invoice
+            );
+          });
+      });
   }
 }
 

@@ -37,11 +37,9 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       discounts: "Discounts",
       total: "Total"
     },
-    subtotal: 0,
-    tax: { percentage: 0, amount: 0 },
+    tax: { percentage: 0 },
     fees: 0,
     discounts: 0,
-    total: 0,
     terms: { label: "Terms", content: "" },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
@@ -61,14 +59,13 @@ function makeItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
     description: "Item",
     quantity: 1,
     unitPrice: 0,
-    amount: 0,
     ...overrides
   };
 }
 
 describe("calculateInvoiceTotals", () => {
   it("sums item amounts into the subtotal and total", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [
           makeItem({ quantity: 2, unitPrice: 50 }),
@@ -77,31 +74,31 @@ describe("calculateInvoiceTotals", () => {
       })
     );
 
-    expect(invoice.items[0].amount).toBe(100);
-    expect(invoice.items[1].amount).toBe(30);
-    expect(invoice.subtotal).toBe(130);
-    expect(invoice.total).toBe(130);
+    expect(totals.items[0].amount).toBe(100);
+    expect(totals.items[1].amount).toBe(30);
+    expect(totals.subtotal).toBe(130);
+    expect(totals.total).toBe(130);
   });
 
   it("returns zeros for an invoice with no items", () => {
-    const invoice = calculateInvoiceTotals(makeInvoice({ items: [] }));
+    const totals = calculateInvoiceTotals(makeInvoice({ items: [] }));
 
-    expect(invoice.subtotal).toBe(0);
-    expect(invoice.tax.amount).toBe(0);
-    expect(invoice.total).toBe(0);
+    expect(totals.subtotal).toBe(0);
+    expect(totals.taxAmount).toBe(0);
+    expect(totals.total).toBe(0);
   });
 
   it("rounds each item amount to two decimal places", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({ items: [makeItem({ quantity: 3, unitPrice: 0.335 })] })
     );
 
-    expect(invoice.items[0].amount).toBe(1.01);
-    expect(invoice.subtotal).toBe(1.01);
+    expect(totals.items[0].amount).toBe(1.01);
+    expect(totals.subtotal).toBe(1.01);
   });
 
   it("rounds the subtotal explicitly, absorbing per-item float drift", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [
           makeItem({ quantity: 1, unitPrice: 0.1 }),
@@ -110,60 +107,60 @@ describe("calculateInvoiceTotals", () => {
       })
     );
 
-    expect(invoice.subtotal).toBe(0.3);
+    expect(totals.subtotal).toBe(0.3);
   });
 
   it("applies a whole-number tax percentage to the subtotal", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
-        tax: { percentage: 20, amount: 0 }
+        tax: { percentage: 20 }
       })
     );
 
-    expect(invoice.subtotal).toBe(100);
-    expect(invoice.tax.amount).toBe(20);
-    expect(invoice.total).toBe(120);
+    expect(totals.subtotal).toBe(100);
+    expect(totals.taxAmount).toBe(20);
+    expect(totals.total).toBe(120);
   });
 
   it("rounds fractional tax to two decimal places", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 99.99 })],
-        tax: { percentage: 7.5, amount: 0 }
+        tax: { percentage: 7.5 }
       })
     );
 
-    expect(invoice.subtotal).toBe(99.99);
-    expect(invoice.tax.amount).toBe(7.5);
-    expect(invoice.total).toBe(107.49);
+    expect(totals.subtotal).toBe(99.99);
+    expect(totals.taxAmount).toBe(7.5);
+    expect(totals.total).toBe(107.49);
   });
 
   it("adds fees on top of the subtotal and tax", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
-        tax: { percentage: 10, amount: 0 },
+        tax: { percentage: 10 },
         fees: 15
       })
     );
 
-    expect(invoice.total).toBe(125);
+    expect(totals.total).toBe(125);
   });
 
   it("subtracts discounts from the total", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
         discounts: 30
       })
     );
 
-    expect(invoice.total).toBe(70);
+    expect(totals.total).toBe(70);
   });
 
   it("coerces string-typed quantities, prices, tax, fees, and discounts", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [
           makeItem({
@@ -171,20 +168,20 @@ describe("calculateInvoiceTotals", () => {
             unitPrice: "49.5" as unknown as number
           })
         ],
-        tax: { percentage: "10" as unknown as number, amount: 0 },
+        tax: { percentage: "10" as unknown as number },
         fees: "5" as unknown as number,
         discounts: "4" as unknown as number
       })
     );
 
-    expect(invoice.items[0].amount).toBe(99);
-    expect(invoice.subtotal).toBe(99);
-    expect(invoice.tax.amount).toBe(9.9);
-    expect(invoice.total).toBe(109.9);
+    expect(totals.items[0].amount).toBe(99);
+    expect(totals.subtotal).toBe(99);
+    expect(totals.taxAmount).toBe(9.9);
+    expect(totals.total).toBe(109.9);
   });
 
   it("treats non-numeric strings as zero", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [
           makeItem({
@@ -195,34 +192,34 @@ describe("calculateInvoiceTotals", () => {
       })
     );
 
-    expect(invoice.items[0].amount).toBe(0);
-    expect(invoice.subtotal).toBe(0);
-    expect(invoice.total).toBe(0);
+    expect(totals.items[0].amount).toBe(0);
+    expect(totals.subtotal).toBe(0);
+    expect(totals.total).toBe(0);
   });
 
   it("clamps the total at zero when the discount exceeds the chargeable amount", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
-        tax: { percentage: 10, amount: 0 },
+        tax: { percentage: 10 },
         fees: 5,
         discounts: 1000
       })
     );
 
-    expect(invoice.subtotal).toBe(100);
-    expect(invoice.tax.amount).toBe(10);
-    expect(invoice.total).toBe(0);
+    expect(totals.subtotal).toBe(100);
+    expect(totals.taxAmount).toBe(10);
+    expect(totals.total).toBe(0);
   });
 
   it("clamps to zero exactly when the discount equals the chargeable amount", () => {
-    const invoice = calculateInvoiceTotals(
+    const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
         discounts: 100
       })
     );
 
-    expect(invoice.total).toBe(0);
+    expect(totals.total).toBe(0);
   });
 });
