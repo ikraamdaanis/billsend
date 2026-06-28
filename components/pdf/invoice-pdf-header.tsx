@@ -1,5 +1,5 @@
 import { Image as PDFImage, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { PdfMultilineText } from "~/components/invoice-pdf-text";
+import { PdfMultilineText } from "~/components/pdf/invoice-pdf-text";
 import type { Invoice } from "~/types";
 import { pdfRoleStyle } from "~/utils/pdf-styles";
 

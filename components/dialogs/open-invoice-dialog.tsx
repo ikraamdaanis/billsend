@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import {
   InvoiceListStripeFiller,
   InvoiceListTable
-} from "~/components/invoice-list-table";
+} from "~/components/tables/invoice-list-table";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
