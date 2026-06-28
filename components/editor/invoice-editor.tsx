@@ -1,23 +1,23 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CustomCurrencyDialog } from "~/components/custom-currency-dialog";
-import { DownloadInvoice } from "~/components/download-invoice";
-import { InvoiceCanvas } from "~/components/invoice-canvas";
-import { InvoiceClientDetails } from "~/components/invoice-client-details";
-import { InvoiceDetails } from "~/components/invoice-details";
-import { InvoiceFileMenu } from "~/components/invoice-file-menu";
+import { CustomCurrencyDialog } from "~/components/dialogs/custom-currency-dialog";
+import { DownloadInvoice } from "~/components/pdf/download-invoice";
+import { InvoiceCanvas } from "~/components/editor/invoice-canvas";
+import { InvoiceClientDetails } from "~/components/editor/invoice-client-details";
+import { InvoiceDetails } from "~/components/editor/invoice-details";
+import { InvoiceFileMenu } from "~/components/editor/invoice-file-menu";
 import {
   InvoiceFontFamilyMenu,
   InvoiceFontWeightMenu
-} from "~/components/invoice-font-picker";
-import { InvoiceImage } from "~/components/invoice-image";
-import { InvoiceLineItems } from "~/components/invoice-line-items";
-import { InvoicePricing } from "~/components/invoice-pricing";
-import { InvoiceSellerDetails } from "~/components/invoice-seller-details";
-import { InvoiceTerms } from "~/components/invoice-terms";
-import { InvoiceTitle } from "~/components/invoice-title";
-import { RenameInvoiceDialog } from "~/components/rename-invoice-dialog";
+} from "~/components/editor/invoice-font-picker";
+import { InvoiceImage } from "~/components/editor/invoice-image";
+import { InvoiceLineItems } from "~/components/editor/invoice-line-items";
+import { InvoicePricing } from "~/components/editor/invoice-pricing";
+import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details";
+import { InvoiceTerms } from "~/components/editor/invoice-terms";
+import { InvoiceTitle } from "~/components/editor/invoice-title";
+import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,

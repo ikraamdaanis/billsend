@@ -2,8 +2,8 @@ import { IconFolderOpen, IconLoader2 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { InvoiceListStripeFiller } from "~/components/invoice-list-table";
-import { TemplateListTable } from "~/components/template-list-table";
+import { InvoiceListStripeFiller } from "~/components/tables/invoice-list-table";
+import { TemplateListTable } from "~/components/tables/template-list-table";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
