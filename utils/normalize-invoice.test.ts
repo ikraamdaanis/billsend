@@ -22,8 +22,7 @@ function makeCurrentInvoice(): Invoice {
         id: "i1",
         description: "Work",
         quantity: 1,
-        unitPrice: 100,
-        amount: 100
+        unitPrice: 100
       }
     ],
     tableSettings: {
@@ -46,11 +45,9 @@ function makeCurrentInvoice(): Invoice {
       discounts: "Discounts",
       total: "Total"
     },
-    subtotal: 100,
-    tax: { percentage: 0, amount: 0 },
+    tax: { percentage: 0 },
     fees: 0,
     discounts: 0,
-    total: 100,
     terms: { label: "Terms", content: "" },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
@@ -146,15 +143,13 @@ describe("normalizeInvoice", () => {
     expect(normalized.labels.invoiceNumber).toBe("Invoice No.");
   });
 
-  it("carries the money fields through untouched", () => {
+  it("carries the money inputs through untouched", () => {
     const current = makeCurrentInvoice();
     const normalized = normalizeInvoice(current);
 
-    expect(normalized.subtotal).toBe(current.subtotal);
     expect(normalized.tax).toEqual(current.tax);
     expect(normalized.fees).toBe(current.fees);
     expect(normalized.discounts).toBe(current.discounts);
-    expect(normalized.total).toBe(current.total);
     expect(normalized.items).toEqual(current.items);
   });
 });

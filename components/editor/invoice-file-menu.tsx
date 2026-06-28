@@ -14,6 +14,8 @@ import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
 import { OpenTemplateDialog } from "~/components/dialogs/open-template-dialog";
 import { SaveInvoiceDialog } from "~/components/dialogs/save-invoice-dialog";
 import { SaveTemplateModal } from "~/components/dialogs/save-template-modal";
+import type { UnsavedChangesAction } from "~/components/dialogs/unsaved-changes-dialog";
+import { UnsavedChangesDialog } from "~/components/dialogs/unsaved-changes-dialog";
 import {
   MenubarContent,
   MenubarItem,
@@ -21,8 +23,6 @@ import {
   MenubarSeparator,
   MenubarTrigger
 } from "~/components/ui/menubar";
-import type { UnsavedChangesAction } from "~/components/dialogs/unsaved-changes-dialog";
-import { UnsavedChangesDialog } from "~/components/dialogs/unsaved-changes-dialog";
 import {
   generateDefaultInvoiceName,
   useHasUnsavedChanges,
