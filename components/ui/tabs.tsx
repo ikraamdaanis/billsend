@@ -1,10 +1,9 @@
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
-
 import { cn } from "~/lib/utils";
 
-function Tabs({
+export function Tabs({
   className,
   orientation = "horizontal",
   ...props
@@ -22,7 +21,7 @@ function Tabs({
   );
 }
 
-const tabsListVariants = cva(
+export const tabsListVariants = cva(
   "group/tabs-list inline-flex w-fit items-center justify-center rounded-[3px] p-[3px] text-muted-foreground group-data-horizontal/tabs:h-8 group-data-vertical/tabs:h-fit group-data-vertical/tabs:flex-col data-[variant=line]:rounded-none",
   {
     variants: {
@@ -37,7 +36,7 @@ const tabsListVariants = cva(
   }
 );
 
-function TabsList({
+export function TabsList({
   className,
   variant = "default",
   ...props
@@ -52,7 +51,7 @@ function TabsList({
   );
 }
 
-function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
+export function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -68,7 +67,10 @@ function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
   );
 }
 
-function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
+export function TabsContent({
+  className,
+  ...props
+}: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"
@@ -77,5 +79,3 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
     />
   );
 }
-
-export { Tabs, TabsContent, TabsList, tabsListVariants, TabsTrigger };

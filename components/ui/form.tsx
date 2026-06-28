@@ -37,7 +37,7 @@ export const FormField = <
   );
 };
 
-export const useFormField = () => {
+export function useFormField() {
   const fieldContext = useContext(FormFieldContext);
   const itemContext = useContext(FormItemContext);
   const { getFieldState } = useFormContext();
@@ -54,7 +54,7 @@ export const useFormField = () => {
     formMessageId: `${id}-form-item-message`,
     ...fieldState
   };
-};
+}
 
 export type FormItemContextValue = {
   id: string;

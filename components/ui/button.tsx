@@ -1,10 +1,9 @@
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
-
 import { cn } from "~/lib/utils";
 
-const buttonVariants = cva(
+export const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-[4px] border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-1 focus-visible:ring-ring active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
@@ -41,7 +40,7 @@ const buttonVariants = cva(
   }
 );
 
-function Button({
+export function Button({
   className,
   variant = "default",
   size = "default",
@@ -55,5 +54,3 @@ function Button({
     />
   );
 }
-
-export { Button, buttonVariants };
