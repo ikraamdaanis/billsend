@@ -13,10 +13,8 @@ import type {
   PdfSettings,
   TableSettings
 } from "~/types";
-import {
-  DEFAULT_INVOICE_THEME,
-  normalizeInvoice
-} from "~/utils/normalize-invoice";
+import { DEFAULT_INVOICE_THEME } from "~/schema/invoice";
+import { migrateInvoiceData } from "~/schema/migrations";
 
 export const invoiceDefault: Invoice = {
   id: "1",
@@ -169,9 +167,9 @@ export const useInvoiceStore = create<InvoiceStore>()(
       // Whole state operations
       setInvoice: invoice =>
         set(() => {
-          // Normalize legacy/imported shapes. Totals are derived at render, so
-          // there is nothing to recompute here.
-          return normalizeInvoice(invoice);
+          // Validate + migrate any legacy/imported shape to the current schema.
+          // Totals are derived at render, so there is nothing to recompute here.
+          return migrateInvoiceData(invoice);
         }),
 
       resetInvoice: () =>
