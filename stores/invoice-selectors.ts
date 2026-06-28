@@ -4,32 +4,50 @@ import type { InvoiceStore } from "~/stores/invoice-store";
 import { useInvoiceStore } from "~/stores/invoice-store";
 import type { Invoice } from "~/types";
 
+// The persisted invoice fields, in one place. `satisfies` rejects typos and
+// keys that aren't on Invoice; the MissingKey assertion below rejects forgetting
+// a key, so adding a field to Invoice forces adding it here (or the build fails).
+const INVOICE_DATA_KEYS = [
+  "id",
+  "title",
+  "image",
+  "number",
+  "invoiceDate",
+  "dueDate",
+  "seller",
+  "client",
+  "items",
+  "tableSettings",
+  "labels",
+  "subtotal",
+  "tax",
+  "fees",
+  "discounts",
+  "total",
+  "terms",
+  "pdfSettings",
+  "currency",
+  "theme"
+] as const satisfies ReadonlyArray<keyof Invoice>;
+
+type MissingInvoiceKey = Exclude<
+  keyof Invoice,
+  (typeof INVOICE_DATA_KEYS)[number]
+>;
+// Runtime no-op whose only job is the compile-time constraint: a non-never type
+// argument (an Invoice key missing from the list above) fails to type-check.
+function assertAllInvoiceKeysListed<TMissing extends never>(): TMissing[] {
+  return [];
+}
+assertAllInvoiceKeysListed<MissingInvoiceKey>();
+
 // Picks the persisted invoice fields out of the store state, dropping the
 // action methods. Shared by the useInvoiceData hook and imperative reads
 // (e.g. provider document actions) so the shape stays in one place.
 export function selectInvoiceData(state: InvoiceStore): Invoice {
-  return {
-    id: state.id,
-    title: state.title,
-    image: state.image,
-    number: state.number,
-    invoiceDate: state.invoiceDate,
-    dueDate: state.dueDate,
-    seller: state.seller,
-    client: state.client,
-    items: state.items,
-    tableSettings: state.tableSettings,
-    labels: state.labels,
-    subtotal: state.subtotal,
-    tax: state.tax,
-    fees: state.fees,
-    discounts: state.discounts,
-    total: state.total,
-    terms: state.terms,
-    pdfSettings: state.pdfSettings,
-    currency: state.currency,
-    theme: state.theme
-  };
+  return Object.fromEntries(
+    INVOICE_DATA_KEYS.map(key => [key, state[key]])
+  ) as Invoice;
 }
 
 // Theme slice - global font / size / accent for the whole invoice

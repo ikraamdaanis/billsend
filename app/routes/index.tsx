@@ -10,6 +10,7 @@ import {
   IconWifiOff
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { addDays, format } from "date-fns";
 import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/")({ component: HomePage });
@@ -182,6 +183,8 @@ function Hero() {
 }
 
 function InvoicePreview() {
+  const dueDate = format(addDays(new Date(), 30), "d MMM yyyy");
+
   return (
     <div className="relative mx-auto w-full max-w-md">
       <div className="animate-float rounded-[3px] border border-neutral-200 bg-white shadow-xl shadow-neutral-900/5">
@@ -217,7 +220,7 @@ function InvoicePreview() {
               Due
             </div>
             <div className="font-mono text-neutral-700 tabular-nums">
-              30 Jun 2026
+              {dueDate}
             </div>
           </div>
         </div>
