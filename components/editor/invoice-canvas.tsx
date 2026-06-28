@@ -24,9 +24,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     const page = pageRef.current;
     const section = sectionRef.current;
 
-    if (!page || !section) {
-      return;
-    }
+    if (!page || !section) return;
 
     const pageObserver = new ResizeObserver(() => {
       setPageSize({ width: page.offsetWidth, height: page.offsetHeight });
@@ -65,7 +63,6 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
         <div
           ref={pageRef}
           className="min-h-[297mm] w-[210mm] border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
-          onClick={event => event.stopPropagation()}
           style={{
             ...CANVAS_STATIC_STYLES,
             fontFamily: baseFont.cssFamily,
@@ -86,13 +83,9 @@ function resolveZoom(
   pageSize: { width: number; height: number },
   containerSize: { width: number; height: number }
 ) {
-  if (typeof view === "number") {
-    return view;
-  }
+  if (typeof view === "number") return view;
 
-  if (!pageSize.width || !pageSize.height || !containerSize.width) {
-    return 1;
-  }
+  if (!pageSize.width || !pageSize.height || !containerSize.width) return 1;
 
   const availableWidth = containerSize.width - FIT_PADDING * 2;
   const availableHeight = containerSize.height - FIT_PADDING * 2;

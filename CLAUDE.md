@@ -52,7 +52,7 @@ lib/                 # Helper utilities (cn() classname merger)
 
 ### Imports
 
-- **Absolute imports only**; no relative imports (enforced by ESLint). Uses tsconfig `baseUrl: "."`.
+- **Absolute imports only** via the `~/` path alias (e.g. `~/components/...`), configured in tsconfig `paths`; no relative imports (enforced by ESLint).
 - Use `import type { X }` for type-only imports (enforced).
 
 ### Naming
@@ -102,7 +102,7 @@ lib/                 # Helper utilities (cn() classname merger)
 
 - **No backend**; all persistence is IndexedDB via Dexie
 - **React Compiler enabled**: automatic memoization; avoid manual useMemo/useCallback unless necessary
-- **Dynamic imports** for heavy components (e.g., PDFViewer) to reduce initial bundle
+- **PDF generation** (`@react-pdf/renderer`) lives in the `invoice-pdf-*` / `download-invoice` modules; it is currently statically imported, so it loads with the editor route (a known initial-bundle cost, not yet code-split)
 - **No barrel exports**; import directly from the source file
 - **date-fns** for dates (not dayjs or moment)
 - **lodash-es** for utilities (tree-shakeable ES module version)
