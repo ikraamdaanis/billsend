@@ -1,4 +1,4 @@
-import { InvoiceInput } from "~/components/invoice-input";
+import { InvoiceInput } from "~/components/editor/invoice-input";
 import { useDetailsSlice, useTheme } from "~/stores/invoice-selectors";
 import type { InvoiceDetailRow } from "~/types";
 import { buildDetailRows } from "~/utils/build-invoice-view-model";

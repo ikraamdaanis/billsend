@@ -1,7 +1,7 @@
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import type { ChangeEvent } from "react";
 import { useState } from "react";
-import { InvoiceInput } from "~/components/invoice-input";
+import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
 import { normalizeCurrency } from "~/consts/currencies";
 import { cn } from "~/lib/utils";

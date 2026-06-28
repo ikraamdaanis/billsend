@@ -9,11 +9,11 @@ import {
 } from "@tabler/icons-react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { ImportDataDialog } from "~/components/import-data-dialog";
-import { OpenInvoiceDialog } from "~/components/open-invoice-dialog";
-import { OpenTemplateDialog } from "~/components/open-template-dialog";
-import { SaveInvoiceDialog } from "~/components/save-invoice-dialog";
-import { SaveTemplateModal } from "~/components/save-template-modal";
+import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
+import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
+import { OpenTemplateDialog } from "~/components/dialogs/open-template-dialog";
+import { SaveInvoiceDialog } from "~/components/dialogs/save-invoice-dialog";
+import { SaveTemplateModal } from "~/components/dialogs/save-template-modal";
 import {
   MenubarContent,
   MenubarItem,
@@ -21,8 +21,8 @@ import {
   MenubarSeparator,
   MenubarTrigger
 } from "~/components/ui/menubar";
-import type { UnsavedChangesAction } from "~/components/unsaved-changes-dialog";
-import { UnsavedChangesDialog } from "~/components/unsaved-changes-dialog";
+import type { UnsavedChangesAction } from "~/components/dialogs/unsaved-changes-dialog";
+import { UnsavedChangesDialog } from "~/components/dialogs/unsaved-changes-dialog";
 import {
   generateDefaultInvoiceName,
   useHasUnsavedChanges,

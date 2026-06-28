@@ -1,9 +1,9 @@
 import { IconFileText } from "@tabler/icons-react";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { DeleteTemplateModal } from "~/components/delete-template-modal";
-import { EditTemplateModal } from "~/components/edit-template-modal";
-import { TemplateCard } from "~/components/template-card";
+import { DeleteTemplateModal } from "~/components/dialogs/delete-template-modal";
+import { EditTemplateModal } from "~/components/dialogs/edit-template-modal";
+import { TemplateCard } from "~/components/tables/template-card";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,

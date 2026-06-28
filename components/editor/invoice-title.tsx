@@ -1,4 +1,4 @@
-import { InvoiceInput } from "~/components/invoice-input";
+import { InvoiceInput } from "~/components/editor/invoice-input";
 import { useTheme, useTitleSlice } from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";

@@ -1,9 +1,9 @@
 import { Document, Page, StyleSheet } from "@react-pdf/renderer";
-import { InvoicePdfDetails } from "~/components/invoice-pdf-details";
-import { InvoicePdfHeader } from "~/components/invoice-pdf-header";
-import { InvoicePdfItemsTable } from "~/components/invoice-pdf-items-table";
-import { InvoicePdfTerms } from "~/components/invoice-pdf-terms";
-import { InvoicePdfTotals } from "~/components/invoice-pdf-totals";
+import { InvoicePdfDetails } from "~/components/pdf/invoice-pdf-details";
+import { InvoicePdfHeader } from "~/components/pdf/invoice-pdf-header";
+import { InvoicePdfItemsTable } from "~/components/pdf/invoice-pdf-items-table";
+import { InvoicePdfTerms } from "~/components/pdf/invoice-pdf-terms";
+import { InvoicePdfTotals } from "~/components/pdf/invoice-pdf-totals";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import type { Invoice } from "~/types";
 import { buildInvoiceViewModel } from "~/utils/build-invoice-view-model";

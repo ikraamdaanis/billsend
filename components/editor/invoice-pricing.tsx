@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { InvoiceInput } from "~/components/invoice-input";
+import { InvoiceInput } from "~/components/editor/invoice-input";
 import { formatCurrency } from "~/consts/currencies";
 import {
   useCurrencySymbol,
