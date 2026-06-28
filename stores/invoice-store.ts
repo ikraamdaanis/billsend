@@ -2,6 +2,8 @@ import { addDays, format } from "date-fns";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { DEFAULT_INVOICE_THEME } from "~/schema/invoice";
+import { migrateInvoiceData } from "~/schema/migrations";
 import type {
   Invoice,
   InvoiceClient,
@@ -13,8 +15,6 @@ import type {
   PdfSettings,
   TableSettings
 } from "~/types";
-import { DEFAULT_INVOICE_THEME } from "~/schema/invoice";
-import { migrateInvoiceData } from "~/schema/migrations";
 
 export const invoiceDefault: Invoice = {
   id: "1",

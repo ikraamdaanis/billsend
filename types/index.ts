@@ -1,3 +1,10 @@
+// The persisted invoice shape is defined and validated by the Zod schema; this
+// import + re-export keeps `~/types` the single import site for the inferred
+// type while making it usable by the document/template types below.
+import type { Invoice } from "~/schema/invoice";
+
+export type { Invoice };
+
 export type TextSettings = {
   align: "left" | "center" | "right";
   size: string;
@@ -98,10 +105,6 @@ export type InvoiceTerms = {
 export type PdfSettings = {
   backgroundColor: string;
 };
-
-// The persisted invoice shape is defined and validated by the Zod schema; this
-// re-export keeps `~/types` the single import site for the inferred type.
-export type { Invoice } from "~/schema/invoice";
 
 export type InvoiceDetailRow = {
   id: "number" | "invoiceDate" | "dueDate";

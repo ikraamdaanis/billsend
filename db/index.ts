@@ -162,7 +162,10 @@ class InvoiceDatabase extends Dexie {
           .table("templates")
           .toCollection()
           .modify(template => {
-            template.templateData = migrateInvoiceData(template.templateData, 0);
+            template.templateData = migrateInvoiceData(
+              template.templateData,
+              0
+            );
             template.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
       });
@@ -187,7 +190,10 @@ class InvoiceDatabase extends Dexie {
           .table("templates")
           .toCollection()
           .modify(template => {
-            template.templateData = migrateInvoiceData(template.templateData, 0);
+            template.templateData = migrateInvoiceData(
+              template.templateData,
+              0
+            );
             template.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
       });
