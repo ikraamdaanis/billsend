@@ -3,6 +3,7 @@ import { InvoiceInput } from "~/components/editor/invoice-input";
 import { formatCurrency } from "~/consts/currencies";
 import {
   useCurrencySymbol,
+  useInvoiceTotals,
   usePricingSlice,
   useTheme
 } from "~/stores/invoice-selectors";
@@ -57,7 +58,8 @@ export function InvoicePricing() {
 }
 
 function SubtotalRow() {
-  const { subtotal, currency, labels, setLabels } = usePricingSlice();
+  const { currency, labels, setLabels } = usePricingSlice();
+  const { subtotal } = useInvoiceTotals();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
@@ -83,6 +85,7 @@ function SubtotalRow() {
 
 function TaxRow() {
   const { tax, currency, setTax, labels, setLabels } = usePricingSlice();
+  const { taxAmount } = useInvoiceTotals();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
@@ -129,7 +132,7 @@ function TaxRow() {
         className="ml-auto min-w-40 items-center"
         style={getTextStyles({ settings: valueSettings })}
       >
-        {formatCurrency(tax.amount, currency)}
+        {formatCurrency(taxAmount, currency)}
       </span>
     </div>
   );
@@ -215,7 +218,8 @@ function DiscountsRow() {
 }
 
 function TotalRow() {
-  const { total, currency, labels, setLabels } = usePricingSlice();
+  const { currency, labels, setLabels } = usePricingSlice();
+  const { total } = useInvoiceTotals();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "grandTotalLabel");
   const valueSettings = getRoleSettings(theme, "grandTotalValue");

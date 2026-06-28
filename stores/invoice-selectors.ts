@@ -3,6 +3,7 @@ import { normalizeCurrency } from "~/consts/currencies";
 import type { InvoiceStore } from "~/stores/invoice-store";
 import { useInvoiceStore } from "~/stores/invoice-store";
 import type { Invoice } from "~/types";
+import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 
 // The persisted invoice fields, in one place. `satisfies` rejects typos and
 // keys that aren't on Invoice; the MissingKey assertion below rejects forgetting
@@ -19,11 +20,9 @@ const INVOICE_DATA_KEYS = [
   "items",
   "tableSettings",
   "labels",
-  "subtotal",
   "tax",
   "fees",
   "discounts",
-  "total",
   "terms",
   "pdfSettings",
   "currency",
@@ -126,15 +125,13 @@ export function useLineItemsSlice() {
   );
 }
 
-// Pricing slice
+// Pricing slice (inputs only; the derived totals come from useInvoiceTotals)
 export function usePricingSlice() {
   return useInvoiceStore(
     useShallow(state => ({
-      subtotal: state.subtotal,
       tax: state.tax,
       fees: state.fees,
       discounts: state.discounts,
-      total: state.total,
       currency: state.currency,
       labels: state.labels,
       setTax: state.setTax,
@@ -142,6 +139,32 @@ export function usePricingSlice() {
       setDiscounts: state.setDiscounts,
       setLabels: state.setLabels
     }))
+  );
+}
+
+// Derived money totals (subtotal, tax amount, grand total), recomputed from the
+// pricing inputs. Returns plain numbers so shallow equality only fires a
+// re-render when a total actually changes, not on every unrelated edit.
+export function useInvoiceTotals(): {
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+} {
+  return useInvoiceStore(
+    useShallow(state => {
+      const totals = calculateInvoiceTotals({
+        items: state.items,
+        tax: state.tax,
+        fees: state.fees,
+        discounts: state.discounts
+      });
+
+      return {
+        subtotal: totals.subtotal,
+        taxAmount: totals.taxAmount,
+        total: totals.total
+      };
+    })
   );
 }
 

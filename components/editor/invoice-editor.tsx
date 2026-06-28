@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CustomCurrencyDialog } from "~/components/dialogs/custom-currency-dialog";
-import { DownloadInvoice } from "~/components/pdf/download-invoice";
+import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
 import { InvoiceCanvas } from "~/components/editor/invoice-canvas";
 import { InvoiceClientDetails } from "~/components/editor/invoice-client-details";
 import { InvoiceDetails } from "~/components/editor/invoice-details";
@@ -17,7 +17,7 @@ import { InvoicePricing } from "~/components/editor/invoice-pricing";
 import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details";
 import { InvoiceTerms } from "~/components/editor/invoice-terms";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
-import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
+import { DownloadInvoice } from "~/components/pdf/download-invoice";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,

@@ -8,6 +8,10 @@ import type {
   InvoiceSummaryRow,
   InvoiceViewModel
 } from "~/types";
+import {
+  calculateInvoiceTotals,
+  calculateLineAmount
+} from "~/utils/calculate-invoice-totals";
 
 // Maps an invoice to an ordered, fully-formatted view-model so the HTML canvas
 // and the PDF render from one source instead of duplicating ordering,
@@ -52,7 +56,10 @@ export function buildLineItemRow(
     description: item.description,
     quantity: item.quantity,
     unitPrice: formatCurrency(item.unitPrice, currency),
-    amount: formatCurrency(item.amount, currency)
+    amount: formatCurrency(
+      calculateLineAmount(item.quantity, item.unitPrice),
+      currency
+    )
   };
 }
 
@@ -115,11 +122,21 @@ function buildSummaryRows(input: {
 }
 
 export function buildInvoiceViewModel(invoice: Invoice): InvoiceViewModel {
+  const totals = calculateInvoiceTotals(invoice);
+
   return {
     detailRows: buildDetailRows(invoice),
     lineItems: invoice.items.map(item =>
       buildLineItemRow(item, invoice.currency)
     ),
-    summaryRows: buildSummaryRows(invoice)
+    summaryRows: buildSummaryRows({
+      labels: invoice.labels,
+      subtotal: totals.subtotal,
+      tax: { percentage: invoice.tax.percentage, amount: totals.taxAmount },
+      fees: invoice.fees,
+      discounts: invoice.discounts,
+      total: totals.total,
+      currency: invoice.currency
+    })
   };
 }

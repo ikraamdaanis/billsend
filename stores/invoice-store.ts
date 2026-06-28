@@ -13,7 +13,6 @@ import type {
   PdfSettings,
   TableSettings
 } from "~/types";
-import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 import {
   DEFAULT_INVOICE_THEME,
   normalizeInvoice
@@ -43,8 +42,7 @@ export const invoiceDefault: Invoice = {
       id: crypto.randomUUID(),
       description: "Item 1",
       quantity: 1,
-      unitPrice: 0,
-      amount: 0
+      unitPrice: 0
     }
   ],
   tableSettings: {
@@ -67,14 +65,11 @@ export const invoiceDefault: Invoice = {
     discounts: "Discounts",
     total: "Total"
   },
-  subtotal: 0,
   tax: {
-    percentage: 0,
-    amount: 0
+    percentage: 0
   },
   fees: 0,
   discounts: 0,
-  total: 0,
   terms: {
     label: "Terms and conditions",
     content: ""
@@ -91,15 +86,6 @@ function applyUpdater<T>(current: T, updater: T | ((prev: T) => T)): T {
   return typeof updater === "function"
     ? (updater as (prev: T) => T)(current)
     : updater;
-}
-
-// Helper to recalculate and apply totals
-function recalculate(state: Invoice): void {
-  const calculated = calculateInvoiceTotals(state);
-  state.items = calculated.items;
-  state.subtotal = calculated.subtotal;
-  state.tax = calculated.tax;
-  state.total = calculated.total;
 }
 
 // Actions type
@@ -146,7 +132,7 @@ interface InvoiceActions {
   setTableSettings: (
     settings: TableSettings | ((prev: TableSettings) => TableSettings)
   ) => void;
-  addItem: (item: Omit<InvoiceItem, "amount">) => void;
+  addItem: (item: InvoiceItem) => void;
   removeItem: (itemId: string) => void;
   updateItem: (
     index: number,
@@ -183,9 +169,9 @@ export const useInvoiceStore = create<InvoiceStore>()(
       // Whole state operations
       setInvoice: invoice =>
         set(() => {
-          // Normalize legacy/imported shapes, then recompute totals
-          const calculated = calculateInvoiceTotals(normalizeInvoice(invoice));
-          return { ...calculated };
+          // Normalize legacy/imported shapes. Totals are derived at render, so
+          // there is nothing to recompute here.
+          return normalizeInvoice(invoice);
         }),
 
       resetInvoice: () =>
@@ -198,8 +184,7 @@ export const useInvoiceStore = create<InvoiceStore>()(
                 id: crypto.randomUUID(),
                 description: "Item 1",
                 quantity: 1,
-                unitPrice: 0,
-                amount: 0
+                unitPrice: 0
               }
             ]
           };
@@ -272,15 +257,12 @@ export const useInvoiceStore = create<InvoiceStore>()(
 
       addItem: item =>
         set(state => {
-          const amount = item.quantity * item.unitPrice;
-          state.items.push({ ...item, amount });
-          recalculate(state);
+          state.items.push(item);
         }),
 
       removeItem: itemId =>
         set(state => {
           state.items = state.items.filter(item => item.id !== itemId);
-          recalculate(state);
         }),
 
       updateItem: (index, field, value) =>
@@ -294,32 +276,25 @@ export const useInvoiceStore = create<InvoiceStore>()(
               break;
             case "quantity":
             case "unitPrice":
-            case "amount":
               item[field] = Number(value);
               break;
           }
-
-          item.amount = item.quantity * item.unitPrice;
-          recalculate(state);
         }),
 
       // Pricing
       setTax: tax =>
         set(state => {
           state.tax = applyUpdater(state.tax, tax);
-          recalculate(state);
         }),
 
       setFees: fees =>
         set(state => {
           state.fees = fees;
-          recalculate(state);
         }),
 
       setDiscounts: discounts =>
         set(state => {
           state.discounts = discounts;
-          recalculate(state);
         }),
 
       // Terms

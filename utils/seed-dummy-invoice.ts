@@ -8,7 +8,6 @@ import type {
   InvoiceSize,
   TableSettings
 } from "~/types";
-import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 
 const COMPANY_NAMES = [
   "Acme Studio",
@@ -198,8 +197,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
     id: crypto.randomUUID(),
     description: pickRandom(ITEM_DESCRIPTIONS),
     quantity: randomInt(1, 12),
-    unitPrice: randomInt(1, 80) * 25,
-    amount: 0
+    unitPrice: randomInt(1, 80) * 25
   }));
 
   const createdAt = new Date(
@@ -209,7 +207,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
     createdAt.getTime() + randomInt(0, 48) * 3600 * 1000
   );
 
-  const invoiceData: Invoice = calculateInvoiceTotals({
+  const invoiceData: Invoice = {
     ...invoiceDefault,
     id: crypto.randomUUID(),
     title: pickRandom(TITLES),
@@ -231,7 +229,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
       columnLabels: pickRandom(COLUMN_LABEL_SETS),
       ...pickRandom(TABLE_PALETTES)
     },
-    tax: { percentage: pickRandom(TAX_RATES), amount: 0 },
+    tax: { percentage: pickRandom(TAX_RATES) },
     fees: Math.random() < 0.3 ? randomInt(1, 20) * 5 : 0,
     discounts: Math.random() < 0.25 ? randomInt(1, 20) * 5 : 0,
     terms: {
@@ -241,7 +239,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
     pdfSettings: { backgroundColor: pickRandom(PDF_BACKGROUNDS) },
     currency: pickRandom(currencyOptions).symbol,
     theme: { ...invoiceDefault.theme, size: pickRandom(SIZES) }
-  });
+  };
 
   const invoiceDocument: InvoiceDocument = {
     id: crypto.randomUUID(),

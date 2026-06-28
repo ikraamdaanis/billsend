@@ -51,10 +51,14 @@ type LegacyTableSettings = {
   borderColor?: string;
 };
 
-type LegacyInvoice = Omit<Invoice, "theme" | "tableSettings" | "labels"> & {
+type LegacyInvoice = Omit<
+  Invoice,
+  "theme" | "tableSettings" | "labels" | "tax"
+> & {
   theme?: LegacyInvoiceTheme;
   tableSettings?: LegacyTableSettings;
   labels?: Partial<InvoiceLabels>;
+  tax?: { percentage?: number };
 };
 
 function normalizeTheme(theme: LegacyInvoiceTheme = {}): InvoiceTheme {
@@ -99,8 +103,10 @@ function normalizeTableSettings(
 
 /**
  * Bring any stored or imported invoice up to the current model: guarantee a
- * `theme`, collapse the legacy per-field table settings into column labels, and
- * drop the obsolete per-field `*Settings` keys. Idempotent on new-shaped data.
+ * `theme`, collapse the legacy per-field table settings into column labels, drop
+ * the obsolete per-field `*Settings` keys, and strip derived money fields
+ * (`subtotal`, `total`, per-item `amount`, `tax.amount`) that are now computed at
+ * render. Idempotent on new-shaped data.
  */
 export function normalizeInvoice(raw: Invoice): Invoice {
   const legacy = raw as LegacyInvoice;
@@ -114,14 +120,17 @@ export function normalizeInvoice(raw: Invoice): Invoice {
     dueDate: legacy.dueDate,
     seller: legacy.seller,
     client: legacy.client,
-    items: legacy.items,
+    items: legacy.items.map(item => ({
+      id: item.id,
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice
+    })),
     tableSettings: normalizeTableSettings(legacy.tableSettings),
     labels: { ...DEFAULT_LABELS, ...legacy.labels },
-    subtotal: legacy.subtotal,
-    tax: legacy.tax,
+    tax: { percentage: legacy.tax?.percentage ?? 0 },
     fees: legacy.fees,
     discounts: legacy.discounts,
-    total: legacy.total,
     terms: legacy.terms,
     pdfSettings: legacy.pdfSettings,
     currency: legacy.currency,
