@@ -1,27 +1,30 @@
 "use client";
 
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";
-import type * as React from "react";
-
+import type { ComponentProps } from "react";
 import { cn } from "~/lib/utils";
 
-function ContextMenu({ ...props }: ContextMenuPrimitive.Root.Props) {
+export function ContextMenu({ ...props }: ContextMenuPrimitive.Root.Props) {
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
 }
 
-function ContextMenuTrigger({ ...props }: ContextMenuPrimitive.Trigger.Props) {
+export function ContextMenuTrigger({
+  ...props
+}: ContextMenuPrimitive.Trigger.Props) {
   return (
     <ContextMenuPrimitive.Trigger data-slot="context-menu-trigger" {...props} />
   );
 }
 
-function ContextMenuGroup({ ...props }: ContextMenuPrimitive.Group.Props) {
+export function ContextMenuGroup({
+  ...props
+}: ContextMenuPrimitive.Group.Props) {
   return (
     <ContextMenuPrimitive.Group data-slot="context-menu-group" {...props} />
   );
 }
 
-function ContextMenuContent({
+export function ContextMenuContent({
   align = "start",
   alignOffset = 0,
   side = "bottom",
@@ -55,7 +58,7 @@ function ContextMenuContent({
   );
 }
 
-function ContextMenuItem({
+export function ContextMenuItem({
   className,
   inset,
   variant = "default",
@@ -78,7 +81,7 @@ function ContextMenuItem({
   );
 }
 
-function ContextMenuLabel({
+export function ContextMenuLabel({
   className,
   inset,
   ...props
@@ -98,7 +101,7 @@ function ContextMenuLabel({
   );
 }
 
-function ContextMenuSeparator({
+export function ContextMenuSeparator({
   className,
   ...props
 }: ContextMenuPrimitive.Separator.Props) {
@@ -111,10 +114,10 @@ function ContextMenuSeparator({
   );
 }
 
-function ContextMenuShortcut({
+export function ContextMenuShortcut({
   className,
   ...props
-}: React.ComponentProps<"span">) {
+}: ComponentProps<"span">) {
   return (
     <span
       data-slot="context-menu-shortcut"
@@ -126,14 +129,3 @@ function ContextMenuShortcut({
     />
   );
 }
-
-export {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuGroup,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuShortcut,
-  ContextMenuTrigger
-};

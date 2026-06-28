@@ -5,13 +5,15 @@ import {
   IconChevronUp,
   IconSelector
 } from "@tabler/icons-react";
-import type * as React from "react";
 import type { ComponentProps } from "react";
 import { cn } from "~/lib/utils";
 
-const Select = SelectPrimitive.Root;
+export const Select = SelectPrimitive.Root;
 
-function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
+export function SelectGroup({
+  className,
+  ...props
+}: SelectPrimitive.Group.Props) {
   return (
     <SelectPrimitive.Group
       data-slot="select-group"
@@ -21,7 +23,10 @@ function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   );
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+export function SelectValue({
+  className,
+  ...props
+}: SelectPrimitive.Value.Props) {
   return (
     <SelectPrimitive.Value
       data-slot="select-value"
@@ -31,7 +36,7 @@ function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
   );
 }
 
-function SelectTrigger({
+export function SelectTrigger({
   className,
   size = "default",
   children,
@@ -59,7 +64,7 @@ function SelectTrigger({
   );
 }
 
-function SelectContent({
+export function SelectContent({
   className,
   children,
   side = "bottom",
@@ -101,7 +106,7 @@ function SelectContent({
   );
 }
 
-function SelectLabel({
+export function SelectLabel({
   className,
   ...props
 }: SelectPrimitive.GroupLabel.Props) {
@@ -114,7 +119,7 @@ function SelectLabel({
   );
 }
 
-function SelectItem({
+export function SelectItem({
   className,
   children,
   ...props
@@ -142,7 +147,7 @@ function SelectItem({
   );
 }
 
-function SelectSeparator({
+export function SelectSeparator({
   className,
   ...props
 }: SelectPrimitive.Separator.Props) {
@@ -155,10 +160,10 @@ function SelectSeparator({
   );
 }
 
-function SelectScrollUpButton({
+export function SelectScrollUpButton({
   className,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
+}: ComponentProps<typeof SelectPrimitive.ScrollUpArrow>) {
   return (
     <SelectPrimitive.ScrollUpArrow
       data-slot="select-scroll-up-button"
@@ -173,10 +178,10 @@ function SelectScrollUpButton({
   );
 }
 
-function SelectScrollDownButton({
+export function SelectScrollDownButton({
   className,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
+}: ComponentProps<typeof SelectPrimitive.ScrollDownArrow>) {
   return (
     <SelectPrimitive.ScrollDownArrow
       data-slot="select-scroll-down-button"
@@ -190,19 +195,6 @@ function SelectScrollDownButton({
     </SelectPrimitive.ScrollDownArrow>
   );
 }
-
-export {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue
-};
 
 /**
  * Native HTML Select component with custom chevron styling
