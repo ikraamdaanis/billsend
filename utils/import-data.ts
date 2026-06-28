@@ -7,6 +7,7 @@ import {
   saveInvoice,
   saveTemplate
 } from "~/db";
+import { migrateInvoiceData } from "~/schema/migrations";
 import type {
   BillsendExportFile,
   ImportAnalysis,
@@ -29,6 +30,7 @@ const billsendExportSchema = z.object({
       isDefault: z.boolean(),
       templateData: z.record(z.string(), z.unknown()),
       screenshotUrl: z.string().nullable(),
+      schemaVersion: z.number().int().catch(0),
       createdAt: z.string(),
       updatedAt: z.string()
     })
@@ -39,6 +41,7 @@ const billsendExportSchema = z.object({
       name: z.string(),
       invoiceData: z.record(z.string(), z.unknown()),
       templateId: z.string().nullable(),
+      schemaVersion: z.number().int().catch(0),
       createdAt: z.string(),
       updatedAt: z.string()
     })
@@ -179,7 +182,10 @@ export async function executeImport(
       existingTemplateNames
     );
 
-    const templateData = structuredClone(templateExport.templateData);
+    const templateData = migrateInvoiceData(
+      structuredClone(templateExport.templateData),
+      templateExport.schemaVersion ?? 0
+    );
     const mappedTemplateImage = imageIdMap.get(templateData.image);
     if (mappedTemplateImage) {
       templateData.image = mappedTemplateImage;
@@ -206,7 +212,10 @@ export async function executeImport(
       existingInvoiceNames
     );
 
-    const invoiceData = structuredClone(invoiceExport.invoiceData);
+    const invoiceData = migrateInvoiceData(
+      structuredClone(invoiceExport.invoiceData),
+      invoiceExport.schemaVersion ?? 0
+    );
     const mappedInvoiceImage = imageIdMap.get(invoiceData.image);
     if (mappedInvoiceImage) {
       invoiceData.image = mappedInvoiceImage;

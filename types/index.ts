@@ -99,28 +99,9 @@ export type PdfSettings = {
   backgroundColor: string;
 };
 
-export type Invoice = {
-  id: string;
-  title: string;
-  image: string;
-  number: string;
-  invoiceDate: string;
-  dueDate: string;
-  seller: InvoiceSeller;
-  client: InvoiceClient;
-  items: InvoiceItem[];
-  tableSettings: TableSettings;
-  labels: InvoiceLabels;
-  tax: {
-    percentage: number;
-  };
-  fees: number;
-  discounts: number;
-  terms: InvoiceTerms;
-  pdfSettings: PdfSettings;
-  currency: string;
-  theme: InvoiceTheme;
-};
+// The persisted invoice shape is defined and validated by the Zod schema; this
+// re-export keeps `~/types` the single import site for the inferred type.
+export type { Invoice } from "~/schema/invoice";
 
 export type InvoiceDetailRow = {
   id: "number" | "invoiceDate" | "dueDate";
@@ -164,6 +145,7 @@ export type InvoiceDocument = {
   name: string;
   invoiceData: Invoice;
   templateId: string | null;
+  schemaVersion?: number;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -181,6 +163,7 @@ export type BillsendExportFile = {
     isDefault: boolean;
     templateData: Invoice;
     screenshotUrl: string | null;
+    schemaVersion?: number;
     createdAt: string;
     updatedAt: string;
   }>;
@@ -189,6 +172,7 @@ export type BillsendExportFile = {
     name: string;
     invoiceData: Invoice;
     templateId: string | null;
+    schemaVersion?: number;
     createdAt: string;
     updatedAt: string;
   }>;
@@ -219,6 +203,7 @@ export type InvoiceTemplate = {
   isDefault: boolean;
   templateData: Invoice;
   screenshotUrl: string | null;
+  schemaVersion?: number;
   createdAt: Date;
   updatedAt: Date;
 };
