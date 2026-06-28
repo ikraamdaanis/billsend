@@ -1,8 +1,35 @@
 import type { Table } from "dexie";
 import Dexie from "dexie";
-import type { Invoice, InvoiceDocument, InvoiceTemplate } from "~/types";
-import { normalizeInvoice } from "~/utils/normalize-invoice";
+import {
+  CURRENT_INVOICE_SCHEMA_VERSION,
+  migrateInvoiceData
+} from "~/schema/migrations";
+import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { selectOrphanedImageIds } from "~/utils/select-orphaned-images";
+
+// Validate + migrate stored data on the way out, stamping the current schema
+// version. Old records (no version) are treated as v0 and brought fully current.
+function migrateStoredInvoice(document: InvoiceDocument): InvoiceDocument {
+  return {
+    ...document,
+    invoiceData: migrateInvoiceData(
+      document.invoiceData,
+      document.schemaVersion ?? 0
+    ),
+    schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+  };
+}
+
+function migrateStoredTemplate(template: InvoiceTemplate): InvoiceTemplate {
+  return {
+    ...template,
+    templateData: migrateInvoiceData(
+      template.templateData,
+      template.schemaVersion ?? 0
+    ),
+    schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+  };
+}
 
 export interface StoredImage {
   id: string;
@@ -128,22 +155,20 @@ class InvoiceDatabase extends Dexie {
           .table("invoices")
           .toCollection()
           .modify(invoice => {
-            invoice.invoiceData = normalizeInvoice(
-              invoice.invoiceData as Invoice
-            );
+            invoice.invoiceData = migrateInvoiceData(invoice.invoiceData, 0);
+            invoice.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
         await tx
           .table("templates")
           .toCollection()
           .modify(template => {
-            template.templateData = normalizeInvoice(
-              template.templateData as Invoice
-            );
+            template.templateData = migrateInvoiceData(template.templateData, 0);
+            template.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
       });
     // Version 4: Stopped persisting derived money fields (subtotal, total,
-    // per-item amount, tax.amount); they are now computed at render. Re-run
-    // normalizeInvoice, which strips those keys from stored data.
+    // per-item amount, tax.amount); they are now computed at render. Re-run the
+    // invoice migration, which strips those keys and stamps the schema version.
     this.version(4)
       .stores({
         templates: "id, name, createdAt, updatedAt",
@@ -155,17 +180,15 @@ class InvoiceDatabase extends Dexie {
           .table("invoices")
           .toCollection()
           .modify(invoice => {
-            invoice.invoiceData = normalizeInvoice(
-              invoice.invoiceData as Invoice
-            );
+            invoice.invoiceData = migrateInvoiceData(invoice.invoiceData, 0);
+            invoice.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
         await tx
           .table("templates")
           .toCollection()
           .modify(template => {
-            template.templateData = normalizeInvoice(
-              template.templateData as Invoice
-            );
+            template.templateData = migrateInvoiceData(template.templateData, 0);
+            template.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
       });
   }
@@ -220,7 +243,7 @@ async function ensureDbReady(): Promise<void> {
 export async function getAllTemplates(): Promise<InvoiceTemplate[]> {
   try {
     await ensureDbReady();
-    return await db.templates.toArray();
+    return (await db.templates.toArray()).map(migrateStoredTemplate);
   } catch (error) {
     throw createStorageError(
       error,
@@ -232,7 +255,10 @@ export async function getAllTemplates(): Promise<InvoiceTemplate[]> {
 export async function saveTemplate(template: InvoiceTemplate): Promise<string> {
   try {
     await ensureDbReady();
-    return await db.templates.put(template);
+    return await db.templates.put({
+      ...template,
+      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+    });
   } catch (error) {
     throw createStorageError(
       error,
@@ -256,7 +282,7 @@ export async function deleteTemplate(id: string): Promise<void> {
 export async function getAllInvoices(): Promise<InvoiceDocument[]> {
   try {
     await ensureDbReady();
-    return await db.invoices.toArray();
+    return (await db.invoices.toArray()).map(migrateStoredInvoice);
   } catch (error) {
     throw createStorageError(
       error,
@@ -268,7 +294,10 @@ export async function getAllInvoices(): Promise<InvoiceDocument[]> {
 export async function saveInvoice(invoice: InvoiceDocument): Promise<string> {
   try {
     await ensureDbReady();
-    return await db.invoices.put(invoice);
+    return await db.invoices.put({
+      ...invoice,
+      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+    });
   } catch (error) {
     throw createStorageError(error, "Failed to save invoice to local storage.");
   }
@@ -279,7 +308,9 @@ export async function getInvoice(
 ): Promise<InvoiceDocument | undefined> {
   try {
     await ensureDbReady();
-    return await db.invoices.get(id);
+    const document = await db.invoices.get(id);
+
+    return document ? migrateStoredInvoice(document) : undefined;
   } catch (error) {
     throw createStorageError(
       error,
