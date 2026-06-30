@@ -9,7 +9,7 @@ const CANVAS_STATIC_STYLES: CSSProperties = {
   MozOsxFontSmoothing: "grayscale"
 };
 
-const FIT_PADDING = 32;
+const FIT_PADDING = 16;
 
 export function InvoiceCanvas({ children }: { children: ReactNode }) {
   const { view } = useCanvasView();
@@ -50,7 +50,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
   return (
     <section
       ref={sectionRef}
-      className="relative flex h-full flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-8"
+      className="relative flex h-full flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8"
     >
       <div
         className="shrink-0"
@@ -62,7 +62,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
       >
         <div
           ref={pageRef}
-          className="min-h-[297mm] w-[210mm] border border-zinc-300 bg-white p-4 text-zinc-900 shadow-md sm:p-8 lg:p-16 xl:p-20"
+          className="min-h-[297mm] w-[210mm] border border-zinc-300 bg-white p-[40pt] text-zinc-900 shadow-md"
           style={{
             ...CANVAS_STATIC_STYLES,
             fontFamily: baseFont.cssFamily,
