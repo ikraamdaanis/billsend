@@ -9,8 +9,6 @@ const CANVAS_STATIC_STYLES: CSSProperties = {
   MozOsxFontSmoothing: "grayscale"
 };
 
-const FIT_PADDING = 16;
-
 export function InvoiceCanvas({ children }: { children: ReactNode }) {
   const { view } = useCanvasView();
   const theme = useTheme();
@@ -30,9 +28,15 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
       setPageSize({ width: page.offsetWidth, height: page.offsetHeight });
     });
     const sectionObserver = new ResizeObserver(() => {
+      const styles = getComputedStyle(section);
+      const paddingX =
+        parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+      const paddingY =
+        parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+
       setContainerSize({
-        width: section.clientWidth,
-        height: section.clientHeight
+        width: section.clientWidth - paddingX,
+        height: section.clientHeight - paddingY
       });
     });
 
@@ -87,11 +91,8 @@ function resolveZoom(
 
   if (!pageSize.width || !pageSize.height || !containerSize.width) return 1;
 
-  const availableWidth = containerSize.width - FIT_PADDING * 2;
-  const availableHeight = containerSize.height - FIT_PADDING * 2;
-
   return Math.min(
-    availableWidth / pageSize.width,
-    availableHeight / pageSize.height
+    containerSize.width / pageSize.width,
+    containerSize.height / pageSize.height
   );
 }
