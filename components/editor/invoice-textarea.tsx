@@ -17,7 +17,7 @@ const InvoiceTextAreaComponent = ({
         onChange?.(value);
       }}
       className={cn(
-        "relative w-full cursor-text resize-none overflow-visible rounded-[3px] border border-transparent bg-transparent text-zinc-900 transition-[background-color,border-color,padding] outline-none hover:bg-blue-100 focus:z-20 focus:border-blue-500 focus:bg-blue-100 focus:p-2 focus:outline-none",
+        "relative w-full cursor-text resize-none overflow-hidden rounded-[3px] border border-transparent bg-transparent text-zinc-900 transition-[background-color,border-color,padding] outline-none hover:bg-blue-100 focus:z-20 focus:border-blue-500 focus:bg-blue-100 focus:p-2 focus:outline-none",
         className
       )}
       rows={1}
