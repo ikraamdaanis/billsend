@@ -1,14 +1,13 @@
 import type { ComponentProps } from "react";
-import { memo } from "react";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
 
-const InvoiceInputComponent = ({
+export function InvoiceInput({
   className,
   ...props
 }: Omit<ComponentProps<typeof Input>, "onChange"> & {
   onChange?: (value: string) => void;
-}) => {
+}) {
   return (
     <Input
       {...props}
@@ -22,6 +21,4 @@ const InvoiceInputComponent = ({
       )}
     />
   );
-};
-
-export const InvoiceInput = memo(InvoiceInputComponent);
+}

@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState
-} from "react";
+import { createContext, useContext, useState } from "react";
 import {
   cleanupOrphanedImages,
   getAllInvoices,
@@ -47,7 +41,7 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
 
   // Loads a saved document into the store and marks it as current, sweeping
   // any image blob the previously-edited invoice abandoned.
-  const load = useCallback(async (documentId: string): Promise<void> => {
+  async function load(documentId: string): Promise<void> {
     const document = await getInvoice(documentId);
 
     if (!document) {
@@ -64,104 +58,93 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     setCurrentDocumentName(document.name);
     setLastSavedInvoice(structuredClone(normalized));
     void cleanupOrphanedImages([normalized.image]);
-  }, []);
+  }
 
   // Persists the live invoice as a brand-new document and makes it current.
-  const saveAs = useCallback(
-    async (name: string, templateId: string | null = null): Promise<string> => {
-      const invoice = selectInvoiceData(useInvoiceStore.getState());
-      const now = new Date();
-      const trimmedName = name.trim();
-      const document: InvoiceDocument = {
-        id: crypto.randomUUID(),
-        name: trimmedName,
-        invoiceData: structuredClone(invoice),
-        templateId,
-        createdAt: now,
-        updatedAt: now
-      };
+  async function saveAs(
+    name: string,
+    templateId: string | null = null
+  ): Promise<string> {
+    const invoice = selectInvoiceData(useInvoiceStore.getState());
+    const now = new Date();
+    const trimmedName = name.trim();
+    const document: InvoiceDocument = {
+      id: crypto.randomUUID(),
+      name: trimmedName,
+      invoiceData: structuredClone(invoice),
+      templateId,
+      createdAt: now,
+      updatedAt: now
+    };
 
-      const savedId = await saveInvoice(document);
-      setCurrentDocumentId(savedId);
-      setCurrentDocumentName(trimmedName);
-      setLastSavedInvoice(structuredClone(invoice));
-      void cleanupOrphanedImages([invoice.image]);
+    const savedId = await saveInvoice(document);
+    setCurrentDocumentId(savedId);
+    setCurrentDocumentName(trimmedName);
+    setLastSavedInvoice(structuredClone(invoice));
+    void cleanupOrphanedImages([invoice.image]);
 
-      return savedId;
-    },
-    []
-  );
+    return savedId;
+  }
 
   // Saves the live invoice over an existing document. Defaults to the current
   // document; an explicit documentId/name overwrites and switches to that one.
-  const update = useCallback(
-    async (options?: { documentId?: string; name?: string }): Promise<void> => {
-      const targetId = options?.documentId ?? currentDocumentId;
+  async function update(options?: {
+    documentId?: string;
+    name?: string;
+  }): Promise<void> {
+    const targetId = options?.documentId ?? currentDocumentId;
 
-      if (!targetId) {
-        throw new Error("Invoice document not found");
-      }
+    if (!targetId) {
+      throw new Error("Invoice document not found");
+    }
 
-      const existingDocument = await getInvoice(targetId);
+    const existingDocument = await getInvoice(targetId);
 
-      if (!existingDocument) {
-        throw new Error("Invoice document not found");
-      }
+    if (!existingDocument) {
+      throw new Error("Invoice document not found");
+    }
 
-      const invoice = selectInvoiceData(useInvoiceStore.getState());
-      const updatedDocument: InvoiceDocument = {
-        ...existingDocument,
-        invoiceData: structuredClone(invoice),
-        updatedAt: new Date()
-      };
+    const invoice = selectInvoiceData(useInvoiceStore.getState());
+    const updatedDocument: InvoiceDocument = {
+      ...existingDocument,
+      invoiceData: structuredClone(invoice),
+      updatedAt: new Date()
+    };
 
-      await saveInvoice(updatedDocument);
-      setCurrentDocumentId(targetId);
+    await saveInvoice(updatedDocument);
+    setCurrentDocumentId(targetId);
 
-      if (options?.name !== undefined) {
-        setCurrentDocumentName(options.name);
-      }
+    if (options?.name !== undefined) {
+      setCurrentDocumentName(options.name);
+    }
 
-      setLastSavedInvoice(structuredClone(invoice));
-      void cleanupOrphanedImages([invoice.image]);
-    },
-    [currentDocumentId]
-  );
+    setLastSavedInvoice(structuredClone(invoice));
+    void cleanupOrphanedImages([invoice.image]);
+  }
 
   // Replaces the store with a fresh blank invoice and clears the current
   // document, dropping any now-orphaned image blob.
-  const reset = useCallback((): void => {
+  function reset(): void {
     const invoice = ensureItemIds(structuredClone(invoiceDefault));
     useInvoiceStore.getState().setInvoice(invoice);
     setCurrentDocumentId(null);
     setCurrentDocumentName(null);
     setLastSavedInvoice(null);
     void cleanupOrphanedImages();
-  }, []);
+  }
 
-  const value = useMemo(
-    () => ({
-      currentDocumentId,
-      currentDocumentName,
-      lastSavedInvoice,
-      setCurrentDocumentId,
-      setCurrentDocumentName,
-      setLastSavedInvoice,
-      load,
-      saveAs,
-      update,
-      reset
-    }),
-    [
-      currentDocumentId,
-      currentDocumentName,
-      lastSavedInvoice,
-      load,
-      saveAs,
-      update,
-      reset
-    ]
-  );
+  const value = {
+    currentDocumentId,
+    currentDocumentName,
+    lastSavedInvoice,
+    setCurrentDocumentId,
+    setCurrentDocumentName,
+    setLastSavedInvoice,
+    load,
+    saveAs,
+    update,
+    reset
+  };
 
   return (
     <InvoiceDocumentContext.Provider value={value}>
@@ -188,10 +171,7 @@ export function useHasUnsavedChanges(): boolean {
   const { currentDocumentId, lastSavedInvoice } = useInvoiceDocument();
   const invoice = useInvoiceData();
 
-  return useMemo(
-    () => deriveHasUnsavedChanges(invoice, currentDocumentId, lastSavedInvoice),
-    [invoice, currentDocumentId, lastSavedInvoice]
-  );
+  return deriveHasUnsavedChanges(invoice, currentDocumentId, lastSavedInvoice);
 }
 
 export function generateDefaultInvoiceName(

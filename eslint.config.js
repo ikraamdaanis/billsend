@@ -42,6 +42,7 @@ export default defineConfig([
       ],
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/set-state-in-effect": "off",
+      "react-hooks/exhaustive-deps": "off",
       "jsx-a11y/no-autofocus": "off",
       "import/order": "off",
       "sort-imports": "off",

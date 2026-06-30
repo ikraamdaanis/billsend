@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 type CanvasView = "fit" | number;
 
@@ -13,7 +13,7 @@ const CanvasViewContext = createContext<CanvasViewContextValue | null>(null);
 export function CanvasViewProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<CanvasView>(1);
 
-  const value = useMemo(() => ({ view, setView }), [view]);
+  const value = { view, setView };
 
   return (
     <CanvasViewContext.Provider value={value}>

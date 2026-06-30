@@ -101,7 +101,7 @@ function HomePage() {
 function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/80 backdrop-blur-md">
-      <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_auto_1fr] items-center px-6">
+      <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_1fr] items-center px-6 md:grid-cols-[1fr_auto_1fr]">
         <Link to="/" className="flex items-center gap-2 justify-self-start">
           <span className="font-bricolage-grotesque text-brand-600 text-xl font-semibold tracking-tight">
             billsend
