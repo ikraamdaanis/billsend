@@ -1,14 +1,13 @@
 import type { ComponentProps } from "react";
-import { memo } from "react";
 import { cn } from "~/lib/utils";
 
-const InvoiceTextAreaComponent = ({
+export function InvoiceTextArea({
   className,
   onChange,
   ...props
 }: Omit<ComponentProps<"textarea">, "onChange" | "ref"> & {
   onChange?: (value: string) => void;
-}) => {
+}) {
   return (
     <textarea
       {...props}
@@ -23,6 +22,4 @@ const InvoiceTextAreaComponent = ({
       rows={1}
     />
   );
-};
-
-export const InvoiceTextArea = memo(InvoiceTextAreaComponent);
+}

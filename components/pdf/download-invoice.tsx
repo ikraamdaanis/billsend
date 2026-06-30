@@ -1,6 +1,6 @@
 import { pdf } from "@react-pdf/renderer";
 import type { ComponentProps } from "react";
-import { useMemo, useTransition } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { InvoicePDF } from "~/components/pdf/invoice-generator";
 import { Button } from "~/components/ui/button";
@@ -18,11 +18,8 @@ export function DownloadInvoice({
 
   const [pending, startTransition] = useTransition();
 
-  // Create a stable copy of the invoice data with loaded image URL
-  const stableInvoice = useMemo(
-    () => ({ ...invoice, image: imageUrl }),
-    [invoice, imageUrl]
-  );
+  // A copy of the invoice data with the loaded image URL swapped in.
+  const stableInvoice = { ...invoice, image: imageUrl };
 
   // Generate PDF blob URL for "Open in new tab" button
   function handleCreatePdfUrl() {

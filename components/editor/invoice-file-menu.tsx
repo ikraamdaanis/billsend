@@ -7,7 +7,7 @@ import {
   IconFolderOpen,
   IconUpload
 } from "@tabler/icons-react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
 import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
@@ -72,47 +72,41 @@ export function InvoiceFileMenu({
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [pending, startTransition] = useTransition();
 
-  const runWithUnsavedGuard = useCallback(
-    (action: () => void) => {
-      if (hasUnsavedChanges) {
-        setPendingAction(() => action);
-        setUnsavedDialogOpen(true);
-      } else {
-        action();
-      }
-    },
-    [hasUnsavedChanges]
-  );
+  function runWithUnsavedGuard(action: () => void) {
+    if (hasUnsavedChanges) {
+      setPendingAction(() => action);
+      setUnsavedDialogOpen(true);
+    } else {
+      action();
+    }
+  }
 
-  const setSaveAsDialogOpen = useCallback(
-    (open: boolean) => {
-      if (!open) setPendingAction(null);
+  function setSaveAsDialogOpen(open: boolean) {
+    if (!open) setPendingAction(null);
 
-      setInternalSaveAsDialogOpen(open);
-      onExternalSaveDialogOpenChange?.(open);
-    },
-    [onExternalSaveDialogOpenChange]
-  );
+    setInternalSaveAsDialogOpen(open);
+    onExternalSaveDialogOpenChange?.(open);
+  }
 
-  const handleNewInvoice = useCallback(() => {
+  function handleNewInvoice() {
     runWithUnsavedGuard(() => {
       reset();
     });
-  }, [runWithUnsavedGuard, reset]);
+  }
 
-  const handleOpenInvoice = useCallback(() => {
+  function handleOpenInvoice() {
     runWithUnsavedGuard(() => {
       setOpenDialogOpen(true);
     });
-  }, [runWithUnsavedGuard]);
+  }
 
-  const handleOpenTemplate = useCallback(() => {
+  function handleOpenTemplate() {
     runWithUnsavedGuard(() => {
       setTemplateDialogOpen(true);
     });
-  }, [runWithUnsavedGuard]);
+  }
 
-  const handleSave = useCallback((): Promise<void> => {
+  function handleSave(): Promise<void> {
     if (!currentDocumentId) {
       setSaveAsDialogOpen(true);
 
@@ -133,13 +127,13 @@ export function InvoiceFileMenu({
         }
       });
     });
-  }, [currentDocumentId, update, setSaveAsDialogOpen]);
+  }
 
-  const handleSaveAs = useCallback(() => {
+  function handleSaveAs() {
     setSaveAsDialogOpen(true);
-  }, [setSaveAsDialogOpen]);
+  }
 
-  const handleExport = useCallback(() => {
+  function handleExport() {
     startTransition(async () => {
       try {
         await exportAllData();
@@ -150,7 +144,7 @@ export function InvoiceFileMenu({
         );
       }
     });
-  }, []);
+  }
 
   function handleSelectTemplate(template: InvoiceTemplate) {
     startTransition(() => {
