@@ -1,40 +1,46 @@
 /**
  * Takes a string value and returns a formatted percentage string.
- * Only allows integer values. Returns a valid integer string 0-100
- * without leading zeros. Only allows 3 digits if the value is 100.
+ * Allows up to 2 decimal places. The whole-number part is limited to two
+ * digits, so an overshoot like "400" is truncated to "40" rather than
+ * clamped to 100. An exact "100" is the single allowed three-digit value so
+ * the full 0-100 range stays reachable.
  */
 export function handlePercentageInput(value: string) {
-  // Remove percentage symbols, commas, and all
-  // non-numeric characters including decimals
-  let numericValue = value.replace(/[^0-9]/g, "");
+  let numericValue = value.replace(/[^0-9.]/g, "");
 
-  // Handle leading zeros and edge cases
-  if (!numericValue || numericValue === "00") {
+  if (numericValue === "" || numericValue === ".") {
     return "0";
   }
 
-  // Remove leading zeros for numbers like 0123
-  if (numericValue.startsWith("0") && numericValue.length > 1) {
-    numericValue = numericValue.replace(/^0+/, "");
+  // Collapse multiple decimal points down to the first one.
+  const firstDotIndex = numericValue.indexOf(".");
+
+  if (firstDotIndex !== -1) {
+    numericValue =
+      numericValue.slice(0, firstDotIndex + 1) +
+      numericValue.slice(firstDotIndex + 1).replace(/\./g, "");
   }
 
-  // Handle maximum of 100 and limit characters
-  if (numericValue.length > 2) {
-    // Check if it's exactly "100"
-    if (numericValue.startsWith("100")) {
+  const hasDecimal = numericValue.includes(".");
+  let [wholePart, decimalPart = ""] = numericValue.split(".");
+
+  // Strip leading zeros, keeping a single "0".
+  if (wholePart.length > 1) {
+    wholePart = wholePart.replace(/^0+/, "") || "0";
+  }
+
+  // Limit the whole-number part to two digits (truncate the overshoot),
+  // except for an exact "100".
+  if (wholePart.length > 2) {
+    if (wholePart.startsWith("100")) {
       return "100";
     }
 
-    // If the first two digits make a number <= 100, keep only the first two digits
-    const firstTwoDigits = numericValue.substring(0, 2);
-    const twoDigitValue = parseInt(firstTwoDigits, 10);
-
-    if (twoDigitValue <= 100) {
-      return firstTwoDigits;
-    } else {
-      return "100";
-    }
+    wholePart = wholePart.slice(0, 2);
   }
 
-  return numericValue;
+  // Limit decimal places to 2.
+  decimalPart = decimalPart.slice(0, 2);
+
+  return hasDecimal ? `${wholePart}.${decimalPart}` : wholePart;
 }
