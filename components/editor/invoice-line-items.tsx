@@ -340,6 +340,7 @@ function TableCell({
   updateItem: UpdateItem;
 }) {
   const [isEditingCurrency, setIsEditingCurrency] = useState(false);
+  const [currencyDraft, setCurrencyDraft] = useState("");
 
   const rowStyle = getTextStyles({
     settings: getRoleSettings(theme, column.rowRole)
@@ -374,6 +375,18 @@ function TableCell({
       let numericValue = value
         .replace(currencySymbol, "")
         .replace(/[^0-9.]/g, "");
+
+      const firstDot = numericValue.indexOf(".");
+
+      if (firstDot !== -1) {
+        const wholePart = numericValue.slice(0, firstDot);
+        const decimalPart = numericValue
+          .slice(firstDot + 1)
+          .replace(/\./g, "")
+          .slice(0, 2);
+        numericValue = `${wholePart}.${decimalPart}`;
+      }
+
       if (
         numericValue.length > 1 &&
         numericValue.startsWith("0") &&
@@ -382,10 +395,11 @@ function TableCell({
         numericValue = numericValue.replace(/^0+/, "");
       }
 
+      setCurrencyDraft(numericValue);
       updateItem(
         index,
         itemField,
-        numericValue === "" ? 0 : Number(numericValue)
+        numericValue === "" || numericValue === "." ? 0 : Number(numericValue)
       );
     }
   }
@@ -396,6 +410,7 @@ function TableCell({
     }
 
     setIsEditingCurrency(false);
+    setCurrencyDraft("");
 
     const hasDigits = /\d/.test(target.value);
     const number = Number(
@@ -410,6 +425,7 @@ function TableCell({
       return;
     }
 
+    setCurrencyDraft(item.unitPrice.toString());
     setIsEditingCurrency(true);
   }
 
@@ -440,7 +456,7 @@ function TableCell({
 
   if (column.cell.kind === "currency") {
     inputValue = isEditingCurrency
-      ? `${currencySymbol}${item.unitPrice.toString()}`
+      ? `${currencySymbol}${currencyDraft}`
       : viewRow.unitPrice;
   }
 
