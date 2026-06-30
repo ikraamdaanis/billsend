@@ -323,7 +323,7 @@ function LeavePageDialog({
 
 function Top() {
   return (
-    <div className="flex flex-col-reverse items-start justify-between gap-4 sm:flex-row">
+    <div className="flex flex-row items-start justify-between gap-4">
       <div className="flex w-full flex-col gap-4">
         <InvoiceTitle />
         <InvoiceSellerDetails />
@@ -336,7 +336,7 @@ function Top() {
 function Mid() {
   return (
     <>
-      <div className="mt-2 grid gap-8 sm:grid-cols-2">
+      <div className="mt-2 grid grid-cols-2 gap-8">
         <InvoiceClientDetails />
         <InvoiceDetails />
       </div>
