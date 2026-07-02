@@ -204,12 +204,12 @@ export function ImportDataDialog({
         </div>
 
         <DialogFooter>
+          <Button variant="outline" onClick={handleClose}>
+            {state === "done" ? "Done" : "Cancel"}
+          </Button>
           {state === "preview" && (
             <Button onClick={handleImport}>Import</Button>
           )}
-          <Button variant="secondary" onClick={handleClose}>
-            {state === "done" ? "Done" : "Cancel"}
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

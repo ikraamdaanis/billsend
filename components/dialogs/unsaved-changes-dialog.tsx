@@ -30,7 +30,7 @@ export function UnsavedChangesDialog({
         </DialogHeader>
         <DialogFooter>
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={() => {
               onAction("cancel");
               onOpenChange(false);
@@ -39,7 +39,7 @@ export function UnsavedChangesDialog({
             Cancel
           </Button>
           <Button
-            variant="secondary"
+            variant="destructive"
             onClick={() => {
               onAction("discard");
               onOpenChange(false);

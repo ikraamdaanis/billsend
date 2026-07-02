@@ -53,10 +53,10 @@ export function DeleteTemplateModal({
             &quot;? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="flex items-center gap-2">
+        <DialogFooter>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
@@ -67,7 +67,6 @@ export function DeleteTemplateModal({
             variant="destructive"
             onClick={handleDelete}
             disabled={pending}
-            className="flex items-center gap-2"
           >
             {pending ? "Deleting..." : "Delete Template"}
           </Button>
