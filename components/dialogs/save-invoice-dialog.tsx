@@ -140,7 +140,7 @@ export function SaveInvoiceDialog({
             <DialogFooter>
               <Button
                 type="button"
-                variant="secondary"
+                variant="outline"
                 onClick={handleCancel}
                 disabled={pending}
               >

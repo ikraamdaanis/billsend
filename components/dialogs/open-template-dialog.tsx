@@ -285,7 +285,7 @@ export function OpenTemplateDialog({
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
           <span className="text-muted-foreground text-sm">{footerLabel}</span>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
             <Button

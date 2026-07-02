@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconPencil } from "@tabler/icons-react";
 import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -152,10 +151,10 @@ export function EditTemplateModal({
             />
           </form>
         </Form>
-        <DialogFooter className="flex items-center gap-2">
+        <DialogFooter>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={handleClose}
             disabled={pending}
           >
@@ -165,9 +164,7 @@ export function EditTemplateModal({
             type="button"
             onClick={form.handleSubmit(handleSubmit)}
             disabled={pending}
-            className="flex items-center gap-2"
           >
-            <IconPencil className="h-4 w-4" />
             Update Template
           </Button>
         </DialogFooter>

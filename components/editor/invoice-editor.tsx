@@ -309,12 +309,12 @@ function LeavePageDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+          <Button variant="outline" onClick={() => setIsModalOpen(false)}>
             Cancel
           </Button>
-          <Link to="/">
-            <Button variant="destructive">Leave</Button>
-          </Link>
+          <Button variant="destructive" render={<Link to="/" />}>
+            Leave
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
