@@ -4,10 +4,12 @@ import type { Invoice, InvoiceDetailRow } from "~/types";
 import { pdfRoleStyle } from "~/utils/pdf-styles";
 
 const styles = StyleSheet.create({
+  detailsSection: {
+    marginBottom: 20
+  },
   detailsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
     gap: 40
   },
   clientInfo: {
@@ -46,44 +48,46 @@ export function InvoicePdfDetails({
   const theme = invoice.theme;
 
   return (
-    <View style={styles.detailsRow}>
-      <View style={styles.clientInfo}>
-        {invoice.client.label && (
-          <Text
-            style={{
-              ...styles.clientLabel,
-              ...pdfRoleStyle(theme, "sectionLabel")
-            }}
-          >
-            {invoice.client.label}
-          </Text>
-        )}
-        <PdfMultilineText
-          text={invoice.client.content}
-          style={pdfRoleStyle(theme, "sectionContent", { marginBottom: 2 })}
-        />
-      </View>
-      <View style={styles.invoiceDetails}>
-        {detailRows.map(row => (
-          <View key={row.id} style={styles.detailsField}>
-            <Text
-              style={{
-                ...styles.detailsLabel,
-                ...pdfRoleStyle(theme, "detailLabel")
-              }}
-            >
-              {row.label}
-            </Text>
-            <Text
-              style={{
-                ...styles.detailsValue,
-                ...pdfRoleStyle(theme, "detailValue")
-              }}
-            >
-              {row.value}
-            </Text>
-          </View>
-        ))}
+    <View style={styles.detailsSection}>
+      {invoice.client.label && (
+        <Text
+          style={{
+            ...styles.clientLabel,
+            ...pdfRoleStyle(theme, "sectionLabel")
+          }}
+        >
+          {invoice.client.label}
+        </Text>
+      )}
+      <View style={styles.detailsRow}>
+        <View style={styles.clientInfo}>
+          <PdfMultilineText
+            text={invoice.client.content}
+            style={pdfRoleStyle(theme, "sectionContent", { marginBottom: 2 })}
+          />
+        </View>
+        <View style={styles.invoiceDetails}>
+          {detailRows.map(row => (
+            <View key={row.id} style={styles.detailsField}>
+              <Text
+                style={{
+                  ...styles.detailsLabel,
+                  ...pdfRoleStyle(theme, "detailLabel")
+                }}
+              >
+                {row.label}
+              </Text>
+              <Text
+                style={{
+                  ...styles.detailsValue,
+                  ...pdfRoleStyle(theme, "detailValue")
+                }}
+              >
+                {row.value}
+              </Text>
+            </View>
+          ))}
+        </View>
       </View>
     </View>
   );

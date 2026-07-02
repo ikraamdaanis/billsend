@@ -6,7 +6,7 @@ import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceClientDetails() {
   return (
-    <section className="flex flex-col gap-1">
+    <section className="col-start-1 row-span-2 grid grid-rows-subgrid">
       <ClientLabel />
       <ClientContent />
     </section>
