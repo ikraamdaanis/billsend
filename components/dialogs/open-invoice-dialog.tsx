@@ -1,4 +1,4 @@
-import { IconFolderOpen, IconLoader2, IconSparkles } from "@tabler/icons-react";
+import { IconFolderOpen, IconLoader2 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -310,11 +310,10 @@ export function OpenInvoiceDialog({
                 onClick={handleSeedDummyInvoice}
                 disabled={seeding}
               >
-                <IconSparkles />
                 Add dummy
               </Button>
             )}
-            <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
               Close
             </Button>
             <Button

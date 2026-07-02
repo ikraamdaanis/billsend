@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconDeviceFloppy } from "@tabler/icons-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -234,10 +233,10 @@ export function SaveTemplateModal({
             />
           </form>
         </Form>
-        <DialogFooter className="flex items-center gap-2">
+        <DialogFooter>
           <Button
             type="button"
-            variant="secondary"
+            variant="outline"
             onClick={handleCancel}
             disabled={pending}
           >
@@ -247,9 +246,7 @@ export function SaveTemplateModal({
             type="button"
             onClick={form.handleSubmit(handleSubmit)}
             disabled={pending}
-            className="flex items-center gap-2"
           >
-            <IconDeviceFloppy className="h-4 w-4" />
             {selectedTemplateId && selectedTemplateId !== "new"
               ? "Update Template"
               : "Create Template"}
