@@ -336,9 +336,11 @@ function Top() {
 function Mid() {
   return (
     <>
-      <div className="mt-2 grid grid-cols-2 gap-8">
+      <div className="mt-2 grid grid-cols-2 grid-rows-[auto_auto] gap-x-8 gap-y-1">
         <InvoiceClientDetails />
-        <InvoiceDetails />
+        <div className="col-start-2 row-start-2">
+          <InvoiceDetails />
+        </div>
       </div>
     </>
   );
