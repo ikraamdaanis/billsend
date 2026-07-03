@@ -26,7 +26,7 @@ export function Menubar({ className, ...props }: MenubarPrimitive.Props) {
     <MenubarPrimitive
       data-slot="menubar"
       className={cn(
-        "flex h-8 items-center gap-0.5 rounded-[3px] px-[3px]",
+        "rounded-surface flex h-8 items-center gap-0.5 px-[3px]",
         className
       )}
       {...props}
@@ -58,7 +58,7 @@ export function MenubarTrigger({
     <DropdownMenuTrigger
       data-slot="menubar-trigger"
       className={cn(
-        "hover:bg-muted aria-expanded:bg-muted flex items-center rounded-[3px] px-1.5 py-[2px] text-sm font-medium outline-hidden select-none",
+        "hover:bg-muted aria-expanded:bg-muted rounded-surface flex items-center px-1.5 py-[2px] text-sm font-medium outline-hidden select-none",
         className
       )}
       {...props}
@@ -80,7 +80,7 @@ export function MenubarContent({
       alignOffset={alignOffset}
       sideOffset={sideOffset}
       className={cn(
-        "bg-popover text-popover-foreground ring-foreground/10 min-w-36 rounded-[3px] p-1 shadow-md ring-1 duration-0 data-closed:animate-none data-open:animate-none",
+        "bg-popover text-popover-foreground ring-foreground/10 rounded-surface shadow-menu min-w-36 p-1 ring-1 duration-0 data-closed:animate-none data-open:animate-none",
         className
       )}
       {...props}
@@ -100,7 +100,7 @@ export function MenubarItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "group/menubar-item focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:*:[svg]:text-destructive! gap-1.5 rounded-[3px] px-1.5 py-1 text-sm data-disabled:opacity-50 data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4",
+        "group/menubar-item focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:*:[svg]:text-destructive! rounded-surface gap-1.5 px-1.5 py-1 text-sm data-disabled:opacity-50 data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -122,7 +122,7 @@ export function MenubarCheckboxItem({
       data-slot="menubar-checkbox-item"
       data-inset={inset}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground relative flex cursor-default items-center gap-1.5 rounded-[3px] py-1 pr-1.5 pl-7 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground rounded-surface relative flex cursor-default items-center gap-1.5 py-1 pr-1.5 pl-7 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0",
         className
       )}
       checked={checked}
@@ -159,7 +159,7 @@ export function MenubarRadioItem({
       data-inset={inset}
       closeOnClick={closeOnClick}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground aria-checked:bg-accent flex cursor-default items-center gap-1.5 rounded-[3px] px-1.5 py-1 text-sm whitespace-nowrap outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground aria-checked:bg-accent rounded-surface flex cursor-default items-center gap-1.5 px-1.5 py-1 text-sm whitespace-nowrap outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-7 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -238,7 +238,7 @@ export function MenubarSubTrigger({
       delay={0}
       closeDelay={0}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground gap-1.5 rounded-[3px] px-1.5 py-1 text-sm data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4",
+        "focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground rounded-surface gap-1.5 px-1.5 py-1 text-sm data-inset:pl-7 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -254,7 +254,7 @@ export function MenubarSubContent({
     <DropdownMenuSubContent
       data-slot="menubar-sub-content"
       className={cn(
-        "bg-popover text-popover-foreground ring-foreground/10 min-w-32 rounded-[3px] p-1 shadow-lg ring-1 duration-0 data-closed:animate-none data-open:animate-none",
+        "bg-popover text-popover-foreground ring-foreground/10 rounded-surface min-w-32 p-1 shadow-lg ring-1 duration-0 data-closed:animate-none data-open:animate-none",
         className
       )}
       {...props}

@@ -189,7 +189,7 @@ export function InvoiceImage() {
           role="button"
           aria-label={`${imageUrl ? "Change" : "Upload"} invoice logo. Drop an image or activate to browse.`}
           className={cn(
-            "flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden rounded-[3px]",
+            "rounded-surface flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden",
             isDragging
               ? "bg-brand-100 border-brand-500 border-2 border-dashed"
               : "bg-zinc-100",
@@ -204,9 +204,9 @@ export function InvoiceImage() {
                 alt="Invoice logo"
                 width={128}
                 height={128}
-                className="h-32 w-32 rounded-[3px] object-cover"
+                className="rounded-surface h-32 w-32 object-cover"
               />
-              <div className="absolute inset-0 flex items-center justify-center rounded-[3px] bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="rounded-surface absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
                 <Button
                   variant="destructive"
                   size="sm"

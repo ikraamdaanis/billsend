@@ -132,7 +132,7 @@ export function InvoiceLineItems() {
       <div
         role="table"
         aria-label="Invoice line items"
-        className="line-items-container flex flex-col rounded-[3px] border"
+        className="line-items-container flex flex-col rounded-surface border"
         style={{ borderColor: tableSettings.borderColor }}
       >
         <div role="rowgroup" className="flex flex-col">
