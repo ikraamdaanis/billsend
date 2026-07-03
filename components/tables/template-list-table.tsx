@@ -398,7 +398,7 @@ export function TemplateListTable({
                         onFocus={event => event.currentTarget.select()}
                         onKeyDown={event => handleEditKeyDown(event, template)}
                         onBlur={() => finishRename(template, true)}
-                        className="bg-background text-foreground outline-brand-500 -my-0.5 -ml-1 h-6 w-full min-w-0 rounded-[3px] px-1 text-sm font-medium outline-2 -outline-offset-1"
+                        className="bg-background text-foreground outline-brand-500 rounded-surface -my-0.5 -ml-1 h-6 w-full min-w-0 px-1 text-sm font-medium outline-2 -outline-offset-1"
                       />
                     ) : (
                       <span className="min-w-0 truncate font-medium">

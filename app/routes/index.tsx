@@ -142,7 +142,7 @@ function Hero() {
       />
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-6 py-20 lg:grid-cols-2 lg:gap-12 lg:py-28">
         <div className="animate-fade-in-up flex flex-col items-start">
-          <span className="border-brand-200 bg-brand-50 text-brand-700 inline-flex items-center gap-2 rounded-[3px] border px-3 py-1 text-sm font-medium">
+          <span className="border-brand-200 bg-brand-50 text-brand-700 rounded-surface inline-flex items-center gap-2 border px-3 py-1 text-sm font-medium">
             <IconShieldCheck className="size-3.5" />
             Runs entirely in your browser
           </span>
@@ -187,10 +187,10 @@ function InvoicePreview() {
 
   return (
     <div className="relative mx-auto w-full max-w-md">
-      <div className="animate-float rounded-[3px] border border-neutral-200 bg-white shadow-xl shadow-neutral-900/5">
+      <div className="animate-float rounded-surface border border-neutral-200 bg-white shadow-xl shadow-neutral-900/5">
         <div className="flex items-start justify-between border-b border-neutral-200 p-6">
           <div className="flex flex-col gap-2">
-            <div className="bg-brand-600 flex size-9 items-center justify-center rounded-[3px]">
+            <div className="bg-brand-600 rounded-surface flex size-9 items-center justify-center">
               <span className="font-display text-base font-semibold text-white">
                 b
               </span>
@@ -236,7 +236,7 @@ function InvoicePreview() {
           </span>
         </div>
       </div>
-      <div className="absolute -bottom-4 -left-4 hidden items-center gap-2 rounded-[3px] border border-neutral-200 bg-white px-3 py-2 shadow-lg sm:flex">
+      <div className="rounded-surface absolute -bottom-4 -left-4 hidden items-center gap-2 border border-neutral-200 bg-white px-3 py-2 shadow-lg sm:flex">
         <IconDatabase className="text-brand-600 size-4" />
         <span className="text-sm font-medium text-neutral-700">
           Saved locally
@@ -298,7 +298,7 @@ function Features() {
             spreadsheets, no subscriptions, and no data leaving your computer.
           </p>
         </div>
-        <div className="mt-14 overflow-hidden rounded-[3px] border border-neutral-200 bg-neutral-200">
+        <div className="rounded-surface mt-14 overflow-hidden border border-neutral-200 bg-neutral-200">
           <div className="grid gap-px sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(feature => (
               <FeatureCell key={feature.title} feature={feature} />
@@ -319,7 +319,7 @@ function FeatureCell({
 
   return (
     <div className="group flex flex-col gap-4 bg-neutral-50 p-8 transition-colors hover:bg-white">
-      <div className="border-brand-200 bg-brand-50 text-brand-600 flex size-10 items-center justify-center rounded-[3px] border">
+      <div className="border-brand-200 bg-brand-50 text-brand-600 rounded-surface flex size-10 items-center justify-center border">
         <Icon className="size-5" />
       </div>
       <div className="flex flex-col gap-2">
@@ -346,7 +346,7 @@ function Steps() {
             From blank page to PDF
           </h2>
         </div>
-        <div className="mt-14 grid gap-px overflow-hidden rounded-[3px] border border-neutral-200 bg-neutral-200 md:grid-cols-3">
+        <div className="rounded-surface mt-14 grid gap-px overflow-hidden border border-neutral-200 bg-neutral-200 md:grid-cols-3">
           {STEPS.map(step => (
             <div
               key={step.number}
@@ -378,7 +378,7 @@ function PrivacyPanel() {
       className="border-b border-neutral-200 py-20 sm:py-28"
     >
       <div className="mx-auto max-w-6xl px-6">
-        <div className="bg-brand-50/40 relative overflow-hidden rounded-[3px] border border-neutral-200 px-8 py-16 sm:px-16">
+        <div className="bg-brand-50/40 rounded-surface relative overflow-hidden border border-neutral-200 px-8 py-16 sm:px-16">
           <div
             className="pointer-events-none absolute inset-0 mask-[radial-gradient(ellipse_80%_80%_at_50%_0%,black,transparent)] opacity-70"
             style={{
@@ -400,7 +400,7 @@ function PrivacyPanel() {
               like, clear them whenever you want. We genuinely cannot see them.
             </p>
           </div>
-          <div className="relative mt-12 grid gap-px overflow-hidden rounded-[3px] border border-neutral-200 bg-neutral-200 sm:grid-cols-3">
+          <div className="rounded-surface relative mt-12 grid gap-px overflow-hidden border border-neutral-200 bg-neutral-200 sm:grid-cols-3">
             <Assurance
               title="No accounts"
               description="Open the app and start. There is nothing to sign up for."
