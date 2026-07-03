@@ -30,7 +30,7 @@ export function TemplateCard({
   onDelete: (template: InvoiceTemplate, event: MouseEvent) => void;
 }) {
   return (
-    <div className="group relative flex h-full flex-col rounded-[3px] border-2 transition-all duration-200">
+    <div className="group relative flex h-full flex-col rounded-surface border-2 transition-all duration-200">
       <div className="relative aspect-[1.6/1] w-full overflow-hidden rounded-t-md bg-linear-to-br from-gray-50 to-gray-100 p-4">
         {renderTemplatePreview(template)}
       </div>
