@@ -1,10 +1,19 @@
 import type { Table } from "dexie";
 import Dexie from "dexie";
 import {
+  BUSINESS_PROFILE_ID,
+  createDefaultBusinessProfile,
+  normalizeBusinessProfile
+} from "~/schema/business-profile";
+import {
   CURRENT_INVOICE_SCHEMA_VERSION,
   migrateInvoiceData
 } from "~/schema/migrations";
-import type { InvoiceDocument, InvoiceTemplate } from "~/types";
+import type {
+  BusinessProfile,
+  InvoiceDocument,
+  InvoiceTemplate
+} from "~/types";
 import { selectOrphanedImageIds } from "~/utils/select-orphaned-images";
 
 // Validate + migrate stored data on the way out, stamping the current schema
@@ -125,6 +134,7 @@ class InvoiceDatabase extends Dexie {
   templates!: Table<InvoiceTemplate, string>;
   invoices!: Table<InvoiceDocument, string>;
   images!: Table<StoredImage, string>;
+  profiles!: Table<BusinessProfile, string>;
 
   constructor() {
     super("InvoiceDatabase");
@@ -196,6 +206,23 @@ class InvoiceDatabase extends Dexie {
             );
             template.schemaVersion = CURRENT_INVOICE_SCHEMA_VERSION;
           });
+      });
+    // Version 5: Added the singleton business profile. Existing invoices,
+    // templates, and images are untouched; the upgrade only provisions a
+    // default (empty) profile so returning users have one to edit.
+    this.version(5)
+      .stores({
+        templates: "id, name, createdAt, updatedAt",
+        invoices: "id, name, createdAt, updatedAt",
+        images: "id",
+        profiles: "id"
+      })
+      .upgrade(async tx => {
+        const existing = await tx.table("profiles").get(BUSINESS_PROFILE_ID);
+
+        if (existing) return;
+
+        await tx.table("profiles").put(createDefaultBusinessProfile());
       });
   }
 }
@@ -337,6 +364,46 @@ export async function deleteInvoice(id: string): Promise<void> {
   }
 }
 
+/**
+ * Read the singleton business profile, lazily provisioning a default (empty)
+ * one the first time it is requested. Fresh installs skip the version-5
+ * migration (Dexie only runs upgrades for existing lower versions), so this is
+ * the seam that guarantees a profile always exists. Stored data is normalized
+ * on the way out so a partial record is repaired rather than trusted blindly.
+ */
+export async function getBusinessProfile(): Promise<BusinessProfile> {
+  try {
+    await ensureDbReady();
+    const stored = await db.profiles.get(BUSINESS_PROFILE_ID);
+
+    if (stored) return normalizeBusinessProfile(stored);
+
+    const fresh = createDefaultBusinessProfile();
+    await db.profiles.put(fresh);
+
+    return fresh;
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to load business profile from local storage."
+    );
+  }
+}
+
+export async function saveBusinessProfile(
+  profile: BusinessProfile
+): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.profiles.put({ ...profile, id: BUSINESS_PROFILE_ID });
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to save business profile to local storage."
+    );
+  }
+}
+
 export async function saveImage(
   id: string,
   blob: Blob,
@@ -417,15 +484,17 @@ async function runOrphanCleanup(keepImageIds: string[]): Promise<void> {
   try {
     await ensureDbReady();
 
-    const [invoices, templates, images] = await Promise.all([
+    const [invoices, templates, images, profile] = await Promise.all([
       db.invoices.toArray(),
       db.templates.toArray(),
-      db.images.toArray()
+      db.images.toArray(),
+      db.profiles.get(BUSINESS_PROFILE_ID)
     ]);
 
     const referencedImageIds = [
       ...invoices.map(invoice => invoice.invoiceData.image),
-      ...templates.map(template => template.templateData.image)
+      ...templates.map(template => template.templateData.image),
+      profile?.logoImageId ?? ""
     ];
 
     const orphanedImageIds = selectOrphanedImageIds(

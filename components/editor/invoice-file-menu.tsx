@@ -1,5 +1,6 @@
 import {
   IconBookmark,
+  IconBuildingStore,
   IconDeviceFloppy,
   IconDownload,
   IconFile,
@@ -9,6 +10,7 @@ import {
 } from "@tabler/icons-react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { BusinessProfileDialog } from "~/components/dialogs/business-profile-dialog";
 import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
 import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
 import { OpenTemplateDialog } from "~/components/dialogs/open-template-dialog";
@@ -63,6 +65,7 @@ export function InvoiceFileMenu({
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
   const [defaultName, setDefaultName] = useState<string>("Invoice 001");
@@ -317,6 +320,14 @@ export function InvoiceFileMenu({
             Save As Template
           </MenubarItem>
           <MenubarSeparator />
+          <MenubarItem
+            onClick={() => setProfileDialogOpen(true)}
+            disabled={pending}
+          >
+            <IconBuildingStore className="mr-2 h-4 w-4" />
+            Business Profile
+          </MenubarItem>
+          <MenubarSeparator />
           <MenubarItem onClick={handleExport} disabled={pending}>
             <IconDownload className="mr-2 h-4 w-4" />
             Export Data
@@ -362,6 +373,10 @@ export function InvoiceFileMenu({
       <ImportDataDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
+      />
+      <BusinessProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
       />
     </>
   );
