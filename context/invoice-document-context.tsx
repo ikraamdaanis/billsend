@@ -14,7 +14,10 @@ import { invoiceDefault, useInvoiceStore } from "~/stores/invoice-store";
 import type { Invoice, InvoiceDocument } from "~/types";
 import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
-import { advanceInvoiceNumber } from "~/utils/invoice-numbering";
+import {
+  advanceInvoiceNumber,
+  formatInvoiceNumber
+} from "~/utils/invoice-numbering";
 
 type InvoiceDocumentContextValue = {
   currentDocumentId: string | null;
@@ -87,6 +90,20 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     setLastSavedInvoice(structuredClone(invoice));
     void cleanupOrphanedImages([invoice.image]);
 
+    // Reserve the auto-number at save time, not seed time: only advance the
+    // counter when this new invoice actually carries the current auto-number.
+    // A duplicate of a loaded invoice or a user-overridden number differs, so
+    // it never consumes a fresh number. This means merely opening the editor
+    // or clicking "New" can't skip numbers the way seed-time advancing did.
+    const profile = await getBusinessProfile();
+
+    if (invoice.number === formatInvoiceNumber(profile.numbering)) {
+      await saveBusinessProfile({
+        ...profile,
+        numbering: advanceInvoiceNumber(profile.numbering)
+      });
+    }
+
     return savedId;
   }
 
@@ -131,6 +148,9 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
   // from the saved business profile, so the seller details and logo pre-fill
   // while the profile itself stays untouched. The seeded invoice becomes the
   // baseline, so a freshly pre-filled document doesn't immediately read dirty.
+  // The numbering counter is intentionally left alone here: it advances only
+  // when a new invoice is actually saved (see `saveAs`), so seeding a blank on
+  // every mount or "New" click can't skip numbers.
   async function reset(): Promise<void> {
     const profile = await getBusinessProfile();
     useInvoiceStore.getState().resetInvoice(profile);
@@ -139,13 +159,6 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     setCurrentDocumentName(null);
     setLastSavedInvoice(structuredClone(normalized));
     void cleanupOrphanedImages([normalized.image]);
-    // Advance the counter so the next new invoice gets the next number. The
-    // freshly seeded invoice already captured this number as a plain string, so
-    // any per-invoice override the user makes afterwards can't reach back here.
-    void saveBusinessProfile({
-      ...profile,
-      numbering: advanceInvoiceNumber(profile.numbering)
-    });
   }
 
   // On first mount of a fresh editor session (no document loaded and the store
