@@ -39,7 +39,16 @@ const businessProfileFormSchema = z.object({
     .max(200, "Business name must be less than 200 characters"),
   address: z.string().max(1000, "Address must be less than 1000 characters"),
   email: z.string().max(200, "Email must be less than 200 characters"),
-  phone: z.string().max(100, "Phone must be less than 100 characters")
+  phone: z.string().max(100, "Phone must be less than 100 characters"),
+  bankName: z.string().max(200, "Bank name must be less than 200 characters"),
+  accountNumber: z
+    .string()
+    .max(100, "Account number must be less than 100 characters"),
+  iban: z.string().max(100, "IBAN must be less than 100 characters"),
+  sortCode: z.string().max(100, "Sort code must be less than 100 characters"),
+  paymentTerms: z
+    .string()
+    .max(1000, "Payment instructions must be less than 1000 characters")
 });
 
 export function BusinessProfileDialog({
@@ -58,7 +67,12 @@ export function BusinessProfileDialog({
       businessName: "",
       address: "",
       email: "",
-      phone: ""
+      phone: "",
+      bankName: "",
+      accountNumber: "",
+      iban: "",
+      sortCode: "",
+      paymentTerms: ""
     }
   });
 
@@ -77,7 +91,12 @@ export function BusinessProfileDialog({
           businessName: profile.businessName,
           address: profile.address,
           email: profile.email,
-          phone: profile.phone
+          phone: profile.phone,
+          bankName: profile.paymentDetails.bankName,
+          accountNumber: profile.paymentDetails.accountNumber,
+          iban: profile.paymentDetails.iban,
+          sortCode: profile.paymentDetails.sortCode,
+          paymentTerms: profile.paymentDetails.terms
         });
         setLogoImageId(profile.logoImageId);
       } catch (error) {
@@ -105,7 +124,14 @@ export function BusinessProfileDialog({
           address: data.address.trim(),
           email: data.email.trim(),
           phone: data.phone.trim(),
-          logoImageId
+          logoImageId,
+          paymentDetails: {
+            bankName: data.bankName.trim(),
+            accountNumber: data.accountNumber.trim(),
+            iban: data.iban.trim(),
+            sortCode: data.sortCode.trim(),
+            terms: data.paymentTerms.trim()
+          }
         });
         void cleanupOrphanedImages([logoImageId]);
         toast.success("Business profile saved");
@@ -196,6 +222,87 @@ export function BusinessProfileDialog({
                   )}
                 />
               </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium">Payment details</p>
+                <p className="text-muted-foreground text-xs">
+                  Tell clients how to pay you. Pre-filled onto new invoices;
+                  leave any field blank to omit it.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="bankName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Acme Bank" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="accountNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Account number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12345678" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="iban"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IBAN</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="GB29 NWBK 6016 1331 9268 19"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sortCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sort code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="12-34-56" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="paymentTerms"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment instructions</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={"Net 30\nPayPal: pay@acmeinc.com"}
+                        rows={2}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <DialogFooter>
               <Button

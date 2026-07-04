@@ -37,6 +37,14 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     fees: 0,
     discounts: 0,
     terms: { label: "Terms", content: "" },
+    paymentDetails: {
+      label: "Payment details",
+      bankName: "",
+      accountNumber: "",
+      iban: "",
+      sortCode: "",
+      terms: ""
+    },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
     theme: {
