@@ -56,6 +56,35 @@ describe("createBlankInvoice", () => {
     expect(invoice.image).toBe("logo-123");
   });
 
+  it("seeds the payment details from the profile", () => {
+    const invoice = createBlankInvoice(
+      profile({
+        paymentDetails: {
+          bankName: "Acme Bank",
+          accountNumber: "12345678",
+          iban: "GB29 NWBK 6016 1331 9268 19",
+          sortCode: "12-34-56",
+          terms: "Net 30"
+        }
+      })
+    );
+
+    expect(invoice.paymentDetails).toEqual({
+      label: invoiceDefault.paymentDetails.label,
+      bankName: "Acme Bank",
+      accountNumber: "12345678",
+      iban: "GB29 NWBK 6016 1331 9268 19",
+      sortCode: "12-34-56",
+      terms: "Net 30"
+    });
+  });
+
+  it("leaves the payment details empty when no profile is supplied", () => {
+    const invoice = createBlankInvoice();
+
+    expect(invoice.paymentDetails).toEqual(invoiceDefault.paymentDetails);
+  });
+
   it("keeps the seller label and placeholder from the default", () => {
     const invoice = createBlankInvoice(profile({ businessName: "Acme Inc." }));
 
@@ -72,6 +101,23 @@ describe("createBlankInvoice", () => {
 
     expect(invoice.seller.content).toBe("Acme Inc.");
     expect(invoice.image).toBe("");
+  });
+
+  it("is non-retroactive for payment details: editing the profile afterwards leaves the invoice untouched", () => {
+    const savedProfile = profile({
+      paymentDetails: {
+        bankName: "Acme Bank",
+        accountNumber: "12345678",
+        iban: "",
+        sortCode: "",
+        terms: ""
+      }
+    });
+    const invoice = createBlankInvoice(savedProfile);
+
+    savedProfile.paymentDetails.bankName = "Renamed Bank";
+
+    expect(invoice.paymentDetails.bankName).toBe("Acme Bank");
   });
 
   it("returns an independent invoice on each call", () => {
