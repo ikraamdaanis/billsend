@@ -1,22 +1,31 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { Invoice } from "~/types";
 import { pdfRoleStyle } from "~/utils/pdf-styles";
+import { SCALE_FACTOR } from "~/utils/scale-font-size";
 
 const styles = StyleSheet.create({
   section: {
     marginTop: 20
   },
-  title: {
-    marginBottom: 4,
-    fontWeight: "medium",
-    fontSize: 12
+  fields: {
+    marginTop: 6,
+    flexDirection: "column",
+    gap: 3
   },
-  row: {
-    fontSize: 10,
-    color: "#6b7280"
+  field: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6
   },
   fieldLabel: {
-    color: "#374151"
+    width: 96,
+    flexShrink: 0
+  },
+  fieldValue: {
+    flex: 1
+  },
+  terms: {
+    marginTop: 6
   }
 });
 
@@ -35,37 +44,38 @@ export function InvoicePdfPaymentDetails({ invoice }: { invoice: Invoice }) {
     return null;
   }
 
+  // The editor renders each label as a plain `text-sm text-zinc-500` span (a
+  // fixed 14px that never scales with the theme). Scale it to PDF without the
+  // rounding scaleFontSize applies: rounding 10.5 up to 11 would swallow the
+  // gap to the section heading (11pt on medium, 12pt on large), which the
+  // editor keeps because its heading scales while the label stays 14px.
+  const labelStyle = pdfRoleStyle(theme, "termsContent", {
+    ...styles.fieldLabel,
+    fontSize: 14 * SCALE_FACTOR,
+    fontWeight: 400,
+    color: "#71717a"
+  });
+  const valueStyle = pdfRoleStyle(theme, "termsContent", styles.fieldValue);
+
   return (
     <View style={styles.section}>
       {paymentDetails.label && (
-        <Text
-          style={{
-            ...styles.title,
-            ...pdfRoleStyle(theme, "sectionLabel")
-          }}
-        >
+        <Text style={pdfRoleStyle(theme, "sectionLabel")}>
           {paymentDetails.label}
         </Text>
       )}
-      {rows.map(field => (
-        <Text
-          key={field.key}
-          style={{
-            ...styles.row,
-            ...pdfRoleStyle(theme, "termsContent")
-          }}
-        >
-          <Text style={styles.fieldLabel}>{field.label}: </Text>
-          {paymentDetails[field.key]}
-        </Text>
-      ))}
+      {rows.length > 0 && (
+        <View style={styles.fields}>
+          {rows.map(field => (
+            <View key={field.key} style={styles.field}>
+              <Text style={labelStyle}>{field.label}</Text>
+              <Text style={valueStyle}>{paymentDetails[field.key]}</Text>
+            </View>
+          ))}
+        </View>
+      )}
       {paymentDetails.terms && (
-        <Text
-          style={{
-            ...styles.row,
-            ...pdfRoleStyle(theme, "termsContent")
-          }}
-        >
+        <Text style={pdfRoleStyle(theme, "termsContent", styles.terms)}>
           {paymentDetails.terms}
         </Text>
       )}
