@@ -5,6 +5,7 @@ import { immer } from "zustand/middleware/immer";
 import { DEFAULT_INVOICE_THEME } from "~/schema/invoice";
 import { migrateInvoiceData } from "~/schema/migrations";
 import type {
+  BusinessProfile,
   Invoice,
   InvoiceClient,
   InvoiceItem,
@@ -79,6 +80,43 @@ export const invoiceDefault: Invoice = {
   theme: DEFAULT_INVOICE_THEME
 };
 
+// Compose a saved business profile's structured sender fields into the single
+// multi-line seller content block a new invoice carries, dropping empty fields.
+function composeSellerContent(profile: BusinessProfile): string {
+  return [profile.businessName, profile.address, profile.email, profile.phone]
+    .map(field => field.trim())
+    .filter(field => field.length > 0)
+    .join("\n");
+}
+
+/**
+ * The single factory that seeds a fresh, blank invoice. This is the one place a
+ * new invoice is created, so it is also the sole seam that reads the business
+ * profile: when a profile is supplied, the new invoice's seller content and
+ * logo are pre-filled from it. The returned invoice is a plain snapshot, so
+ * editing it (or the profile) later never mutates the other.
+ */
+export function createBlankInvoice(profile?: BusinessProfile): Invoice {
+  const blank: Invoice = {
+    ...invoiceDefault,
+    items: invoiceDefault.items.map(item => ({
+      ...item,
+      id: crypto.randomUUID()
+    }))
+  };
+
+  if (!profile) return blank;
+
+  return {
+    ...blank,
+    image: profile.logoImageId,
+    seller: {
+      ...blank.seller,
+      content: composeSellerContent(profile)
+    }
+  };
+}
+
 // Helper to apply updater (value or function)
 function applyUpdater<T>(current: T, updater: T | ((prev: T) => T)): T {
   return typeof updater === "function"
@@ -90,7 +128,7 @@ function applyUpdater<T>(current: T, updater: T | ((prev: T) => T)): T {
 interface InvoiceActions {
   // Whole state operations
   setInvoice: (invoice: Invoice) => void;
-  resetInvoice: () => void;
+  resetInvoice: (profile?: BusinessProfile) => void;
 
   // Theme
   setTheme: (
@@ -172,21 +210,11 @@ export const useInvoiceStore = create<InvoiceStore>()(
           return migrateInvoiceData(invoice);
         }),
 
-      resetInvoice: () =>
+      resetInvoice: profile =>
         set(() => {
-          // Create fresh default with new item IDs
-          const fresh = {
-            ...invoiceDefault,
-            items: [
-              {
-                id: crypto.randomUUID(),
-                description: "Item 1",
-                quantity: 1,
-                unitPrice: 0
-              }
-            ]
-          };
-          return fresh;
+          // Route blank creation through the factory so seeding from the
+          // business profile lives in exactly one place.
+          return createBlankInvoice(profile);
         }),
 
       // Theme
