@@ -5,6 +5,7 @@ import { invoiceDefault } from "~/stores/invoice-store";
 import type {
   Invoice,
   InvoiceDocument,
+  InvoicePaymentDetails,
   InvoiceSize,
   TableSettings
 } from "~/types";
@@ -120,6 +121,25 @@ const TERMS_CONTENTS = [
   "All amounts are in the currency shown and exclude any bank charges."
 ];
 
+const BANKS = [
+  { name: "Barclays", code: "BARC" },
+  { name: "HSBC UK", code: "HBUK" },
+  { name: "Lloyds Bank", code: "LOYD" },
+  { name: "NatWest", code: "NWBK" },
+  { name: "Santander", code: "ABBY" },
+  { name: "Monzo", code: "MONZ" },
+  { name: "Starling Bank", code: "SRLG" },
+  { name: "Halifax", code: "HLFX" }
+];
+
+const PAYMENT_INSTRUCTIONS = [
+  "Net 30",
+  "Due on receipt",
+  "Please pay within 14 days of the invoice date.",
+  "Payment due within 30 days. Late payments incur a 2% monthly fee.",
+  "Bank transfer preferred; please quote the invoice number as the reference."
+];
+
 const COLUMN_LABEL_SETS: TableSettings["columnLabels"][] = [
   {
     description: "Item",
@@ -183,6 +203,29 @@ function buildContactBlock(name: string): string {
   ].join("\n");
 }
 
+function buildPaymentDetails(sellerName: string): InvoicePaymentDetails {
+  const bank = pickRandom(BANKS);
+  const accountNumber = String(randomInt(10000000, 99999999));
+  const sortDigits = `${randomInt(10, 99)}${randomInt(10, 99)}${randomInt(10, 99)}`;
+  const sortCode = `${sortDigits.slice(0, 2)}-${sortDigits.slice(2, 4)}-${sortDigits.slice(4)}`;
+  const ibanBody = (sortDigits + accountNumber).match(/.{1,4}/g)?.join(" ") ?? "";
+  const iban = `GB${randomInt(10, 99)} ${bank.code} ${ibanBody}`;
+  const handle = sellerName.toLowerCase().replace(/[^a-z0-9]+/g, "");
+  const terms =
+    Math.random() < 0.5
+      ? pickRandom(PAYMENT_INSTRUCTIONS)
+      : `Bank transfer or PayPal to pay@${handle}.com`;
+
+  return {
+    label: "Payment details",
+    bankName: bank.name,
+    accountNumber,
+    iban,
+    sortCode,
+    terms
+  };
+}
+
 /**
  * Dev-only helper. Builds an invoice with random but realistic data and writes
  * it straight to IndexedDB so the Open Invoice list can be tested with many
@@ -236,6 +279,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
       label: pickRandom(TERMS_LABELS),
       content: pickRandom(TERMS_CONTENTS)
     },
+    paymentDetails: buildPaymentDetails(sellerName),
     pdfSettings: { backgroundColor: pickRandom(PDF_BACKGROUNDS) },
     currency: pickRandom(currencyOptions).symbol,
     theme: { ...invoiceDefault.theme, size: pickRandom(SIZES) }
