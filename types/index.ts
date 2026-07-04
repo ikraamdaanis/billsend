@@ -1,9 +1,10 @@
 // The persisted invoice shape is defined and validated by the Zod schema; this
 // import + re-export keeps `~/types` the single import site for the inferred
 // type while making it usable by the document/template types below.
+import type { BusinessProfile } from "~/schema/business-profile";
 import type { Invoice } from "~/schema/invoice";
 
-export type { Invoice };
+export type { BusinessProfile, Invoice };
 
 export type TextSettings = {
   align: "left" | "center" | "right";
