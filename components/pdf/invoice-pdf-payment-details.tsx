@@ -28,8 +28,7 @@ const FIELDS = [
 ] as const;
 
 export function InvoicePdfPaymentDetails({ invoice }: { invoice: Invoice }) {
-  const theme = invoice.theme;
-  const { paymentDetails } = invoice;
+  const { theme, paymentDetails } = invoice;
   const rows = FIELDS.filter(field => paymentDetails[field.key].trim());
 
   if (rows.length === 0 && !paymentDetails.terms.trim()) {
