@@ -2,6 +2,7 @@ import { Document, Page, StyleSheet } from "@react-pdf/renderer";
 import { InvoicePdfDetails } from "~/components/pdf/invoice-pdf-details";
 import { InvoicePdfHeader } from "~/components/pdf/invoice-pdf-header";
 import { InvoicePdfItemsTable } from "~/components/pdf/invoice-pdf-items-table";
+import { InvoicePdfPaymentDetails } from "~/components/pdf/invoice-pdf-payment-details";
 import { InvoicePdfTerms } from "~/components/pdf/invoice-pdf-terms";
 import { InvoicePdfTotals } from "~/components/pdf/invoice-pdf-totals";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
@@ -32,6 +33,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         <InvoicePdfDetails invoice={invoice} detailRows={detailRows} />
         <InvoicePdfItemsTable invoice={invoice} lineItems={lineItems} />
         <InvoicePdfTotals invoice={invoice} summaryRows={summaryRows} />
+        <InvoicePdfPaymentDetails invoice={invoice} />
         <InvoicePdfTerms invoice={invoice} />
       </Page>
     </Document>

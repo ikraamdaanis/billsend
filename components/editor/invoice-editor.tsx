@@ -13,6 +13,7 @@ import {
 } from "~/components/editor/invoice-font-picker";
 import { InvoiceImage } from "~/components/editor/invoice-image";
 import { InvoiceLineItems } from "~/components/editor/invoice-line-items";
+import { InvoicePaymentDetails } from "~/components/editor/invoice-payment-details";
 import { InvoicePricing } from "~/components/editor/invoice-pricing";
 import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details";
 import { InvoiceTerms } from "~/components/editor/invoice-terms";
@@ -352,6 +353,9 @@ function Bottom() {
       <div className="mt-6 max-w-full">
         <InvoiceLineItems />
         <InvoicePricing />
+      </div>
+      <div className="mt-6">
+        <InvoicePaymentDetails />
       </div>
       <div className="mt-6">
         <InvoiceTerms />

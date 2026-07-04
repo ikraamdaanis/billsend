@@ -42,6 +42,14 @@ function currentRaw(): Record<string, unknown> {
     fees: 0,
     discounts: 0,
     terms: { label: "Terms", content: "" },
+    paymentDetails: {
+      label: "Payment details",
+      bankName: "Acme Bank",
+      accountNumber: "12345678",
+      iban: "",
+      sortCode: "",
+      terms: ""
+    },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
     theme: { font: "lora", fontWeight: "Bold", size: "large", accent: "#123" }
@@ -167,6 +175,27 @@ describe("migrateInvoiceData", () => {
     };
 
     expect(migrateInvoiceData(raw).items[0].quantity).toBe(3);
+  });
+
+  it("adds an empty payment details section to a legacy invoice without one", () => {
+    const { paymentDetails: _paymentDetails, ...legacy } = currentRaw();
+    const normalized = migrateInvoiceData(legacy);
+
+    expect(normalized.paymentDetails).toEqual({
+      label: "Payment details",
+      bankName: "",
+      accountNumber: "",
+      iban: "",
+      sortCode: "",
+      terms: ""
+    });
+  });
+
+  it("preserves stored payment details without data loss", () => {
+    const normalized = migrateInvoiceData(currentRaw());
+
+    expect(normalized.paymentDetails.bankName).toBe("Acme Bank");
+    expect(normalized.paymentDetails.accountNumber).toBe("12345678");
   });
 
   it("skips the v0->v1 reshape when already at the current version", () => {
