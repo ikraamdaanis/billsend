@@ -42,6 +42,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       bankName: "",
       accountNumber: "",
       iban: "",
+      bic: "",
       sortCode: "",
       terms: ""
     },
