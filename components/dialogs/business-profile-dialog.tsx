@@ -35,6 +35,7 @@ import {
   createDefaultBusinessProfile,
   DEFAULT_INVOICE_NUMBERING
 } from "~/schema/business-profile";
+import { useInvoiceStore } from "~/stores/invoice-store";
 import { formatInvoiceNumber } from "~/utils/invoice-numbering";
 
 const businessProfileFormSchema = z.object({
@@ -158,7 +159,12 @@ export function BusinessProfileDialog({
             nextNumber
           }
         });
-        void cleanupOrphanedImages([logoImageId]);
+        // Keep both the profile logo and the image the live invoice currently
+        // uses: an unsaved invoice's logo isn't referenced by any stored
+        // document yet, so without this the sweep would delete the blob out
+        // from under the invoice being edited.
+        const liveInvoiceImageId = useInvoiceStore.getState().image;
+        void cleanupOrphanedImages([logoImageId, liveInvoiceImageId]);
         toast.success("Business profile saved");
         onOpenChange(false);
       } catch (error) {
