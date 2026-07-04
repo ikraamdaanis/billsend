@@ -181,6 +181,24 @@ export function BusinessProfileDialog({
     });
   }
 
+  function handleClearAll() {
+    form.reset({
+      businessName: "",
+      address: "",
+      email: "",
+      phone: "",
+      bankName: "",
+      accountNumber: "",
+      iban: "",
+      bic: "",
+      sortCode: "",
+      paymentTerms: "",
+      numberPrefix: "",
+      numberPadding: 0
+    });
+    setLogoImageId("");
+  }
+
   const numberPrefix = useWatch({
     control: form.control,
     name: "numberPrefix"
@@ -425,6 +443,15 @@ export function BusinessProfileDialog({
               </p>
             </div>
             <DialogFooter className="shrink-0">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClearAll}
+                disabled={pending}
+                className="text-muted-foreground sm:mr-auto"
+              >
+                Clear all
+              </Button>
               <Button
                 type="button"
                 variant="outline"
