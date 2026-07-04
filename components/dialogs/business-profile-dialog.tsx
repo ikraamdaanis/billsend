@@ -187,8 +187,8 @@ export function BusinessProfileDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[540px]">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col overflow-hidden sm:max-w-xl">
+        <DialogHeader className="shrink-0">
           <DialogTitle>Business profile</DialogTitle>
           <DialogDescription>
             Your sender details and logo, saved once and pre-filled onto every
@@ -197,8 +197,11 @@ export function BusinessProfileDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <div className="flex flex-col gap-4 px-4 pb-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          >
+            <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-4">
               <ProfileLogoField
                 logoImageId={logoImageId}
                 onChange={setLogoImageId}
@@ -233,7 +236,7 @@ export function BusinessProfileDialog({
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="email"
@@ -268,7 +271,7 @@ export function BusinessProfileDialog({
                   leave any field blank to omit it.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="bankName"
@@ -350,7 +353,7 @@ export function BusinessProfileDialog({
                   invoice.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="numberPrefix"
@@ -398,7 +401,7 @@ export function BusinessProfileDialog({
                 </span>
               </p>
             </div>
-            <DialogFooter>
+            <DialogFooter className="shrink-0">
               <Button
                 type="button"
                 variant="outline"
