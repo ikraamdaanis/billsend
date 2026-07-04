@@ -71,6 +71,10 @@ export function BusinessProfileDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [pending, startTransition] = useTransition();
+  // Stays true from a successful save until the dialog is next opened, so the
+  // button keeps its "Saving..." state through the close animation instead of
+  // flashing back to "Save profile" the instant the transition settles.
+  const [closingAfterSave, setClosingAfterSave] = useState(false);
   const [logoImageId, setLogoImageId] = useState("");
   // The live counter is preserved verbatim across saves: only the prefix and
   // padding are editable here, so editing the profile never rewinds numbering.
@@ -98,6 +102,8 @@ export function BusinessProfileDialog({
 
   useEffect(() => {
     if (!open) return;
+
+    setClosingAfterSave(false);
 
     let cancelled = false;
 
@@ -170,6 +176,7 @@ export function BusinessProfileDialog({
         const liveInvoiceImageId = useInvoiceStore.getState().image;
         void cleanupOrphanedImages([logoImageId, liveInvoiceImageId]);
         toast.success("Business profile saved");
+        setClosingAfterSave(true);
         onOpenChange(false);
       } catch (error) {
         toast.error(
@@ -460,8 +467,8 @@ export function BusinessProfileDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? "Saving..." : "Save profile"}
+              <Button type="submit" disabled={pending || closingAfterSave}>
+                Save profile
               </Button>
             </DialogFooter>
           </form>
