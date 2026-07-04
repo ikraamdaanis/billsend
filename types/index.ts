@@ -169,6 +169,7 @@ export type BillsendExportFile = {
     exportedAt: string;
     appName: "billsend";
   };
+  profile?: BusinessProfile;
   templates: Array<{
     id: string;
     name: string;
@@ -201,12 +202,14 @@ export type ImportAnalysis = {
   templates: { total: number; new: number; conflicts: string[] };
   invoices: { total: number; new: number; conflicts: string[] };
   images: { total: number; new: number; duplicates: number };
+  profile: { present: boolean };
 };
 
 export type ImportResult = {
   templatesImported: number;
   invoicesImported: number;
   imagesImported: number;
+  profileImported: boolean;
 };
 
 export type InvoiceTemplate = {

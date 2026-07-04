@@ -1,5 +1,10 @@
 import { format } from "date-fns";
-import { getAllImages, getAllInvoices, getAllTemplates } from "~/db";
+import {
+  getAllImages,
+  getAllInvoices,
+  getAllTemplates,
+  getBusinessProfile
+} from "~/db";
 import type { BillsendExportFile } from "~/types";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -11,36 +16,46 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-export async function exportAllData(): Promise<void> {
-  const [templates, invoices, images] = await Promise.all([
+// Snapshots the whole local setup (templates, invoices, images, and the
+// singleton business profile with its numbering) into the serializable export
+// shape. Kept separate from the download so it can be exercised in tests, which
+// have no DOM to drive the file save.
+export async function buildExportData(): Promise<BillsendExportFile> {
+  const [profile, templates, invoices, images] = await Promise.all([
+    getBusinessProfile(),
     getAllTemplates(),
     getAllInvoices(),
     getAllImages()
   ]);
 
-  const exportData: BillsendExportFile = {
+  return {
     meta: {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       appName: "billsend"
     },
-    templates: templates.map(t => ({
-      ...t,
-      createdAt: new Date(t.createdAt).toISOString(),
-      updatedAt: new Date(t.updatedAt).toISOString()
+    profile,
+    templates: templates.map(template => ({
+      ...template,
+      createdAt: new Date(template.createdAt).toISOString(),
+      updatedAt: new Date(template.updatedAt).toISOString()
     })),
-    invoices: invoices.map(i => ({
-      ...i,
-      createdAt: new Date(i.createdAt).toISOString(),
-      updatedAt: new Date(i.updatedAt).toISOString()
+    invoices: invoices.map(invoice => ({
+      ...invoice,
+      createdAt: new Date(invoice.createdAt).toISOString(),
+      updatedAt: new Date(invoice.updatedAt).toISOString()
     })),
-    images: images.map(img => ({
-      id: img.id,
-      data: arrayBufferToBase64(img.data),
-      type: img.type,
-      createdAt: new Date(img.createdAt).toISOString()
+    images: images.map(image => ({
+      id: image.id,
+      data: arrayBufferToBase64(image.data),
+      type: image.type,
+      createdAt: new Date(image.createdAt).toISOString()
     }))
   };
+}
+
+export async function exportAllData(): Promise<void> {
+  const exportData = await buildExportData();
 
   const json = JSON.stringify(exportData, null, 2);
   const blob = new Blob([json], { type: "application/json" });

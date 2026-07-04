@@ -169,6 +169,14 @@ export function ImportDataDialog({
                     {analysis.images.total} total
                   </span>
                 </div>
+                {analysis.profile.present && (
+                  <div className="flex items-center justify-between rounded-surface border p-3">
+                    <span className="text-sm">Business profile</span>
+                    <span className="text-muted-foreground text-sm">
+                      replaces current
+                    </span>
+                  </div>
+                )}
               </div>
               {hasConflicts && (
                 <div className="flex items-start gap-2 rounded-surface border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950">
@@ -197,7 +205,8 @@ export function ImportDataDialog({
                 {result.templatesImported} template
                 {result.templatesImported !== 1 ? "s" : ""}, and{" "}
                 {result.imagesImported} image
-                {result.imagesImported !== 1 ? "s" : ""}.
+                {result.imagesImported !== 1 ? "s" : ""}
+                {result.profileImported ? ", plus your business profile." : "."}
               </p>
             </div>
           )}

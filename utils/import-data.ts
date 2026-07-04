@@ -3,10 +3,12 @@ import {
   getAllImages,
   getAllInvoices,
   getAllTemplates,
+  saveBusinessProfile,
   saveImage,
   saveInvoice,
   saveTemplate
 } from "~/db";
+import { businessProfileSchema } from "~/schema/business-profile";
 import { migrateInvoiceData } from "~/schema/migrations";
 import type {
   BillsendExportFile,
@@ -22,6 +24,10 @@ const billsendExportSchema = z.object({
     exportedAt: z.string(),
     appName: z.literal("billsend")
   }),
+  // Optional so older exports (which predate the business profile) still parse.
+  // When present it is repaired to the current shape by the same resilient
+  // schema the app uses everywhere else.
+  profile: businessProfileSchema.optional(),
   templates: z.array(
     z.object({
       id: z.string(),
@@ -121,7 +127,8 @@ export async function analyzeImport(
       total: parsed.images.length,
       new: parsed.images.length - imageDuplicates,
       duplicates: imageDuplicates
-    }
+    },
+    profile: { present: Boolean(parsed.profile) }
   };
 }
 
@@ -170,6 +177,21 @@ export async function executeImport(
     const arrayBuffer = base64ToArrayBuffer(img.data);
     const blob = new Blob([arrayBuffer], { type: img.type });
     await saveImage(newId, blob, img.type);
+  }
+
+  // Restore the singleton business profile (sender details, payment details,
+  // and numbering). It overwrites the local profile so the imported setup
+  // behaves exactly as it did on the original device. The logo reference is
+  // remapped onto the freshly imported image, mirroring templates/invoices.
+  let profileImported = false;
+  if (parsed.profile) {
+    const mappedLogoId = imageIdMap.get(parsed.profile.logoImageId);
+
+    await saveBusinessProfile({
+      ...parsed.profile,
+      logoImageId: mappedLogoId ?? parsed.profile.logoImageId
+    });
+    profileImported = true;
   }
 
   // Import templates with new IDs
@@ -240,6 +262,7 @@ export async function executeImport(
   return {
     templatesImported: parsed.templates.length,
     invoicesImported: parsed.invoices.length,
-    imagesImported: parsed.images.length
+    imagesImported: parsed.images.length,
+    profileImported
   };
 }
