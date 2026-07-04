@@ -208,8 +208,10 @@ function buildPaymentDetails(sellerName: string): InvoicePaymentDetails {
   const accountNumber = String(randomInt(10000000, 99999999));
   const sortDigits = `${randomInt(10, 99)}${randomInt(10, 99)}${randomInt(10, 99)}`;
   const sortCode = `${sortDigits.slice(0, 2)}-${sortDigits.slice(2, 4)}-${sortDigits.slice(4)}`;
-  const ibanBody = (sortDigits + accountNumber).match(/.{1,4}/g)?.join(" ") ?? "";
+  const ibanBody =
+    (sortDigits + accountNumber).match(/.{1,4}/g)?.join(" ") ?? "";
   const iban = `GB${randomInt(10, 99)} ${bank.code} ${ibanBody}`;
+  const bic = `${bank.code}GB2${pickRandom(["L", "A", "B"])}`;
   const handle = sellerName.toLowerCase().replace(/[^a-z0-9]+/g, "");
   const terms =
     Math.random() < 0.5
@@ -221,6 +223,7 @@ function buildPaymentDetails(sellerName: string): InvoicePaymentDetails {
     bankName: bank.name,
     accountNumber,
     iban,
+    bic,
     sortCode,
     terms
   };
