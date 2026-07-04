@@ -24,6 +24,7 @@ const INVOICE_DATA_KEYS = [
   "fees",
   "discounts",
   "terms",
+  "paymentDetails",
   "pdfSettings",
   "currency",
   "theme"
@@ -174,6 +175,16 @@ export function useTermsSlice() {
     useShallow(state => ({
       terms: state.terms,
       setTerms: state.setTerms
+    }))
+  );
+}
+
+// Payment details slice
+export function usePaymentDetailsSlice() {
+  return useInvoiceStore(
+    useShallow(state => ({
+      paymentDetails: state.paymentDetails,
+      setPaymentDetails: state.setPaymentDetails
     }))
   );
 }

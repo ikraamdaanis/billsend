@@ -14,7 +14,22 @@ export const businessProfileSchema = z.object({
   address: z.string().catch(""),
   email: z.string().catch(""),
   phone: z.string().catch(""),
-  logoImageId: z.string().catch("")
+  logoImageId: z.string().catch(""),
+  paymentDetails: z
+    .object({
+      bankName: z.string().catch(""),
+      accountNumber: z.string().catch(""),
+      iban: z.string().catch(""),
+      sortCode: z.string().catch(""),
+      terms: z.string().catch("")
+    })
+    .catch({
+      bankName: "",
+      accountNumber: "",
+      iban: "",
+      sortCode: "",
+      terms: ""
+    })
 });
 
 export type BusinessProfile = z.infer<typeof businessProfileSchema>;
@@ -26,7 +41,14 @@ export function createDefaultBusinessProfile(): BusinessProfile {
     address: "",
     email: "",
     phone: "",
-    logoImageId: ""
+    logoImageId: "",
+    paymentDetails: {
+      bankName: "",
+      accountNumber: "",
+      iban: "",
+      sortCode: "",
+      terms: ""
+    }
   };
 }
 

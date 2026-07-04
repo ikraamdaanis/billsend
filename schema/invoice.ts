@@ -44,6 +44,15 @@ const DEFAULT_LABELS = {
   total: "Total"
 } as const;
 
+const DEFAULT_PAYMENT_DETAILS = {
+  label: "Payment details",
+  bankName: "",
+  accountNumber: "",
+  iban: "",
+  sortCode: "",
+  terms: ""
+} as const;
+
 const DEFAULT_COLUMN_LABELS = {
   description: "Item",
   quantity: "Quantity",
@@ -66,6 +75,22 @@ function contactSchema(defaultLabel: string) {
     })
     .catch({ label: defaultLabel, content: "", placeholder: "" });
 }
+
+// Payment details mirror the terms section: a customizable label plus content.
+// The content is a set of free-text fields so they work across banking
+// conventions (bank name, account number, IBAN, sort code) alongside free-text
+// instructions (e.g. "Net 30", a PayPal address). An all-empty section is
+// suppressed at render.
+const paymentDetailsSchema = z
+  .object({
+    label: z.string().catch(DEFAULT_PAYMENT_DETAILS.label),
+    bankName: z.string().catch(""),
+    accountNumber: z.string().catch(""),
+    iban: z.string().catch(""),
+    sortCode: z.string().catch(""),
+    terms: z.string().catch("")
+  })
+  .catch(DEFAULT_PAYMENT_DETAILS);
 
 const invoiceItemSchema = z.object({
   id: z.string().catch(""),
@@ -141,6 +166,7 @@ export const invoiceSchema = z.object({
       content: z.string().catch("")
     })
     .catch({ label: "Terms and conditions", content: "" }),
+  paymentDetails: paymentDetailsSchema,
   pdfSettings: z
     .object({ backgroundColor: z.string().catch("#ffffff") })
     .catch({ backgroundColor: "#ffffff" }),

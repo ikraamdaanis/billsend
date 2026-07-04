@@ -10,6 +10,7 @@ import type {
   InvoiceClient,
   InvoiceItem,
   InvoiceLabels,
+  InvoicePaymentDetails,
   InvoiceSeller,
   InvoiceTerms,
   InvoiceTheme,
@@ -73,6 +74,14 @@ export const invoiceDefault: Invoice = {
     label: "Terms and conditions",
     content: ""
   },
+  paymentDetails: {
+    label: "Payment details",
+    bankName: "",
+    accountNumber: "",
+    iban: "",
+    sortCode: "",
+    terms: ""
+  },
   pdfSettings: {
     backgroundColor: "#ffffff"
   },
@@ -113,6 +122,10 @@ export function createBlankInvoice(profile?: BusinessProfile): Invoice {
     seller: {
       ...blank.seller,
       content: composeSellerContent(profile)
+    },
+    paymentDetails: {
+      ...blank.paymentDetails,
+      ...profile.paymentDetails
     }
   };
 }
@@ -186,6 +199,13 @@ interface InvoiceActions {
   // Terms
   setTerms: (
     terms: InvoiceTerms | ((prev: InvoiceTerms) => InvoiceTerms)
+  ) => void;
+
+  // Payment details
+  setPaymentDetails: (
+    paymentDetails:
+      | InvoicePaymentDetails
+      | ((prev: InvoicePaymentDetails) => InvoicePaymentDetails)
   ) => void;
 
   // PDF
@@ -327,6 +347,15 @@ export const useInvoiceStore = create<InvoiceStore>()(
       setTerms: terms =>
         set(state => {
           state.terms = applyUpdater(state.terms, terms);
+        }),
+
+      // Payment details
+      setPaymentDetails: paymentDetails =>
+        set(state => {
+          state.paymentDetails = applyUpdater(
+            state.paymentDetails,
+            paymentDetails
+          );
         }),
 
       // PDF

@@ -103,6 +103,15 @@ export type InvoiceTerms = {
   content: string;
 };
 
+export type InvoicePaymentDetails = {
+  label: string;
+  bankName: string;
+  accountNumber: string;
+  iban: string;
+  sortCode: string;
+  terms: string;
+};
+
 export type PdfSettings = {
   backgroundColor: string;
 };
