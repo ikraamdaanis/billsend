@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createDefaultBusinessProfile } from "~/schema/business-profile";
 import { createBlankInvoice, invoiceDefault } from "~/stores/invoice-store";
 import type { BusinessProfile } from "~/types";
+import { advanceInvoiceNumber } from "~/utils/invoice-numbering";
 
 function profile(overrides: Partial<BusinessProfile> = {}): BusinessProfile {
   return { ...createDefaultBusinessProfile(), ...overrides };
@@ -118,6 +119,48 @@ describe("createBlankInvoice", () => {
     savedProfile.paymentDetails.bankName = "Renamed Bank";
 
     expect(invoice.paymentDetails.bankName).toBe("Acme Bank");
+  });
+
+  it("pre-fills the number from the profile numbering in the configured format", () => {
+    const invoice = createBlankInvoice(
+      profile({ numbering: { prefix: "INV-", padding: 4, nextNumber: 42 } })
+    );
+
+    expect(invoice.number).toBe("INV-0042");
+  });
+
+  it("keeps the default number when no profile is supplied", () => {
+    expect(createBlankInvoice().number).toBe(invoiceDefault.number);
+  });
+
+  it("advances the number across successive creations as the counter climbs", () => {
+    let savedProfile = profile();
+    const numbers = [];
+
+    for (let creation = 0; creation < 3; creation++) {
+      numbers.push(createBlankInvoice(savedProfile).number);
+      savedProfile = {
+        ...savedProfile,
+        numbering: advanceInvoiceNumber(savedProfile.numbering)
+      };
+    }
+
+    expect(numbers).toEqual(["INV-0001", "INV-0002", "INV-0003"]);
+  });
+
+  it("does not corrupt the counter when a number is overridden on one invoice", () => {
+    const savedProfile = profile();
+    const first = createBlankInvoice(savedProfile);
+    first.number = "CUSTOM-999";
+
+    const advancedProfile = {
+      ...savedProfile,
+      numbering: advanceInvoiceNumber(savedProfile.numbering)
+    };
+    const second = createBlankInvoice(advancedProfile);
+
+    expect(first.number).toBe("CUSTOM-999");
+    expect(second.number).toBe("INV-0002");
   });
 
   it("returns an independent invoice on each call", () => {
