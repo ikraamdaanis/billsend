@@ -27,10 +27,10 @@ import { Textarea } from "~/components/ui/textarea";
 import {
   cleanupOrphanedImages,
   getBusinessProfile,
-  getImageBlob,
   saveBusinessProfile,
   saveImage
 } from "~/db";
+import { useImageLoader } from "~/hooks/use-image-loader";
 import { createDefaultBusinessProfile } from "~/schema/business-profile";
 
 const businessProfileFormSchema = z.object({
@@ -224,56 +224,8 @@ function ProfileLogoField({
   logoImageId: string;
   onChange: (imageId: string) => void;
 }) {
-  const [previewUrl, setPreviewUrl] = useState("");
-  const currentUrlRef = useRef<string | null>(null);
+  const previewUrl = useImageLoader(logoImageId);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  function revokeCurrentUrl() {
-    if (!currentUrlRef.current) return;
-
-    URL.revokeObjectURL(currentUrlRef.current);
-    currentUrlRef.current = null;
-  }
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadLogo() {
-      if (!logoImageId) {
-        revokeCurrentUrl();
-        setPreviewUrl("");
-
-        return;
-      }
-
-      try {
-        const blob = await getImageBlob(logoImageId);
-
-        if (cancelled) return;
-
-        revokeCurrentUrl();
-
-        if (!blob) {
-          setPreviewUrl("");
-
-          return;
-        }
-
-        const url = URL.createObjectURL(blob);
-        currentUrlRef.current = url;
-        setPreviewUrl(url);
-      } catch {
-        if (!cancelled) setPreviewUrl("");
-      }
-    }
-
-    loadLogo();
-
-    return () => {
-      cancelled = true;
-      revokeCurrentUrl();
-    };
-  }, [logoImageId]);
 
   async function handleFileChange(fileList: FileList | null) {
     const file = fileList?.[0];
