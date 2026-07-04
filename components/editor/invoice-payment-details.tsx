@@ -56,7 +56,7 @@ function PaymentDetailsField({
   label,
   placeholder
 }: {
-  fieldKey: "bankName" | "accountNumber" | "iban" | "sortCode";
+  fieldKey: (typeof PAYMENT_FIELDS)[number]["key"];
   label: string;
   placeholder: string;
 }) {
