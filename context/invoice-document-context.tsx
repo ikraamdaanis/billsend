@@ -1,8 +1,10 @@
+import { isEqual } from "lodash-es";
 import type { ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   cleanupOrphanedImages,
   getAllInvoices,
+  getBusinessProfile,
   getInvoice,
   saveInvoice
 } from "~/db";
@@ -22,7 +24,7 @@ type InvoiceDocumentContextValue = {
   load: (documentId: string) => Promise<void>;
   saveAs: (name: string, templateId?: string | null) => Promise<string>;
   update: (options?: { documentId?: string; name?: string }) => Promise<void>;
-  reset: () => void;
+  reset: () => Promise<void>;
 };
 
 const InvoiceDocumentContext =
@@ -123,15 +125,38 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
   }
 
   // Replaces the store with a fresh blank invoice and clears the current
-  // document, dropping any now-orphaned image blob.
-  function reset(): void {
-    const invoice = ensureItemIds(structuredClone(invoiceDefault));
-    useInvoiceStore.getState().setInvoice(invoice);
+  // document, dropping any now-orphaned image blob. The blank invoice is seeded
+  // from the saved business profile, so the seller details and logo pre-fill
+  // while the profile itself stays untouched. The seeded invoice becomes the
+  // baseline, so a freshly pre-filled document doesn't immediately read dirty.
+  async function reset(): Promise<void> {
+    const profile = await getBusinessProfile();
+    useInvoiceStore.getState().resetInvoice(profile);
+    const normalized = selectInvoiceData(useInvoiceStore.getState());
     setCurrentDocumentId(null);
     setCurrentDocumentName(null);
-    setLastSavedInvoice(null);
-    void cleanupOrphanedImages();
+    setLastSavedInvoice(structuredClone(normalized));
+    void cleanupOrphanedImages([normalized.image]);
   }
+
+  // On first mount of a fresh editor session (no document loaded and the store
+  // still at its pristine default), pre-fill from the business profile. Guarded
+  // so it never clobbers an invoice the user has already started editing.
+  const hasSeededRef = useRef(false);
+
+  useEffect(() => {
+    if (hasSeededRef.current) return;
+
+    hasSeededRef.current = true;
+
+    const pristine =
+      currentDocumentId === null &&
+      isEqual(selectInvoiceData(useInvoiceStore.getState()), invoiceDefault);
+
+    if (!pristine) return;
+
+    void reset();
+  }, []);
 
   const value = {
     currentDocumentId,
