@@ -28,6 +28,7 @@ export const businessProfileSchema = z.object({
       bankName: z.string().catch(""),
       accountNumber: z.string().catch(""),
       iban: z.string().catch(""),
+      bic: z.string().catch(""),
       sortCode: z.string().catch(""),
       terms: z.string().catch("")
     })
@@ -35,6 +36,7 @@ export const businessProfileSchema = z.object({
       bankName: "",
       accountNumber: "",
       iban: "",
+      bic: "",
       sortCode: "",
       terms: ""
     }),
@@ -74,6 +76,7 @@ export function createDefaultBusinessProfile(): BusinessProfile {
       bankName: "",
       accountNumber: "",
       iban: "",
+      bic: "",
       sortCode: "",
       terms: ""
     },

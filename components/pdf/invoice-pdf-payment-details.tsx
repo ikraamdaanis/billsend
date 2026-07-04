@@ -33,6 +33,7 @@ const FIELDS = [
   { key: "bankName", label: "Bank name" },
   { key: "accountNumber", label: "Account number" },
   { key: "iban", label: "IBAN" },
+  { key: "bic", label: "BIC / SWIFT" },
   { key: "sortCode", label: "Sort code" }
 ] as const;
 

@@ -64,6 +64,7 @@ describe("createBlankInvoice", () => {
           bankName: "Acme Bank",
           accountNumber: "12345678",
           iban: "GB29 NWBK 6016 1331 9268 19",
+          bic: "NWBKGB2L",
           sortCode: "12-34-56",
           terms: "Net 30"
         }
@@ -75,6 +76,7 @@ describe("createBlankInvoice", () => {
       bankName: "Acme Bank",
       accountNumber: "12345678",
       iban: "GB29 NWBK 6016 1331 9268 19",
+      bic: "NWBKGB2L",
       sortCode: "12-34-56",
       terms: "Net 30"
     });
@@ -110,6 +112,7 @@ describe("createBlankInvoice", () => {
         bankName: "Acme Bank",
         accountNumber: "12345678",
         iban: "",
+        bic: "",
         sortCode: "",
         terms: ""
       }

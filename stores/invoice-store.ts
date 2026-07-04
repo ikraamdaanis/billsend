@@ -80,6 +80,7 @@ export const invoiceDefault: Invoice = {
     bankName: "",
     accountNumber: "",
     iban: "",
+    bic: "",
     sortCode: "",
     terms: ""
   },
