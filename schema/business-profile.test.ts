@@ -13,7 +13,14 @@ describe("createDefaultBusinessProfile", () => {
       address: "",
       email: "",
       phone: "",
-      logoImageId: ""
+      logoImageId: "",
+      paymentDetails: {
+        bankName: "",
+        accountNumber: "",
+        iban: "",
+        sortCode: "",
+        terms: ""
+      }
     });
   });
 });
@@ -33,7 +40,14 @@ describe("normalizeBusinessProfile", () => {
       address: "",
       email: "",
       phone: "",
-      logoImageId: ""
+      logoImageId: "",
+      paymentDetails: {
+        bankName: "",
+        accountNumber: "",
+        iban: "",
+        sortCode: "",
+        terms: ""
+      }
     });
   });
 
@@ -44,7 +58,14 @@ describe("normalizeBusinessProfile", () => {
       address: "123 Main St.",
       email: "info@acme.com",
       phone: "(555) 555-5555",
-      logoImageId: "logo-1"
+      logoImageId: "logo-1",
+      paymentDetails: {
+        bankName: "Acme Bank",
+        accountNumber: "12345678",
+        iban: "GB29 NWBK 6016 1331 9268 19",
+        sortCode: "12-34-56",
+        terms: "Net 30"
+      }
     };
 
     expect(normalizeBusinessProfile(stored)).toEqual(stored);
