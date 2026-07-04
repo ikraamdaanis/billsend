@@ -17,6 +17,7 @@ import type {
   PdfSettings,
   TableSettings
 } from "~/types";
+import { formatInvoiceNumber } from "~/utils/invoice-numbering";
 
 export const invoiceDefault: Invoice = {
   id: "1",
@@ -118,6 +119,7 @@ export function createBlankInvoice(profile?: BusinessProfile): Invoice {
 
   return {
     ...blank,
+    number: formatInvoiceNumber(profile.numbering),
     image: profile.logoImageId,
     seller: {
       ...blank.seller,

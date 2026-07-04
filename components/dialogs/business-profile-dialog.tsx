@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { IconUpload } from "@tabler/icons-react";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -31,7 +31,11 @@ import {
   saveImage
 } from "~/db";
 import { useImageLoader } from "~/hooks/use-image-loader";
-import { createDefaultBusinessProfile } from "~/schema/business-profile";
+import {
+  createDefaultBusinessProfile,
+  DEFAULT_INVOICE_NUMBERING
+} from "~/schema/business-profile";
+import { formatInvoiceNumber } from "~/utils/invoice-numbering";
 
 const businessProfileFormSchema = z.object({
   businessName: z
@@ -48,7 +52,13 @@ const businessProfileFormSchema = z.object({
   sortCode: z.string().max(100, "Sort code must be less than 100 characters"),
   paymentTerms: z
     .string()
-    .max(1000, "Payment instructions must be less than 1000 characters")
+    .max(1000, "Payment instructions must be less than 1000 characters"),
+  numberPrefix: z.string().max(20, "Prefix must be less than 20 characters"),
+  numberPadding: z
+    .number({ message: "Enter a number" })
+    .int("Padding must be a whole number")
+    .min(0, "Padding can't be negative")
+    .max(10, "Padding must be 10 or less")
 });
 
 export function BusinessProfileDialog({
@@ -60,6 +70,11 @@ export function BusinessProfileDialog({
 }) {
   const [pending, startTransition] = useTransition();
   const [logoImageId, setLogoImageId] = useState("");
+  // The live counter is preserved verbatim across saves: only the prefix and
+  // padding are editable here, so editing the profile never rewinds numbering.
+  const [nextNumber, setNextNumber] = useState(
+    DEFAULT_INVOICE_NUMBERING.nextNumber
+  );
 
   const form = useForm<z.infer<typeof businessProfileFormSchema>>({
     resolver: zodResolver(businessProfileFormSchema),
@@ -72,7 +87,9 @@ export function BusinessProfileDialog({
       accountNumber: "",
       iban: "",
       sortCode: "",
-      paymentTerms: ""
+      paymentTerms: "",
+      numberPrefix: DEFAULT_INVOICE_NUMBERING.prefix,
+      numberPadding: DEFAULT_INVOICE_NUMBERING.padding
     }
   });
 
@@ -96,9 +113,12 @@ export function BusinessProfileDialog({
           accountNumber: profile.paymentDetails.accountNumber,
           iban: profile.paymentDetails.iban,
           sortCode: profile.paymentDetails.sortCode,
-          paymentTerms: profile.paymentDetails.terms
+          paymentTerms: profile.paymentDetails.terms,
+          numberPrefix: profile.numbering.prefix,
+          numberPadding: profile.numbering.padding
         });
         setLogoImageId(profile.logoImageId);
+        setNextNumber(profile.numbering.nextNumber);
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -131,6 +151,11 @@ export function BusinessProfileDialog({
             iban: data.iban.trim(),
             sortCode: data.sortCode.trim(),
             terms: data.paymentTerms.trim()
+          },
+          numbering: {
+            prefix: data.numberPrefix,
+            padding: data.numberPadding,
+            nextNumber
           }
         });
         void cleanupOrphanedImages([logoImageId]);
@@ -145,6 +170,20 @@ export function BusinessProfileDialog({
       }
     });
   }
+
+  const numberPrefix = useWatch({
+    control: form.control,
+    name: "numberPrefix"
+  });
+  const numberPadding = useWatch({
+    control: form.control,
+    name: "numberPadding"
+  });
+  const previewNumber = formatInvoiceNumber({
+    prefix: numberPrefix,
+    padding: Number.isFinite(numberPadding) ? numberPadding : 0,
+    nextNumber
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -303,6 +342,61 @@ export function BusinessProfileDialog({
                   </FormItem>
                 )}
               />
+              <div className="flex flex-col gap-1">
+                <p className="text-sm font-medium">Invoice numbering</p>
+                <p className="text-muted-foreground text-xs">
+                  New invoices are numbered automatically from a running
+                  counter. You can still override the number on any single
+                  invoice.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="numberPrefix"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Prefix</FormLabel>
+                      <FormControl>
+                        <Input placeholder="INV-" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="numberPadding"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Zero-padding</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          name={field.name}
+                          ref={field.ref}
+                          onBlur={field.onBlur}
+                          value={
+                            Number.isFinite(field.value) ? field.value : ""
+                          }
+                          onChange={event =>
+                            field.onChange(event.target.valueAsNumber)
+                          }
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <p className="text-muted-foreground text-xs">
+                Next invoice:{" "}
+                <span className="text-foreground font-medium">
+                  {previewNumber}
+                </span>
+              </p>
             </div>
             <DialogFooter>
               <Button

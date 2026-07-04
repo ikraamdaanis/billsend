@@ -20,6 +20,11 @@ describe("createDefaultBusinessProfile", () => {
         iban: "",
         sortCode: "",
         terms: ""
+      },
+      numbering: {
+        prefix: "INV-",
+        padding: 4,
+        nextNumber: 1
       }
     });
   });
@@ -47,6 +52,11 @@ describe("normalizeBusinessProfile", () => {
         iban: "",
         sortCode: "",
         terms: ""
+      },
+      numbering: {
+        prefix: "INV-",
+        padding: 4,
+        nextNumber: 1
       }
     });
   });
@@ -65,10 +75,39 @@ describe("normalizeBusinessProfile", () => {
         iban: "GB29 NWBK 6016 1331 9268 19",
         sortCode: "12-34-56",
         terms: "Net 30"
+      },
+      numbering: {
+        prefix: "ACME-",
+        padding: 3,
+        nextNumber: 17
       }
     };
 
     expect(normalizeBusinessProfile(stored)).toEqual(stored);
+  });
+
+  it("defaults the numbering config on a legacy profile record", () => {
+    const { numbering: _numbering, ...legacy } = createDefaultBusinessProfile();
+
+    expect(normalizeBusinessProfile(legacy).numbering).toEqual({
+      prefix: "INV-",
+      padding: 4,
+      nextNumber: 1
+    });
+  });
+
+  it("repairs corrupt numbering fields while keeping the valid ones", () => {
+    const normalized = normalizeBusinessProfile({
+      businessName: "Acme Inc.",
+      numbering: { prefix: "OK-", padding: -5, nextNumber: "nope" }
+    });
+
+    expect(normalized.businessName).toBe("Acme Inc.");
+    expect(normalized.numbering).toEqual({
+      prefix: "OK-",
+      padding: 4,
+      nextNumber: 1
+    });
   });
 
   it("coerces a corrupt field to its default without dropping the record", () => {
