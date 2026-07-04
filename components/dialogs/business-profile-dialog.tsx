@@ -50,6 +50,7 @@ const businessProfileFormSchema = z.object({
     .string()
     .max(100, "Account number must be less than 100 characters"),
   iban: z.string().max(100, "IBAN must be less than 100 characters"),
+  bic: z.string().max(100, "BIC / SWIFT must be less than 100 characters"),
   sortCode: z.string().max(100, "Sort code must be less than 100 characters"),
   paymentTerms: z
     .string()
@@ -87,6 +88,7 @@ export function BusinessProfileDialog({
       bankName: "",
       accountNumber: "",
       iban: "",
+      bic: "",
       sortCode: "",
       paymentTerms: "",
       numberPrefix: DEFAULT_INVOICE_NUMBERING.prefix,
@@ -113,6 +115,7 @@ export function BusinessProfileDialog({
           bankName: profile.paymentDetails.bankName,
           accountNumber: profile.paymentDetails.accountNumber,
           iban: profile.paymentDetails.iban,
+          bic: profile.paymentDetails.bic,
           sortCode: profile.paymentDetails.sortCode,
           paymentTerms: profile.paymentDetails.terms,
           numberPrefix: profile.numbering.prefix,
@@ -150,6 +153,7 @@ export function BusinessProfileDialog({
             bankName: data.bankName.trim(),
             accountNumber: data.accountNumber.trim(),
             iban: data.iban.trim(),
+            bic: data.bic.trim(),
             sortCode: data.sortCode.trim(),
             terms: data.paymentTerms.trim()
           },
@@ -315,6 +319,19 @@ export function BusinessProfileDialog({
                           placeholder="GB29 NWBK 6016 1331 9268 19"
                           {...field}
                         />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="bic"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>BIC / SWIFT</FormLabel>
+                      <FormControl>
+                        <Input placeholder="NWBKGB2L" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

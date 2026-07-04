@@ -72,6 +72,7 @@ describe("business profile db operations", () => {
         bankName: "Acme Bank",
         accountNumber: "12345678",
         iban: "GB29 NWBK 6016 1331 9268 19",
+        bic: "NWBKGB2L",
         sortCode: "12-34-56",
         terms: "Net 30"
       }
@@ -83,6 +84,7 @@ describe("business profile db operations", () => {
       bankName: "Acme Bank",
       accountNumber: "12345678",
       iban: "GB29 NWBK 6016 1331 9268 19",
+      bic: "NWBKGB2L",
       sortCode: "12-34-56",
       terms: "Net 30"
     });
@@ -100,6 +102,7 @@ describe("business profile db operations", () => {
       bankName: "",
       accountNumber: "",
       iban: "",
+      bic: "",
       sortCode: "",
       terms: ""
     });

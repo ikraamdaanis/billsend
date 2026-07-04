@@ -186,6 +186,7 @@ describe("migrateInvoiceData", () => {
       bankName: "",
       accountNumber: "",
       iban: "",
+      bic: "",
       sortCode: "",
       terms: ""
     });

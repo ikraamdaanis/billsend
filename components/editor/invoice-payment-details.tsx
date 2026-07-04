@@ -12,6 +12,7 @@ const PAYMENT_FIELDS = [
     label: "IBAN",
     placeholder: "GB29 NWBK 6016 1331 9268 19"
   },
+  { key: "bic", label: "BIC / SWIFT", placeholder: "NWBKGB2L" },
   { key: "sortCode", label: "Sort code", placeholder: "12-34-56" }
 ] as const;
 
