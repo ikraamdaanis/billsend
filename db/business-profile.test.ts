@@ -105,6 +105,43 @@ describe("business profile db operations", () => {
     });
   });
 
+  it("persists the numbering counter and format across a fresh connection", async () => {
+    await saveBusinessProfile({
+      ...createDefaultBusinessProfile(),
+      numbering: { prefix: "ACME-", padding: 3, nextNumber: 8 }
+    });
+
+    const reloaded = await getBusinessProfile();
+
+    expect(reloaded.numbering).toEqual({
+      prefix: "ACME-",
+      padding: 3,
+      nextNumber: 8
+    });
+
+    const persisted = await readProfileFromFreshConnection();
+
+    expect(persisted?.numbering).toEqual({
+      prefix: "ACME-",
+      padding: 3,
+      nextNumber: 8
+    });
+  });
+
+  it("defaults missing numbering on a legacy profile record", async () => {
+    await saveBusinessProfile(createDefaultBusinessProfile());
+    const { numbering: _numbering, ...legacy } = createDefaultBusinessProfile();
+    await saveRawProfile(legacy);
+
+    const reloaded = await getBusinessProfile();
+
+    expect(reloaded.numbering).toEqual({
+      prefix: "INV-",
+      padding: 4,
+      nextNumber: 1
+    });
+  });
+
   it("always stores the profile under the singleton id", async () => {
     await saveBusinessProfile({
       ...createDefaultBusinessProfile(),

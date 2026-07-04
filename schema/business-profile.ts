@@ -8,6 +8,14 @@ import { z } from "zod";
 
 export const BUSINESS_PROFILE_ID = "business-profile";
 
+// Sensible out-of-the-box numbering: the first invoice reads "INV-0001" and the
+// counter climbs from there. All three fields are freely reconfigurable.
+export const DEFAULT_INVOICE_NUMBERING = {
+  prefix: "INV-",
+  padding: 4,
+  nextNumber: 1
+};
+
 export const businessProfileSchema = z.object({
   id: z.string().catch(BUSINESS_PROFILE_ID),
   businessName: z.string().catch(""),
@@ -29,7 +37,27 @@ export const businessProfileSchema = z.object({
       iban: "",
       sortCode: "",
       terms: ""
+    }),
+  // Advisory sequential numbering. `nextNumber` is the value the next new
+  // invoice will carry; `prefix` and `padding` shape how it renders (e.g.
+  // "INV-0042"). Per-invoice edits never write back here, so overriding a number
+  // on one invoice can't corrupt the counter.
+  numbering: z
+    .object({
+      prefix: z.string().catch(DEFAULT_INVOICE_NUMBERING.prefix),
+      padding: z
+        .number()
+        .int()
+        .min(0)
+        .max(10)
+        .catch(DEFAULT_INVOICE_NUMBERING.padding),
+      nextNumber: z
+        .number()
+        .int()
+        .min(1)
+        .catch(DEFAULT_INVOICE_NUMBERING.nextNumber)
     })
+    .catch({ ...DEFAULT_INVOICE_NUMBERING })
 });
 
 export type BusinessProfile = z.infer<typeof businessProfileSchema>;
@@ -48,7 +76,8 @@ export function createDefaultBusinessProfile(): BusinessProfile {
       iban: "",
       sortCode: "",
       terms: ""
-    }
+    },
+    numbering: { ...DEFAULT_INVOICE_NUMBERING }
   };
 }
 
