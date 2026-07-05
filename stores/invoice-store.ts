@@ -5,7 +5,6 @@ import { immer } from "zustand/middleware/immer";
 import { DEFAULT_INVOICE_THEME } from "~/schema/invoice";
 import { migrateInvoiceData } from "~/schema/migrations";
 import type {
-  BusinessProfile,
   Invoice,
   InvoiceClient,
   InvoiceItem,
@@ -17,13 +16,12 @@ import type {
   PdfSettings,
   TableSettings
 } from "~/types";
-import { formatInvoiceNumber } from "~/utils/invoice-numbering";
 
 export const invoiceDefault: Invoice = {
   id: "1",
   title: "Invoice",
   image: "",
-  number: "1",
+  number: "INV-0001",
   invoiceDate: format(new Date(), "yyyy-MM-dd"),
   dueDate: format(addDays(new Date(), 30), "yyyy-MM-dd"),
   seller: {
@@ -91,45 +89,19 @@ export const invoiceDefault: Invoice = {
   theme: DEFAULT_INVOICE_THEME
 };
 
-// Compose a saved business profile's structured sender fields into the single
-// multi-line seller content block a new invoice carries, dropping empty fields.
-function composeSellerContent(profile: BusinessProfile): string {
-  return [profile.businessName, profile.address, profile.email, profile.phone]
-    .map(field => field.trim())
-    .filter(field => field.length > 0)
-    .join("\n");
-}
-
 /**
- * The single factory that seeds a fresh, blank invoice. This is the one place a
- * new invoice is created, so it is also the sole seam that reads the business
- * profile: when a profile is supplied, the new invoice's seller content and
- * logo are pre-filled from it. The returned invoice is a plain snapshot, so
- * editing it (or the profile) later never mutates the other.
+ * The single factory that seeds a fresh, blank invoice. Every new invoice is
+ * created here. A new invoice always starts blank (including a static default
+ * number the user edits inline); the returned invoice is a fully independent
+ * snapshot, never sharing nested objects with the default.
  */
-export function createBlankInvoice(profile?: BusinessProfile): Invoice {
-  const blank: Invoice = {
-    ...invoiceDefault,
+export function createBlankInvoice(): Invoice {
+  return {
+    ...structuredClone(invoiceDefault),
     items: invoiceDefault.items.map(item => ({
       ...item,
       id: crypto.randomUUID()
     }))
-  };
-
-  if (!profile) return blank;
-
-  return {
-    ...blank,
-    number: formatInvoiceNumber(profile.numbering),
-    image: profile.logoImageId,
-    seller: {
-      ...blank.seller,
-      content: composeSellerContent(profile)
-    },
-    paymentDetails: {
-      ...blank.paymentDetails,
-      ...profile.paymentDetails
-    }
   };
 }
 
@@ -144,7 +116,7 @@ function applyUpdater<T>(current: T, updater: T | ((prev: T) => T)): T {
 interface InvoiceActions {
   // Whole state operations
   setInvoice: (invoice: Invoice) => void;
-  resetInvoice: (profile?: BusinessProfile) => void;
+  resetInvoice: () => void;
 
   // Theme
   setTheme: (
@@ -233,11 +205,10 @@ export const useInvoiceStore = create<InvoiceStore>()(
           return migrateInvoiceData(invoice);
         }),
 
-      resetInvoice: profile =>
+      resetInvoice: () =>
         set(() => {
-          // Route blank creation through the factory so seeding from the
-          // business profile lives in exactly one place.
-          return createBlankInvoice(profile);
+          // Route blank creation through the single factory.
+          return createBlankInvoice();
         }),
 
       // Theme
