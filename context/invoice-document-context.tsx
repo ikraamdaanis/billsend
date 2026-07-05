@@ -4,9 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   cleanupOrphanedImages,
   getAllInvoices,
-  getBusinessProfile,
   getInvoice,
-  saveBusinessProfile,
   saveInvoice
 } from "~/db";
 import { selectInvoiceData, useInvoiceData } from "~/stores/invoice-selectors";
@@ -14,10 +12,6 @@ import { invoiceDefault, useInvoiceStore } from "~/stores/invoice-store";
 import type { Invoice, InvoiceDocument } from "~/types";
 import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
-import {
-  advanceInvoiceNumber,
-  formatInvoiceNumber
-} from "~/utils/invoice-numbering";
 
 type InvoiceDocumentContextValue = {
   currentDocumentId: string | null;
@@ -29,7 +23,7 @@ type InvoiceDocumentContextValue = {
   load: (documentId: string) => Promise<void>;
   saveAs: (name: string, templateId?: string | null) => Promise<string>;
   update: (options?: { documentId?: string; name?: string }) => Promise<void>;
-  reset: () => Promise<void>;
+  reset: () => void;
 };
 
 const InvoiceDocumentContext =
@@ -90,20 +84,6 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     setLastSavedInvoice(structuredClone(invoice));
     void cleanupOrphanedImages([invoice.image]);
 
-    // Reserve the auto-number at save time, not seed time: only advance the
-    // counter when this new invoice actually carries the current auto-number.
-    // A duplicate of a loaded invoice or a user-overridden number differs, so
-    // it never consumes a fresh number. This means merely opening the editor
-    // or clicking "New" can't skip numbers the way seed-time advancing did.
-    const profile = await getBusinessProfile();
-
-    if (invoice.number === formatInvoiceNumber(profile.numbering)) {
-      await saveBusinessProfile({
-        ...profile,
-        numbering: advanceInvoiceNumber(profile.numbering)
-      });
-    }
-
     return savedId;
   }
 
@@ -144,16 +124,11 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
   }
 
   // Replaces the store with a fresh blank invoice and clears the current
-  // document, dropping any now-orphaned image blob. The blank invoice is seeded
-  // from the saved business profile, so the seller details and logo pre-fill
-  // while the profile itself stays untouched. The seeded invoice becomes the
-  // baseline, so a freshly pre-filled document doesn't immediately read dirty.
-  // The numbering counter is intentionally left alone here: it advances only
-  // when a new invoice is actually saved (see `saveAs`), so seeding a blank on
-  // every mount or "New" click can't skip numbers.
-  async function reset(): Promise<void> {
-    const profile = await getBusinessProfile();
-    useInvoiceStore.getState().resetInvoice(profile);
+  // document, dropping any now-orphaned image blob. New invoices start fully
+  // blank, including a static default number the user edits per invoice. The
+  // blank invoice becomes the baseline, so it doesn't immediately read dirty.
+  function reset(): void {
+    useInvoiceStore.getState().resetInvoice();
     const normalized = selectInvoiceData(useInvoiceStore.getState());
     setCurrentDocumentId(null);
     setCurrentDocumentName(null);
@@ -162,8 +137,9 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
   }
 
   // On first mount of a fresh editor session (no document loaded and the store
-  // still at its pristine default), pre-fill from the business profile. Guarded
-  // so it never clobbers an invoice the user has already started editing.
+  // still at its pristine default), normalise the baseline so the freshly blank
+  // invoice doesn't immediately read dirty. Guarded so it never clobbers an
+  // invoice the user has already started editing.
   const hasSeededRef = useRef(false);
 
   useEffect(() => {
@@ -177,7 +153,7 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
 
     if (!pristine) return;
 
-    void reset();
+    reset();
   }, []);
 
   const value = {

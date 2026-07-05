@@ -1,10 +1,9 @@
 // The persisted invoice shape is defined and validated by the Zod schema; this
 // import + re-export keeps `~/types` the single import site for the inferred
 // type while making it usable by the document/template types below.
-import type { BusinessProfile } from "~/schema/business-profile";
 import type { Invoice } from "~/schema/invoice";
 
-export type { BusinessProfile, Invoice };
+export type { Invoice };
 
 export type TextSettings = {
   align: "left" | "center" | "right";
@@ -170,7 +169,6 @@ export type BillsendExportFile = {
     exportedAt: string;
     appName: "billsend";
   };
-  profile?: BusinessProfile;
   templates: Array<{
     id: string;
     name: string;
@@ -203,14 +201,12 @@ export type ImportAnalysis = {
   templates: { total: number; new: number; conflicts: string[] };
   invoices: { total: number; new: number; conflicts: string[] };
   images: { total: number; new: number; duplicates: number };
-  profile: { present: boolean };
 };
 
 export type ImportResult = {
   templatesImported: number;
   invoicesImported: number;
   imagesImported: number;
-  profileImported: boolean;
 };
 
 export type InvoiceTemplate = {

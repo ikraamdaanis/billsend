@@ -1,10 +1,5 @@
 import { format } from "date-fns";
-import {
-  getAllImages,
-  getAllInvoices,
-  getAllTemplates,
-  getBusinessProfile
-} from "~/db";
+import { getAllImages, getAllInvoices, getAllTemplates } from "~/db";
 import type { BillsendExportFile } from "~/types";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -16,13 +11,11 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   return btoa(binary);
 }
 
-// Snapshots the whole local setup (templates, invoices, images, and the
-// singleton business profile with its numbering) into the serializable export
-// shape. Kept separate from the download so it can be exercised in tests, which
-// have no DOM to drive the file save.
+// Snapshots the whole local setup (templates, invoices, and images) into the
+// serializable export shape. Kept separate from the download so it can be
+// exercised in tests, which have no DOM to drive the file save.
 export async function buildExportData(): Promise<BillsendExportFile> {
-  const [profile, templates, invoices, images] = await Promise.all([
-    getBusinessProfile(),
+  const [templates, invoices, images] = await Promise.all([
     getAllTemplates(),
     getAllInvoices(),
     getAllImages()
@@ -30,11 +23,10 @@ export async function buildExportData(): Promise<BillsendExportFile> {
 
   return {
     meta: {
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       appName: "billsend"
     },
-    profile,
     templates: templates.map(template => ({
       ...template,
       createdAt: new Date(template.createdAt).toISOString(),
