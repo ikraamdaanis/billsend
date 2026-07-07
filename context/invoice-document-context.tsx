@@ -3,8 +3,11 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import {
   cleanupOrphanedImages,
+  clearDraft,
   getAllInvoices,
+  getDraft,
   getInvoice,
+  saveDraft,
   saveInvoice
 } from "~/db";
 import { selectInvoiceData, useInvoiceData } from "~/stores/invoice-selectors";
@@ -25,6 +28,11 @@ type InvoiceDocumentContextValue = {
   update: (options?: { documentId?: string; name?: string }) => Promise<void>;
   reset: () => void;
 };
+
+// How long to wait after the last edit before writing the working draft. Long
+// enough to coalesce a burst of keystrokes, short enough that little work is at
+// risk between saves.
+const DRAFT_SAVE_DEBOUNCE_MS = 600;
 
 const InvoiceDocumentContext =
   createContext<InvoiceDocumentContextValue | null>(null);
@@ -134,27 +142,101 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     setCurrentDocumentName(null);
     setLastSavedInvoice(structuredClone(normalized));
     void cleanupOrphanedImages([normalized.image]);
+    // Discard the working draft so "New invoice" truly starts fresh, even if the
+    // page is reloaded before the next autosave fires.
+    void clearDraft();
   }
 
-  // On first mount of a fresh editor session (no document loaded and the store
-  // still at its pristine default), normalise the baseline so the freshly blank
-  // invoice doesn't immediately read dirty. Guarded so it never clobbers an
-  // invoice the user has already started editing.
-  const hasSeededRef = useRef(false);
+  // On first mount of a fresh editor session, restore the autosaved working
+  // draft so an accidental reload never loses unsaved work. Guarded to a
+  // pristine store, so it can never clobber edits already started this session,
+  // and it seeds a fresh blank invoice (normalising the baseline) when there is
+  // no draft to restore.
+  const hasHydratedRef = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    if (hasSeededRef.current) return;
+    if (hasHydratedRef.current) return;
 
-    hasSeededRef.current = true;
+    hasHydratedRef.current = true;
 
-    const pristine =
-      currentDocumentId === null &&
-      isEqual(selectInvoiceData(useInvoiceStore.getState()), invoiceDefault);
+    let cancelled = false;
 
-    if (!pristine) return;
+    async function hydrate() {
+      const pristine =
+        currentDocumentId === null &&
+        isEqual(selectInvoiceData(useInvoiceStore.getState()), invoiceDefault);
 
-    reset();
+      if (!pristine) {
+        if (!cancelled) setIsHydrated(true);
+
+        return;
+      }
+
+      const draft = await getDraft();
+
+      if (cancelled) return;
+
+      if (draft) {
+        const invoice = ensureItemIds(structuredClone(draft.invoiceData));
+        useInvoiceStore.getState().setInvoice(invoice);
+        const normalized = selectInvoiceData(useInvoiceStore.getState());
+        setCurrentDocumentId(draft.documentId);
+        setCurrentDocumentName(draft.documentName);
+        setLastSavedInvoice(
+          structuredClone(draft.lastSavedInvoice ?? normalized)
+        );
+        void cleanupOrphanedImages([normalized.image]);
+      } else {
+        reset();
+      }
+
+      setIsHydrated(true);
+    }
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  // Debounced autosave of the live editing session into the working draft.
+  // Enabled only after hydration so it can never overwrite the draft it is about
+  // to restore. Subscribes to the store for invoice edits and re-runs on any
+  // document-identity change (load / save / reset) to capture the new baseline.
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+
+    function scheduleSave() {
+      if (timeout) clearTimeout(timeout);
+
+      timeout = setTimeout(() => {
+        void saveDraft({
+          invoiceData: structuredClone(
+            selectInvoiceData(useInvoiceStore.getState())
+          ),
+          documentId: currentDocumentId,
+          documentName: currentDocumentName,
+          lastSavedInvoice: lastSavedInvoice
+            ? structuredClone(lastSavedInvoice)
+            : null,
+          updatedAt: new Date()
+        });
+      }, DRAFT_SAVE_DEBOUNCE_MS);
+    }
+
+    const unsubscribe = useInvoiceStore.subscribe(scheduleSave);
+    scheduleSave();
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+
+      unsubscribe();
+    };
+  }, [isHydrated, currentDocumentId, currentDocumentName, lastSavedInvoice]);
 
   const value = {
     currentDocumentId,

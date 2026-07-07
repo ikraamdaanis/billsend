@@ -4,7 +4,7 @@ import {
   CURRENT_INVOICE_SCHEMA_VERSION,
   migrateInvoiceData
 } from "~/schema/migrations";
-import type { InvoiceDocument, InvoiceTemplate } from "~/types";
+import type { InvoiceDocument, InvoiceDraft, InvoiceTemplate } from "~/types";
 import { selectOrphanedImageIds } from "~/utils/select-orphaned-images";
 
 // The business profile was removed in schema version 6. Its fixed id is
@@ -125,10 +125,14 @@ function createStorageError(error: unknown, fallbackMessage: string): Error {
  *       });
  *     });
  */
+// Fixed id for the singleton autosaved working draft.
+const DRAFT_ID = "current-draft";
+
 class InvoiceDatabase extends Dexie {
   templates!: Table<InvoiceTemplate, string>;
   invoices!: Table<InvoiceDocument, string>;
   images!: Table<StoredImage, string>;
+  drafts!: Table<InvoiceDraft, string>;
 
   constructor() {
     super("InvoiceDatabase");
@@ -247,6 +251,14 @@ class InvoiceDatabase extends Dexie {
       invoices: "id, name, createdAt, updatedAt",
       images: "id",
       profiles: null
+    });
+    // Version 7: Added the singleton autosaved working draft. New table only, so
+    // Dexie provisions it automatically; existing data is untouched.
+    this.version(7).stores({
+      templates: "id, name, createdAt, updatedAt",
+      invoices: "id, name, createdAt, updatedAt",
+      images: "id",
+      drafts: "id"
     });
   }
 }
@@ -388,6 +400,61 @@ export async function deleteInvoice(id: string): Promise<void> {
   }
 }
 
+// Reads the autosaved working draft, migrating its stored invoice shapes to the
+// current schema. A missing or unreadable draft resolves to undefined rather
+// than throwing, so a corrupt draft can never block the editor from starting.
+export async function getDraft(): Promise<InvoiceDraft | undefined> {
+  try {
+    await ensureDbReady();
+
+    const draft = await db.drafts.get(DRAFT_ID);
+
+    if (!draft) return undefined;
+
+    const version = draft.schemaVersion ?? 0;
+
+    return {
+      ...draft,
+      invoiceData: migrateInvoiceData(draft.invoiceData, version),
+      lastSavedInvoice: draft.lastSavedInvoice
+        ? migrateInvoiceData(draft.lastSavedInvoice, version)
+        : null
+    };
+  } catch (error) {
+    console.error("[InvoiceDatabase] Failed to read working draft", error);
+
+    return undefined;
+  }
+}
+
+// Best-effort autosave of the working draft. Runs on every edit, so a storage
+// hiccup must never surface to the user or interrupt editing; failures are
+// logged and swallowed.
+export async function saveDraft(
+  draft: Omit<InvoiceDraft, "id" | "schemaVersion">
+): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.drafts.put({
+      ...draft,
+      id: DRAFT_ID,
+      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+    });
+  } catch (error) {
+    console.error("[InvoiceDatabase] Failed to save working draft", error);
+  }
+}
+
+// Discards the working draft (e.g. on an explicit "New invoice"). Best-effort.
+export async function clearDraft(): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.drafts.delete(DRAFT_ID);
+  } catch (error) {
+    console.error("[InvoiceDatabase] Failed to clear working draft", error);
+  }
+}
+
 export async function saveImage(
   id: string,
   blob: Blob,
@@ -468,15 +535,18 @@ async function runOrphanCleanup(keepImageIds: string[]): Promise<void> {
   try {
     await ensureDbReady();
 
-    const [invoices, templates, images] = await Promise.all([
+    const [invoices, templates, images, draft] = await Promise.all([
       db.invoices.toArray(),
       db.templates.toArray(),
-      db.images.toArray()
+      db.images.toArray(),
+      db.drafts.get(DRAFT_ID)
     ]);
 
     const referencedImageIds = [
       ...invoices.map(invoice => invoice.invoiceData.image),
-      ...templates.map(template => template.templateData.image)
+      ...templates.map(template => template.templateData.image),
+      draft?.invoiceData.image ?? "",
+      draft?.lastSavedInvoice?.image ?? ""
     ];
 
     const orphanedImageIds = selectOrphanedImageIds(
