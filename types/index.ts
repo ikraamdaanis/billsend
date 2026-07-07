@@ -163,6 +163,20 @@ export type InvoiceDocument = {
   updatedAt: Date;
 };
 
+// The autosaved working draft: a single record capturing the live editing
+// session (the in-progress invoice, which saved document it belongs to, and the
+// baseline it is diffed against) so an accidental reload never loses unsaved
+// work. Restored on editor mount; rewritten on every edit; cleared on reset.
+export type InvoiceDraft = {
+  id: string;
+  invoiceData: Invoice;
+  documentId: string | null;
+  documentName: string | null;
+  lastSavedInvoice: Invoice | null;
+  schemaVersion?: number;
+  updatedAt: Date;
+};
+
 export type BillsendExportFile = {
   meta: {
     version: number;
