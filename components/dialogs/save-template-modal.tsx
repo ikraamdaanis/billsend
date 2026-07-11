@@ -83,7 +83,7 @@ export function SaveTemplateModal({
   currentInvoiceData: Invoice;
 }) {
   const [pending, startTransition] = useTransition();
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("new");
 
   const selectedTemplate = templates.find(
     template => template.id === selectedTemplateId
@@ -105,12 +105,26 @@ export function SaveTemplateModal({
     setSelectedTemplateId(templateId);
   }
 
+  // Reset on every close path (Cancel, Escape, overlay click, successful save)
+  // so a previously selected overwrite target never carries into the next open.
+  // Delayed so the reset isn't visible during the dialog's close animation.
+  function handleOpenChange(nextOpen: boolean) {
+    onOpenChange(nextOpen);
+
+    if (!nextOpen) {
+      setTimeout(() => {
+        setSelectedTemplateId("new");
+        form.reset();
+      }, 500);
+    }
+  }
+
   function handleSubmit(data: SaveTemplateFormData) {
     startTransition(async () => {
       try {
         const now = new Date();
 
-        if (selectedTemplateId && selectedTemplateId !== "new") {
+        if (selectedTemplateId !== "new") {
           // Update existing template
           const existingTemplate = templates.find(
             t => t.id === selectedTemplateId
@@ -149,11 +163,7 @@ export function SaveTemplateModal({
           toast.success("Template created successfully!");
         }
 
-        onOpenChange(false);
-        setTimeout(() => {
-          setSelectedTemplateId("");
-          form.reset();
-        }, 500);
+        handleOpenChange(false);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to save template"
@@ -162,16 +172,8 @@ export function SaveTemplateModal({
     });
   }
 
-  function handleCancel() {
-    onOpenChange(false);
-    setTimeout(() => {
-      setSelectedTemplateId("");
-      form.reset();
-    }, 500);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[500px]">
         <DialogHeader>
           <DialogTitle>Save as Template</DialogTitle>
@@ -181,7 +183,10 @@ export function SaveTemplateModal({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form className="flex flex-col gap-4 px-4 pb-4">
+          <form
+            className="flex flex-col gap-4 px-4 pb-4"
+            onSubmit={form.handleSubmit(handleSubmit)}
+          >
             <div className="flex flex-col gap-2">
               <FormLabel htmlFor="template-select">Template</FormLabel>
               <NativeSelect
@@ -237,7 +242,7 @@ export function SaveTemplateModal({
           <Button
             type="button"
             variant="outline"
-            onClick={handleCancel}
+            onClick={() => handleOpenChange(false)}
             disabled={pending}
           >
             Cancel
@@ -247,7 +252,7 @@ export function SaveTemplateModal({
             onClick={form.handleSubmit(handleSubmit)}
             disabled={pending}
           >
-            {selectedTemplateId && selectedTemplateId !== "new"
+            {selectedTemplateId !== "new"
               ? "Update Template"
               : "Create Template"}
           </Button>

@@ -46,7 +46,7 @@ export function SaveInvoiceDialog({
   onSave: (name: string, overwriteId?: string) => Promise<void>;
 }) {
   const [pending, startTransition] = useTransition();
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("");
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>("new");
 
   const selectedInvoice = existingInvoices.find(
     invoice => invoice.id === selectedInvoiceId
@@ -66,34 +66,36 @@ export function SaveInvoiceDialog({
     setSelectedInvoiceId(invoiceId);
   }
 
+  // Reset on every close path (Cancel, Escape, overlay click, successful save)
+  // so a previously selected overwrite target never carries into the next open.
+  // Delayed so the reset isn't visible during the dialog's close animation.
+  function handleOpenChange(nextOpen: boolean) {
+    onOpenChange(nextOpen);
+
+    if (!nextOpen) {
+      setTimeout(() => {
+        setSelectedInvoiceId("new");
+        form.reset({ name: defaultName });
+      }, 500);
+    }
+  }
+
   function handleSubmit(data: SaveInvoiceFormData) {
     startTransition(async () => {
       const overwriteId =
-        selectedInvoiceId && selectedInvoiceId !== "new"
-          ? selectedInvoiceId
-          : undefined;
+        selectedInvoiceId !== "new" ? selectedInvoiceId : undefined;
 
-      await onSave(data.name.trim(), overwriteId);
-
-      onOpenChange(false);
-
-      setTimeout(() => {
-        setSelectedInvoiceId("");
-        form.reset({ name: defaultName });
-      }, 500);
+      try {
+        await onSave(data.name.trim(), overwriteId);
+        handleOpenChange(false);
+      } catch {
+        // onSave surfaces its own error toast; keep the dialog open to retry.
+      }
     });
   }
 
-  function handleCancel() {
-    onOpenChange(false);
-    setTimeout(() => {
-      setSelectedInvoiceId("");
-      form.reset({ name: defaultName });
-    }, 500);
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[500px]">
         <DialogHeader>
           <DialogTitle>Save Invoice</DialogTitle>
@@ -141,7 +143,7 @@ export function SaveInvoiceDialog({
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleCancel}
+                onClick={() => handleOpenChange(false)}
                 disabled={pending}
               >
                 Cancel
