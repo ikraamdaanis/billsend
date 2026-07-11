@@ -15,6 +15,12 @@ registerInvoicePdfFonts();
 export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   // invoice.image should already be a blob URL or empty string
   const imageUrl = invoice.image || "";
+  // Sets the PDF's /Title metadata, which the browser's viewer uses as the
+  // default filename when the user saves. Without it, saving from the preview
+  // tab defaults to the blob URL's UUID (e.g. b3d1c2a8-….pdf).
+  const documentTitle = invoice.number
+    ? `Invoice ${invoice.number}`
+    : invoice.title || "Invoice";
   const baseFont = getInvoiceFontDefinition(invoice.theme.font);
   const { detailRows, lineItems, summaryRows } = buildInvoiceViewModel(invoice);
   const styles = StyleSheet.create({
@@ -27,7 +33,7 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   });
 
   return (
-    <Document>
+    <Document title={documentTitle}>
       <Page size="A4" style={styles.page}>
         <InvoicePdfHeader invoice={invoice} imageUrl={imageUrl} />
         <InvoicePdfDetails invoice={invoice} detailRows={detailRows} />

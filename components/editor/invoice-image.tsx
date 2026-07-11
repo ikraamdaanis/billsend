@@ -9,6 +9,11 @@ import { useImageLoader } from "~/hooks/use-image-loader";
 import { cn } from "~/lib/utils";
 import { useImageSlice } from "~/stores/invoice-selectors";
 
+// A logo is embedded verbatim into every data export (base64), so an oversized
+// image bloats storage and later slows exports to a crawl. Cap it well above any
+// reasonable logo.
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
 export function InvoiceImage() {
   const { image: imageId, setImage } = useImageSlice();
   const imageUrl = useImageLoader(imageId);
@@ -20,13 +25,19 @@ export function InvoiceImage() {
   ) {
     setIsDragging(false);
 
-    if (fileRejections.length > 0) {
+    // Only complain when nothing usable came through; a valid image dropped
+    // alongside a stray non-image should still upload rather than be discarded.
+    if (acceptedFiles.length === 0) {
+      const tooLarge = fileRejections.some(rejection =>
+        rejection.errors.some(error => error.code === "file-too-large")
+      );
+
       return toast.error(
-        "That file isn't a supported image. Upload a PNG, JPG, or WebP."
+        tooLarge
+          ? "That image is too large. Please upload an image under 5 MB."
+          : "That file isn't a supported image. Upload a PNG, JPG, or WebP."
       );
     }
-
-    if (acceptedFiles.length === 0) return;
 
     const file = acceptedFiles[0];
     const newImageId = crypto.randomUUID();
@@ -67,6 +78,7 @@ export function InvoiceImage() {
       accept={{
         "image/*": [".png", ".jpg", ".jpeg", ".webp"]
       }}
+      maxSize={MAX_IMAGE_SIZE_BYTES}
     >
       {({ getRootProps, getInputProps }) => (
         <div
