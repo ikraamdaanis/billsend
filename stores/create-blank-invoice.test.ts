@@ -1,7 +1,43 @@
-import { describe, expect, it } from "vitest";
+import { addDays, format } from "date-fns";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createBlankInvoice, invoiceDefault } from "~/stores/invoice-store";
 
 describe("createBlankInvoice", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("stamps the invoice date at creation time, not module load", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T10:00:00Z"));
+
+    const invoice = createBlankInvoice();
+
+    expect(invoice.invoiceDate).toBe("2026-09-15");
+    expect(invoice.invoiceDate).not.toBe(invoiceDefault.invoiceDate);
+  });
+
+  it("stamps the due date 30 days from creation time", () => {
+    vi.useFakeTimers();
+    const now = new Date("2026-09-15T10:00:00Z");
+    vi.setSystemTime(now);
+
+    const invoice = createBlankInvoice();
+
+    expect(invoice.dueDate).toBe(format(addDays(now, 30), "yyyy-MM-dd"));
+  });
+
+  it("re-stamps the date on each call as the clock advances", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-15T10:00:00Z"));
+    const first = createBlankInvoice();
+    vi.setSystemTime(new Date("2026-09-17T10:00:00Z"));
+    const second = createBlankInvoice();
+
+    expect(first.invoiceDate).toBe("2026-09-15");
+    expect(second.invoiceDate).toBe("2026-09-17");
+  });
+
   it("returns a fully blank invoice", () => {
     const invoice = createBlankInvoice();
 
