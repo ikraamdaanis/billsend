@@ -22,8 +22,12 @@ export const invoiceDefault: Invoice = {
   title: "Invoice",
   image: "",
   number: "INV-0001",
-  invoiceDate: format(new Date(), "yyyy-MM-dd"),
-  dueDate: format(addDays(new Date(), 30), "yyyy-MM-dd"),
+  // Dates are stamped per invoice in createBlankInvoice(), not baked in here.
+  // Keeping the module-level default static (empty) means every isolate renders
+  // the same first paint, so a server crossing midnight can't disagree with the
+  // client's local date and trigger a hydration mismatch.
+  invoiceDate: "",
+  dueDate: "",
   seller: {
     label: "From",
     content: "",
@@ -93,11 +97,17 @@ export const invoiceDefault: Invoice = {
  * The single factory that seeds a fresh, blank invoice. Every new invoice is
  * created here. A new invoice always starts blank (including a static default
  * number the user edits inline); the returned invoice is a fully independent
- * snapshot, never sharing nested objects with the default.
+ * snapshot, never sharing nested objects with the default. The invoice and due
+ * dates are stamped from the clock at call time (due 30 days out), so an invoice
+ * created today is dated today rather than whenever the module was loaded.
  */
 export function createBlankInvoice(): Invoice {
+  const now = new Date();
+
   return {
     ...structuredClone(invoiceDefault),
+    invoiceDate: format(now, "yyyy-MM-dd"),
+    dueDate: format(addDays(now, 30), "yyyy-MM-dd"),
     items: invoiceDefault.items.map(item => ({
       ...item,
       id: crypto.randomUUID()
