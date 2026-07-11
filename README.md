@@ -61,6 +61,10 @@ bun run ts-lint      # Type check (watch)
 bun run deploy       # Build and deploy to Cloudflare Workers
 ```
 
+Run the suite with `bun run test`, not plain `bun test`. The script runs Vitest,
+which shims IndexedDB via `fake-indexeddb`; `bun test` uses Bun's own runner and
+skips that setup, so the Dexie-backed tests fail as if something were broken.
+
 ## Project Structure
 
 ```
