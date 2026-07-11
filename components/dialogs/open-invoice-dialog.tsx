@@ -27,12 +27,16 @@ export function OpenInvoiceDialog({
   open,
   onOpenChange,
   onSelectInvoice,
-  currentInvoiceId
+  currentInvoiceId,
+  onCurrentInvoiceDeleted,
+  onCurrentInvoiceRenamed
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectInvoice: (invoice: InvoiceDocument) => void;
   currentInvoiceId: string | null;
+  onCurrentInvoiceDeleted: () => void;
+  onCurrentInvoiceRenamed: (newName: string) => void;
 }) {
   const [invoices, setInvoices] = useState<InvoiceDocument[]>([]);
   const [loading, setLoading] = useState(true);
@@ -189,6 +193,10 @@ export function OpenInvoiceDialog({
         await Promise.all(targets.map(invoice => deleteInvoice(invoice.id)));
         await loadInvoices();
 
+        if (currentInvoiceId !== null && targetIds.has(currentInvoiceId)) {
+          onCurrentInvoiceDeleted();
+        }
+
         setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
         setDeleteTarget(null);
         toast.success(
@@ -211,6 +219,10 @@ export function OpenInvoiceDialog({
     try {
       await saveInvoice({ ...invoice, name: newName, updatedAt: new Date() });
       await loadInvoices();
+
+      if (invoice.id === currentInvoiceId) {
+        onCurrentInvoiceRenamed(newName);
+      }
 
       toast.success("Invoice renamed successfully");
     } catch (error) {
