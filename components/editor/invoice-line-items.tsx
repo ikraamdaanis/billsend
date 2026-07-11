@@ -43,6 +43,40 @@ type SetTableSettings = ReturnType<
   typeof useLineItemsSlice
 >["setTableSettings"];
 
+// Coerce raw input into a decimal draft string: drop everything that is not a
+// digit or a dot (this also strips any currency symbol), keep only the first
+// dot, cap at two decimal places, and remove leading zeros.
+function normalizeDecimalInput(value: string): string {
+  let numericValue = value.replace(/[^0-9.]/g, "");
+
+  const firstDot = numericValue.indexOf(".");
+
+  if (firstDot !== -1) {
+    const wholePart = numericValue.slice(0, firstDot);
+    const decimalPart = numericValue
+      .slice(firstDot + 1)
+      .replace(/\./g, "")
+      .slice(0, 2);
+    numericValue = `${wholePart}.${decimalPart}`;
+  }
+
+  if (
+    numericValue.length > 1 &&
+    numericValue.startsWith("0") &&
+    !numericValue.startsWith("0.")
+  ) {
+    numericValue = numericValue.replace(/^0+/, "");
+  }
+
+  return numericValue;
+}
+
+// An in-progress draft like "" or "." has no numeric value yet, so it commits
+// as 0.
+function parseDecimalDraft(draft: string): number {
+  return draft === "" || draft === "." ? 0 : Number(draft);
+}
+
 const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
   {
     id: "description",
@@ -357,67 +391,12 @@ function TableCell({
       return;
     }
 
-    if (column.cell.kind === "integer") {
-      let numericValue = value.replace(/[^0-9.]/g, "");
-
-      const firstDot = numericValue.indexOf(".");
-
-      if (firstDot !== -1) {
-        const wholePart = numericValue.slice(0, firstDot);
-        const decimalPart = numericValue
-          .slice(firstDot + 1)
-          .replace(/\./g, "")
-          .slice(0, 2);
-        numericValue = `${wholePart}.${decimalPart}`;
-      }
-
-      if (
-        numericValue.length > 1 &&
-        numericValue.startsWith("0") &&
-        !numericValue.startsWith("0.")
-      ) {
-        numericValue = numericValue.replace(/^0+/, "");
-      }
+    if (column.cell.kind === "integer" || column.cell.kind === "currency") {
+      const numericValue = normalizeDecimalInput(value);
 
       setNumericDraft(numericValue);
-      updateItem(
-        index,
-        itemField,
-        numericValue === "" || numericValue === "." ? 0 : Number(numericValue)
-      );
+      updateItem(index, itemField, parseDecimalDraft(numericValue));
       return;
-    }
-
-    if (column.cell.kind === "currency") {
-      let numericValue = value
-        .replace(currencySymbol, "")
-        .replace(/[^0-9.]/g, "");
-
-      const firstDot = numericValue.indexOf(".");
-
-      if (firstDot !== -1) {
-        const wholePart = numericValue.slice(0, firstDot);
-        const decimalPart = numericValue
-          .slice(firstDot + 1)
-          .replace(/\./g, "")
-          .slice(0, 2);
-        numericValue = `${wholePart}.${decimalPart}`;
-      }
-
-      if (
-        numericValue.length > 1 &&
-        numericValue.startsWith("0") &&
-        !numericValue.startsWith("0.")
-      ) {
-        numericValue = numericValue.replace(/^0+/, "");
-      }
-
-      setNumericDraft(numericValue);
-      updateItem(
-        index,
-        itemField,
-        numericValue === "" || numericValue === "." ? 0 : Number(numericValue)
-      );
     }
   }
 
@@ -444,11 +423,13 @@ function TableCell({
   function handleFocus() {
     if (column.cell.kind === "currency") {
       setNumericDraft(item.unitPrice.toString());
-      setIsEditingNumeric(true);
     } else if (column.cell.kind === "integer") {
       setNumericDraft(item.quantity.toString());
-      setIsEditingNumeric(true);
+    } else {
+      return;
     }
+
+    setIsEditingNumeric(true);
   }
 
   const cellLabel = columnLabel || column.headerPlaceholder;
