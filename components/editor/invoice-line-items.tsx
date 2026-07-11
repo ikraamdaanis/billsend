@@ -339,8 +339,8 @@ function TableCell({
   theme: InvoiceTheme;
   updateItem: UpdateItem;
 }) {
-  const [isEditingCurrency, setIsEditingCurrency] = useState(false);
-  const [currencyDraft, setCurrencyDraft] = useState("");
+  const [isEditingNumeric, setIsEditingNumeric] = useState(false);
+  const [numericDraft, setNumericDraft] = useState("");
 
   const rowStyle = getTextStyles({
     settings: getRoleSettings(theme, column.rowRole)
@@ -358,15 +358,32 @@ function TableCell({
     }
 
     if (column.cell.kind === "integer") {
-      let numericValue = value.replace(/[^0-9]/g, "");
-      if (numericValue.length > 1 && numericValue.startsWith("0")) {
+      let numericValue = value.replace(/[^0-9.]/g, "");
+
+      const firstDot = numericValue.indexOf(".");
+
+      if (firstDot !== -1) {
+        const wholePart = numericValue.slice(0, firstDot);
+        const decimalPart = numericValue
+          .slice(firstDot + 1)
+          .replace(/\./g, "")
+          .slice(0, 2);
+        numericValue = `${wholePart}.${decimalPart}`;
+      }
+
+      if (
+        numericValue.length > 1 &&
+        numericValue.startsWith("0") &&
+        !numericValue.startsWith("0.")
+      ) {
         numericValue = numericValue.replace(/^0+/, "");
       }
 
+      setNumericDraft(numericValue);
       updateItem(
         index,
         itemField,
-        numericValue === "" ? 0 : Number(numericValue)
+        numericValue === "" || numericValue === "." ? 0 : Number(numericValue)
       );
       return;
     }
@@ -395,7 +412,7 @@ function TableCell({
         numericValue = numericValue.replace(/^0+/, "");
       }
 
-      setCurrencyDraft(numericValue);
+      setNumericDraft(numericValue);
       updateItem(
         index,
         itemField,
@@ -405,28 +422,33 @@ function TableCell({
   }
 
   function handleBlur({ target }: ChangeEvent<HTMLInputElement>) {
-    if (column.cell.kind !== "currency" || !column.cell.itemField) {
+    const itemField = column.cell.itemField;
+    if (
+      (column.cell.kind !== "currency" && column.cell.kind !== "integer") ||
+      !itemField
+    ) {
       return;
     }
 
-    setIsEditingCurrency(false);
-    setCurrencyDraft("");
+    setIsEditingNumeric(false);
+    setNumericDraft("");
 
     const hasDigits = /\d/.test(target.value);
     const number = Number(
       target.value.replace(currencySymbol, "").replace(/[^0-9.]/g, "")
     );
 
-    updateItem(index, column.cell.itemField, hasDigits ? number : 0);
+    updateItem(index, itemField, hasDigits ? number : 0);
   }
 
   function handleFocus() {
-    if (column.cell.kind !== "currency") {
-      return;
+    if (column.cell.kind === "currency") {
+      setNumericDraft(item.unitPrice.toString());
+      setIsEditingNumeric(true);
+    } else if (column.cell.kind === "integer") {
+      setNumericDraft(item.quantity.toString());
+      setIsEditingNumeric(true);
     }
-
-    setCurrencyDraft(item.unitPrice.toString());
-    setIsEditingCurrency(true);
   }
 
   const cellLabel = columnLabel || column.headerPlaceholder;
@@ -451,12 +473,12 @@ function TableCell({
   }
 
   if (column.cell.kind === "integer") {
-    inputValue = item.quantity.toString();
+    inputValue = isEditingNumeric ? numericDraft : item.quantity.toString();
   }
 
   if (column.cell.kind === "currency") {
-    inputValue = isEditingCurrency
-      ? `${currencySymbol}${currencyDraft}`
+    inputValue = isEditingNumeric
+      ? `${currencySymbol}${numericDraft}`
       : viewRow.unitPrice;
   }
 
