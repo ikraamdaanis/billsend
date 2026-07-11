@@ -171,15 +171,13 @@ export async function executeImport(
   );
   const existingImageIds = new Set(existingImages.map(image => image.id));
 
-  // Images keep their original id so referential integrity survives and a
+  // Images keep their original id so referential integrity survives (invoice and
+  // template records already point at that id, so nothing needs remapping) and a
   // re-import stays idempotent: an id already in the database is the same blob,
   // so we skip it rather than store a fresh copy. This is what analyzeImport
   // reports as "duplicates", keeping the preview honest about what runs here.
-  const imageIdMap = new Map<string, string>();
   const imagesToStore: StoredImage[] = [];
   for (const imageExport of parsed.images) {
-    imageIdMap.set(imageExport.id, imageExport.id);
-
     if (existingImageIds.has(imageExport.id)) continue;
 
     imagesToStore.push({
@@ -204,8 +202,6 @@ export async function executeImport(
       structuredClone(templateExport.templateData),
       templateExport.schemaVersion ?? 0
     );
-    const mappedTemplateImage = imageIdMap.get(templateData.image);
-    if (mappedTemplateImage) templateData.image = mappedTemplateImage;
 
     templatesToStore.push({
       id: newId,
@@ -232,8 +228,6 @@ export async function executeImport(
       structuredClone(invoiceExport.invoiceData),
       invoiceExport.schemaVersion ?? 0
     );
-    const mappedInvoiceImage = imageIdMap.get(invoiceData.image);
-    if (mappedInvoiceImage) invoiceData.image = mappedInvoiceImage;
 
     const newTemplateId = invoiceExport.templateId
       ? (templateIdMap.get(invoiceExport.templateId) ??
