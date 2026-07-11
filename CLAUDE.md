@@ -24,12 +24,18 @@ billsend is a free, local-first invoice generator that runs entirely in the brow
 bun run dev          # Start dev server (port 3000)
 bun run build        # Production build
 bun run serve        # Preview production build
+bun run test         # Run the test suite (Vitest)
 bun run lint         # ESLint
 bun run format       # Prettier
 bun run check        # Format + lint fix
 bun run check-types  # TypeScript type check (no emit)
 bun run ts-lint      # Type check with watch mode
 ```
+
+Run tests with `bun run test`, not plain `bun test`. The `test` script runs
+Vitest, which loads the setup file that shims IndexedDB (`fake-indexeddb`);
+`bun test` invokes Bun's own runner instead, bypassing that setup and failing
+the Dexie/migration suites with what looks like real breakage.
 
 ## Project Structure
 
