@@ -41,7 +41,11 @@ import {
   MenubarSubTrigger,
   MenubarTrigger
 } from "~/components/ui/menubar";
-import { currencyOptions, normalizeCurrency } from "~/consts/currencies";
+import {
+  currencyOptions,
+  getCurrencyMarker,
+  normalizeCurrency
+} from "~/consts/currencies";
 import {
   CanvasViewProvider,
   useCanvasView
@@ -215,7 +219,9 @@ function EditMenu() {
               <MenubarRadioGroup value={selected} onValueChange={setCurrency}>
                 {currencyOptions.map(({ symbol, label }) => (
                   <MenubarRadioItem key={symbol} value={symbol}>
-                    <span className="w-8 shrink-0">{symbol}</span>
+                    <span className="w-8 shrink-0">
+                      {getCurrencyMarker(symbol)}
+                    </span>
                     <span className="text-muted-foreground">{label}</span>
                   </MenubarRadioItem>
                 ))}
