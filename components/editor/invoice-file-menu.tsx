@@ -121,24 +121,30 @@ export function InvoiceFileMenu({
     setLastSavedInvoice(null);
   }
 
-  function handleSave(): Promise<void> {
+  // Resolves with "saved" when the document was written, or "deferred" when the
+  // save was routed to the Save As dialog instead (no current document, or the
+  // current one has vanished from storage). Rejects only on a genuine failure.
+  // Callers must not treat "deferred" as saved: the pending action is left for
+  // the Save As dialog to run on completion, so nothing destructive runs before
+  // the edits are actually persisted.
+  function handleSave(): Promise<"saved" | "deferred"> {
     if (!currentDocumentId) {
       setSaveAsDialogOpen(true);
 
-      return Promise.resolve();
+      return Promise.resolve("deferred");
     }
 
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<"saved" | "deferred">((resolve, reject) => {
       startTransition(async () => {
         try {
           await update();
           toast.success("Invoice saved successfully");
-          resolve();
+          resolve("saved");
         } catch (error) {
           if (error instanceof DocumentNotFoundError) {
             detachCurrentDocument();
             setSaveAsDialogOpen(true);
-            resolve();
+            resolve("deferred");
 
             return;
           }
@@ -255,8 +261,15 @@ export function InvoiceFileMenu({
     }
 
     try {
-      await handleSave();
-      runPendingAction();
+      const result = await handleSave();
+
+      // Only run the pending (often destructive) action once the save actually
+      // landed. When the save was deferred to the Save As dialog, that dialog
+      // runs the pending action itself after it persists, so running it here
+      // would wipe the edits before they were saved.
+      if (result === "saved") {
+        runPendingAction();
+      }
     } catch {
       setPendingAction(null);
     }
@@ -299,6 +312,18 @@ export function InvoiceFileMenu({
       // intentionally not bound because Chrome and Safari reserve it for a new
       // browser window and never surface it to the page.
       const key = event.key.toLowerCase();
+
+      if (key !== "o" && key !== "s") return;
+
+      // A modal dialog owns keyboard focus; swallow file shortcuts underneath it
+      // rather than firing them (which could stack a second dialog and silently
+      // replace the pending action), but still preventDefault so the browser's
+      // own Save/Open dialog doesn't pop up either.
+      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) {
+        event.preventDefault();
+
+        return;
+      }
 
       if (key === "o" && !event.shiftKey) {
         event.preventDefault();

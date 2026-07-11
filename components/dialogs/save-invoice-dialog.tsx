@@ -26,6 +26,7 @@ import type { InvoiceDocument } from "~/types";
 const saveInvoiceSchema = z.object({
   name: z
     .string()
+    .trim()
     .min(1, "Invoice name is required")
     .max(100, "Invoice name must be less than 100 characters")
 });
