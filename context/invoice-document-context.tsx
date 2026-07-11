@@ -220,31 +220,56 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
 
     let timeout: ReturnType<typeof setTimeout> | null = null;
 
+    function writeDraft() {
+      void saveDraft({
+        invoiceData: structuredClone(
+          selectInvoiceData(useInvoiceStore.getState())
+        ),
+        documentId: currentDocumentId,
+        documentName: currentDocumentName,
+        lastSavedInvoice: lastSavedInvoice
+          ? structuredClone(lastSavedInvoice)
+          : null,
+        updatedAt: new Date()
+      });
+    }
+
     function scheduleSave() {
       if (timeout) clearTimeout(timeout);
 
-      timeout = setTimeout(() => {
-        void saveDraft({
-          invoiceData: structuredClone(
-            selectInvoiceData(useInvoiceStore.getState())
-          ),
-          documentId: currentDocumentId,
-          documentName: currentDocumentName,
-          lastSavedInvoice: lastSavedInvoice
-            ? structuredClone(lastSavedInvoice)
-            : null,
-          updatedAt: new Date()
-        });
-      }, DRAFT_SAVE_DEBOUNCE_MS);
+      timeout = setTimeout(writeDraft, DRAFT_SAVE_DEBOUNCE_MS);
+    }
+
+    // Flush a pending debounced write before the tab is discarded so the last
+    // keystrokes before a close or navigation are never lost. pagehide covers
+    // tab close and back/forward navigation; visibilitychange (hidden) covers
+    // mobile app-switch and tab backgrounding, where pagehide may not fire.
+    function flushSave() {
+      if (!timeout) return;
+
+      clearTimeout(timeout);
+      timeout = null;
+      writeDraft();
+    }
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        flushSave();
+      }
     }
 
     const unsubscribe = useInvoiceStore.subscribe(scheduleSave);
     scheduleSave();
 
+    window.addEventListener("pagehide", flushSave);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       if (timeout) clearTimeout(timeout);
 
       unsubscribe();
+      window.removeEventListener("pagehide", flushSave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isHydrated, currentDocumentId, currentDocumentName, lastSavedInvoice]);
 
