@@ -89,6 +89,16 @@ describe("calculateInvoiceTotals", () => {
     expect(totals.total).toBe(130);
   });
 
+  it("computes the line amount for a fractional quantity", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({ items: [makeItem({ quantity: 1.5, unitPrice: 40 })] })
+    );
+
+    expect(totals.items[0].amount).toBe(60);
+    expect(totals.subtotal).toBe(60);
+    expect(totals.total).toBe(60);
+  });
+
   it("returns zeros for an invoice with no items", () => {
     const totals = calculateInvoiceTotals(makeInvoice({ items: [] }));
 

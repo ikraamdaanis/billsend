@@ -41,6 +41,7 @@ function PaymentDetailsLabel() {
 
   return (
     <InvoiceInput
+      aria-label="Payment details section label"
       value={paymentDetails.label}
       className="font-medium md:text-base"
       onChange={value => setPaymentDetails(prev => ({ ...prev, label: value }))}
@@ -64,10 +65,15 @@ function PaymentDetailsField({
   const { paymentDetails, setPaymentDetails } = usePaymentDetailsSlice();
   const theme = useTheme();
 
+  const fieldId = `invoice-payment-field-${fieldKey}`;
+
   return (
     <div className="flex items-center gap-2">
-      <span className="w-32 shrink-0 text-sm text-zinc-500">{label}</span>
+      <label htmlFor={fieldId} className="w-32 shrink-0 text-sm text-zinc-500">
+        {label}
+      </label>
       <InvoiceInput
+        id={fieldId}
         value={paymentDetails[fieldKey]}
         onChange={value =>
           setPaymentDetails(prev => ({ ...prev, [fieldKey]: value }))
@@ -88,6 +94,7 @@ function PaymentDetailsTerms() {
   return (
     <InvoiceTextArea
       id="invoice-field-payment-terms"
+      aria-label="Payment instructions"
       value={paymentDetails.terms}
       onChange={value => setPaymentDetails(prev => ({ ...prev, terms: value }))}
       className="mt-2 field-sizing-content min-h-[2lh] w-full"

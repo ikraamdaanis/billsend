@@ -67,6 +67,7 @@ function SubtotalRow() {
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
+        aria-label="Subtotal label"
         value={labels.subtotal}
         onChange={value => setLabels(prev => ({ ...prev, subtotal: value }))}
         className="w-full min-w-fit"
@@ -99,6 +100,7 @@ function TaxRow() {
         style={{ justifyContent: labelSettings.align }}
       >
         <InvoiceInput
+          aria-label="Tax label"
           value={labels.tax}
           onChange={value => setLabels(prev => ({ ...prev, tax: value }))}
           className="field-sizing-content w-auto min-w-fit pr-0.5"
@@ -108,6 +110,7 @@ function TaxRow() {
         <span className="flex items-center">
           <InvoiceInput
             id="invoice-field-totals"
+            aria-label="Tax percentage"
             value={taxInput}
             onChange={value => {
               const numericValue = handlePercentageInput(value);
@@ -150,6 +153,7 @@ function FeesRow() {
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
+        aria-label="Fees label"
         value={labels.fees}
         onChange={value => setLabels(prev => ({ ...prev, fees: value }))}
         className="w-full min-w-fit"
@@ -161,6 +165,7 @@ function FeesRow() {
         style={{ justifyContent: valueSettings.align }}
       >
         <InvoiceInput
+          aria-label="Fees amount"
           value={`${currencySymbol}${feesInput}`}
           className="w-20 text-right"
           style={getTextStyles({ settings: valueSettings })}
@@ -189,6 +194,7 @@ function DiscountsRow() {
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
+        aria-label="Discounts label"
         value={labels.discounts}
         onChange={value => setLabels(prev => ({ ...prev, discounts: value }))}
         className="w-full min-w-fit"
@@ -200,6 +206,7 @@ function DiscountsRow() {
         style={{ justifyContent: valueSettings.align }}
       >
         <InvoiceInput
+          aria-label="Discounts amount"
           value={`${currencySymbol}${discountsInput}`}
           style={getTextStyles({ settings: valueSettings })}
           onChange={value => {
@@ -227,6 +234,7 @@ function TotalRow() {
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
+        aria-label="Total label"
         value={labels.total}
         onChange={value => setLabels(prev => ({ ...prev, total: value }))}
         className="w-full min-w-fit"
