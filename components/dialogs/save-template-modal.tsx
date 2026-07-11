@@ -127,7 +127,7 @@ export function SaveTemplateModal({
         if (selectedTemplateId !== "new") {
           // Update existing template
           const existingTemplate = templates.find(
-            t => t.id === selectedTemplateId
+            template => template.id === selectedTemplateId
           );
 
           if (!existingTemplate) {
