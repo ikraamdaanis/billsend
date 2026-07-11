@@ -51,15 +51,15 @@ export function getTextStyles({
   }
 
   if (remove.includes("size")) {
-    delete styles.size;
+    delete styles.fontSize;
   }
 
   if (remove.includes("weight")) {
-    delete styles.weight;
+    delete styles.fontWeight;
   }
 
   if (remove.includes("align")) {
-    delete styles.align;
+    delete styles.textAlign;
   }
 
   return styles;
