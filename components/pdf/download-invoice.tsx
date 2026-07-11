@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { InvoicePDF } from "~/components/pdf/invoice-generator";
 import { Button } from "~/components/ui/button";
-import { useImageLoader } from "~/hooks/use-image-loader";
+import { getImageBlob } from "~/db";
 import { cn } from "~/lib/utils";
 import { useInvoiceData } from "~/stores/invoice-selectors";
 import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
@@ -14,12 +14,8 @@ export function DownloadInvoice({
   ...props
 }: Omit<ComponentProps<typeof Button>, "onClick">) {
   const invoice = useInvoiceData();
-  const imageUrl = useImageLoader(invoice.image);
 
   const [pending, startTransition] = useTransition();
-
-  // A copy of the invoice data with the loaded image URL swapped in.
-  const stableInvoice = { ...invoice, image: imageUrl };
 
   // Generate PDF blob URL for "Open in new tab" button
   function handleCreatePdfUrl() {
@@ -31,8 +27,30 @@ export function DownloadInvoice({
     }
 
     startTransition(async () => {
+      let logoUrl = "";
+      let logoUrlIsOwned = false;
+
       try {
         registerInvoicePdfFonts();
+
+        // Resolve the logo from IndexedDB up front. The reactive image loader
+        // can still be an empty string right after opening a saved invoice, so
+        // reading the blob here guarantees the PDF is built with the logo.
+        if (
+          invoice.image.startsWith("blob:") ||
+          invoice.image.startsWith("data:")
+        ) {
+          logoUrl = invoice.image;
+        } else if (invoice.image) {
+          const blob = await getImageBlob(invoice.image);
+
+          if (blob) {
+            logoUrl = URL.createObjectURL(blob);
+            logoUrlIsOwned = true;
+          }
+        }
+
+        const stableInvoice = { ...invoice, image: logoUrl };
         const blob = await pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
         const url = URL.createObjectURL(blob);
 
@@ -49,6 +67,10 @@ export function DownloadInvoice({
         );
 
         newWindow.close();
+      } finally {
+        // toBlob() has already embedded the logo, so the source URL we minted
+        // for it can be released regardless of success.
+        if (logoUrlIsOwned) URL.revokeObjectURL(logoUrl);
       }
     });
   }
