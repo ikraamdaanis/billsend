@@ -294,16 +294,19 @@ export function InvoiceFileMenu({
 
       if (!modKey) return;
 
-      if (event.key === "n" && !event.shiftKey) {
-        event.preventDefault();
-        handleNewInvoice();
-      } else if (event.key === "o") {
+      // Compare case-insensitively: holding Shift reports an uppercase key, so
+      // "s" would never match on Cmd+Shift+S without normalising first. Cmd+N is
+      // intentionally not bound because Chrome and Safari reserve it for a new
+      // browser window and never surface it to the page.
+      const key = event.key.toLowerCase();
+
+      if (key === "o" && !event.shiftKey) {
         event.preventDefault();
         handleOpenInvoice();
-      } else if (event.key === "s" && !event.shiftKey) {
+      } else if (key === "s" && !event.shiftKey) {
         event.preventDefault();
         void handleSave().catch(() => {});
-      } else if (event.key === "s" && event.shiftKey) {
+      } else if (key === "s" && event.shiftKey) {
         event.preventDefault();
         handleSaveAs();
       }
@@ -312,7 +315,7 @@ export function InvoiceFileMenu({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleNewInvoice, handleOpenInvoice, handleSave, handleSaveAs]);
+  }, [handleOpenInvoice, handleSave, handleSaveAs]);
 
   return (
     <>

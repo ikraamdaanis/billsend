@@ -19,6 +19,7 @@ function TermsLabel() {
 
   return (
     <InvoiceInput
+      aria-label="Terms section label"
       value={terms.label}
       className="mb-2 font-medium md:text-base"
       onChange={value => setTerms(prev => ({ ...prev, label: value }))}
@@ -37,6 +38,7 @@ function TermsContent() {
   return (
     <InvoiceTextArea
       id="invoice-field-terms"
+      aria-label={`${terms.label || "Terms and conditions"} content`}
       value={terms.content}
       onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full"
