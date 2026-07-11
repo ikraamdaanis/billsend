@@ -7,6 +7,7 @@ import { Button } from "~/components/ui/button";
 import { getImageBlob } from "~/db";
 import { cn } from "~/lib/utils";
 import { useInvoiceData } from "~/stores/invoice-selectors";
+import { isDirectImageUrl } from "~/utils/is-direct-image-url";
 import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
 
 export function DownloadInvoice({
@@ -36,10 +37,7 @@ export function DownloadInvoice({
         // Resolve the logo from IndexedDB up front. The reactive image loader
         // can still be an empty string right after opening a saved invoice, so
         // reading the blob here guarantees the PDF is built with the logo.
-        if (
-          invoice.image.startsWith("blob:") ||
-          invoice.image.startsWith("data:")
-        ) {
+        if (isDirectImageUrl(invoice.image)) {
           logoUrl = invoice.image;
         } else if (invoice.image) {
           const blob = await getImageBlob(invoice.image);
