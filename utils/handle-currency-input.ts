@@ -2,10 +2,19 @@
  * Takes a string value and returns a formatted currency string.
  * Handles inputs like $124.34, 002343, etc.
  * Returns a valid number string 0 or greater without leading zeros.
+ *
+ * Pass `currencySymbol` when the value is prefixed with the symbol so it can be
+ * stripped before sanitising. This matters for symbols that contain a literal
+ * dot (the dirham "د.إ"), which would otherwise survive as a stray decimal
+ * point and corrupt the amount.
  */
-export function handleCurrencyInput(value: string) {
-  // Remove currency symbols, commas, and other non-numeric characters
-  let numericValue = value.replace(/[^0-9.]/g, "");
+export function handleCurrencyInput(value: string, currencySymbol?: string) {
+  const withoutSymbol = currencySymbol
+    ? value.replace(currencySymbol, "")
+    : value;
+
+  // Remove commas and any other non-numeric characters
+  let numericValue = withoutSymbol.replace(/[^0-9.]/g, "");
 
   // Prevent multiple decimal points
   const decimalCount = numericValue.split(".").length - 1;
@@ -24,7 +33,7 @@ export function handleCurrencyInput(value: string) {
   }
 
   // Handle leading zeros and edge cases
-  if (!numericValue || numericValue === "." || numericValue === "00") {
+  if (!numericValue || numericValue === "." || /^0+$/.test(numericValue)) {
     return "0";
   }
 
