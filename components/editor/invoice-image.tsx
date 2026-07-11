@@ -3,12 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
-import {
-  cleanupOrphanedImages,
-  deleteImage,
-  getImageBlob,
-  saveImage
-} from "~/db";
+import { cleanupOrphanedImages, getImageBlob, saveImage } from "~/db";
 import { cn } from "~/lib/utils";
 import { useImageSlice } from "~/stores/invoice-selectors";
 
@@ -70,7 +65,7 @@ export function InvoiceImage() {
     }
   }
 
-  async function handleRemoveImage() {
+  function handleRemoveImage() {
     // Revoke current image URL
     if (currentUrlRef.current) {
       URL.revokeObjectURL(currentUrlRef.current);
@@ -78,21 +73,13 @@ export function InvoiceImage() {
     }
 
     setImageUrl("");
-
-    if (imageId) {
-      try {
-        await deleteImage(imageId);
-      } catch (error) {
-        // Failed to delete from DB, but still clear the UI
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Failed to remove image from storage."
-        );
-      }
-    }
-
     setImage("");
+
+    // Only detach the blob from the live invoice; never hard-delete it. Save As
+    // clones the image id, so the same blob can back other saved invoices,
+    // templates, or the draft. Let the reference-counting orphan sweep decide
+    // whether it is now unreferenced and safe to collect.
+    void cleanupOrphanedImages();
   }
 
   // Cleanup blob URLs on component unmount
