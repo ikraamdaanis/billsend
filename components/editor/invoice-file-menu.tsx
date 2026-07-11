@@ -24,6 +24,7 @@ import {
   MenubarTrigger
 } from "~/components/ui/menubar";
 import {
+  DocumentNotFoundError,
   generateDefaultInvoiceName,
   useHasUnsavedChanges,
   useInvoiceDocument
@@ -111,6 +112,15 @@ export function InvoiceFileMenu({
     });
   }
 
+  // Detaches the editor from its saved document without touching the invoice
+  // data, so the content lives on as an unsaved document. Used when the current
+  // document is deleted or has otherwise vanished from storage.
+  function detachCurrentDocument() {
+    setCurrentDocumentId(null);
+    setCurrentDocumentName(null);
+    setLastSavedInvoice(null);
+  }
+
   function handleSave(): Promise<void> {
     if (!currentDocumentId) {
       setSaveAsDialogOpen(true);
@@ -125,6 +135,14 @@ export function InvoiceFileMenu({
           toast.success("Invoice saved successfully");
           resolve();
         } catch (error) {
+          if (error instanceof DocumentNotFoundError) {
+            detachCurrentDocument();
+            setSaveAsDialogOpen(true);
+            resolve();
+
+            return;
+          }
+
           toast.error(
             error instanceof Error ? error.message : "Failed to save invoice"
           );
@@ -349,6 +367,8 @@ export function InvoiceFileMenu({
         onOpenChange={setOpenDialogOpen}
         onSelectInvoice={handleSelectInvoice}
         currentInvoiceId={currentDocumentId}
+        onCurrentInvoiceDeleted={detachCurrentDocument}
+        onCurrentInvoiceRenamed={setCurrentDocumentName}
       />
       <SaveInvoiceDialog
         open={saveAsDialogOpen}

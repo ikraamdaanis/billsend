@@ -34,6 +34,16 @@ type InvoiceDocumentContextValue = {
 // risk between saves.
 const DRAFT_SAVE_DEBOUNCE_MS = 600;
 
+// Thrown when a save/load targets a document id that no longer exists in the
+// database (e.g. it was deleted from the Open Invoice dialog). Callers can catch
+// this specifically to recover, such as falling back to the Save As flow.
+export class DocumentNotFoundError extends Error {
+  constructor() {
+    super("Invoice document not found");
+    this.name = "DocumentNotFoundError";
+  }
+}
+
 const InvoiceDocumentContext =
   createContext<InvoiceDocumentContextValue | null>(null);
 
@@ -54,7 +64,7 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     const document = await getInvoice(documentId);
 
     if (!document) {
-      throw new Error("Invoice document not found");
+      throw new DocumentNotFoundError();
     }
 
     const invoice = ensureItemIds(structuredClone(document.invoiceData));
@@ -104,13 +114,13 @@ export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
     const targetId = options?.documentId ?? currentDocumentId;
 
     if (!targetId) {
-      throw new Error("Invoice document not found");
+      throw new DocumentNotFoundError();
     }
 
     const existingDocument = await getInvoice(targetId);
 
     if (!existingDocument) {
-      throw new Error("Invoice document not found");
+      throw new DocumentNotFoundError();
     }
 
     const invoice = selectInvoiceData(useInvoiceStore.getState());
