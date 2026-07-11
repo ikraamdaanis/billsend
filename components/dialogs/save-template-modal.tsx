@@ -29,6 +29,7 @@ import type { Invoice, InvoiceTemplate } from "~/types";
 const saveTemplateSchema = z.object({
   name: z
     .string()
+    .trim()
     .min(1, "Template name is required")
     .max(100, "Template name must be less than 100 characters"),
   description: z.string().optional()

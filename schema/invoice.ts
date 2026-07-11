@@ -154,7 +154,20 @@ export const invoiceSchema = z.object({
   dueDate: z.string().catch(""),
   seller: contactSchema("From"),
   client: contactSchema("To"),
-  items: z.array(invoiceItemSchema).catch([]),
+  // Resilience lives on each element, not the array: a single unparseable entry
+  // (e.g. a `null` from a hand-edited or merge-conflicted backup) drops only
+  // that entry, never the whole line-item list. Putting `.catch([])` on the
+  // array instead would silently blank every item to recover from one bad one.
+  items: z
+    .array(z.unknown())
+    .catch([])
+    .transform(items =>
+      items.flatMap(item => {
+        const parsed = invoiceItemSchema.safeParse(item);
+
+        return parsed.success ? [parsed.data] : [];
+      })
+    ),
   tableSettings: tableSettingsSchema,
   labels: invoiceLabelsSchema,
   tax: z

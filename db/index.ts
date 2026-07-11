@@ -401,30 +401,26 @@ export async function deleteInvoice(id: string): Promise<void> {
 }
 
 // Reads the autosaved working draft, migrating its stored invoice shapes to the
-// current schema. A missing or unreadable draft resolves to undefined rather
-// than throwing, so a corrupt draft can never block the editor from starting.
+// current schema. A missing draft resolves to undefined; a genuine read failure
+// (e.g. the database is mid-upgrade in another tab) throws, so the caller can
+// tell "no draft" apart from "couldn't read" and avoid destroying intact work.
+// Migration never throws, so a corrupt draft shape can't block the editor.
 export async function getDraft(): Promise<InvoiceDraft | undefined> {
-  try {
-    await ensureDbReady();
+  await ensureDbReady();
 
-    const draft = await db.drafts.get(DRAFT_ID);
+  const draft = await db.drafts.get(DRAFT_ID);
 
-    if (!draft) return undefined;
+  if (!draft) return undefined;
 
-    const version = draft.schemaVersion ?? 0;
+  const version = draft.schemaVersion ?? 0;
 
-    return {
-      ...draft,
-      invoiceData: migrateInvoiceData(draft.invoiceData, version),
-      lastSavedInvoice: draft.lastSavedInvoice
-        ? migrateInvoiceData(draft.lastSavedInvoice, version)
-        : null
-    };
-  } catch (error) {
-    console.error("[InvoiceDatabase] Failed to read working draft", error);
-
-    return undefined;
-  }
+  return {
+    ...draft,
+    invoiceData: migrateInvoiceData(draft.invoiceData, version),
+    lastSavedInvoice: draft.lastSavedInvoice
+      ? migrateInvoiceData(draft.lastSavedInvoice, version)
+      : null
+  };
 }
 
 // Best-effort autosave of the working draft. Runs on every edit, so a storage
