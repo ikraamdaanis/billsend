@@ -7,7 +7,7 @@ import {
   IconFolderOpen,
   IconUpload
 } from "@tabler/icons-react";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
 import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
@@ -65,6 +65,7 @@ export function InvoiceFileMenu({
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const continueAfterUnsavedRef = useRef(false);
   const [defaultName, setDefaultName] = useState<string>("Invoice 001");
   const [existingInvoices, setExistingInvoices] = useState<InvoiceDocument[]>(
     []
@@ -207,14 +208,24 @@ export function InvoiceFileMenu({
     });
   }
 
+  function handleUnsavedDialogOpenChange(open: boolean) {
+    if (!open && !continueAfterUnsavedRef.current) setPendingAction(null);
+
+    continueAfterUnsavedRef.current = false;
+    setUnsavedDialogOpen(open);
+  }
+
   async function handleUnsavedAction(action: UnsavedChangesAction) {
     if (action === "discard") {
+      continueAfterUnsavedRef.current = true;
       runPendingAction();
 
       return;
     }
 
     if (action !== "save") return;
+
+    continueAfterUnsavedRef.current = true;
 
     if (!currentDocumentId) {
       setSaveAsDialogOpen(true);
@@ -345,7 +356,7 @@ export function InvoiceFileMenu({
       />
       <UnsavedChangesDialog
         open={unsavedDialogOpen}
-        onOpenChange={setUnsavedDialogOpen}
+        onOpenChange={handleUnsavedDialogOpenChange}
         onAction={handleUnsavedAction}
       />
       <OpenTemplateDialog
