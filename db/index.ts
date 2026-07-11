@@ -496,6 +496,39 @@ export async function deleteImage(id: string): Promise<void> {
   }
 }
 
+// Writes a whole backup (images, templates, invoices) in one read-write
+// transaction so it either fully applies or fully rolls back. If any put fails
+// partway (e.g. a quota error), Dexie aborts the transaction and the database is
+// left exactly as it was, which also stops a retry from duplicating records that
+// a partial commit would otherwise have left behind. Callers must decode/prepare
+// every record before calling this; the callback does only Dexie work so the
+// transaction never commits early on a foreign await.
+export async function importDataAtomically(records: {
+  images: StoredImage[];
+  templates: InvoiceTemplate[];
+  invoices: InvoiceDocument[];
+}): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.transaction(
+      "rw",
+      db.images,
+      db.templates,
+      db.invoices,
+      async () => {
+        await db.images.bulkPut(records.images);
+        await db.templates.bulkPut(records.templates);
+        await db.invoices.bulkPut(records.invoices);
+      }
+    );
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to import data into local storage."
+    );
+  }
+}
+
 export async function getAllImages(): Promise<StoredImage[]> {
   try {
     await ensureDbReady();

@@ -36,8 +36,13 @@ export function ImportDataDialog({
   const [parsedData, setParsedData] = useState<BillsendExportFile | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Bumped on every close so an import that is still running in the background
+  // can tell it belongs to a dismissed dialog and skip flipping the (now reset)
+  // dialog to a stale done/error screen.
+  const importGenerationRef = useRef(0);
 
   function handleClose() {
+    importGenerationRef.current++;
     onOpenChange(false);
     setState("idle");
     setError(null);
@@ -74,14 +79,20 @@ export function ImportDataDialog({
   async function handleImport() {
     if (!parsedData) return;
 
+    const generation = importGenerationRef.current;
     setState("importing");
     setError(null);
 
     try {
       const importResult = await executeImport(parsedData);
+
+      if (generation !== importGenerationRef.current) return;
+
       setResult(importResult);
       setState("done");
     } catch (err) {
+      if (generation !== importGenerationRef.current) return;
+
       setError(err instanceof Error ? err.message : "Failed to import data.");
       setState("preview");
     }
