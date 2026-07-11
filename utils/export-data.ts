@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { CURRENT_EXPORT_VERSION } from "~/consts/export";
 import { getAllImages, getAllInvoices, getAllTemplates } from "~/db";
 import type { BillsendExportFile } from "~/types";
 
@@ -23,7 +24,7 @@ export async function buildExportData(): Promise<BillsendExportFile> {
 
   return {
     meta: {
-      version: 3,
+      version: CURRENT_EXPORT_VERSION,
       exportedAt: new Date().toISOString(),
       appName: "billsend"
     },
@@ -58,5 +59,8 @@ export async function exportAllData(): Promise<void> {
   a.download = `billsend-export-${format(new Date(), "yyyy-MM-dd")}.json`;
   a.click();
 
-  URL.revokeObjectURL(url);
+  // Defer the revoke: Safari has historically aborted the download when the
+  // object URL is revoked synchronously in the same tick as the click, so let
+  // the download start before releasing the blob.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
