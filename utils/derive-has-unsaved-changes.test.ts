@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { invoiceDefault } from "~/stores/invoice-store";
+import { createBlankInvoice, invoiceDefault } from "~/stores/invoice-store";
 import type { Invoice } from "~/types";
 import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 
@@ -18,6 +18,14 @@ describe("deriveHasUnsavedChanges", () => {
       invoice.title = "Changed";
 
       expect(deriveHasUnsavedChanges(invoice, null, null)).toBe(true);
+    });
+
+    it("is clean for a freshly stamped blank invoice against its own snapshot", () => {
+      const blank = createBlankInvoice();
+
+      expect(deriveHasUnsavedChanges(blank, null, structuredClone(blank))).toBe(
+        false
+      );
     });
   });
 
