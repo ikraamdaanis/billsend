@@ -158,6 +158,28 @@ describe("buildInvoiceViewModel", () => {
       expect(lineItems[0].unitPrice).toBe("$9.00");
       expect(lineItems[0].amount).toBe("$9.00");
     });
+
+    it("renders a legible ASCII marker for the Riyal and Dirham symbols", () => {
+      const riyal = buildInvoiceViewModel(
+        makeInvoice({
+          currency: "⃁",
+          items: [makeItem({ quantity: 2, unitPrice: 50 })]
+        })
+      );
+
+      expect(riyal.lineItems[0].unitPrice).toBe("SAR50.00");
+      expect(riyal.lineItems[0].amount).toBe("SAR100.00");
+
+      const dirham = buildInvoiceViewModel(
+        makeInvoice({
+          currency: "د.إ",
+          items: [makeItem({ quantity: 1, unitPrice: 9 })]
+        })
+      );
+
+      expect(dirham.lineItems[0].unitPrice).toBe("AED9.00");
+      expect(dirham.lineItems[0].amount).toBe("AED9.00");
+    });
   });
 
   describe("summaryRows", () => {
