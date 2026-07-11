@@ -166,7 +166,7 @@ function FeesRow() {
           style={getTextStyles({ settings: valueSettings })}
           placeholder={currencySymbol}
           onChange={value => {
-            const numericValue = handleCurrencyInput(value);
+            const numericValue = handleCurrencyInput(value, currencySymbol);
             setFeesInput(numericValue);
             setFees(Number(numericValue));
           }}
@@ -203,7 +203,7 @@ function DiscountsRow() {
           value={`${currencySymbol}${discountsInput}`}
           style={getTextStyles({ settings: valueSettings })}
           onChange={value => {
-            const numericValue = handleCurrencyInput(value);
+            const numericValue = handleCurrencyInput(value, currencySymbol);
             setDiscountsInput(numericValue);
             setDiscounts(Number(numericValue));
           }}
