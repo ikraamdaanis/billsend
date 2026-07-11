@@ -34,15 +34,14 @@ export function useImageLoader(imageId: string) {
       try {
         const blob = await getImageBlob(imageId);
 
+        // Bail before touching the ref: a newer effect run may already own the
+        // live URL, and revoking it here would break the newer load's image.
+        if (cancelled) return;
+
         if (blob) {
           revokeBlobUrl(imageUrlRef, false);
 
           const url = URL.createObjectURL(blob);
-
-          if (cancelled) {
-            URL.revokeObjectURL(url);
-            return;
-          }
 
           imageUrlRef.current = url;
           setImageUrl(url);

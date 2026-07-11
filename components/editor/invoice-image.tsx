@@ -1,62 +1,46 @@
 import { IconUpload } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+import type { FileRejection } from "react-dropzone";
 import Dropzone from "react-dropzone";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { cleanupOrphanedImages, getImageBlob, saveImage } from "~/db";
+import { useImageLoader } from "~/hooks/use-image-loader";
 import { cn } from "~/lib/utils";
 import { useImageSlice } from "~/stores/invoice-selectors";
 
 export function InvoiceImage() {
   const { image: imageId, setImage } = useImageSlice();
-
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const imageUrl = useImageLoader(imageId);
   const [isDragging, setIsDragging] = useState(false);
 
-  const currentUrlRef = useRef<string | null>(null);
-  const lastUploadedIdRef = useRef<string | null>(null);
+  async function handleDrop(
+    acceptedFiles: File[],
+    fileRejections: FileRejection[]
+  ) {
+    setIsDragging(false);
 
-  async function handleImageUpload(files: File[]) {
-    if (files.length === 0) return;
-
-    const file = files[0];
-    const newImageId = crypto.randomUUID();
-
-    // Revoke previous image URL if it exists
-    if (currentUrlRef.current) {
-      URL.revokeObjectURL(currentUrlRef.current);
-      currentUrlRef.current = null;
+    if (fileRejections.length > 0) {
+      return toast.error(
+        "That file isn't a supported image. Upload a PNG, JPG, or WebP."
+      );
     }
 
-    // Immediately show the uploaded image
-    const previewUrl = URL.createObjectURL(file);
-    currentUrlRef.current = previewUrl;
-    setImageUrl(previewUrl);
+    if (acceptedFiles.length === 0) return;
+
+    const file = acceptedFiles[0];
+    const newImageId = crypto.randomUUID();
 
     try {
-      // Save image blob to IndexedDB
       await saveImage(newImageId, file, file.type);
 
-      // Verify it was saved
       const verifyBlob = await getImageBlob(newImageId);
-
       if (!verifyBlob) throw new Error("Image was not saved correctly");
 
-      // Track that we just uploaded this image
-      lastUploadedIdRef.current = newImageId;
-
-      // Store image ID in invoice state
       setImage(newImageId);
 
-      // Drop the replaced blob (and any other orphans), keeping the new one
       void cleanupOrphanedImages([newImageId]);
     } catch (error) {
-      // On error, revoke preview URL and clear
-      if (currentUrlRef.current === previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        currentUrlRef.current = null;
-        setImageUrl("");
-      }
       toast.error(
         error instanceof Error
           ? error.message
@@ -66,13 +50,6 @@ export function InvoiceImage() {
   }
 
   function handleRemoveImage() {
-    // Revoke current image URL
-    if (currentUrlRef.current) {
-      URL.revokeObjectURL(currentUrlRef.current);
-      currentUrlRef.current = null;
-    }
-
-    setImageUrl("");
     setImage("");
 
     // Only detach the blob from the live invoice; never hard-delete it. Save As
@@ -82,88 +59,9 @@ export function InvoiceImage() {
     void cleanupOrphanedImages();
   }
 
-  // Cleanup blob URLs on component unmount
-  useEffect(() => {
-    return () => {
-      if (currentUrlRef.current) {
-        URL.revokeObjectURL(currentUrlRef.current);
-        currentUrlRef.current = null;
-      }
-    };
-  }, []);
-
-  // Load image from IndexedDB when imageId changes
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadImage() {
-      if (!imageId) {
-        // Revoke previous URL if it exists
-        if (currentUrlRef.current) {
-          URL.revokeObjectURL(currentUrlRef.current);
-          currentUrlRef.current = null;
-        }
-        setImageUrl("");
-        lastUploadedIdRef.current = null;
-        return;
-      }
-
-      // If we just uploaded this image and already have a URL, don't reload
-      if (imageId === lastUploadedIdRef.current && currentUrlRef.current) {
-        return;
-      }
-
-      try {
-        const blob = await getImageBlob(imageId);
-
-        // Revoke previous URL before creating new one
-        if (currentUrlRef.current) {
-          URL.revokeObjectURL(currentUrlRef.current);
-        }
-
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-
-          if (cancelled) return URL.revokeObjectURL(url);
-
-          currentUrlRef.current = url;
-          setImageUrl(url);
-        } else {
-          currentUrlRef.current = null;
-          setImageUrl("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          if (currentUrlRef.current) {
-            URL.revokeObjectURL(currentUrlRef.current);
-            currentUrlRef.current = null;
-          }
-
-          setImageUrl("");
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Failed to load image from storage."
-          );
-        }
-      }
-    }
-
-    loadImage();
-
-    return () => {
-      cancelled = true;
-      // Always clean up blob URL on unmount or when imageId changes
-      if (currentUrlRef.current) {
-        URL.revokeObjectURL(currentUrlRef.current);
-        currentUrlRef.current = null;
-      }
-    };
-  }, [imageId]);
-
   return (
     <Dropzone
-      onDrop={handleImageUpload}
+      onDrop={handleDrop}
       onDragEnter={() => setIsDragging(true)}
       onDragLeave={() => setIsDragging(false)}
       accept={{
@@ -193,7 +91,7 @@ export function InvoiceImage() {
                 height={128}
                 className="rounded-surface h-32 w-32 object-cover"
               />
-              <div className="rounded-surface absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="rounded-surface absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
                 <Button
                   variant="destructive"
                   size="sm"
