@@ -65,6 +65,10 @@ export function InvoiceFileMenu({
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  // The unsaved-changes dialog fires onOpenChange(false) both when the user picks an
+  // action (Save/Discard) and when they dismiss it (Cancel/Escape/overlay). Only a
+  // dismissal should drop the pending action; this ref marks the action-driven closes
+  // so they skip that cleanup.
   const continueAfterUnsavedRef = useRef(false);
   const [defaultName, setDefaultName] = useState<string>("Invoice 001");
   const [existingInvoices, setExistingInvoices] = useState<InvoiceDocument[]>(
@@ -216,16 +220,15 @@ export function InvoiceFileMenu({
   }
 
   async function handleUnsavedAction(action: UnsavedChangesAction) {
+    continueAfterUnsavedRef.current = action !== "cancel";
+
     if (action === "discard") {
-      continueAfterUnsavedRef.current = true;
       runPendingAction();
 
       return;
     }
 
     if (action !== "save") return;
-
-    continueAfterUnsavedRef.current = true;
 
     if (!currentDocumentId) {
       setSaveAsDialogOpen(true);
