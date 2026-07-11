@@ -302,7 +302,7 @@ export function InvoiceFileMenu({
         handleOpenInvoice();
       } else if (event.key === "s" && !event.shiftKey) {
         event.preventDefault();
-        handleSave();
+        void handleSave().catch(() => {});
       } else if (event.key === "s" && event.shiftKey) {
         event.preventDefault();
         handleSaveAs();
@@ -328,7 +328,10 @@ export function InvoiceFileMenu({
             Open Invoice
           </MenubarItem>
           <MenubarSeparator />
-          <MenubarItem onClick={handleSave} disabled={pending}>
+          <MenubarItem
+            onClick={() => void handleSave().catch(() => {})}
+            disabled={pending}
+          >
             <IconDeviceFloppy className="mr-2 h-4 w-4" />
             Save
           </MenubarItem>

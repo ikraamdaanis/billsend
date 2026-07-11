@@ -120,7 +120,9 @@ export function RenameInvoiceDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit">Rename</Button>
+              <Button type="submit" disabled={pending}>
+                Rename
+              </Button>
             </DialogFooter>
           </form>
         </Form>
