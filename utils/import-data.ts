@@ -19,12 +19,14 @@ import type {
   InvoiceTemplate
 } from "~/types";
 
+const metaSchema = z.object({
+  version: z.number().int().positive(),
+  exportedAt: z.string(),
+  appName: z.literal("billsend")
+});
+
 const billsendExportSchema = z.object({
-  meta: z.object({
-    version: z.number().int().positive(),
-    exportedAt: z.string(),
-    appName: z.literal("billsend")
-  }),
+  meta: metaSchema,
   templates: z.array(
     z.object({
       id: z.string(),
@@ -74,17 +76,27 @@ export async function parseExportFile(file: File): Promise<BillsendExportFile> {
     throw new Error("The selected file is not valid JSON.");
   }
 
+  // Check the version stamp before validating the whole body. A newer export may
+  // have changed shape; without this, such a file fails the full parse with a
+  // misleading "not a valid export" error instead of the accurate "please update"
+  // message that the version stamp exists to produce.
+  const rawMeta =
+    json && typeof json === "object"
+      ? (json as Record<string, unknown>).meta
+      : undefined;
+  const meta = metaSchema.safeParse(rawMeta);
+
+  if (meta.success && meta.data.version > CURRENT_EXPORT_VERSION) {
+    throw new Error(
+      "This file was created by a newer version of billsend and can't be imported. Please update billsend and try again."
+    );
+  }
+
   const result = billsendExportSchema.safeParse(json);
   if (!result.success) {
     const firstError = result.error.issues[0]?.message ?? "Unknown error";
 
     throw new Error(`The file is not a valid billsend export: ${firstError}`);
-  }
-
-  if (result.data.meta.version > CURRENT_EXPORT_VERSION) {
-    throw new Error(
-      "This file was created by a newer version of billsend and can't be imported. Please update billsend and try again."
-    );
   }
 
   return result.data as unknown as BillsendExportFile;
@@ -133,6 +145,16 @@ export async function analyzeImport(
       duplicates: imageDuplicates
     }
   };
+}
+
+// Coerces an exported date string into a valid Date. A corrupt or unparseable
+// value (e.g. a truncated ISO string, or free text from a hand-edited backup)
+// falls back to now, so an Invalid Date can never reach storage and later throw
+// when the invoice list formats it or a re-export calls toISOString on it.
+function toValidDate(value: string): Date {
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? new Date() : date;
 }
 
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -184,7 +206,7 @@ export async function executeImport(
       id: imageExport.id,
       data: base64ToArrayBuffer(imageExport.data),
       type: imageExport.type,
-      createdAt: new Date(imageExport.createdAt)
+      createdAt: toValidDate(imageExport.createdAt)
     });
   }
 
@@ -211,8 +233,8 @@ export async function executeImport(
       templateData,
       screenshotUrl: templateExport.screenshotUrl,
       schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
-      createdAt: new Date(templateExport.createdAt),
-      updatedAt: new Date(templateExport.updatedAt)
+      createdAt: toValidDate(templateExport.createdAt),
+      updatedAt: toValidDate(templateExport.updatedAt)
     });
   }
 
@@ -240,8 +262,8 @@ export async function executeImport(
       invoiceData,
       templateId: newTemplateId,
       schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
-      createdAt: new Date(invoiceExport.createdAt),
-      updatedAt: new Date(invoiceExport.updatedAt)
+      createdAt: toValidDate(invoiceExport.createdAt),
+      updatedAt: toValidDate(invoiceExport.updatedAt)
     });
   }
 
