@@ -1,5 +1,5 @@
 import { useShallow } from "zustand/react/shallow";
-import { normalizeCurrency } from "~/consts/currencies";
+import { getCurrencyMarker } from "~/consts/currencies";
 import type { InvoiceStore } from "~/stores/invoice-store";
 import { useInvoiceStore } from "~/stores/invoice-store";
 import type { Invoice } from "~/types";
@@ -209,9 +209,9 @@ export function useCurrencySlice() {
   );
 }
 
-// Currency symbol - derived value, only re-renders when currency changes
+// Currency marker - derived display value, only re-renders when currency changes
 export function useCurrencySymbol() {
-  return useInvoiceStore(state => normalizeCurrency(state.currency));
+  return useInvoiceStore(state => getCurrencyMarker(state.currency));
 }
 
 // Full invoice data for serialization (save/load)

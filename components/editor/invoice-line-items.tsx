@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
-import { normalizeCurrency } from "~/consts/currencies";
+import { getCurrencyMarker } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
 import { useLineItemsSlice, useTheme } from "~/stores/invoice-selectors";
 import type {
@@ -121,7 +121,7 @@ export function InvoiceLineItems() {
     setTableSettings
   } = useLineItemsSlice();
   const theme = useTheme();
-  const currencySymbol = normalizeCurrency(currency);
+  const currencySymbol = getCurrencyMarker(currency);
 
   return (
     <div
