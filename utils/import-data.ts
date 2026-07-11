@@ -1,13 +1,16 @@
 import { z } from "zod";
+import { CURRENT_EXPORT_VERSION } from "~/consts/export";
+import type { StoredImage } from "~/db";
 import {
   getAllImages,
   getAllInvoices,
   getAllTemplates,
-  saveImage,
-  saveInvoice,
-  saveTemplate
+  importDataAtomically
 } from "~/db";
-import { migrateInvoiceData } from "~/schema/migrations";
+import {
+  CURRENT_INVOICE_SCHEMA_VERSION,
+  migrateInvoiceData
+} from "~/schema/migrations";
 import type {
   BillsendExportFile,
   ImportAnalysis,
@@ -74,7 +77,14 @@ export async function parseExportFile(file: File): Promise<BillsendExportFile> {
   const result = billsendExportSchema.safeParse(json);
   if (!result.success) {
     const firstError = result.error.issues[0]?.message ?? "Unknown error";
+
     throw new Error(`The file is not a valid billsend export: ${firstError}`);
+  }
+
+  if (result.data.meta.version > CURRENT_EXPORT_VERSION) {
+    throw new Error(
+      "This file was created by a newer version of billsend and can't be imported. Please update billsend and try again."
+    );
   }
 
   return result.data as unknown as BillsendExportFile;
@@ -87,23 +97,23 @@ export async function analyzeImport(
     await Promise.all([getAllTemplates(), getAllInvoices(), getAllImages()]);
 
   const existingTemplateNames = new Set(
-    existingTemplates.map(t => t.name.toLowerCase())
+    existingTemplates.map(template => template.name.toLowerCase())
   );
   const existingInvoiceNames = new Set(
-    existingInvoices.map(i => i.name.toLowerCase())
+    existingInvoices.map(invoice => invoice.name.toLowerCase())
   );
-  const existingImageIds = new Set(existingImages.map(img => img.id));
+  const existingImageIds = new Set(existingImages.map(image => image.id));
 
   const templateConflicts = parsed.templates
-    .filter(t => existingTemplateNames.has(t.name.toLowerCase()))
-    .map(t => t.name);
+    .filter(template => existingTemplateNames.has(template.name.toLowerCase()))
+    .map(template => template.name);
 
   const invoiceConflicts = parsed.invoices
-    .filter(i => existingInvoiceNames.has(i.name.toLowerCase()))
-    .map(i => i.name);
+    .filter(invoice => existingInvoiceNames.has(invoice.name.toLowerCase()))
+    .map(invoice => invoice.name);
 
-  const imageDuplicates = parsed.images.filter(img =>
-    existingImageIds.has(img.id)
+  const imageDuplicates = parsed.images.filter(image =>
+    existingImageIds.has(image.id)
   ).length;
 
   return {
@@ -150,30 +160,38 @@ function resolveConflictName(name: string, existingNames: Set<string>): string {
 export async function executeImport(
   parsed: BillsendExportFile
 ): Promise<ImportResult> {
-  const [existingTemplates, existingInvoices] = await Promise.all([
-    getAllTemplates(),
-    getAllInvoices()
-  ]);
+  const [existingTemplates, existingInvoices, existingImages] =
+    await Promise.all([getAllTemplates(), getAllInvoices(), getAllImages()]);
 
   const existingTemplateNames = new Set(
-    existingTemplates.map(t => t.name.toLowerCase())
+    existingTemplates.map(template => template.name.toLowerCase())
   );
   const existingInvoiceNames = new Set(
-    existingInvoices.map(i => i.name.toLowerCase())
+    existingInvoices.map(invoice => invoice.name.toLowerCase())
   );
+  const existingImageIds = new Set(existingImages.map(image => image.id));
 
-  // Import images with new IDs
+  // Images keep their original id so referential integrity survives and a
+  // re-import stays idempotent: an id already in the database is the same blob,
+  // so we skip it rather than store a fresh copy. This is what analyzeImport
+  // reports as "duplicates", keeping the preview honest about what runs here.
   const imageIdMap = new Map<string, string>();
-  for (const img of parsed.images) {
-    const newId = crypto.randomUUID();
-    imageIdMap.set(img.id, newId);
-    const arrayBuffer = base64ToArrayBuffer(img.data);
-    const blob = new Blob([arrayBuffer], { type: img.type });
-    await saveImage(newId, blob, img.type);
+  const imagesToStore: StoredImage[] = [];
+  for (const imageExport of parsed.images) {
+    imageIdMap.set(imageExport.id, imageExport.id);
+
+    if (existingImageIds.has(imageExport.id)) continue;
+
+    imagesToStore.push({
+      id: imageExport.id,
+      data: base64ToArrayBuffer(imageExport.data),
+      type: imageExport.type,
+      createdAt: new Date(imageExport.createdAt)
+    });
   }
 
-  // Import templates with new IDs
   const templateIdMap = new Map<string, string>();
+  const templatesToStore: InvoiceTemplate[] = [];
   for (const templateExport of parsed.templates) {
     const newId = crypto.randomUUID();
     templateIdMap.set(templateExport.id, newId);
@@ -187,24 +205,22 @@ export async function executeImport(
       templateExport.schemaVersion ?? 0
     );
     const mappedTemplateImage = imageIdMap.get(templateData.image);
-    if (mappedTemplateImage) {
-      templateData.image = mappedTemplateImage;
-    }
+    if (mappedTemplateImage) templateData.image = mappedTemplateImage;
 
-    const template: InvoiceTemplate = {
+    templatesToStore.push({
       id: newId,
       name: resolvedName,
       description: templateExport.description,
       isDefault: false,
       templateData,
       screenshotUrl: templateExport.screenshotUrl,
+      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
       createdAt: new Date(templateExport.createdAt),
       updatedAt: new Date(templateExport.updatedAt)
-    };
-    await saveTemplate(template);
+    });
   }
 
-  // Import invoices with new IDs
+  const invoicesToStore: InvoiceDocument[] = [];
   for (const invoiceExport of parsed.invoices) {
     const newId = crypto.randomUUID();
     const resolvedName = resolveConflictName(
@@ -217,29 +233,33 @@ export async function executeImport(
       invoiceExport.schemaVersion ?? 0
     );
     const mappedInvoiceImage = imageIdMap.get(invoiceData.image);
-    if (mappedInvoiceImage) {
-      invoiceData.image = mappedInvoiceImage;
-    }
+    if (mappedInvoiceImage) invoiceData.image = mappedInvoiceImage;
 
     const newTemplateId = invoiceExport.templateId
       ? (templateIdMap.get(invoiceExport.templateId) ??
         invoiceExport.templateId)
       : invoiceExport.templateId;
 
-    const invoice: InvoiceDocument = {
+    invoicesToStore.push({
       id: newId,
       name: resolvedName,
       invoiceData,
       templateId: newTemplateId,
+      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
       createdAt: new Date(invoiceExport.createdAt),
       updatedAt: new Date(invoiceExport.updatedAt)
-    };
-    await saveInvoice(invoice);
+    });
   }
 
+  await importDataAtomically({
+    images: imagesToStore,
+    templates: templatesToStore,
+    invoices: invoicesToStore
+  });
+
   return {
-    templatesImported: parsed.templates.length,
-    invoicesImported: parsed.invoices.length,
-    imagesImported: parsed.images.length
+    templatesImported: templatesToStore.length,
+    invoicesImported: invoicesToStore.length,
+    imagesImported: imagesToStore.length
   };
 }
