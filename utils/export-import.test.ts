@@ -177,6 +177,51 @@ describe("data backup/restore", () => {
     expect(result.imagesImported).toBe(1);
     expect(await getAllImages()).toHaveLength(2);
   });
+
+  it("coerces an unparseable date on import instead of storing Invalid Date", async () => {
+    const nowIso = new Date().toISOString();
+    const parsed: BillsendExportFile = {
+      meta: {
+        version: CURRENT_EXPORT_VERSION,
+        exportedAt: nowIso,
+        appName: "billsend"
+      },
+      templates: [],
+      invoices: [
+        {
+          id: "inv-bad-date",
+          name: "Bad date",
+          invoiceData: structuredClone(invoiceDefault),
+          templateId: null,
+          createdAt: "not-a-real-date",
+          updatedAt: "yesterday"
+        }
+      ],
+      images: []
+    };
+
+    await executeImport(parsed);
+    const invoices = await getAllInvoices();
+
+    expect(invoices).toHaveLength(1);
+    expect(Number.isNaN(invoices[0].createdAt.getTime())).toBe(false);
+    expect(Number.isNaN(invoices[0].updatedAt.getTime())).toBe(false);
+  });
+
+  it("reports a newer-version file before failing on its body shape", async () => {
+    const future = {
+      meta: {
+        version: CURRENT_EXPORT_VERSION + 1,
+        exportedAt: new Date().toISOString(),
+        appName: "billsend"
+      },
+      invoices: "not-an-array"
+    };
+
+    await expect(parseExportFile(toFile(future))).rejects.toThrow(
+      /newer version/i
+    );
+  });
 });
 
 // A minimal export carrying one invoice plus the given images, so tests can drive
