@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { getImageBlob } from "~/db";
+import { isDirectImageUrl } from "~/utils/is-direct-image-url";
 import { revokeBlobUrl } from "~/utils/revoke-blob-url";
 
 /**
@@ -25,7 +26,7 @@ export function useImageLoader(imageId: string) {
       }
 
       // Passthrough blob: or data: URLs directly
-      if (imageId.startsWith("blob:") || imageId.startsWith("data:")) {
+      if (isDirectImageUrl(imageId)) {
         revokeBlobUrl(imageUrlRef, false);
         imageUrlRef.current = imageId;
         return setImageUrl(imageId);
