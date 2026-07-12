@@ -1,50 +1,28 @@
-import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
+import { addLineItem, gotoEditorReady, saveInvoiceAs } from "./helpers";
 
 // P0 smoke path: the single happy path that exercises the create -> edit ->
 // add line item -> save -> leave -> return -> download chain end to end. This
 // alone would have caught the #78 detach bug, where returning to the editor
 // dropped the saved document's identity.
 test("create, edit, save, leave, return, and download an invoice", async ({
-  page,
-  setTitleWhenReady
+  page
 }) => {
   const context = page.context();
 
-  await page.goto("/create");
+  await gotoEditorReady(page, "Acme Consulting");
 
-  const title = page.getByLabel("Invoice title");
-
-  await expect(title).toBeVisible();
-
-  // Fills the title and waits for the editor to finish hydrating (see fixtures).
-  // Once this returns the store has settled, so the remaining edits are durable.
-  await setTitleWhenReady("Acme Consulting");
-
-  await page.getByRole("button", { name: "Add item" }).click();
+  await addLineItem(page);
 
   const description = page.getByLabel("Item, item 1");
-  const quantity = page.getByLabel("Quantity, item 1");
-  const unitPrice = page.getByLabel("Unit Price, item 1");
 
   await description.fill("Consulting work");
-  await quantity.fill("3");
-  await unitPrice.fill("100");
+  await page.getByLabel("Quantity, item 1").fill("3");
+  await page.getByLabel("Unit Price, item 1").fill("100");
 
-  const amount = page.getByLabel("Amount, item 1");
+  await expect(page.getByLabel("Amount, item 1")).toContainText("300");
 
-  await expect(amount).toContainText("300");
-
-  await openFileMenu(page);
-  await page.getByRole("menuitem", { name: "Save", exact: true }).click();
-
-  const saveDialog = page.getByRole("dialog");
-
-  await expect(saveDialog).toBeVisible();
-
-  await saveDialog.getByRole("textbox").fill("Acme Invoice");
-  await saveDialog.getByRole("button", { name: "Save" }).click();
-  await expect(saveDialog).toBeHidden();
+  await saveInvoiceAs(page, "Acme Invoice");
 
   await expect(
     page.getByRole("heading", { name: "Acme Invoice" })
@@ -60,7 +38,7 @@ test("create, edit, save, leave, return, and download an invoice", async ({
   await expect(
     page.getByRole("heading", { name: "Acme Invoice" })
   ).toBeVisible();
-  await expect(title).toHaveValue("Acme Consulting");
+  await expect(page.getByLabel("Invoice title")).toHaveValue("Acme Consulting");
   await expect(description).toHaveValue("Consulting work");
 
   // Download opens the PDF in a new viewer tab. Asserting that the tab opens is
@@ -77,7 +55,3 @@ test("create, edit, save, leave, return, and download an invoice", async ({
   expect(pdfPage).toBeTruthy();
   expect(pdfPage.isClosed()).toBe(false);
 });
-
-async function openFileMenu(page: Page) {
-  await page.getByRole("menuitem", { name: "File" }).click();
-}
