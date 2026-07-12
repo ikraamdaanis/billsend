@@ -24,7 +24,9 @@ test("editing identity fields holds their values", async ({ page }) => {
   await page.getByLabel("To details").fill("Globex Corp\nbilling@globex.test");
   await page.getByLabel("Invoice No.", { exact: true }).fill("INV-2026-014");
 
-  await expect(page.getByLabel("Invoice title")).toHaveValue("Website redesign");
+  await expect(page.getByLabel("Invoice title")).toHaveValue(
+    "Website redesign"
+  );
   await expect(page.getByLabel("From details")).toHaveValue(
     "Acme Studio\nhello@acme.test"
   );
@@ -60,8 +62,12 @@ test("section and column labels are editable", async ({ page }) => {
   await page.getByLabel("Client section label").fill("Billed to");
   await page.getByLabel("Description column label").fill("Service");
 
-  await expect(page.getByLabel("Seller section label")).toHaveValue("Billed by");
-  await expect(page.getByLabel("Client section label")).toHaveValue("Billed to");
+  await expect(page.getByLabel("Seller section label")).toHaveValue(
+    "Billed by"
+  );
+  await expect(page.getByLabel("Client section label")).toHaveValue(
+    "Billed to"
+  );
   await expect(page.getByLabel("Description column label")).toHaveValue(
     "Service"
   );

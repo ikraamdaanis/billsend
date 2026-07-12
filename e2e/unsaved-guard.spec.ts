@@ -82,7 +82,9 @@ test("saving a document deleted in another tab routes to Save As without losing 
 
   await expect(saveDialog).toBeVisible();
   // Edits are intact, not wiped by the failed direct save.
-  await expect(page.getByLabel("From details")).toHaveValue("edit after delete");
+  await expect(page.getByLabel("From details")).toHaveValue(
+    "edit after delete"
+  );
 });
 
 test("global Save/Open shortcuts are inert while a dialog is open [R]", async ({
