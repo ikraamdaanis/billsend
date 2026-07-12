@@ -118,12 +118,13 @@ function SiteHeader() {
             Privacy
           </a>
         </nav>
-        <Link to="/create" preload="viewport" className="justify-self-end">
-          <Button className="h-9 px-4 text-sm">
-            Create invoice
-            <IconArrowRight className="size-4" />
-          </Button>
-        </Link>
+        <Button
+          className="h-9 justify-self-end px-4 text-sm"
+          render={<Link to="/create" preload="viewport" />}
+        >
+          Create invoice
+          <IconArrowRight className="size-4" />
+        </Button>
       </div>
     </header>
   );
@@ -155,20 +156,20 @@ function Hero() {
             accounts, no servers, and nothing ever leaves your device.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Link to="/create" preload="viewport">
-              <Button className="h-11 w-full px-6 text-sm sm:w-auto">
-                Create your first invoice
-                <IconArrowRight className="size-4" />
-              </Button>
-            </Link>
-            <a href="#how" className="sm:ml-2">
-              <Button
-                variant="outline"
-                className="h-11 w-full px-6 text-sm sm:w-auto"
-              >
-                See how it works
-              </Button>
-            </a>
+            <Button
+              className="h-11 w-full px-6 text-sm sm:w-auto"
+              render={<Link to="/create" preload="viewport" />}
+            >
+              Create your first invoice
+              <IconArrowRight className="size-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 w-full px-6 text-sm sm:ml-2 sm:w-auto"
+              render={<a href="#how" aria-label="See how it works" />}
+            >
+              See how it works
+            </Button>
           </div>
           <p className="mt-6 font-mono text-sm text-neutral-500 tabular-nums">
             Free · No sign-up · Works offline
@@ -448,12 +449,13 @@ function FinalCta() {
         <p className="mt-5 max-w-[48ch] text-lg text-pretty text-neutral-600">
           No sign-up, no catch. Make one in the next minute, for free.
         </p>
-        <Link to="/create" preload="viewport" className="mt-8">
-          <Button className="h-11 px-6 text-sm">
-            Create your invoice
-            <IconArrowRight className="size-4" />
-          </Button>
-        </Link>
+        <Button
+          className="mt-8 h-11 px-6 text-sm"
+          render={<Link to="/create" preload="viewport" />}
+        >
+          Create your invoice
+          <IconArrowRight className="size-4" />
+        </Button>
       </div>
     </section>
   );
