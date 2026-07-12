@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
   documentActions,
   hydrateDocument,
+  isDocumentHydrated,
   startDraftPersistence
 } from "~/context/document-session";
 import { getAllInvoices } from "~/db";
@@ -17,11 +18,36 @@ import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 // run hydration) and to let the hook assert it is used inside the editor.
 const InvoiceDocumentContext = createContext<boolean>(false);
 
-export function InvoiceDocumentProvider({ children }: { children: ReactNode }) {
+export function InvoiceDocumentProvider({
+  children,
+  fallback = null
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
+  // Gate the editor on hydration completing. The editor's inputs are bound to
+  // the invoice store, which hydration replaces (restoring the working draft, or
+  // stamping a fresh blank invoice). Mounting those inputs before hydration
+  // settles would let a keystroke land on state that hydration is about to
+  // overwrite, silently wiping it. Holding the fallback until hydration resolves
+  // closes that race at the source: there is no input for hydration to clobber.
+  const [isHydrated, setIsHydrated] = useState(isDocumentHydrated);
+
   useEffect(() => {
     startDraftPersistence();
-    void hydrateDocument();
+
+    let cancelled = false;
+
+    void hydrateDocument().finally(() => {
+      if (!cancelled) setIsHydrated(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
+
+  if (!isHydrated) return fallback;
 
   return (
     <InvoiceDocumentContext.Provider value={true}>
