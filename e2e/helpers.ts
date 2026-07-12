@@ -185,7 +185,9 @@ export async function openFileMenu(page: Page) {
 
 export async function clickFileMenuItem(page: Page, name: string | RegExp) {
   await openFileMenu(page);
-  await page.getByRole("menuitem", { name, exact: typeof name === "string" }).click();
+  await page
+    .getByRole("menuitem", { name, exact: typeof name === "string" })
+    .click();
 }
 
 // Saves the current invoice through the Save As dialog under the given name.
@@ -201,6 +203,42 @@ export async function saveInvoiceAs(page: Page, name: string) {
 
 export async function addLineItem(page: Page) {
   await page.getByRole("button", { name: "Add item" }).click();
+}
+
+// Triggers Export Data and returns the download's filename and parsed JSON.
+export async function exportData(page: Page) {
+  const downloadPromise = page.waitForEvent("download");
+
+  await clickFileMenuItem(page, "Export Data");
+
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of stream) {
+    chunks.push(chunk as Buffer);
+  }
+
+  return {
+    filename: download.suggestedFilename(),
+    // JSON.parse returns `any`, which the import edge-case tests mutate freely.
+    json: JSON.parse(Buffer.concat(chunks).toString("utf8"))
+  };
+}
+
+// Opens the Import dialog and selects an in-memory JSON payload as the file.
+export async function selectImportFile(page: Page, data: unknown) {
+  await clickFileMenuItem(page, "Import Data");
+
+  const dialog = page.getByRole("dialog", { name: "Import Data" });
+
+  await dialog.locator("#import-file-input").setInputFiles({
+    name: "import.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(JSON.stringify(data))
+  });
+
+  return dialog;
 }
 
 // Local yyyy-MM-dd, mirroring the app's date-fns format(now, "yyyy-MM-dd").

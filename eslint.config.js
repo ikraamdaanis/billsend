@@ -106,7 +106,8 @@ export default defineConfig([
       globals: {
         process: "readonly",
         console: "readonly",
-        indexedDB: "readonly"
+        indexedDB: "readonly",
+        Buffer: "readonly"
       },
       parserOptions: {
         project: "./e2e/tsconfig.json",

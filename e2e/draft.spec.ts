@@ -36,7 +36,9 @@ test("reloading restores the document identity, not just content [R]", async ({
   await expect(
     page.getByRole("heading", { name: "Quarterly retainer" })
   ).toBeVisible();
-  await expect(page.getByLabel("From details")).toHaveValue("Edited after save");
+  await expect(page.getByLabel("From details")).toHaveValue(
+    "Edited after save"
+  );
 });
 
 test("New Invoice clears the draft; reloading yields a blank invoice [R]", async ({
