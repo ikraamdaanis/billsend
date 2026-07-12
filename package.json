@@ -15,6 +15,7 @@
     "check": "prettier --write . && eslint --fix",
     "ts-lint": "tsc --noEmit --incremental --watch",
     "check-types": "tsc --noEmit",
+    "check-types:e2e": "tsc --noEmit -p e2e/tsconfig.json",
     "preview": "vite preview",
     "deploy": "bun run build && wrangler deploy",
     "cf-typegen": "wrangler types",
