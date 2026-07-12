@@ -170,6 +170,15 @@ export async function gotoEditorReady(page: Page, title = "Test invoice") {
   await fillWhenReady(page, page.getByLabel("Invoice title"), title);
 }
 
+// Opens the editor and waits for hydration to settle without editing anything,
+// by waiting for the client-stamped invoice date to populate. Use for tests
+// that must not dirty the editor (e.g. empty-state and menu-only flows), so
+// hydration's one-time store reset can't re-render a menu closed mid-open.
+export async function gotoEditorSettled(page: Page) {
+  await page.goto("/create");
+  await expect(page.getByLabel("Date", { exact: true })).not.toHaveValue("");
+}
+
 export async function openFileMenu(page: Page) {
   await page.getByRole("menuitem", { name: "File" }).click();
 }
