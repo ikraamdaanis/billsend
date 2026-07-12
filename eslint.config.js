@@ -100,5 +100,34 @@ export default defineConfig([
       "jsx-a11y/click-events-have-key-events": "off"
     }
   },
-  globalIgnores(["build/**", "dist/**", "**/node_modules/", "**/*.js"])
+  {
+    files: ["e2e/**/*.ts", "playwright.config.ts"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        indexedDB: "readonly"
+      },
+      parserOptions: {
+        project: "./e2e/tsconfig.json",
+        tsconfigRootDir: import.meta.dirname
+      }
+    },
+    rules: {
+      "no-restricted-imports": "off",
+      "@typescript-eslint/no-floating-promises": "error",
+      // Playwright fixtures take a callback param named `use`; it is not the
+      // React `use` hook, so the hooks linter does not apply to this directory.
+      "react-hooks/rules-of-hooks": "off"
+    }
+  },
+  globalIgnores([
+    "build/**",
+    "dist/**",
+    "**/node_modules/",
+    "**/*.js",
+    "test-results/**",
+    "playwright-report/**",
+    "blob-report/**"
+  ])
 ]);
