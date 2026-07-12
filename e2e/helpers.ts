@@ -5,44 +5,6 @@ import { expect } from "@playwright/test";
 // dependency on app source.
 export const DB_NAME = "InvoiceDatabase";
 
-// Counts working-draft rows in IndexedDB. A row only exists once the editor has
-// hydrated (autosave is gated on hydration completing), so it doubles as a
-// "hydration finished" signal.
-export async function readDraftCount(page: Page): Promise<number> {
-  return await page.evaluate(async databaseName => {
-    return await new Promise<number>(resolve => {
-      const request = indexedDB.open(databaseName);
-
-      request.onsuccess = () => {
-        const db = request.result;
-
-        if (!db.objectStoreNames.contains("drafts")) {
-          db.close();
-          resolve(0);
-
-          return;
-        }
-
-        const countRequest = db
-          .transaction("drafts", "readonly")
-          .objectStore("drafts")
-          .count();
-
-        countRequest.onsuccess = () => {
-          db.close();
-          resolve(countRequest.result);
-        };
-        countRequest.onerror = () => {
-          db.close();
-          resolve(0);
-        };
-      };
-
-      request.onerror = () => resolve(0);
-    });
-  }, DB_NAME);
-}
-
 // Whether the serialized rows of an IndexedDB object store contain the given
 // text. Used to wait for a specific edit to reach the draft (before reloading,
 // so restore assertions test hydration rather than autosave-flush timing) or to
@@ -136,52 +98,29 @@ export async function clearObjectStore(page: Page, storeName: string) {
   );
 }
 
-// Fills a field and waits until the editor has durably accepted it. The editor
-// resets its store once while hydrating (restoring the working draft on first
-// mount); on a cold IndexedDB that read can land a second or two after mount and
-// wipe edits made in between. A persisted draft row proves hydration finished
-// and no further reset will fire, so the field value is durable from then on.
-// Re-fills each poll because a pre-hydration fill gets discarded before it can
-// persist. Use this for the first edit of every test that mutates the editor.
-export async function fillWhenReady(
-  page: Page,
-  locator: Locator,
-  value: string
-) {
-  await expect
-    .poll(
-      async () => {
-        await locator.fill(value);
-
-        const count = await readDraftCount(page);
-        const domValue = await locator.inputValue();
-
-        return count > 0 && domValue === value;
-      },
-      { timeout: 25_000, intervals: [700] }
-    )
-    .toBe(true);
-}
-
-// Opens the editor and settles hydration by durably setting the invoice title.
-// Returns once the editor is ready for further edits.
+// Opens the editor and sets the invoice title. The editor is gated on hydration
+// (its inputs don't mount until the invoice store is hydrated), so the moment
+// the title field is fillable the value is durable: no store reset can land
+// afterwards to wipe it. Returns once the editor is ready for further edits.
 export async function gotoEditorReady(page: Page, title = "Test invoice") {
   await page.goto("/create");
-  await fillWhenReady(page, page.getByLabel("Invoice title"), title);
+
+  const invoiceTitle = page.getByLabel("Invoice title");
+
+  await invoiceTitle.fill(title);
+  await expect(invoiceTitle).toHaveValue(title);
 }
 
-// Opens the editor and waits for hydration to settle without editing anything,
-// by waiting for the client-stamped invoice date to populate. Use for tests
-// that must not dirty the editor (e.g. empty-state and menu-only flows), so
-// hydration's one-time store reset can't re-render a menu closed mid-open.
+// Opens the editor and waits for it to be ready without editing anything, by
+// waiting for the client-stamped invoice date to populate. Use for tests that
+// must not dirty the editor (e.g. empty-state and menu-only flows).
 export async function gotoEditorSettled(page: Page) {
   await page.goto("/create");
   await expect(page.getByLabel("Date", { exact: true })).not.toHaveValue("");
 }
 
-// Opens the File menu, retrying until the menu content actually appears. A
-// hydration re-render can close the menu the instant after it opens, so a bare
-// click occasionally lands on nothing; retrying the open is deterministic.
+// Opens the File menu, retrying until the menu content actually appears, so a
+// bare click that occasionally lands on nothing can't flake the test.
 export async function openFileMenu(page: Page) {
   const trigger = page.getByRole("menuitem", { name: "File" });
   const firstItem = page.getByRole("menuitem", { name: "New Invoice" });
