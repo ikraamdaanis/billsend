@@ -2,7 +2,8 @@ import { expect, test } from "./fixtures";
 import {
   clickFileMenuItem,
   gotoEditorReady,
-  saveInvoiceAs
+  saveInvoiceAs,
+  storeContains
 } from "./helpers";
 
 // Group E: Save / Save As / document identity, including the [R] validation
@@ -37,9 +38,14 @@ test("Ctrl/Cmd+S saves directly once a document exists, with no dialog [R]", asy
   await page.getByLabel("Invoice title").fill("Retainer March (rev)");
   await page.keyboard.press("ControlOrMeta+s");
 
-  await expect(page.getByText("Invoice saved successfully")).toBeVisible();
+  // Direct save: no Save As dialog, and the edit lands on the existing record.
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: "Retainer March" })).toBeVisible();
+  await expect
+    .poll(() => storeContains(page, "invoices", "Retainer March (rev)"))
+    .toBe(true);
+  await expect(
+    page.getByRole("heading", { name: "Retainer March" })
+  ).toBeVisible();
 });
 
 test("whitespace-only names are rejected on Save As [R]", async ({ page }) => {
