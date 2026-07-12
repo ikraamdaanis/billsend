@@ -43,6 +43,99 @@ export async function readDraftCount(page: Page): Promise<number> {
   }, DB_NAME);
 }
 
+// Whether the serialized rows of an IndexedDB object store contain the given
+// text. Used to wait for a specific edit to reach the draft (before reloading,
+// so restore assertions test hydration rather than autosave-flush timing) or to
+// confirm a save landed in the invoices store.
+export async function storeContains(
+  page: Page,
+  storeName: string,
+  needle: string
+): Promise<boolean> {
+  return await page.evaluate(
+    async ([databaseName, store, text]) => {
+      return await new Promise<boolean>(resolve => {
+        const request = indexedDB.open(databaseName);
+
+        request.onsuccess = () => {
+          const db = request.result;
+
+          if (!db.objectStoreNames.contains(store)) {
+            db.close();
+            resolve(false);
+
+            return;
+          }
+
+          const getAll = db
+            .transaction(store, "readonly")
+            .objectStore(store)
+            .getAll();
+
+          getAll.onsuccess = () => {
+            db.close();
+            resolve(JSON.stringify(getAll.result).includes(text));
+          };
+          getAll.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+
+        request.onerror = () => resolve(false);
+      });
+    },
+    [DB_NAME, storeName, needle] as const
+  );
+}
+
+// Whether the working draft currently contains the given text.
+export async function draftContains(
+  page: Page,
+  needle: string
+): Promise<boolean> {
+  return await storeContains(page, "drafts", needle);
+}
+
+// Clears an IndexedDB object store from the page's origin. Used to simulate a
+// record being deleted in another tab (a readwrite transaction, no version
+// bump, so it never blocks the app's open connection).
+export async function clearObjectStore(page: Page, storeName: string) {
+  await page.evaluate(
+    async ([databaseName, store]) => {
+      await new Promise<void>((resolve, reject) => {
+        const request = indexedDB.open(databaseName);
+
+        request.onsuccess = () => {
+          const db = request.result;
+
+          if (!db.objectStoreNames.contains(store)) {
+            db.close();
+            resolve();
+
+            return;
+          }
+
+          const tx = db.transaction(store, "readwrite");
+
+          tx.objectStore(store).clear();
+          tx.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          tx.onerror = () => {
+            db.close();
+            reject(tx.error);
+          };
+        };
+
+        request.onerror = () => reject(request.error);
+      });
+    },
+    [DB_NAME, storeName] as const
+  );
+}
+
 // Fills a field and waits until the editor has durably accepted it. The editor
 // resets its store once while hydrating (restoring the working draft on first
 // mount); on a cold IndexedDB that read can land a second or two after mount and
