@@ -1,5 +1,11 @@
 import { expect, test } from "./fixtures";
-import { gotoEditorReady, gotoEditorSettled, saveInvoiceAs } from "./helpers";
+import {
+  clickFileMenuItem,
+  draftContains,
+  gotoEditorReady,
+  gotoEditorSettled,
+  saveInvoiceAs
+} from "./helpers";
 
 // Groups N and M: keyboard shortcuts, focus management, and multi-tab behaviour.
 
@@ -55,13 +61,15 @@ test("a second tab sees an invoice saved in the first tab", async ({
   await gotoEditorReady(tabA, "Shared title");
   await saveInvoiceAs(tabA, "Shared doc");
 
+  // Wait for the post-save draft to persist the document association, so tab B
+  // restores a clean (saved) draft rather than the pre-save one, which would
+  // read as dirty and route Open Invoice through the unsaved-changes guard.
+  await expect.poll(() => draftContains(tabA, "Shared doc")).toBe(true);
+
   // Tab B, opened in the same context (shared IndexedDB), sees the saved record.
   await gotoEditorSettled(tabB);
   await tabB.bringToFront();
-  await tabB.getByRole("menuitem", { name: "File" }).click();
-  await tabB
-    .getByRole("menuitem", { name: "Open Invoice", exact: true })
-    .click();
+  await clickFileMenuItem(tabB, "Open Invoice");
 
   const dialog = tabB.getByRole("dialog", { name: "Open Invoice" });
 

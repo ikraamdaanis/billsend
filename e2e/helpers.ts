@@ -179,8 +179,17 @@ export async function gotoEditorSettled(page: Page) {
   await expect(page.getByLabel("Date", { exact: true })).not.toHaveValue("");
 }
 
+// Opens the File menu, retrying until the menu content actually appears. A
+// hydration re-render can close the menu the instant after it opens, so a bare
+// click occasionally lands on nothing; retrying the open is deterministic.
 export async function openFileMenu(page: Page) {
-  await page.getByRole("menuitem", { name: "File" }).click();
+  const trigger = page.getByRole("menuitem", { name: "File" });
+  const firstItem = page.getByRole("menuitem", { name: "New Invoice" });
+
+  await expect(async () => {
+    await trigger.click();
+    await expect(firstItem).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: 10_000 });
 }
 
 export async function clickFileMenuItem(page: Page, name: string | RegExp) {
