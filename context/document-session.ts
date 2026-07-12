@@ -92,7 +92,8 @@ async function update(options?: {
   documentId?: string;
   name?: string;
 }): Promise<void> {
-  const targetId = options?.documentId ?? useDocumentStore.getState().documentId;
+  const targetId =
+    options?.documentId ?? useDocumentStore.getState().documentId;
 
   if (!targetId) {
     throw new DocumentNotFoundError();
@@ -163,7 +164,9 @@ function writeDraft(): void {
     invoiceData: structuredClone(invoiceData),
     documentId,
     documentName,
-    lastSavedInvoice: lastSavedInvoice ? structuredClone(lastSavedInvoice) : null,
+    lastSavedInvoice: lastSavedInvoice
+      ? structuredClone(lastSavedInvoice)
+      : null,
     updatedAt: new Date()
   });
 }
@@ -244,6 +247,23 @@ async function runHydration(): Promise<void> {
     return;
   }
 
+  // Re-check pristineness after the async read. getDraft() yields the event
+  // loop, so the user can start typing on the blank invoice while it is in
+  // flight; restoring the draft or resetting now would silently wipe those
+  // in-progress edits. If the store is no longer pristine, keep what is there,
+  // enable autosave, and schedule a write for the edits that landed while
+  // `hydrated` was still false (and so never scheduled one themselves).
+  const stillPristine =
+    useDocumentStore.getState().documentId === null &&
+    isEqual(selectInvoiceData(useInvoiceStore.getState()), invoiceDefault);
+
+  if (!stillPristine) {
+    hydrated = true;
+    scheduleSave();
+
+    return;
+  }
+
   if (draft) {
     const invoice = ensureItemIds(structuredClone(draft.invoiceData));
     useInvoiceStore.getState().setInvoice(invoice);
@@ -255,6 +275,9 @@ async function runHydration(): Promise<void> {
     });
     void cleanupOrphanedImages([normalized.image]);
   } else {
+    // No draft: seed a fresh blank invoice (which stamps today's dates). Safe to
+    // reset here because the stillPristine guard above guarantees the user has
+    // not edited anything yet, so there is nothing to clobber.
     reset();
   }
 
