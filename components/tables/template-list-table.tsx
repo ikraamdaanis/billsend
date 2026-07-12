@@ -5,7 +5,6 @@ import {
   IconTemplate,
   IconTrash
 } from "@tabler/icons-react";
-import { format } from "date-fns";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -16,6 +15,7 @@ import {
 } from "~/components/ui/context-menu";
 import { cn } from "~/lib/utils";
 import type { InvoiceTemplate } from "~/types";
+import { formatListDate } from "~/utils/format-list-date";
 
 type SortKey = "name" | "updatedAt";
 type SortDirection = "asc" | "desc";
@@ -418,7 +418,7 @@ export function TemplateListTable({
                         : "text-muted-foreground"
                   )}
                 >
-                  {format(new Date(template.updatedAt), "PP, p")}
+                  {formatListDate(template.updatedAt)}
                 </td>
               </ContextMenuTrigger>
               <ContextMenuContent>
