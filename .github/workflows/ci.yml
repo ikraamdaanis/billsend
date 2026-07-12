@@ -63,6 +63,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Type-check E2E
+        run: bun run check-types:e2e
+
       - name: Get Playwright version
         id: playwright-version
         run: echo "version=$(node -e "console.log(require('@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"

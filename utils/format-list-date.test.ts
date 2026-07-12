@@ -8,10 +8,10 @@ describe("formatListDate", () => {
 
   it("returns a placeholder for an Invalid Date instead of throwing", () => {
     expect(() => formatListDate(new Date("nonsense"))).not.toThrow();
-    expect(formatListDate(new Date("nonsense"))).toBe("—");
+    expect(formatListDate(new Date("nonsense"))).toBe("–");
   });
 
   it("returns a placeholder for an unparseable string", () => {
-    expect(formatListDate("not a date")).toBe("—");
+    expect(formatListDate("not a date")).toBe("–");
   });
 });
