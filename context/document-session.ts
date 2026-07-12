@@ -216,9 +216,11 @@ export function startDraftPersistence(): void {
 // One-time restore of the autosaved working draft, so an accidental reload never
 // loses unsaved work. Memoised on a module promise: idempotent across provider
 // remounts (navigating back to the editor never re-runs it) and safe under React
-// StrictMode's double-invoked effects. Only restores into a pristine store, so it
-// can never clobber edits already in progress, and enables autosave (via
-// `hydrated`) once settled.
+// StrictMode's double-invoked effects. The editor is gated on this promise (the
+// provider renders a fallback until it resolves), so no editable input exists
+// while hydration runs; there is no in-flight edit for the async draft read to
+// race, which is why a single pristine check up front is sufficient. Enables
+// autosave (via `hydrated`) once settled.
 let hydrationPromise: Promise<void> | null = null;
 
 async function runHydration(): Promise<void> {
@@ -247,23 +249,6 @@ async function runHydration(): Promise<void> {
     return;
   }
 
-  // Re-check pristineness after the async read. getDraft() yields the event
-  // loop, so the user can start typing on the blank invoice while it is in
-  // flight; restoring the draft or resetting now would silently wipe those
-  // in-progress edits. If the store is no longer pristine, keep what is there,
-  // enable autosave, and schedule a write for the edits that landed while
-  // `hydrated` was still false (and so never scheduled one themselves).
-  const stillPristine =
-    useDocumentStore.getState().documentId === null &&
-    isEqual(selectInvoiceData(useInvoiceStore.getState()), invoiceDefault);
-
-  if (!stillPristine) {
-    hydrated = true;
-    scheduleSave();
-
-    return;
-  }
-
   if (draft) {
     const invoice = ensureItemIds(structuredClone(draft.invoiceData));
     useInvoiceStore.getState().setInvoice(invoice);
@@ -275,9 +260,6 @@ async function runHydration(): Promise<void> {
     });
     void cleanupOrphanedImages([normalized.image]);
   } else {
-    // No draft: seed a fresh blank invoice (which stamps today's dates). Safe to
-    // reset here because the stillPristine guard above guarantees the user has
-    // not edited anything yet, so there is nothing to clobber.
     reset();
   }
 
@@ -290,6 +272,14 @@ export function hydrateDocument(): Promise<void> {
   }
 
   return hydrationPromise;
+}
+
+// Whether hydration has already completed. Lets the provider seed its gate state
+// synchronously on remount (after a client-side navigation back to the editor),
+// so a return visit shows the editor immediately instead of flashing the
+// fallback while the resolved hydration promise settles a microtask later.
+export function isDocumentHydrated(): boolean {
+  return hydrated;
 }
 
 export const documentActions = {
