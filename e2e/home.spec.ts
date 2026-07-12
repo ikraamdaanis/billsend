@@ -42,10 +42,19 @@ test("in-page anchor links scroll to their sections", async ({ page }) => {
   await expect(page.locator("#privacy")).toBeInViewport();
 });
 
-test("the header CTA is keyboard-actionable as a link", async ({ page }) => {
+test("the header CTA is a single link, not a nested button [R]", async ({
+  page
+}) => {
   await page.goto("/");
 
+  // Guards the <a><button> nesting from the audit: the CTA renders as one link
+  // (one tab stop), with no nested button element.
   const cta = page.getByRole("link", { name: "Create invoice", exact: true });
+
+  await expect(cta).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create invoice", exact: true })
+  ).toHaveCount(0);
 
   await cta.focus();
   await expect(cta).toBeFocused();
