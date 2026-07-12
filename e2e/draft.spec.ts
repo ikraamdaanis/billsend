@@ -9,6 +9,22 @@ import {
 // Group F: working-draft autosave and restore. Every scenario here guards a
 // lifecycle-refactor regression.
 
+test("edits typed immediately on load are not wiped by hydration [R]", async ({
+  page
+}) => {
+  await page.goto("/create");
+
+  const title = page.getByLabel("Invoice title");
+
+  // Type as soon as the field is actionable, without any readiness helper. The
+  // editor is client-only (no pre-hydration SSR input to clobber) and the draft
+  // read must not reset the store out from under this edit.
+  await title.fill("Typed immediately");
+
+  await expect.poll(() => draftContains(page, "Typed immediately")).toBe(true);
+  await expect(title).toHaveValue("Typed immediately");
+});
+
 test("reloading restores edited content from the draft [R]", async ({
   page
 }) => {
