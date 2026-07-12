@@ -75,6 +75,7 @@ function SubtotalRow() {
         placeholder="Subtotal"
       />
       <span
+        data-testid="subtotal-value"
         className="inline-block min-w-40 text-right text-zinc-900"
         style={getTextStyles({ settings: valueSettings })}
       >
@@ -132,6 +133,7 @@ function TaxRow() {
         </span>
       </div>
       <span
+        data-testid="tax-amount"
         className="ml-auto min-w-40 items-center"
         style={getTextStyles({ settings: valueSettings })}
       >
@@ -242,6 +244,7 @@ function TotalRow() {
         placeholder="Total"
       />
       <span
+        data-testid="total-value"
         className="inline-block min-w-40 text-right font-bold"
         style={getTextStyles({ settings: valueSettings })}
       >
