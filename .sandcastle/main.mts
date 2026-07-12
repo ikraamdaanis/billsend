@@ -122,15 +122,22 @@ function listEligibleIssues(): Issue[] {
   );
 
   const all: Issue[] = JSON.parse(raw)
-    .filter((issue: any) => !recentlyClosed.has(issue.number))
-    .map((issue: any) => ({
-      number: issue.number,
-      title: issue.title,
-      body: issue.body ?? "",
-      labels: issue.labels.map((label: any) => label.name),
-      blockedBy: parseBlockedBy(issue.body ?? ""),
-      parent: parseParent(issue.body ?? "")
-    }));
+    .filter((issue: { number: number }) => !recentlyClosed.has(issue.number))
+    .map(
+      (issue: {
+        number: number;
+        title: string;
+        body: string;
+        labels: { name: string }[];
+      }) => ({
+        number: issue.number,
+        title: issue.title,
+        body: issue.body ?? "",
+        labels: issue.labels.map((label: { name: string }) => label.name),
+        blockedBy: parseBlockedBy(issue.body ?? ""),
+        parent: parseParent(issue.body ?? "")
+      })
+    );
 
   const openNumbers = new Set(all.map(issue => issue.number));
   const handledByPr = issuesHandledByPr();
