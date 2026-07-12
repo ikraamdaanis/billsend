@@ -1,5 +1,6 @@
 import { expect, test } from "./fixtures";
 import {
+  DB_NAME,
   clickFileMenuItem,
   gotoEditorReady,
   gotoEditorSettled,
@@ -58,6 +59,56 @@ test("deleting the current invoice detaches the editor [R]", async ({
   await expect(
     page.getByRole("heading", { name: "Untitled invoice" })
   ).toBeVisible();
+});
+
+test("a record with an invalid date does not crash the list [R]", async ({
+  page
+}) => {
+  const pageErrors: string[] = [];
+
+  page.on("pageerror", error => pageErrors.push(error.message));
+
+  await gotoEditorReady(page, "Datey title");
+  await saveInvoiceAs(page, "Datey");
+
+  // Force an Invalid Date into storage, bypassing the import coercion. The list
+  // render must tolerate it (format() would otherwise throw and blank the list).
+  await page.evaluate(async databaseName => {
+    await new Promise<void>((resolve, reject) => {
+      const request = indexedDB.open(databaseName);
+
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction("invoices", "readwrite");
+        const store = tx.objectStore("invoices");
+        const getAll = store.getAll();
+
+        getAll.onsuccess = () => {
+          for (const record of getAll.result) {
+            record.updatedAt = new Date("not a date");
+            store.put(record);
+          }
+        };
+        tx.oncomplete = () => {
+          db.close();
+          resolve();
+        };
+        tx.onerror = () => {
+          db.close();
+          reject(tx.error);
+        };
+      };
+
+      request.onerror = () => reject(request.error);
+    });
+  }, DB_NAME);
+
+  await clickFileMenuItem(page, "Open Invoice");
+
+  const dialog = page.getByRole("dialog", { name: "Open Invoice" });
+
+  await expect(dialog.getByRole("row", { name: /Datey/ })).toBeVisible();
+  expect(pageErrors).toEqual([]);
 });
 
 test("renaming from the dialog updates the toolbar title", async ({ page }) => {
