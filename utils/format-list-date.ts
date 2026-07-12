@@ -8,7 +8,7 @@ export function formatListDate(value: Date | string | number): string {
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "—";
+    return "–";
   }
 
   return format(date, "PP, p");
