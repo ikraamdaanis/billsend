@@ -244,6 +244,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
   const sellerName = pickRandom(COMPANY_NAMES);
   const clientName = `${pickRandom(FIRST_NAMES)} ${pickRandom(LAST_NAMES)}`;
   const invoiceNumber = `INV-${String(randomInt(1, 9999)).padStart(4, "0")}`;
+  const currencyOption = pickRandom(currencyOptions);
 
   const items = Array.from({ length: randomInt(1, 6) }, () => ({
     id: crypto.randomUUID(),
@@ -291,7 +292,8 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
     },
     paymentDetails: buildPaymentDetails(sellerName),
     pdfSettings: { backgroundColor: pickRandom(PDF_BACKGROUNDS) },
-    currency: pickRandom(currencyOptions).symbol,
+    currency: currencyOption.symbol,
+    currencyCode: currencyOption.code,
     theme: { ...invoiceDefault.theme, size: pickRandom(SIZES) }
   };
 
