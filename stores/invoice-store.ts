@@ -401,6 +401,13 @@ export const useInvoiceStore = create<InvoiceStore>()(
       setDiscountType: discountType =>
         set(state => {
           state.discountType = discountType;
+
+          // A fixed amount larger than 100 becomes an impossible percentage on
+          // toggle (the % input itself caps at 100), so clamp it rather than
+          // silently discounting the whole invoice.
+          if (discountType === "percentage" && state.discounts > 100) {
+            state.discounts = 100;
+          }
         }),
 
       setAmountPaid: amountPaid =>
