@@ -203,7 +203,9 @@ export const invoiceSchema = z.object({
   tax: z
     .object({
       percentage: z.coerce.number().catch(0),
-      exempt: z.coerce.boolean().catch(false),
+      // Not z.coerce.boolean(): Boolean("false") is true, so a hand-edited
+      // backup with `"exempt": "false"` would silently flip to exempt.
+      exempt: z.boolean().catch(false),
       note: z.string().catch("")
     })
     .catch({ percentage: 0, exempt: false, note: "" }),
