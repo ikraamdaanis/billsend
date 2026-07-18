@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { formatCurrency } from "~/consts/currencies";
+import { cn } from "~/lib/utils";
 import {
   useCurrencySymbol,
   useInvoiceTotals,
@@ -42,6 +44,37 @@ function usePricingInput(storeValue: number) {
   return [input, setInput] as const;
 }
 
+// A small editor-only toggle shown to the left of a pricing row (e.g. switch a
+// discount between fixed and percentage, or mark tax exempt). Like the add /
+// remove item buttons, it is an editing affordance that never appears in the
+// rendered PDF.
+function PricingRowToggle({
+  label,
+  active,
+  onClick,
+  children
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "shrink-0 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-blue-100",
+        active ? "text-blue-700" : "text-zinc-400"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 /**
  * Displays the pricing information for the invoice.
  */
@@ -53,6 +86,8 @@ export function InvoicePricing() {
       <FeesRow />
       <DiscountsRow />
       <TotalRow />
+      <AmountPaidRow />
+      <BalanceDueRow />
     </div>
   );
 }
@@ -96,6 +131,13 @@ function TaxRow() {
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
+      <PricingRowToggle
+        label="Toggle tax exempt"
+        active={tax.exempt}
+        onClick={() => setTax(prev => ({ ...prev, exempt: !prev.exempt }))}
+      >
+        {tax.exempt ? "Exempt" : "%"}
+      </PricingRowToggle>
       <div
         className="flex w-full items-center"
         style={{ justifyContent: labelSettings.align }}
@@ -108,37 +150,50 @@ function TaxRow() {
           style={getTextStyles({ settings: labelSettings, remove: ["align"] })}
           placeholder="Tax"
         />
-        <span className="flex items-center">
-          <InvoiceInput
-            id="invoice-field-totals"
-            aria-label="Tax percentage"
-            value={taxInput}
-            onChange={value => {
-              const numericValue = handlePercentageInput(value);
-              setTaxInput(numericValue);
-              setTax(prev => ({ ...prev, percentage: Number(numericValue) }));
-            }}
-            onBlur={() =>
-              handleInputBlur(taxInput, setTaxInput, (val: number) =>
-                setTax(prev => ({ ...prev, percentage: val }))
-              )
-            }
-            className="w-10 p-0 text-right focus-visible:w-14"
-            style={getTextStyles({
-              settings: labelSettings,
-              remove: ["align"]
-            })}
-          />
-          <span style={getTextStyles({ settings: labelSettings })}>%</span>
-        </span>
+        {!tax.exempt && (
+          <span className="flex items-center">
+            <InvoiceInput
+              id="invoice-field-totals"
+              aria-label="Tax percentage"
+              value={taxInput}
+              onChange={value => {
+                const numericValue = handlePercentageInput(value);
+                setTaxInput(numericValue);
+                setTax(prev => ({ ...prev, percentage: Number(numericValue) }));
+              }}
+              onBlur={() =>
+                handleInputBlur(taxInput, setTaxInput, (val: number) =>
+                  setTax(prev => ({ ...prev, percentage: val }))
+                )
+              }
+              className="w-10 p-0 text-right focus-visible:w-14"
+              style={getTextStyles({
+                settings: labelSettings,
+                remove: ["align"]
+              })}
+            />
+            <span style={getTextStyles({ settings: labelSettings })}>%</span>
+          </span>
+        )}
       </div>
-      <span
-        data-testid="tax-amount"
-        className="ml-auto min-w-40 items-center"
-        style={getTextStyles({ settings: valueSettings })}
-      >
-        {formatCurrency(taxAmount, currency)}
-      </span>
+      {tax.exempt ? (
+        <InvoiceInput
+          aria-label="Tax exempt note"
+          value={tax.note}
+          onChange={value => setTax(prev => ({ ...prev, note: value }))}
+          className="ml-auto min-w-40 text-right"
+          style={getTextStyles({ settings: valueSettings })}
+          placeholder="e.g. Reverse charge"
+        />
+      ) : (
+        <span
+          data-testid="tax-amount"
+          className="ml-auto min-w-40 items-center"
+          style={getTextStyles({ settings: valueSettings })}
+        >
+          {formatCurrency(taxAmount, currency)}
+        </span>
+      )}
     </div>
   );
 }
@@ -185,53 +240,115 @@ function FeesRow() {
 }
 
 function DiscountsRow() {
-  const { discounts, setDiscounts, labels, setLabels } = usePricingSlice();
+  const {
+    discounts,
+    discountType,
+    setDiscounts,
+    setDiscountType,
+    currency,
+    labels,
+    setLabels
+  } = usePricingSlice();
+  const { discountAmount } = useInvoiceTotals();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
 
   const [discountsInput, setDiscountsInput] = usePricingInput(discounts);
+  const isPercentage = discountType === "percentage";
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
-      <InvoiceInput
-        aria-label="Discounts label"
-        value={labels.discounts}
-        onChange={value => setLabels(prev => ({ ...prev, discounts: value }))}
-        className="w-full min-w-fit"
-        style={getTextStyles({ settings: labelSettings })}
-        placeholder="Discounts"
-      />
-      <span
-        className="ml-auto flex min-w-40 items-center"
-        style={{ justifyContent: valueSettings.align }}
+      <PricingRowToggle
+        label="Toggle discount type"
+        active={isPercentage}
+        onClick={() => setDiscountType(isPercentage ? "fixed" : "percentage")}
+      >
+        {isPercentage ? "%" : currencySymbol}
+      </PricingRowToggle>
+      <div
+        className="flex w-full items-center"
+        style={{ justifyContent: labelSettings.align }}
       >
         <InvoiceInput
-          aria-label="Discounts amount"
-          value={`${currencySymbol}${discountsInput}`}
-          style={getTextStyles({ settings: valueSettings })}
-          onChange={value => {
-            const numericValue = handleCurrencyInput(value, currencySymbol);
-            setDiscountsInput(numericValue);
-            setDiscounts(Number(numericValue));
-          }}
-          onBlur={() =>
-            handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
-          }
-          className="w-20 text-right"
+          aria-label="Discounts label"
+          value={labels.discounts}
+          onChange={value => setLabels(prev => ({ ...prev, discounts: value }))}
+          className="field-sizing-content w-auto min-w-fit pr-0.5"
+          style={getTextStyles({ settings: labelSettings, remove: ["align"] })}
+          placeholder="Discounts"
         />
-      </span>
+        {isPercentage && (
+          <span className="flex items-center">
+            <InvoiceInput
+              aria-label="Discount percentage"
+              value={discountsInput}
+              onChange={value => {
+                const numericValue = handlePercentageInput(value);
+                setDiscountsInput(numericValue);
+                setDiscounts(Number(numericValue));
+              }}
+              onBlur={() =>
+                handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
+              }
+              className="w-10 p-0 text-right focus-visible:w-14"
+              style={getTextStyles({
+                settings: labelSettings,
+                remove: ["align"]
+              })}
+            />
+            <span style={getTextStyles({ settings: labelSettings })}>%</span>
+          </span>
+        )}
+      </div>
+      {isPercentage ? (
+        <span
+          className="ml-auto min-w-40 items-center"
+          style={getTextStyles({ settings: valueSettings })}
+        >
+          {`-${formatCurrency(discountAmount, currency)}`}
+        </span>
+      ) : (
+        <span
+          className="ml-auto flex min-w-40 items-center"
+          style={{ justifyContent: valueSettings.align }}
+        >
+          <InvoiceInput
+            aria-label="Discounts amount"
+            value={`${currencySymbol}${discountsInput}`}
+            style={getTextStyles({ settings: valueSettings })}
+            onChange={value => {
+              const numericValue = handleCurrencyInput(value, currencySymbol);
+              setDiscountsInput(numericValue);
+              setDiscounts(Number(numericValue));
+            }}
+            onBlur={() =>
+              handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
+            }
+            className="w-20 text-right"
+          />
+        </span>
+      )}
     </div>
   );
 }
 
+// The grand total suppresses its emphasis when a payment has been recorded, so
+// the balance-due row below reads as the figure to pay instead.
 function TotalRow() {
-  const { currency, labels, setLabels } = usePricingSlice();
+  const { currency, currencyCode, amountPaid, labels, setLabels } =
+    usePricingSlice();
   const { total } = useInvoiceTotals();
   const theme = useTheme();
-  const labelSettings = getRoleSettings(theme, "grandTotalLabel");
-  const valueSettings = getRoleSettings(theme, "grandTotalValue");
+  const hasPayment = amountPaid > 0;
+  const role = hasPayment ? "totalsLabel" : "grandTotalLabel";
+  const labelSettings = getRoleSettings(theme, role);
+  const valueSettings = getRoleSettings(
+    theme,
+    hasPayment ? "totalsValue" : "grandTotalValue"
+  );
+  const code = currencyCode.trim();
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
@@ -245,10 +362,95 @@ function TotalRow() {
       />
       <span
         data-testid="total-value"
+        className={cn(
+          "inline-block min-w-40 text-right",
+          hasPayment ? "" : "font-bold"
+        )}
+        style={getTextStyles({ settings: valueSettings })}
+      >
+        {code
+          ? `${formatCurrency(total, currency)} ${code}`
+          : formatCurrency(total, currency)}
+      </span>
+    </div>
+  );
+}
+
+function AmountPaidRow() {
+  const { amountPaid, setAmountPaid, labels, setLabels } = usePricingSlice();
+  const currencySymbol = useCurrencySymbol();
+  const theme = useTheme();
+  const labelSettings = getRoleSettings(theme, "totalsLabel");
+  const valueSettings = getRoleSettings(theme, "totalsValue");
+
+  const [amountPaidInput, setAmountPaidInput] = usePricingInput(amountPaid);
+
+  return (
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
+      <InvoiceInput
+        aria-label="Amount paid label"
+        value={labels.amountPaid}
+        onChange={value => setLabels(prev => ({ ...prev, amountPaid: value }))}
+        className="w-full min-w-fit"
+        style={getTextStyles({ settings: labelSettings })}
+        placeholder="Amount paid"
+      />
+      <span
+        className="ml-auto flex min-w-40 items-center"
+        style={{ justifyContent: valueSettings.align }}
+      >
+        <InvoiceInput
+          aria-label="Amount paid"
+          value={`${currencySymbol}${amountPaidInput}`}
+          className="w-24 text-right"
+          style={getTextStyles({ settings: valueSettings })}
+          placeholder={currencySymbol}
+          onChange={value => {
+            const numericValue = handleCurrencyInput(value, currencySymbol);
+            setAmountPaidInput(numericValue);
+            setAmountPaid(Number(numericValue));
+          }}
+          onBlur={() =>
+            handleInputBlur(amountPaidInput, setAmountPaidInput, setAmountPaid)
+          }
+        />
+      </span>
+    </div>
+  );
+}
+
+function BalanceDueRow() {
+  const { amountPaid, currency, currencyCode, labels, setLabels } =
+    usePricingSlice();
+  const { balanceDue } = useInvoiceTotals();
+  const theme = useTheme();
+  const labelSettings = getRoleSettings(theme, "grandTotalLabel");
+  const valueSettings = getRoleSettings(theme, "grandTotalValue");
+
+  if (amountPaid <= 0) {
+    return null;
+  }
+
+  const code = currencyCode.trim();
+
+  return (
+    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
+      <InvoiceInput
+        aria-label="Balance due label"
+        value={labels.balanceDue}
+        onChange={value => setLabels(prev => ({ ...prev, balanceDue: value }))}
+        className="w-full min-w-fit"
+        style={getTextStyles({ settings: labelSettings })}
+        placeholder="Balance due"
+      />
+      <span
+        data-testid="balance-due-value"
         className="inline-block min-w-40 text-right font-bold"
         style={getTextStyles({ settings: valueSettings })}
       >
-        {formatCurrency(total, currency)}
+        {code
+          ? `${formatCurrency(balanceDue, currency)} ${code}`
+          : formatCurrency(balanceDue, currency)}
       </span>
     </div>
   );

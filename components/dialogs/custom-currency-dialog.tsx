@@ -19,18 +19,24 @@ export function CustomCurrencyDialog({
   open,
   onOpenChange,
   currentSymbol,
+  currentCode,
   onSubmit
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentSymbol: string;
-  onSubmit: (symbol: string) => void;
+  currentCode: string;
+  onSubmit: (symbol: string, code: string) => void;
 }) {
   const [value, setValue] = useState(currentSymbol);
+  const [code, setCode] = useState(currentCode);
 
   useEffect(() => {
-    if (open) setValue(currentSymbol);
-  }, [open, currentSymbol]);
+    if (open) {
+      setValue(currentSymbol);
+      setCode(currentCode);
+    }
+  }, [open, currentSymbol, currentCode]);
 
   const trimmed = value.trim();
 
@@ -39,7 +45,7 @@ export function CustomCurrencyDialog({
 
     if (!trimmed) return;
 
-    onSubmit(trimmed);
+    onSubmit(trimmed, code.trim().toUpperCase());
     onOpenChange(false);
   }
 
@@ -47,13 +53,14 @@ export function CustomCurrencyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-sm">
         <DialogHeader>
-          <DialogTitle>Custom currency symbol</DialogTitle>
+          <DialogTitle>Custom currency</DialogTitle>
           <DialogDescription>
-            Enter a symbol to use on this invoice, up to 4 characters.
+            Enter a symbol (up to 4 characters) and an optional ISO code to show
+            on this invoice.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="px-4 pb-4">
+          <div className="flex flex-col gap-3 px-4 pb-4">
             <Input
               name="currency-symbol"
               aria-label="Currency symbol"
@@ -64,8 +71,22 @@ export function CustomCurrencyDialog({
               maxLength={4}
               autoFocus
               autoComplete="off"
-              placeholder="e.g. ₿"
+              placeholder="Symbol, e.g. ₿"
               className="max-sm:text-base"
+            />
+            <Input
+              name="currency-code"
+              aria-label="Currency ISO code"
+              value={code}
+              onChange={event =>
+                setCode(
+                  event.target.value.replace(/[^a-zA-Z]/g, "").slice(0, 3)
+                )
+              }
+              maxLength={3}
+              autoComplete="off"
+              placeholder="ISO code, e.g. BTC (optional)"
+              className="uppercase max-sm:text-base"
             />
           </div>
           <DialogFooter>

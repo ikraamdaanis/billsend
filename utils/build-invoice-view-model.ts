@@ -22,27 +22,46 @@ import {
 export function buildDetailRows(input: {
   labels: InvoiceLabels;
   number: string;
+  poNumber: string;
   invoiceDate: string;
   dueDate: string;
+  servicePeriod: string;
 }): InvoiceDetailRow[] {
   return [
     {
       id: "number",
       labelKey: "invoiceNumber",
       label: input.labels.invoiceNumber,
-      value: input.number
+      value: input.number,
+      isOptional: false
+    },
+    {
+      id: "poNumber",
+      labelKey: "poNumber",
+      label: input.labels.poNumber,
+      value: input.poNumber,
+      isOptional: true
     },
     {
       id: "invoiceDate",
       labelKey: "invoiceDate",
       label: input.labels.invoiceDate,
-      value: input.invoiceDate
+      value: input.invoiceDate,
+      isOptional: false
     },
     {
       id: "dueDate",
       labelKey: "paymentDue",
       label: input.labels.paymentDue,
-      value: input.dueDate
+      value: input.dueDate,
+      isOptional: false
+    },
+    {
+      id: "servicePeriod",
+      labelKey: "servicePeriod",
+      label: input.labels.servicePeriod,
+      value: input.servicePeriod,
+      isOptional: true
     }
   ];
 }
@@ -55,6 +74,7 @@ export function buildLineItemRow(
     id: item.id,
     description: item.description,
     quantity: item.quantity,
+    unit: item.unit,
     unitPrice: formatCurrency(item.unitPrice, currency),
     amount: formatCurrency(
       calculateLineAmount(item.quantity, item.unitPrice),
@@ -63,23 +83,30 @@ export function buildLineItemRow(
   };
 }
 
+// Appends the ISO currency code to a formatted grand-total value when one is
+// set (e.g. "£115.50 GBP"), so a bare "$" is disambiguated on the document.
+function withCurrencyCode(value: string, currencyCode: string): string {
+  const code = currencyCode.trim();
+
+  return code ? `${value} ${code}` : value;
+}
+
 function buildSummaryRows(input: {
   labels: InvoiceLabels;
   subtotal: number;
-  tax: { percentage: number; amount: number };
+  tax: { percentage: number; amount: number; exempt: boolean; note: string };
   fees: number;
-  discounts: number;
+  discountAmount: number;
+  discountType: Invoice["discountType"];
+  discountValue: number;
   total: number;
+  amountPaid: number;
+  balanceDue: number;
   currency: string;
+  currencyCode: string;
 }): InvoiceSummaryRow[] {
   const { labels, currency } = input;
-
-  // The grand total is clamped at zero when a discount exceeds the chargeable
-  // amount (subtotal + tax + fees). Cap the displayed discount to the same
-  // ceiling so the summary rows still reconcile (subtotal + tax + fees -
-  // discount === total) instead of showing a discount the total doesn't reflect.
-  const chargeable = input.subtotal + input.tax.amount + input.fees;
-  const effectiveDiscount = Math.min(input.discounts, chargeable);
+  const hasPayment = input.amountPaid > 0;
 
   return [
     {
@@ -92,9 +119,12 @@ function buildSummaryRows(input: {
     {
       id: "tax",
       label: labels.tax,
-      value: formatCurrency(input.tax.amount, currency),
-      percentage: input.tax.percentage,
-      isVisible: input.tax.percentage > 0,
+      value: input.tax.exempt
+        ? input.tax.note.trim() || "Exempt"
+        : formatCurrency(input.tax.amount, currency),
+      percentage: input.tax.exempt ? undefined : input.tax.percentage,
+      note: input.tax.exempt ? input.tax.note.trim() : undefined,
+      isVisible: input.tax.exempt || input.tax.percentage > 0,
       isTotal: false
     },
     {
@@ -107,16 +137,40 @@ function buildSummaryRows(input: {
     {
       id: "discounts",
       label: labels.discounts,
-      value: formatCurrency(effectiveDiscount, currency),
-      isVisible: input.discounts > 0,
+      value: `-${formatCurrency(input.discountAmount, currency)}`,
+      percentage:
+        input.discountType === "percentage" ? input.discountValue : undefined,
+      isVisible: input.discountValue > 0,
       isTotal: false
     },
     {
       id: "total",
       label: labels.total,
-      value: formatCurrency(input.total, currency),
+      value: withCurrencyCode(
+        formatCurrency(input.total, currency),
+        input.currencyCode
+      ),
+      // Without a recorded payment the grand total is the final figure; with a
+      // payment the balance-due row below becomes the emphasised total instead.
       isVisible: true,
-      isTotal: true
+      isTotal: !hasPayment
+    },
+    {
+      id: "amountPaid",
+      label: labels.amountPaid,
+      value: `-${formatCurrency(input.amountPaid, currency)}`,
+      isVisible: hasPayment,
+      isTotal: false
+    },
+    {
+      id: "balanceDue",
+      label: labels.balanceDue,
+      value: withCurrencyCode(
+        formatCurrency(input.balanceDue, currency),
+        input.currencyCode
+      ),
+      isVisible: hasPayment,
+      isTotal: hasPayment
     }
   ];
 }
@@ -132,11 +186,21 @@ export function buildInvoiceViewModel(invoice: Invoice): InvoiceViewModel {
     summaryRows: buildSummaryRows({
       labels: invoice.labels,
       subtotal: totals.subtotal,
-      tax: { percentage: invoice.tax.percentage, amount: totals.taxAmount },
+      tax: {
+        percentage: invoice.tax.percentage,
+        amount: totals.taxAmount,
+        exempt: invoice.tax.exempt,
+        note: invoice.tax.note
+      },
       fees: invoice.fees,
-      discounts: invoice.discounts,
+      discountAmount: totals.discountAmount,
+      discountType: invoice.discountType,
+      discountValue: invoice.discounts,
       total: totals.total,
-      currency: invoice.currency
+      amountPaid: invoice.amountPaid,
+      balanceDue: totals.balanceDue,
+      currency: invoice.currency,
+      currencyCode: invoice.currencyCode
     })
   };
 }

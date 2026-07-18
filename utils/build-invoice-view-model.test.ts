@@ -8,15 +8,19 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     title: "Invoice",
     image: "",
     number: "INV-001",
+    poNumber: "",
     invoiceDate: "2026-01-01",
     dueDate: "2026-01-31",
+    servicePeriod: "",
     seller: { label: "From", content: "", placeholder: "" },
     client: { label: "To", content: "", placeholder: "" },
+    shipping: { label: "Ship to", content: "", placeholder: "" },
     items: [],
     tableSettings: {
       columnLabels: {
         description: "Item",
         quantity: "Quantity",
+        unit: "Unit",
         unitPrice: "Unit Price",
         amount: "Amount"
       },
@@ -27,16 +31,24 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       invoiceNumber: "Invoice No.",
       invoiceDate: "Date",
       paymentDue: "Due date",
+      poNumber: "PO number",
+      servicePeriod: "Service period",
       subtotal: "Subtotal",
       tax: "Tax",
       fees: "Fees",
       discounts: "Discounts",
-      total: "Total"
+      total: "Total",
+      amountPaid: "Amount paid",
+      balanceDue: "Balance due"
     },
-    tax: { percentage: 0 },
+    tax: { percentage: 0, exempt: false, note: "" },
     fees: 0,
     discounts: 0,
+    discountType: "fixed",
+    amountPaid: 0,
     terms: { label: "Terms", content: "" },
+    notes: { label: "Notes", content: "" },
+    latePayment: { label: "Late payment", content: "" },
     paymentDetails: {
       label: "Payment details",
       bankName: "",
@@ -48,6 +60,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
+    currencyCode: "",
     theme: {
       font: "geist",
       fontWeight: "Normal",
@@ -63,6 +76,7 @@ function makeItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
     id: crypto.randomUUID(),
     description: "Item",
     quantity: 1,
+    unit: "",
     unitPrice: 0,
     ...overrides
   };
@@ -70,13 +84,15 @@ function makeItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
 
 describe("buildInvoiceViewModel", () => {
   describe("detailRows", () => {
-    it("emits the number, invoice date, and due date rows in that order", () => {
+    it("emits the detail rows in order, PO number and service period included", () => {
       const { detailRows } = buildInvoiceViewModel(makeInvoice());
 
       expect(detailRows.map(row => row.id)).toEqual([
         "number",
+        "poNumber",
         "invoiceDate",
-        "dueDate"
+        "dueDate",
+        "servicePeriod"
       ]);
     });
 
@@ -90,35 +106,65 @@ describe("buildInvoiceViewModel", () => {
             invoiceNumber: "Ref",
             invoiceDate: "Issued",
             paymentDue: "Pay by",
+            poNumber: "PO number",
+            servicePeriod: "Service period",
             subtotal: "Subtotal",
             tax: "Tax",
             fees: "Fees",
             discounts: "Discounts",
-            total: "Total"
+            total: "Total",
+            amountPaid: "Amount paid",
+            balanceDue: "Balance due"
           }
         })
       );
 
-      expect(detailRows).toEqual([
+      expect(detailRows.filter(row => !row.isOptional || row.value)).toEqual([
         {
           id: "number",
           labelKey: "invoiceNumber",
           label: "Ref",
-          value: "INV-42"
+          value: "INV-42",
+          isOptional: false
         },
         {
           id: "invoiceDate",
           labelKey: "invoiceDate",
           label: "Issued",
-          value: "2026-02-01"
+          value: "2026-02-01",
+          isOptional: false
         },
         {
           id: "dueDate",
           labelKey: "paymentDue",
           label: "Pay by",
-          value: "2026-03-01"
+          value: "2026-03-01",
+          isOptional: false
         }
       ]);
+    });
+
+    it("emits optional PO number and service period rows when filled", () => {
+      const { detailRows } = buildInvoiceViewModel(
+        makeInvoice({ poNumber: "PO-99", servicePeriod: "Jan 2026" })
+      );
+      const byId = Object.fromEntries(detailRows.map(row => [row.id, row]));
+
+      expect(detailRows.map(row => row.id)).toEqual([
+        "number",
+        "poNumber",
+        "invoiceDate",
+        "dueDate",
+        "servicePeriod"
+      ]);
+      expect(byId.poNumber).toMatchObject({
+        value: "PO-99",
+        isOptional: true
+      });
+      expect(byId.servicePeriod).toMatchObject({
+        value: "Jan 2026",
+        isOptional: true
+      });
     });
   });
 
@@ -183,7 +229,7 @@ describe("buildInvoiceViewModel", () => {
   });
 
   describe("summaryRows", () => {
-    it("orders the rows subtotal, tax, fees, discounts, total", () => {
+    it("orders the rows subtotal, tax, fees, discounts, total, amount paid, balance due", () => {
       const { summaryRows } = buildInvoiceViewModel(makeInvoice());
 
       expect(summaryRows.map(row => row.id)).toEqual([
@@ -191,11 +237,13 @@ describe("buildInvoiceViewModel", () => {
         "tax",
         "fees",
         "discounts",
-        "total"
+        "total",
+        "amountPaid",
+        "balanceDue"
       ]);
     });
 
-    it("keeps subtotal and total visible but hides tax, fees, and discounts when empty", () => {
+    it("keeps subtotal and total visible but hides the optional rows when empty", () => {
       const { summaryRows } = buildInvoiceViewModel(makeInvoice());
       const visibleById = Object.fromEntries(
         summaryRows.map(row => [row.id, row.isVisible])
@@ -206,14 +254,74 @@ describe("buildInvoiceViewModel", () => {
         tax: false,
         fees: false,
         discounts: false,
-        total: true
+        total: true,
+        amountPaid: false,
+        balanceDue: false
       });
+    });
+
+    it("shows amount paid and balance due once a payment is recorded", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          amountPaid: 40
+        })
+      );
+      const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));
+
+      expect(byId.amountPaid.isVisible).toBe(true);
+      expect(byId.amountPaid.value).toBe("-£40.00");
+      expect(byId.balanceDue.isVisible).toBe(true);
+      expect(byId.balanceDue.value).toBe("£60.00");
+      expect(byId.balanceDue.isTotal).toBe(true);
+      expect(byId.total.isTotal).toBe(false);
+    });
+
+    it("marks tax exempt with the note in place of an amount", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          tax: { percentage: 20, exempt: true, note: "Reverse charge" }
+        })
+      );
+      const tax = summaryRows.find(row => row.id === "tax");
+
+      expect(tax?.isVisible).toBe(true);
+      expect(tax?.value).toBe("Reverse charge");
+      expect(tax?.percentage).toBeUndefined();
+    });
+
+    it("carries the discount percentage and applies it to the subtotal", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          items: [makeItem({ quantity: 1, unitPrice: 200 })],
+          discounts: 10,
+          discountType: "percentage"
+        })
+      );
+      const discount = summaryRows.find(row => row.id === "discounts");
+
+      expect(discount?.percentage).toBe(10);
+      expect(discount?.value).toBe("-£20.00");
+    });
+
+    it("appends the ISO currency code to the grand total when set", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          currency: "$",
+          currencyCode: "USD"
+        })
+      );
+      const total = summaryRows.find(row => row.id === "total");
+
+      expect(total?.value).toBe("$100.00 USD");
     });
 
     it("shows tax, fees, and discounts once they have a value", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
-          tax: { percentage: 20 },
+          tax: { percentage: 20, exempt: false, note: "" },
           fees: 5,
           discounts: 3
         })
@@ -235,7 +343,7 @@ describe("buildInvoiceViewModel", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
           items: [makeItem({ quantity: 1, unitPrice: 100 })],
-          tax: { percentage: 7.5 },
+          tax: { percentage: 7.5, exempt: false, note: "" },
           fees: 12,
           discounts: 4
         })
@@ -246,7 +354,7 @@ describe("buildInvoiceViewModel", () => {
       expect(byId.tax.value).toBe("£7.50");
       expect(byId.tax.percentage).toBe(7.5);
       expect(byId.fees.value).toBe("£12.00");
-      expect(byId.discounts.value).toBe("£4.00");
+      expect(byId.discounts.value).toBe("-£4.00");
       expect(byId.total.value).toBe("£115.50");
     });
 
@@ -254,14 +362,14 @@ describe("buildInvoiceViewModel", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
           items: [makeItem({ quantity: 1, unitPrice: 100 })],
-          tax: { percentage: 10 },
+          tax: { percentage: 10, exempt: false, note: "" },
           fees: 5,
           discounts: 1000
         })
       );
       const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));
 
-      expect(byId.discounts.value).toBe("£115.00");
+      expect(byId.discounts.value).toBe("-£115.00");
       expect(byId.total.value).toBe("£0.00");
     });
 

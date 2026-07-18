@@ -22,12 +22,14 @@ export const invoiceDefault: Invoice = {
   title: "Invoice",
   image: "",
   number: "INV-0001",
+  poNumber: "",
   // Dates are stamped per invoice in createBlankInvoice(), not baked in here.
   // Keeping the module-level default static (empty) means every isolate renders
   // the same first paint, so a server crossing midnight can't disagree with the
   // client's local date and trigger a hydration mismatch.
   invoiceDate: "",
   dueDate: "",
+  servicePeriod: "",
   seller: {
     label: "From",
     content: "",
@@ -40,11 +42,18 @@ export const invoiceDefault: Invoice = {
     placeholder:
       "John Doe\n123 Main St.\nAnytown, USA 12345\n(555) 555-5555\njohn.doe@example.com"
   },
+  shipping: {
+    label: "Ship to",
+    content: "",
+    placeholder:
+      "John Doe\n456 Delivery Rd.\nAnytown, USA 12345\n(555) 555-5555"
+  },
   items: [
     {
       id: crypto.randomUUID(),
       description: "Item 1",
       quantity: 1,
+      unit: "",
       unitPrice: 0
     }
   ],
@@ -52,6 +61,7 @@ export const invoiceDefault: Invoice = {
     columnLabels: {
       description: "Item",
       quantity: "Quantity",
+      unit: "Unit",
       unitPrice: "Unit Price",
       amount: "Amount"
     },
@@ -62,19 +72,35 @@ export const invoiceDefault: Invoice = {
     invoiceNumber: "Invoice No.",
     invoiceDate: "Date",
     paymentDue: "Due date",
+    poNumber: "PO number",
+    servicePeriod: "Service period",
     subtotal: "Subtotal",
     tax: "Tax",
     fees: "Fees",
     discounts: "Discounts",
-    total: "Total"
+    total: "Total",
+    amountPaid: "Amount paid",
+    balanceDue: "Balance due"
   },
   tax: {
-    percentage: 0
+    percentage: 0,
+    exempt: false,
+    note: ""
   },
   fees: 0,
   discounts: 0,
+  discountType: "fixed",
+  amountPaid: 0,
   terms: {
     label: "Terms and conditions",
+    content: ""
+  },
+  notes: {
+    label: "Notes",
+    content: ""
+  },
+  latePayment: {
+    label: "Late payment",
     content: ""
   },
   paymentDetails: {
@@ -90,6 +116,7 @@ export const invoiceDefault: Invoice = {
     backgroundColor: "#ffffff"
   },
   currency: "£",
+  currencyCode: "GBP",
   theme: DEFAULT_INVOICE_THEME
 };
 
@@ -141,6 +168,7 @@ interface InvoiceActions {
 
   // Currency
   setCurrency: (currency: Invoice["currency"]) => void;
+  setCurrencyCode: (currencyCode: Invoice["currencyCode"]) => void;
 
   // Seller
   setSeller: (
@@ -152,10 +180,19 @@ interface InvoiceActions {
     client: InvoiceClient | ((prev: InvoiceClient) => InvoiceClient)
   ) => void;
 
+  // Shipping
+  setShipping: (
+    shipping:
+      | Invoice["shipping"]
+      | ((prev: Invoice["shipping"]) => Invoice["shipping"])
+  ) => void;
+
   // Details
   setNumber: (number: string) => void;
+  setPoNumber: (poNumber: string) => void;
   setInvoiceDate: (date: string) => void;
   setDueDate: (date: string) => void;
+  setServicePeriod: (servicePeriod: string) => void;
 
   // Labels
   setLabels: (
@@ -180,10 +217,22 @@ interface InvoiceActions {
   ) => void;
   setFees: (fees: number) => void;
   setDiscounts: (discounts: number) => void;
+  setDiscountType: (discountType: Invoice["discountType"]) => void;
+  setAmountPaid: (amountPaid: number) => void;
 
   // Terms
   setTerms: (
     terms: InvoiceTerms | ((prev: InvoiceTerms) => InvoiceTerms)
+  ) => void;
+
+  // Notes
+  setNotes: (
+    notes: InvoiceTerms | ((prev: InvoiceTerms) => InvoiceTerms)
+  ) => void;
+
+  // Late payment
+  setLatePayment: (
+    latePayment: InvoiceTerms | ((prev: InvoiceTerms) => InvoiceTerms)
   ) => void;
 
   // Payment details
@@ -245,6 +294,11 @@ export const useInvoiceStore = create<InvoiceStore>()(
           state.currency = currency;
         }),
 
+      setCurrencyCode: currencyCode =>
+        set(state => {
+          state.currencyCode = currencyCode;
+        }),
+
       // Seller
       setSeller: seller =>
         set(state => {
@@ -257,10 +311,21 @@ export const useInvoiceStore = create<InvoiceStore>()(
           state.client = applyUpdater(state.client, client);
         }),
 
+      // Shipping
+      setShipping: shipping =>
+        set(state => {
+          state.shipping = applyUpdater(state.shipping, shipping);
+        }),
+
       // Details
       setNumber: number =>
         set(state => {
           state.number = number;
+        }),
+
+      setPoNumber: poNumber =>
+        set(state => {
+          state.poNumber = poNumber;
         }),
 
       setInvoiceDate: date =>
@@ -271,6 +336,11 @@ export const useInvoiceStore = create<InvoiceStore>()(
       setDueDate: date =>
         set(state => {
           state.dueDate = date;
+        }),
+
+      setServicePeriod: servicePeriod =>
+        set(state => {
+          state.servicePeriod = servicePeriod;
         }),
 
       // Labels
@@ -302,6 +372,7 @@ export const useInvoiceStore = create<InvoiceStore>()(
           switch (field) {
             case "id":
             case "description":
+            case "unit":
               item[field] = String(value);
               break;
             case "quantity":
@@ -327,10 +398,32 @@ export const useInvoiceStore = create<InvoiceStore>()(
           state.discounts = discounts;
         }),
 
+      setDiscountType: discountType =>
+        set(state => {
+          state.discountType = discountType;
+        }),
+
+      setAmountPaid: amountPaid =>
+        set(state => {
+          state.amountPaid = amountPaid;
+        }),
+
       // Terms
       setTerms: terms =>
         set(state => {
           state.terms = applyUpdater(state.terms, terms);
+        }),
+
+      // Notes
+      setNotes: notes =>
+        set(state => {
+          state.notes = applyUpdater(state.notes, notes);
+        }),
+
+      // Late payment
+      setLatePayment: latePayment =>
+        set(state => {
+          state.latePayment = applyUpdater(state.latePayment, latePayment);
         }),
 
       // Payment details
