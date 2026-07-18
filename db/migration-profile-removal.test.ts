@@ -63,9 +63,8 @@ describe("business-profile removal migration", () => {
 
     // Import after the legacy db exists so the module opens on top of v5 data
     // and runs the v6 upgrade that removes the profiles table.
-    const { getAllInvoices, getAllTemplates, getAllImages } = await import(
-      "~/db"
-    );
+    const { getAllInvoices, getAllTemplates, getAllImages } =
+      await import("~/db");
 
     const invoices = await getAllInvoices();
     const templates = await getAllTemplates();

@@ -48,11 +48,7 @@ export function InvoiceDetails() {
   return (
     <div className="flex flex-col">
       {rows.map(row => (
-        <DetailRow
-          key={row.id}
-          row={row}
-          placeholders={placeholders[row.id]}
-        />
+        <DetailRow key={row.id} row={row} placeholders={placeholders[row.id]} />
       ))}
     </div>
   );
