@@ -1,17 +1,32 @@
 /**
  * The invoice stores a currency symbol directly, deduped by symbol so the
- * various dollar/yen currencies collapse to a single entry. Anything outside
- * this list is entered through the custom-symbol modal.
+ * various dollar/yen currencies collapse to a single entry. Each preset carries
+ * a default ISO code (the most common currency for that symbol) so a bare, and
+ * possibly ambiguous, symbol like "$" is still stored with an explicit code the
+ * user can adjust. Anything outside this list is entered through the
+ * custom-symbol modal.
  */
-export const currencyOptions: { symbol: string; label: string }[] = [
-  { symbol: "£", label: "Pound" },
-  { symbol: "$", label: "Dollar" },
-  { symbol: "€", label: "Euro" },
-  { symbol: "¥", label: "Yen" },
-  { symbol: "CHF", label: "Franc" },
-  { symbol: "⃁", label: "Riyal" },
-  { symbol: "د.إ", label: "Dirham" }
+export const currencyOptions: {
+  symbol: string;
+  code: string;
+  label: string;
+}[] = [
+  { symbol: "£", code: "GBP", label: "Pound" },
+  { symbol: "$", code: "USD", label: "Dollar" },
+  { symbol: "€", code: "EUR", label: "Euro" },
+  { symbol: "¥", code: "JPY", label: "Yen" },
+  { symbol: "CHF", code: "CHF", label: "Franc" },
+  { symbol: "⃁", code: "SAR", label: "Riyal" },
+  { symbol: "د.إ", code: "AED", label: "Dirham" }
 ];
+
+/**
+ * The default ISO code for a preset symbol, or "" for a custom/unknown symbol.
+ * Used when a preset currency is chosen so the stored code stays in sync.
+ */
+export function getCurrencyCodeForSymbol(symbol: string): string {
+  return currencyOptions.find(option => option.symbol === symbol)?.code ?? "";
+}
 
 /**
  * Older invoices stored a currency code (e.g. "GBP"). Map those to the deduped

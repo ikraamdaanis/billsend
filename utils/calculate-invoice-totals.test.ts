@@ -12,15 +12,19 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     title: "Invoice",
     image: "",
     number: "1",
+    poNumber: "",
     invoiceDate: "2026-01-01",
     dueDate: "2026-01-31",
+    servicePeriod: "",
     seller: { label: "From", content: "", placeholder: "" },
     client: { label: "To", content: "", placeholder: "" },
+    shipping: { label: "Ship to", content: "", placeholder: "" },
     items: [],
     tableSettings: {
       columnLabels: {
         description: "Item",
         quantity: "Quantity",
+        unit: "Unit",
         unitPrice: "Unit Price",
         amount: "Amount"
       },
@@ -31,16 +35,24 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       invoiceNumber: "Invoice No.",
       invoiceDate: "Date",
       paymentDue: "Due date",
+      poNumber: "PO number",
+      servicePeriod: "Service period",
       subtotal: "Subtotal",
       tax: "Tax",
       fees: "Fees",
       discounts: "Discounts",
-      total: "Total"
+      total: "Total",
+      amountPaid: "Amount paid",
+      balanceDue: "Balance due"
     },
-    tax: { percentage: 0 },
+    tax: { percentage: 0, exempt: false, note: "" },
     fees: 0,
     discounts: 0,
+    discountType: "fixed",
+    amountPaid: 0,
     terms: { label: "Terms", content: "" },
+    notes: { label: "Notes", content: "" },
+    latePayment: { label: "Late payment", content: "" },
     paymentDetails: {
       label: "Payment details",
       bankName: "",
@@ -52,6 +64,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
     },
     pdfSettings: { backgroundColor: "#ffffff" },
     currency: "£",
+    currencyCode: "",
     theme: {
       font: "geist",
       fontWeight: "Normal",
@@ -67,6 +80,7 @@ function makeItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem {
     id: crypto.randomUUID(),
     description: "Item",
     quantity: 1,
+    unit: "",
     unitPrice: 0,
     ...overrides
   };
@@ -133,7 +147,7 @@ describe("calculateInvoiceTotals", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
-        tax: { percentage: 20 }
+        tax: { percentage: 20, exempt: false, note: "" }
       })
     );
 
@@ -146,7 +160,7 @@ describe("calculateInvoiceTotals", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 99.99 })],
-        tax: { percentage: 7.5 }
+        tax: { percentage: 7.5, exempt: false, note: "" }
       })
     );
 
@@ -159,7 +173,7 @@ describe("calculateInvoiceTotals", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
-        tax: { percentage: 10 },
+        tax: { percentage: 10, exempt: false, note: "" },
         fees: 15
       })
     );
@@ -187,7 +201,7 @@ describe("calculateInvoiceTotals", () => {
             unitPrice: "49.5" as unknown as number
           })
         ],
-        tax: { percentage: "10" as unknown as number },
+        tax: { percentage: "10" as unknown as number, exempt: false, note: "" },
         fees: "5" as unknown as number,
         discounts: "4" as unknown as number
       })
@@ -220,7 +234,7 @@ describe("calculateInvoiceTotals", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
-        tax: { percentage: 10 },
+        tax: { percentage: 10, exempt: false, note: "" },
         fees: 5,
         discounts: 1000
       })
@@ -240,5 +254,65 @@ describe("calculateInvoiceTotals", () => {
     );
 
     expect(totals.total).toBe(0);
+  });
+
+  it("charges no tax when the invoice is tax exempt", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({
+        items: [makeItem({ quantity: 1, unitPrice: 100 })],
+        tax: { percentage: 20, exempt: true, note: "Reverse charge" }
+      })
+    );
+
+    expect(totals.taxAmount).toBe(0);
+    expect(totals.total).toBe(100);
+  });
+
+  it("applies a percentage discount to the subtotal", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({
+        items: [makeItem({ quantity: 1, unitPrice: 200 })],
+        discounts: 10,
+        discountType: "percentage"
+      })
+    );
+
+    expect(totals.discountAmount).toBe(20);
+    expect(totals.total).toBe(180);
+  });
+
+  it("reports a fixed discount amount and clamps it to the chargeable total", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({
+        items: [makeItem({ quantity: 1, unitPrice: 100 })],
+        discounts: 250
+      })
+    );
+
+    expect(totals.discountAmount).toBe(100);
+    expect(totals.total).toBe(0);
+  });
+
+  it("nets the amount paid off the total to derive the balance due", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({
+        items: [makeItem({ quantity: 1, unitPrice: 100 })],
+        amountPaid: 30
+      })
+    );
+
+    expect(totals.total).toBe(100);
+    expect(totals.balanceDue).toBe(70);
+  });
+
+  it("clamps the balance due at zero when the payment exceeds the total", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({
+        items: [makeItem({ quantity: 1, unitPrice: 100 })],
+        amountPaid: 150
+      })
+    );
+
+    expect(totals.balanceDue).toBe(0);
   });
 });

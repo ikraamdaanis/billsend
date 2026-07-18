@@ -12,10 +12,13 @@ import {
   InvoiceFontWeightMenu
 } from "~/components/editor/invoice-font-picker";
 import { InvoiceImage } from "~/components/editor/invoice-image";
+import { InvoiceLatePayment } from "~/components/editor/invoice-late-payment";
 import { InvoiceLineItems } from "~/components/editor/invoice-line-items";
+import { InvoiceNotes } from "~/components/editor/invoice-notes";
 import { InvoicePaymentDetails } from "~/components/editor/invoice-payment-details";
 import { InvoicePricing } from "~/components/editor/invoice-pricing";
 import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details";
+import { InvoiceShipping } from "~/components/editor/invoice-shipping";
 import { InvoiceTerms } from "~/components/editor/invoice-terms";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
 import { DownloadInvoice } from "~/components/pdf/download-invoice";
@@ -43,6 +46,7 @@ import {
 } from "~/components/ui/menubar";
 import {
   currencyOptions,
+  getCurrencyCodeForSymbol,
   getCurrencyMarker,
   normalizeCurrency
 } from "~/consts/currencies";
@@ -202,11 +206,24 @@ function Toolbar({
 }
 
 function EditMenu() {
-  const { currency, setCurrency } = useCurrencySlice();
+  const { currency, currencyCode, setCurrency, setCurrencyCode } =
+    useCurrencySlice();
   const { theme, setTheme } = useThemeSlice();
   const [customOpen, setCustomOpen] = useState(false);
   const selected = normalizeCurrency(currency);
   const isCustom = !currencyOptions.some(option => option.symbol === selected);
+
+  // Selecting a preset stores its symbol and its default ISO code together, so a
+  // bare "$" still carries an explicit code the user can override.
+  function handlePresetSelect(symbol: string) {
+    setCurrency(symbol);
+    setCurrencyCode(getCurrencyCodeForSymbol(symbol));
+  }
+
+  function handleCustomSubmit(symbol: string, code: string) {
+    setCurrency(symbol);
+    setCurrencyCode(code);
+  }
 
   return (
     <>
@@ -216,13 +233,19 @@ function EditMenu() {
           <MenubarSub>
             <MenubarSubTrigger>Currency</MenubarSubTrigger>
             <MenubarSubContent className="w-auto">
-              <MenubarRadioGroup value={selected} onValueChange={setCurrency}>
-                {currencyOptions.map(({ symbol, label }) => (
+              <MenubarRadioGroup
+                value={selected}
+                onValueChange={handlePresetSelect}
+              >
+                {currencyOptions.map(({ symbol, code, label }) => (
                   <MenubarRadioItem key={symbol} value={symbol}>
                     <span className="w-8 shrink-0">
                       {getCurrencyMarker(symbol)}
                     </span>
                     <span className="text-muted-foreground">{label}</span>
+                    <span className="text-muted-foreground/60 ml-auto pl-3 text-xs">
+                      {code}
+                    </span>
                   </MenubarRadioItem>
                 ))}
               </MenubarRadioGroup>
@@ -257,7 +280,8 @@ function EditMenu() {
         open={customOpen}
         onOpenChange={setCustomOpen}
         currentSymbol={selected}
-        onSubmit={setCurrency}
+        currentCode={currencyCode}
+        onSubmit={handleCustomSubmit}
       />
     </>
   );
@@ -342,14 +366,15 @@ function Top() {
 
 function Mid() {
   return (
-    <>
-      <div className="mt-2 grid grid-cols-2 grid-rows-[auto_auto] gap-x-8 gap-y-1">
+    <div className="mt-2 flex justify-between gap-8">
+      <div className="flex flex-1 flex-col gap-4">
         <InvoiceClientDetails />
-        <div className="col-start-2 row-start-2">
-          <InvoiceDetails />
-        </div>
+        <InvoiceShipping />
       </div>
-    </>
+      <div className="flex flex-1 flex-col items-start justify-end">
+        <InvoiceDetails />
+      </div>
+    </div>
   );
 }
 
@@ -364,7 +389,13 @@ function Bottom() {
         <InvoicePaymentDetails />
       </div>
       <div className="mt-6">
+        <InvoiceNotes />
+      </div>
+      <div className="mt-6">
         <InvoiceTerms />
+      </div>
+      <div className="mt-6">
+        <InvoiceLatePayment />
       </div>
     </>
   );
