@@ -4,6 +4,7 @@ import { InvoicePdfHeader } from "~/components/pdf/invoice-pdf-header";
 import { InvoicePdfItemsTable } from "~/components/pdf/invoice-pdf-items-table";
 import { InvoicePdfPaymentDetails } from "~/components/pdf/invoice-pdf-payment-details";
 import { InvoicePdfTerms } from "~/components/pdf/invoice-pdf-terms";
+import { InvoicePdfTextSection } from "~/components/pdf/invoice-pdf-text-section";
 import { InvoicePdfTotals } from "~/components/pdf/invoice-pdf-totals";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import type { Invoice } from "~/types";
@@ -40,7 +41,17 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         <InvoicePdfItemsTable invoice={invoice} lineItems={lineItems} />
         <InvoicePdfTotals invoice={invoice} summaryRows={summaryRows} />
         <InvoicePdfPaymentDetails invoice={invoice} />
+        <InvoicePdfTextSection
+          theme={invoice.theme}
+          label={invoice.notes.label}
+          content={invoice.notes.content}
+        />
         <InvoicePdfTerms invoice={invoice} />
+        <InvoicePdfTextSection
+          theme={invoice.theme}
+          label={invoice.latePayment.label}
+          content={invoice.latePayment.content}
+        />
       </Page>
     </Document>
   );

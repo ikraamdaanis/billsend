@@ -23,6 +23,9 @@ const styles = StyleSheet.create({
     fontWeight: "medium",
     fontSize: 12
   },
+  shippingBlock: {
+    marginTop: 12
+  },
   detailsField: {
     flexDirection: "row",
     marginBottom: 4,
@@ -46,6 +49,12 @@ export function InvoicePdfDetails({
   detailRows: InvoiceDetailRow[];
 }) {
   const theme = invoice.theme;
+  const hasShipping = invoice.shipping.content.trim().length > 0;
+  // Optional detail rows (PO number, service period) only appear once filled;
+  // the always-present rows (number, dates) render even when blank.
+  const visibleDetailRows = detailRows.filter(
+    row => !row.isOptional || row.value.trim().length > 0
+  );
 
   return (
     <View style={styles.detailsSection}>
@@ -65,9 +74,29 @@ export function InvoicePdfDetails({
             text={invoice.client.content}
             style={pdfRoleStyle(theme, "sectionContent", { marginBottom: 2 })}
           />
+          {hasShipping && (
+            <View style={styles.shippingBlock}>
+              {invoice.shipping.label && (
+                <Text
+                  style={{
+                    ...styles.clientLabel,
+                    ...pdfRoleStyle(theme, "sectionLabel")
+                  }}
+                >
+                  {invoice.shipping.label}
+                </Text>
+              )}
+              <PdfMultilineText
+                text={invoice.shipping.content}
+                style={pdfRoleStyle(theme, "sectionContent", {
+                  marginBottom: 2
+                })}
+              />
+            </View>
+          )}
         </View>
         <View style={styles.invoiceDetails}>
-          {detailRows.map(row => (
+          {visibleDetailRows.map(row => (
             <View key={row.id} style={styles.detailsField}>
               <Text
                 style={{

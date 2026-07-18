@@ -144,28 +144,34 @@ const COLUMN_LABEL_SETS: TableSettings["columnLabels"][] = [
   {
     description: "Item",
     quantity: "Quantity",
+    unit: "Unit",
     unitPrice: "Unit Price",
     amount: "Amount"
   },
   {
     description: "Description",
     quantity: "Qty",
+    unit: "Unit",
     unitPrice: "Rate",
     amount: "Total"
   },
   {
     description: "Service",
     quantity: "Hours",
+    unit: "Unit",
     unitPrice: "Rate",
     amount: "Amount"
   },
   {
     description: "Product",
     quantity: "Qty",
+    unit: "Unit",
     unitPrice: "Price",
     amount: "Subtotal"
   }
 ];
+
+const UNITS = ["", "hrs", "units", "days", "kg", "ea"];
 
 const TABLE_PALETTES = [
   { backgroundColor: "#f9fafb", borderColor: "#e5e7eb" },
@@ -243,6 +249,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
     id: crypto.randomUUID(),
     description: pickRandom(ITEM_DESCRIPTIONS),
     quantity: randomInt(1, 12),
+    unit: pickRandom(UNITS),
     unitPrice: randomInt(1, 80) * 25
   }));
 
@@ -275,7 +282,7 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
       columnLabels: pickRandom(COLUMN_LABEL_SETS),
       ...pickRandom(TABLE_PALETTES)
     },
-    tax: { percentage: pickRandom(TAX_RATES) },
+    tax: { percentage: pickRandom(TAX_RATES), exempt: false, note: "" },
     fees: Math.random() < 0.3 ? randomInt(1, 20) * 5 : 0,
     discounts: Math.random() < 0.25 ? randomInt(1, 20) * 5 : 0,
     terms: {
