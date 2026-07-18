@@ -19,7 +19,7 @@ import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details
 import { InvoiceTerms } from "~/components/editor/invoice-terms";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
 import { DownloadInvoice } from "~/components/pdf/download-invoice";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -319,9 +319,9 @@ function LeavePageDialog({
           <Button variant="outline" onClick={() => setIsModalOpen(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" render={<Link to="/" />}>
+          <Link to="/" className={buttonVariants({ variant: "destructive" })}>
             Leave
-          </Button>
+          </Link>
         </DialogFooter>
       </DialogContent>
     </Dialog>
