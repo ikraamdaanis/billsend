@@ -27,7 +27,8 @@ import {
 } from "motion/react";
 import type { MouseEvent, ReactNode } from "react";
 import { useEffect, useRef } from "react";
-import { Button } from "~/components/ui/button";
+import { buttonVariants } from "~/components/ui/button";
+import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/")({ component: HomePage });
 
@@ -184,13 +185,17 @@ function SiteHeader() {
             Privacy
           </a>
         </nav>
-        <Button
-          className="h-9 justify-self-end px-4 text-sm"
-          render={<Link to="/create" preload="viewport" />}
+        <Link
+          to="/create"
+          preload="viewport"
+          className={cn(
+            buttonVariants({ variant: "default" }),
+            "h-9 justify-self-end px-4 text-sm"
+          )}
         >
           Create invoice
           <IconArrowRight className="size-4" />
-        </Button>
+        </Link>
       </div>
     </header>
   );
