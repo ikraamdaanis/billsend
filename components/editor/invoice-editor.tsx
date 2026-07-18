@@ -280,7 +280,7 @@ function EditMenu() {
         open={customOpen}
         onOpenChange={setCustomOpen}
         currentSymbol={selected}
-        currentCode={currencyCode}
+        currentCode={isCustom ? currencyCode : ""}
         onSubmit={handleCustomSubmit}
       />
     </>
