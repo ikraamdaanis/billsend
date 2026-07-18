@@ -318,6 +318,32 @@ describe("buildInvoiceViewModel", () => {
       expect(total?.value).toBe("$100.00 USD");
     });
 
+    it("skips the code suffix when the rendered marker already is the code", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          currency: "CHF",
+          currencyCode: "CHF"
+        })
+      );
+      const total = summaryRows.find(row => row.id === "total");
+
+      expect(total?.value).toBe("CHF100.00");
+    });
+
+    it("skips the code suffix for tofu-replacement markers like SAR", () => {
+      const { summaryRows } = buildInvoiceViewModel(
+        makeInvoice({
+          items: [makeItem({ quantity: 1, unitPrice: 100 })],
+          currency: "⃁",
+          currencyCode: "SAR"
+        })
+      );
+      const total = summaryRows.find(row => row.id === "total");
+
+      expect(total?.value).toBe("SAR100.00");
+    });
+
     it("shows tax, fees, and discounts once they have a value", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
