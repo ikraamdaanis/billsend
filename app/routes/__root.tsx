@@ -1,5 +1,4 @@
 import geistFont from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
-import instrumentSerifFont from "@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url";
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { StrictMode } from "react";
@@ -26,16 +25,13 @@ export const Route = createRootRoute({
       ...siteMeta()
     ],
     links: [
+      // Geist is the base font on every route, so its latin subset preloads
+      // globally. Route-specific fonts (the homepage's Instrument Serif)
+      // preload from their own route's head instead, so other pages don't
+      // download files they never render.
       {
         rel: "preload",
         href: geistFont,
-        as: "font",
-        type: "font/woff2",
-        crossOrigin: "anonymous"
-      },
-      {
-        rel: "preload",
-        href: instrumentSerifFont,
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous"

@@ -1,3 +1,4 @@
+import instrumentSerifFont from "@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url";
 import type { Icon } from "@tabler/icons-react";
 import {
   IconArrowRight,
@@ -30,7 +31,23 @@ import { useEffect, useRef } from "react";
 import { buttonVariants } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
-export const Route = createFileRoute("/")({ component: HomePage });
+export const Route = createFileRoute("/")({
+  component: HomePage,
+  // Instrument Serif only styles the homepage hero and marketing sections, so
+  // it preloads here rather than in the root head; other routes would download
+  // a font they never render (Chrome flags that as an unused preload).
+  head: () => ({
+    links: [
+      {
+        rel: "preload",
+        href: instrumentSerifFont,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous"
+      }
+    ]
+  })
+});
 
 const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
