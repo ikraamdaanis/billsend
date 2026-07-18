@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
-import { formatCurrency } from "~/consts/currencies";
+import { formatCurrency, formatCurrencyWithCode } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
 import {
   useCurrencySymbol,
@@ -348,7 +348,6 @@ function TotalRow() {
     theme,
     hasPayment ? "totalsValue" : "grandTotalValue"
   );
-  const code = currencyCode.trim();
 
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
@@ -368,9 +367,7 @@ function TotalRow() {
         )}
         style={getTextStyles({ settings: valueSettings })}
       >
-        {code
-          ? `${formatCurrency(total, currency)} ${code}`
-          : formatCurrency(total, currency)}
+        {formatCurrencyWithCode(total, currency, currencyCode)}
       </span>
     </div>
   );
@@ -431,8 +428,6 @@ function BalanceDueRow() {
     return null;
   }
 
-  const code = currencyCode.trim();
-
   return (
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
@@ -448,9 +443,7 @@ function BalanceDueRow() {
         className="inline-block min-w-40 text-right font-bold"
         style={getTextStyles({ settings: valueSettings })}
       >
-        {code
-          ? `${formatCurrency(balanceDue, currency)} ${code}`
-          : formatCurrency(balanceDue, currency)}
+        {formatCurrencyWithCode(balanceDue, currency, currencyCode)}
       </span>
     </div>
   );
