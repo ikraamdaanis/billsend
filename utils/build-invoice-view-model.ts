@@ -1,4 +1,4 @@
-import { formatCurrency } from "~/consts/currencies";
+import { formatCurrency, formatCurrencyWithCode } from "~/consts/currencies";
 import type {
   Invoice,
   InvoiceDetailRow,
@@ -83,14 +83,6 @@ export function buildLineItemRow(
   };
 }
 
-// Appends the ISO currency code to a formatted grand-total value when one is
-// set (e.g. "£115.50 GBP"), so a bare "$" is disambiguated on the document.
-function withCurrencyCode(value: string, currencyCode: string): string {
-  const code = currencyCode.trim();
-
-  return code ? `${value} ${code}` : value;
-}
-
 function buildSummaryRows(input: {
   labels: InvoiceLabels;
   subtotal: number;
@@ -146,10 +138,7 @@ function buildSummaryRows(input: {
     {
       id: "total",
       label: labels.total,
-      value: withCurrencyCode(
-        formatCurrency(input.total, currency),
-        input.currencyCode
-      ),
+      value: formatCurrencyWithCode(input.total, currency, input.currencyCode),
       // Without a recorded payment the grand total is the final figure; with a
       // payment the balance-due row below becomes the emphasised total instead.
       isVisible: true,
@@ -165,8 +154,9 @@ function buildSummaryRows(input: {
     {
       id: "balanceDue",
       label: labels.balanceDue,
-      value: withCurrencyCode(
-        formatCurrency(input.balanceDue, currency),
+      value: formatCurrencyWithCode(
+        input.balanceDue,
+        currency,
         input.currencyCode
       ),
       isVisible: hasPayment,

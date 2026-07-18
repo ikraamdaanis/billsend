@@ -83,3 +83,22 @@ export function formatCurrency(amount: number, currency: string): string {
 
   return `${getCurrencyMarker(currency)}${formatted}`;
 }
+
+/**
+ * Formats an amount with the ISO code appended (e.g. "£115.50 GBP") so a bare,
+ * ambiguous symbol like "$" is disambiguated on the document. The suffix is
+ * skipped when no code is set, and when the rendered marker already is the code
+ * (CHF, and the SAR/AED tofu-replacement markers), which would otherwise repeat
+ * it: "CHF115.50 CHF".
+ */
+export function formatCurrencyWithCode(
+  amount: number,
+  currency: string,
+  currencyCode: string
+): string {
+  const formatted = formatCurrency(amount, currency);
+  const code = currencyCode.trim();
+  if (!code || getCurrencyMarker(currency) === code) return formatted;
+
+  return `${formatted} ${code}`;
+}
