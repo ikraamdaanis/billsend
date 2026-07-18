@@ -38,7 +38,7 @@ function ShippingContent() {
   return (
     <InvoiceTextArea
       id="invoice-field-shipping"
-      aria-label={`${shipping.label || "Shipping"} details`}
+      aria-label={`${shipping.label || "Shipping"} address`}
       value={shipping.content}
       onChange={value => setShipping(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full sm:max-w-[500px]"
