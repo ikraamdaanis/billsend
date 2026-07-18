@@ -61,7 +61,7 @@ describe("migrateInvoiceData", () => {
     const invoice = migrateInvoiceData({});
 
     expect(invoice.items).toEqual([]);
-    expect(invoice.tax).toEqual({ percentage: 0 });
+    expect(invoice.tax).toEqual({ percentage: 0, exempt: false, note: "" });
     expect(invoice.theme).toEqual(DEFAULT_INVOICE_THEME);
     expect(invoice.currency).toBe("£");
   });
@@ -122,6 +122,7 @@ describe("migrateInvoiceData", () => {
     expect(normalized.tableSettings.columnLabels).toEqual({
       description: "Service",
       quantity: "Hours",
+      unit: "Unit",
       unitPrice: "Rate",
       amount: "Total"
     });
@@ -164,7 +165,7 @@ describe("migrateInvoiceData", () => {
 
     expect(normalized).not.toHaveProperty("subtotal");
     expect(normalized).not.toHaveProperty("total");
-    expect(normalized.tax).toEqual({ percentage: 20 });
+    expect(normalized.tax).toEqual({ percentage: 20, exempt: false, note: "" });
     expect(normalized.items[0]).not.toHaveProperty("amount");
   });
 

@@ -19,6 +19,7 @@ export type TableSettings = {
   columnLabels: {
     description: string;
     quantity: string;
+    unit: string;
     unitPrice: string;
     amount: string;
   };
@@ -30,11 +31,15 @@ export type InvoiceLabels = {
   invoiceNumber: string;
   invoiceDate: string;
   paymentDue: string;
+  poNumber: string;
+  servicePeriod: string;
   subtotal: string;
   tax: string;
   fees: string;
   discounts: string;
   total: string;
+  amountPaid: string;
+  balanceDue: string;
 };
 
 export type InvoiceFont =
@@ -80,6 +85,7 @@ export type InvoiceItem = {
   id: string;
   description: string;
   quantity: number;
+  unit: string;
   unitPrice: number;
 };
 
@@ -117,25 +123,42 @@ export type PdfSettings = {
 };
 
 export type InvoiceDetailRow = {
-  id: "number" | "invoiceDate" | "dueDate";
-  labelKey: "invoiceNumber" | "invoiceDate" | "paymentDue";
+  id: "number" | "poNumber" | "invoiceDate" | "dueDate" | "servicePeriod";
+  labelKey:
+    | "invoiceNumber"
+    | "poNumber"
+    | "invoiceDate"
+    | "paymentDue"
+    | "servicePeriod";
   label: string;
   value: string;
+  // Optional rows (PO number, service period) are always shown on the editable
+  // canvas but hidden from the PDF/read-only render when their value is empty.
+  isOptional: boolean;
 };
 
 export type InvoiceLineItemRow = {
   id: string;
   description: string;
   quantity: number;
+  unit: string;
   unitPrice: string;
   amount: string;
 };
 
 export type InvoiceSummaryRow = {
-  id: "subtotal" | "tax" | "fees" | "discounts" | "total";
+  id:
+    | "subtotal"
+    | "tax"
+    | "fees"
+    | "discounts"
+    | "total"
+    | "amountPaid"
+    | "balanceDue";
   label: string;
   value: string;
   percentage?: number;
+  note?: string;
   isVisible: boolean;
   isTotal: boolean;
 };
@@ -150,7 +173,9 @@ export type InvoiceTotals = {
   items: InvoiceItemWithAmount[];
   subtotal: number;
   taxAmount: number;
+  discountAmount: number;
   total: number;
+  balanceDue: number;
 };
 
 export type InvoiceDocument = {

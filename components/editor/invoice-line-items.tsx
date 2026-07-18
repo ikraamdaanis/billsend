@@ -17,7 +17,7 @@ import { buildLineItemRow } from "~/utils/build-invoice-view-model";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 
-type LineItemFieldKey = "description" | "quantity" | "unitPrice";
+type LineItemFieldKey = "description" | "quantity" | "unit" | "unitPrice";
 
 type LineItemColumnKind = "text" | "integer" | "currency" | "amount";
 
@@ -107,6 +107,22 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
       wrapperClassName: "col-span-1 flex h-full items-center",
       inputClassName:
         "w-full rounded-none border-none py-2 ring-0 outline-none focus-visible:py-2"
+    }
+  },
+  {
+    id: "unit",
+    headerRole: "tableHeaderCenter",
+    rowRole: "tableRowCenter",
+    headerPlaceholder: "Unit",
+    headerInputClassName:
+      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+    cell: {
+      kind: "text",
+      itemField: "unit",
+      placeholder: "e.g. hrs",
+      wrapperClassName: "col-span-1 flex h-full items-center",
+      inputClassName:
+        "w-full rounded-none border-none py-2 text-center ring-0 outline-none focus-visible:py-2"
     }
   },
   {
@@ -205,7 +221,7 @@ function TableHeader({
   return (
     <div
       role="row"
-      className="grid grid-cols-[repeat(4,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_120px_150px]"
+      className="grid grid-cols-[repeat(5,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_80px_120px_150px]"
       style={{
         backgroundColor: tableSettings.backgroundColor,
         borderColor: tableSettings.borderColor
@@ -327,7 +343,7 @@ function LineItem({
   return (
     <div
       role="row"
-      className="relative grid grid-cols-[repeat(4,1fr)] items-center gap-2 border-t lg:grid-cols-[1fr_80px_120px_150px]"
+      className="relative grid grid-cols-[repeat(5,1fr)] items-center gap-2 border-t lg:grid-cols-[1fr_80px_80px_120px_150px]"
       style={{ borderColor: tableSettings.borderColor }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
@@ -449,8 +465,8 @@ function TableCell({
   }
 
   let inputValue = "";
-  if (column.cell.kind === "text") {
-    inputValue = item.description;
+  if (column.cell.kind === "text" && column.cell.itemField) {
+    inputValue = String(item[column.cell.itemField]);
   }
 
   if (column.cell.kind === "integer") {
@@ -519,6 +535,7 @@ function AddItemButton({
       id: crypto.randomUUID(),
       description: "",
       quantity: 1,
+      unit: "",
       unitPrice: 0
     });
   }

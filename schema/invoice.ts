@@ -37,11 +37,15 @@ const DEFAULT_LABELS = {
   invoiceNumber: "Invoice No.",
   invoiceDate: "Date",
   paymentDue: "Due date",
+  poNumber: "PO number",
+  servicePeriod: "Service period",
   subtotal: "Subtotal",
   tax: "Tax",
   fees: "Fees",
   discounts: "Discounts",
-  total: "Total"
+  total: "Total",
+  amountPaid: "Amount paid",
+  balanceDue: "Balance due"
 } as const;
 
 const DEFAULT_PAYMENT_DETAILS = {
@@ -57,6 +61,7 @@ const DEFAULT_PAYMENT_DETAILS = {
 const DEFAULT_COLUMN_LABELS = {
   description: "Item",
   quantity: "Quantity",
+  unit: "Unit",
   unitPrice: "Unit Price",
   amount: "Amount"
 } as const;
@@ -75,6 +80,18 @@ function contactSchema(defaultLabel: string) {
       placeholder: z.string().catch("")
     })
     .catch({ label: defaultLabel, content: "", placeholder: "" });
+}
+
+// A labelled free-text block (notes, late-payment terms, etc.): a customizable
+// heading plus content, mirroring the terms section. An empty block is
+// suppressed at render.
+function textSectionSchema(defaultLabel: string) {
+  return z
+    .object({
+      label: z.string().catch(defaultLabel),
+      content: z.string().catch("")
+    })
+    .catch({ label: defaultLabel, content: "" });
 }
 
 // Payment details mirror the terms section: a customizable label plus content.
@@ -98,6 +115,7 @@ const invoiceItemSchema = z.object({
   id: z.string().catch(""),
   description: z.string().catch(""),
   quantity: z.coerce.number().catch(0),
+  unit: z.string().catch(""),
   unitPrice: z.coerce.number().catch(0)
 });
 
@@ -123,6 +141,7 @@ const tableSettingsSchema = z
       .object({
         description: z.string().catch(DEFAULT_COLUMN_LABELS.description),
         quantity: z.string().catch(DEFAULT_COLUMN_LABELS.quantity),
+        unit: z.string().catch(DEFAULT_COLUMN_LABELS.unit),
         unitPrice: z.string().catch(DEFAULT_COLUMN_LABELS.unitPrice),
         amount: z.string().catch(DEFAULT_COLUMN_LABELS.amount)
       })
@@ -137,11 +156,15 @@ const invoiceLabelsSchema = z
     invoiceNumber: z.string().catch(DEFAULT_LABELS.invoiceNumber),
     invoiceDate: z.string().catch(DEFAULT_LABELS.invoiceDate),
     paymentDue: z.string().catch(DEFAULT_LABELS.paymentDue),
+    poNumber: z.string().catch(DEFAULT_LABELS.poNumber),
+    servicePeriod: z.string().catch(DEFAULT_LABELS.servicePeriod),
     subtotal: z.string().catch(DEFAULT_LABELS.subtotal),
     tax: z.string().catch(DEFAULT_LABELS.tax),
     fees: z.string().catch(DEFAULT_LABELS.fees),
     discounts: z.string().catch(DEFAULT_LABELS.discounts),
-    total: z.string().catch(DEFAULT_LABELS.total)
+    total: z.string().catch(DEFAULT_LABELS.total),
+    amountPaid: z.string().catch(DEFAULT_LABELS.amountPaid),
+    balanceDue: z.string().catch(DEFAULT_LABELS.balanceDue)
   })
   .catch(DEFAULT_LABELS);
 
@@ -150,10 +173,13 @@ export const invoiceSchema = z.object({
   title: z.string().catch("Invoice"),
   image: z.string().catch(""),
   number: z.string().catch("1"),
+  poNumber: z.string().catch(""),
   invoiceDate: z.string().catch(""),
   dueDate: z.string().catch(""),
+  servicePeriod: z.string().catch(""),
   seller: contactSchema("From"),
   client: contactSchema("To"),
+  shipping: contactSchema("Ship to"),
   // Resilience lives on each element, not the array: a single unparseable entry
   // (e.g. a `null` from a hand-edited or merge-conflicted backup) drops only
   // that entry, never the whole line-item list. Putting `.catch([])` on the
@@ -170,22 +196,37 @@ export const invoiceSchema = z.object({
     ),
   tableSettings: tableSettingsSchema,
   labels: invoiceLabelsSchema,
+  // Tax stays a single invoice-level rate, extended with a tax-exempt flag and a
+  // free-text note (e.g. "Reverse charge") so mixed-jurisdiction and zero-rated
+  // invoices are supported without per-line rates. When exempt, the rate is
+  // ignored and no tax is charged.
   tax: z
-    .object({ percentage: z.coerce.number().catch(0) })
-    .catch({ percentage: 0 }),
+    .object({
+      percentage: z.coerce.number().catch(0),
+      exempt: z.coerce.boolean().catch(false),
+      note: z.string().catch("")
+    })
+    .catch({ percentage: 0, exempt: false, note: "" }),
   fees: z.coerce.number().catch(0),
   discounts: z.coerce.number().catch(0),
+  // A fixed discount is a currency amount; a percentage discount is applied to
+  // the subtotal. The numeric value lives in `discounts` either way.
+  discountType: z.enum(["fixed", "percentage"]).catch("fixed"),
+  amountPaid: z.coerce.number().catch(0),
   terms: z
     .object({
       label: z.string().catch("Terms and conditions"),
       content: z.string().catch("")
     })
     .catch({ label: "Terms and conditions", content: "" }),
+  notes: textSectionSchema("Notes"),
+  latePayment: textSectionSchema("Late payment"),
   paymentDetails: paymentDetailsSchema,
   pdfSettings: z
     .object({ backgroundColor: z.string().catch("#ffffff") })
     .catch({ backgroundColor: "#ffffff" }),
   currency: z.string().catch("£"),
+  currencyCode: z.string().catch(""),
   theme: invoiceThemeSchema
 });
 

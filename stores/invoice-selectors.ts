@@ -13,20 +13,28 @@ const INVOICE_DATA_KEYS = [
   "title",
   "image",
   "number",
+  "poNumber",
   "invoiceDate",
   "dueDate",
+  "servicePeriod",
   "seller",
   "client",
+  "shipping",
   "items",
   "tableSettings",
   "labels",
   "tax",
   "fees",
   "discounts",
+  "discountType",
+  "amountPaid",
   "terms",
+  "notes",
+  "latePayment",
   "paymentDetails",
   "pdfSettings",
   "currency",
+  "currencyCode",
   "theme"
 ] as const satisfies ReadonlyArray<keyof Invoice>;
 
@@ -100,13 +108,27 @@ export function useDetailsSlice() {
   return useInvoiceStore(
     useShallow(state => ({
       number: state.number,
+      poNumber: state.poNumber,
       invoiceDate: state.invoiceDate,
       dueDate: state.dueDate,
+      servicePeriod: state.servicePeriod,
       labels: state.labels,
       setNumber: state.setNumber,
+      setPoNumber: state.setPoNumber,
       setInvoiceDate: state.setInvoiceDate,
       setDueDate: state.setDueDate,
+      setServicePeriod: state.setServicePeriod,
       setLabels: state.setLabels
+    }))
+  );
+}
+
+// Shipping slice
+export function useShippingSlice() {
+  return useInvoiceStore(
+    useShallow(state => ({
+      shipping: state.shipping,
+      setShipping: state.setShipping
     }))
   );
 }
@@ -133,23 +155,31 @@ export function usePricingSlice() {
       tax: state.tax,
       fees: state.fees,
       discounts: state.discounts,
+      discountType: state.discountType,
+      amountPaid: state.amountPaid,
       currency: state.currency,
+      currencyCode: state.currencyCode,
       labels: state.labels,
       setTax: state.setTax,
       setFees: state.setFees,
       setDiscounts: state.setDiscounts,
+      setDiscountType: state.setDiscountType,
+      setAmountPaid: state.setAmountPaid,
       setLabels: state.setLabels
     }))
   );
 }
 
-// Derived money totals (subtotal, tax amount, grand total), recomputed from the
-// pricing inputs. Returns plain numbers so shallow equality only fires a
-// re-render when a total actually changes, not on every unrelated edit.
+// Derived money totals (subtotal, tax amount, discount amount, grand total,
+// balance due), recomputed from the pricing inputs. Returns plain numbers so
+// shallow equality only fires a re-render when a total actually changes, not on
+// every unrelated edit.
 export function useInvoiceTotals(): {
   subtotal: number;
   taxAmount: number;
+  discountAmount: number;
   total: number;
+  balanceDue: number;
 } {
   return useInvoiceStore(
     useShallow(state => {
@@ -157,13 +187,17 @@ export function useInvoiceTotals(): {
         items: state.items,
         tax: state.tax,
         fees: state.fees,
-        discounts: state.discounts
+        discounts: state.discounts,
+        discountType: state.discountType,
+        amountPaid: state.amountPaid
       });
 
       return {
         subtotal: totals.subtotal,
         taxAmount: totals.taxAmount,
-        total: totals.total
+        discountAmount: totals.discountAmount,
+        total: totals.total,
+        balanceDue: totals.balanceDue
       };
     })
   );
@@ -175,6 +209,26 @@ export function useTermsSlice() {
     useShallow(state => ({
       terms: state.terms,
       setTerms: state.setTerms
+    }))
+  );
+}
+
+// Notes slice
+export function useNotesSlice() {
+  return useInvoiceStore(
+    useShallow(state => ({
+      notes: state.notes,
+      setNotes: state.setNotes
+    }))
+  );
+}
+
+// Late payment slice
+export function useLatePaymentSlice() {
+  return useInvoiceStore(
+    useShallow(state => ({
+      latePayment: state.latePayment,
+      setLatePayment: state.setLatePayment
     }))
   );
 }
@@ -204,7 +258,9 @@ export function useCurrencySlice() {
   return useInvoiceStore(
     useShallow(state => ({
       currency: state.currency,
-      setCurrency: state.setCurrency
+      currencyCode: state.currencyCode,
+      setCurrency: state.setCurrency,
+      setCurrencyCode: state.setCurrencyCode
     }))
   );
 }

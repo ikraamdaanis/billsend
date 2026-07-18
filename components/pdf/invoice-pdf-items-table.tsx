@@ -47,22 +47,27 @@ export function InvoicePdfItemsTable({
           { borderTopLeftRadius: 4, borderTopRightRadius: 4 }
         ]}
       >
-        <View style={[styles.tableCell, { width: "40%" }]}>
+        <View style={[styles.tableCell, { width: "34%" }]}>
           <Text style={pdfRoleStyle(theme, "tableHeaderLeft")}>
             {invoice.tableSettings.columnLabels.description}
           </Text>
         </View>
-        <View style={[styles.tableCell, { width: "20%" }]}>
+        <View style={[styles.tableCell, { width: "14%" }]}>
           <Text style={pdfRoleStyle(theme, "tableHeaderCenter")}>
             {invoice.tableSettings.columnLabels.quantity}
           </Text>
         </View>
-        <View style={[styles.tableCell, { width: "20%" }]}>
+        <View style={[styles.tableCell, { width: "14%" }]}>
+          <Text style={pdfRoleStyle(theme, "tableHeaderCenter")}>
+            {invoice.tableSettings.columnLabels.unit}
+          </Text>
+        </View>
+        <View style={[styles.tableCell, { width: "19%" }]}>
           <Text style={pdfRoleStyle(theme, "tableHeaderCenter")}>
             {invoice.tableSettings.columnLabels.unitPrice}
           </Text>
         </View>
-        <View style={[styles.tableCell, { width: "20%" }]}>
+        <View style={[styles.tableCell, { width: "19%" }]}>
           <Text style={pdfRoleStyle(theme, "tableHeaderRight")}>
             {invoice.tableSettings.columnLabels.amount}
           </Text>
@@ -76,22 +81,27 @@ export function InvoicePdfItemsTable({
             key={row.id}
             style={isLastItem ? styles.tableLastRow : styles.tableRow}
           >
-            <View style={[styles.tableCell, { width: "40%" }]}>
+            <View style={[styles.tableCell, { width: "34%" }]}>
               <Text style={pdfRoleStyle(theme, "tableRowLeft")}>
                 {row.description}
               </Text>
             </View>
-            <View style={[styles.tableCell, { width: "20%" }]}>
+            <View style={[styles.tableCell, { width: "14%" }]}>
               <Text style={pdfRoleStyle(theme, "tableRowCenter")}>
                 {row.quantity}
               </Text>
             </View>
-            <View style={[styles.tableCell, { width: "20%" }]}>
+            <View style={[styles.tableCell, { width: "14%" }]}>
+              <Text style={pdfRoleStyle(theme, "tableRowCenter")}>
+                {row.unit}
+              </Text>
+            </View>
+            <View style={[styles.tableCell, { width: "19%" }]}>
               <Text style={pdfRoleStyle(theme, "tableRowCenter")}>
                 {row.unitPrice}
               </Text>
             </View>
-            <View style={[styles.tableCell, { width: "20%" }]}>
+            <View style={[styles.tableCell, { width: "19%" }]}>
               <Text style={pdfRoleStyle(theme, "tableRowRight")}>
                 {row.amount}
               </Text>
