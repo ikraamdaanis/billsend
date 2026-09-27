@@ -2,7 +2,8 @@ import Dexie from "dexie";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   DocumentNotFoundError,
-  documentActions
+  documentActions,
+  hydrateDocument
 } from "~/context/document-session";
 import {
   deleteInvoice,
@@ -12,8 +13,10 @@ import {
   saveInvoice
 } from "~/db";
 import { documentDefault, useDocumentStore } from "~/stores/document-store";
+import { selectInvoiceData } from "~/stores/invoice-selectors";
 import { invoiceDefault, useInvoiceStore } from "~/stores/invoice-store";
 import type { InvoiceDocument } from "~/types";
+import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 
 // Clears every table through an independent connection so each test starts from
 // an empty database, matching a fresh device. Declared at the current schema
@@ -208,5 +211,33 @@ describe("working draft persistence", () => {
     expect(draft?.documentName).toBe("Client B");
     expect(draft?.invoiceData.number).toBe("INV-DRAFT");
     expect(draft?.lastSavedInvoice?.number).toBe("INV-DRAFT");
+  });
+
+  // An applied template has no saved baseline, so it must still read dirty
+  // after a reload, otherwise New Invoice discards it without a prompt.
+  it("restores an unsaved template draft as dirty", async () => {
+    const invoice = { ...structuredClone(invoiceDefault), number: "INV-TPL" };
+
+    await saveDraft({
+      invoiceData: invoice,
+      documentId: null,
+      documentName: null,
+      lastSavedInvoice: null,
+      updatedAt: new Date()
+    });
+
+    await hydrateDocument();
+
+    const { documentId, lastSavedInvoice } = useDocumentStore.getState();
+
+    expect(useInvoiceStore.getState().number).toBe("INV-TPL");
+    expect(lastSavedInvoice).toBeNull();
+    expect(
+      deriveHasUnsavedChanges(
+        selectInvoiceData(useInvoiceStore.getState()),
+        documentId,
+        lastSavedInvoice
+      )
+    ).toBe(true);
   });
 });

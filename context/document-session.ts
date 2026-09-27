@@ -256,7 +256,12 @@ async function runHydration(): Promise<void> {
     useDocumentStore.getState().setDocument({
       documentId: draft.documentId,
       documentName: draft.documentName,
-      lastSavedInvoice: structuredClone(draft.lastSavedInvoice ?? normalized)
+      // A null baseline is deliberate (an applied template or a detached
+      // document): it keeps the content dirty. Restore it as-is rather than
+      // promoting the unsaved content to its own baseline.
+      lastSavedInvoice: draft.lastSavedInvoice
+        ? structuredClone(draft.lastSavedInvoice)
+        : null
     });
     void cleanupOrphanedImages([normalized.image]);
   } else {
