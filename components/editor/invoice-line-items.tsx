@@ -408,7 +408,14 @@ function TableCell({
     }
 
     if (column.cell.kind === "integer" || column.cell.kind === "currency") {
-      const numericValue = normalizeDecimalInput(value);
+      // Strip the symbol before sanitising: a symbol containing a dot (e.g. a
+      // custom "Rs.") would otherwise survive as a stray decimal point, turning
+      // a typed "5" into 0.05.
+      const withoutSymbol =
+        column.cell.kind === "currency"
+          ? value.replace(currencySymbol, "")
+          : value;
+      const numericValue = normalizeDecimalInput(withoutSymbol);
 
       setNumericDraft(numericValue);
       updateItem(index, itemField, parseDecimalDraft(numericValue));
