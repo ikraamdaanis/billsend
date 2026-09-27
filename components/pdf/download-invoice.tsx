@@ -10,6 +10,30 @@ import { useInvoiceData } from "~/stores/invoice-selectors";
 import { isDirectImageUrl } from "~/utils/is-direct-image-url";
 import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
 
+// react-pdf can only decode PNG and JPEG. Any other logo format the uploader
+// accepts (WebP, GIF, ...) is silently dropped from the PDF, so re-encode it as
+// PNG first.
+async function toPdfSafeImageBlob(blob: Blob): Promise<Blob> {
+  if (blob.type === "image/png" || blob.type === "image/jpeg") return blob;
+
+  const bitmap = await createImageBitmap(blob);
+  const canvas = document.createElement("canvas");
+  canvas.width = bitmap.width;
+  canvas.height = bitmap.height;
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0);
+  bitmap.close();
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(pngBlob => {
+      if (pngBlob) {
+        resolve(pngBlob);
+      } else {
+        reject(new Error("Failed to convert the logo to PNG"));
+      }
+    }, "image/png");
+  });
+}
+
 export function DownloadInvoice({
   className,
   ...props
@@ -43,7 +67,7 @@ export function DownloadInvoice({
           const blob = await getImageBlob(invoice.image);
 
           if (blob) {
-            logoUrl = URL.createObjectURL(blob);
+            logoUrl = URL.createObjectURL(await toPdfSafeImageBlob(blob));
             logoUrlIsOwned = true;
           }
         }
