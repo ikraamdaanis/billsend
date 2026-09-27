@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
 export function InvoicePdfTerms({ invoice }: { invoice: Invoice }) {
   const theme = invoice.theme;
 
-  if (!invoice.terms.content) {
+  if (!invoice.terms.content.trim()) {
     return null;
   }
 
