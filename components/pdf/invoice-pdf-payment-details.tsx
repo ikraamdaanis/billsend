@@ -75,7 +75,7 @@ export function InvoicePdfPaymentDetails({ invoice }: { invoice: Invoice }) {
           ))}
         </View>
       )}
-      {paymentDetails.terms && (
+      {paymentDetails.terms.trim() !== "" && (
         <Text style={pdfRoleStyle(theme, "termsContent", styles.terms)}>
           {paymentDetails.terms}
         </Text>
