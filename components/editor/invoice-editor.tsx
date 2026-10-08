@@ -1,3 +1,4 @@
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -85,14 +86,15 @@ export function InvoiceEditor() {
     <CanvasViewProvider>
       <div className="h-dvh w-full">
         <Toolbar setIsModalOpen={setIsModalOpen} />
-        <div
-          className="relative flex w-full flex-col bg-zinc-200"
+        <main
+          className="bg-desk relative flex w-full flex-col"
           style={{
             height: `calc(100dvh - ${TOOLBAR_HEIGHT}px)`
           }}
         >
           <CanvasArea />
-        </div>
+          <ZoomControl />
+        </main>
       </div>
       <LeavePageDialog
         isModalOpen={isModalOpen}
@@ -157,33 +159,35 @@ function Toolbar({
   const toolbar = useToolbarController();
 
   return (
-    <nav
+    <header
       className="bg-background border-border sticky top-0 z-50 flex w-full items-center gap-1 border-b px-3"
       style={{ height: `${TOOLBAR_HEIGHT}px` }}
     >
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        aria-label="Homepage"
-        className="shrink-0"
+        aria-label="Back to homepage"
+        className="rounded-surface focus-visible:ring-ring shrink-0 outline-none focus-visible:ring-2"
       >
         <img
           src="/favicon.svg"
-          alt="billsend"
-          className="rounded-surface size-9"
+          alt=""
+          className="rounded-surface size-9 pointer-coarse:size-11"
         />
       </button>
       <div className="flex min-w-0 flex-col justify-center">
-        <button
-          type="button"
-          onClick={toolbar.handleTitleClick}
-          className="hover:bg-accent rounded-surface flex h-6 items-center self-start px-2 py-0 transition-colors"
-        >
-          <h2 className="text-foreground truncate text-base font-medium">
-            {toolbar.displayName}
-          </h2>
-        </button>
-        <Menubar className="h-6">
+        <h1 className="flex min-w-0 self-start">
+          <button
+            type="button"
+            onClick={toolbar.handleTitleClick}
+            className="hover:bg-accent rounded-surface focus-visible:ring-ring flex h-6 min-w-0 items-center px-2 py-0 outline-none focus-visible:ring-1 pointer-coarse:h-8"
+          >
+            <span className="text-foreground truncate text-base font-medium">
+              {toolbar.displayName}
+            </span>
+          </button>
+        </h1>
+        <Menubar className="h-6 pointer-coarse:h-8">
           <InvoiceFileMenu
             saveDialogOpen={toolbar.saveDialogOpen}
             onSaveDialogOpenChange={toolbar.setSaveDialogOpen}
@@ -193,7 +197,7 @@ function Toolbar({
         </Menubar>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        <DownloadInvoice />
+        <DownloadInvoice className="pointer-coarse:h-11 pointer-coarse:px-4" />
       </div>
       <RenameInvoiceDialog
         open={toolbar.renameDialogOpen}
@@ -201,7 +205,7 @@ function Toolbar({
         currentName={toolbar.displayName}
         onRename={toolbar.handleRename}
       />
-    </nav>
+    </header>
   );
 }
 
@@ -243,7 +247,7 @@ function EditMenu() {
                       {getCurrencyMarker(symbol)}
                     </span>
                     <span className="text-muted-foreground">{label}</span>
-                    <span className="text-muted-foreground/60 ml-auto pl-3 text-xs">
+                    <span className="text-muted-foreground ml-auto pl-3 text-xs">
                       {code}
                     </span>
                   </MenubarRadioItem>
@@ -309,6 +313,62 @@ function ViewMenu() {
         </MenubarRadioGroup>
       </MenubarContent>
     </MenubarMenu>
+  );
+}
+
+function ZoomControl() {
+  const { view, setView, zoom } = useCanvasView();
+  const zoomSteps = ZOOM_LEVELS.map(level => Number(level.value));
+  // Step from the applied zoom, so leaving Fit lands on the nearest preset.
+  const zoomOutStep = zoomSteps.filter(step => step < zoom - 0.001).at(-1);
+  const zoomInStep = zoomSteps.find(step => step > zoom + 0.001);
+  const zoomPercent = `${Math.round(zoom * 100)}%`;
+  const isFit = view === "fit";
+
+  return (
+    <div
+      role="group"
+      aria-label="Zoom"
+      className="bg-background border-border rounded-control shadow-menu absolute right-3 bottom-3 z-10 flex items-center border p-0.5"
+    >
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Zoom out"
+        disabled={zoomOutStep === undefined}
+        onClick={() => {
+          if (zoomOutStep !== undefined) setView(zoomOutStep);
+        }}
+        className="pointer-coarse:size-11"
+      >
+        <IconMinus aria-hidden="true" />
+      </Button>
+      <Button
+        variant="ghost"
+        aria-label={
+          isFit
+            ? `${zoomPercent}, fitted to screen`
+            : `${zoomPercent}, fit to screen`
+        }
+        aria-pressed={isFit}
+        onClick={() => setView(isFit ? 1 : "fit")}
+        className="min-w-14 px-1.5 tabular-nums pointer-coarse:h-11"
+      >
+        {zoomPercent}
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Zoom in"
+        disabled={zoomInStep === undefined}
+        onClick={() => {
+          if (zoomInStep !== undefined) setView(zoomInStep);
+        }}
+        className="pointer-coarse:size-11"
+      >
+        <IconPlus aria-hidden="true" />
+      </Button>
+    </div>
   );
 }
 

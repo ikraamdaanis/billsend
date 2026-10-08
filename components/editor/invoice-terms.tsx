@@ -21,7 +21,7 @@ function TermsLabel() {
     <InvoiceInput
       aria-label="Terms section label"
       value={terms.label}
-      className="mb-2 font-medium md:text-base"
+      className="mb-2 font-medium"
       onChange={value => setTerms(prev => ({ ...prev, label: value }))}
       placeholder="Terms and conditions"
       style={getTextStyles({
