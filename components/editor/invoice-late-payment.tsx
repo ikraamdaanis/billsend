@@ -21,7 +21,7 @@ function LatePaymentLabel() {
     <InvoiceInput
       aria-label="Late payment section label"
       value={latePayment.label}
-      className="mb-2 font-medium md:text-base"
+      className="mb-2 font-medium"
       onChange={value => setLatePayment(prev => ({ ...prev, label: value }))}
       placeholder="Late payment"
       style={getTextStyles({

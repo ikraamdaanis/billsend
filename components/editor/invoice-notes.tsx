@@ -21,7 +21,7 @@ function NotesLabel() {
     <InvoiceInput
       aria-label="Notes section label"
       value={notes.label}
-      className="mb-2 font-medium md:text-base"
+      className="mb-2 font-medium"
       onChange={value => setNotes(prev => ({ ...prev, label: value }))}
       placeholder="Notes"
       style={getTextStyles({

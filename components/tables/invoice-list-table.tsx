@@ -371,7 +371,7 @@ export function InvoiceListTable({
                       !isSelected && !isDeleting && "hover:bg-accent",
                       isSelected &&
                         !isDeleting &&
-                        "bg-brand-500 text-primary-foreground",
+                        "bg-brand-600 text-primary-foreground",
                       isDeleting && "bg-destructive/10 text-destructive",
                       isContextFocused &&
                         !isDeleting &&

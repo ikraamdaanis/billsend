@@ -20,7 +20,7 @@ export const Route = createRootRoute({
       },
       {
         name: "theme-color",
-        content: "#5e3d7a"
+        content: "#005fca"
       },
       ...siteMeta()
     ],

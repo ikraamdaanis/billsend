@@ -16,7 +16,7 @@ export function InvoiceInput({
         props.onChange?.(value);
       }}
       className={cn(
-        "rounded-surface relative h-[unset] w-full cursor-text resize-none overflow-visible border border-transparent bg-transparent p-0 text-zinc-900 outline-0 transition-[background-color,border-color,padding] outline-none hover:bg-blue-100 focus:z-20 focus:border-blue-500 focus:bg-blue-100 focus:px-2 focus:py-1 focus:ring-0 focus:outline-none",
+        "rounded-surface text-paper-foreground placeholder:text-paper-muted-foreground hover:bg-brand-50 focus:border-brand-500 focus:bg-brand-50 relative h-[unset] w-full cursor-text resize-none overflow-visible border border-transparent bg-transparent p-0 outline-0 transition-[background-color,border-color,padding] outline-none focus:z-20 focus:px-2 focus:py-1 focus:ring-0 focus:outline-none",
         className
       )}
     />
