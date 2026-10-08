@@ -21,7 +21,7 @@ function ShippingLabel() {
     <InvoiceInput
       aria-label="Shipping section label"
       value={shipping.label}
-      className="font-medium md:text-base"
+      className="font-medium"
       onChange={value => setShipping(prev => ({ ...prev, label: value }))}
       placeholder="Ship to"
       style={getTextStyles({
@@ -41,7 +41,7 @@ function ShippingContent() {
       aria-label={`${shipping.label || "Shipping"} address`}
       value={shipping.content}
       onChange={value => setShipping(prev => ({ ...prev, content: value }))}
-      className="field-sizing-content min-h-[4lh] w-full sm:max-w-[500px]"
+      className="field-sizing-content min-h-[4lh] w-full max-w-[500px]"
       style={getTextStyles({
         settings: getRoleSettings(theme, "sectionContent")
       })}

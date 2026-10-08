@@ -4,7 +4,6 @@ import { useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
 import { getCurrencyMarker } from "~/consts/currencies";
-import { cn } from "~/lib/utils";
 import { useLineItemsSlice, useTheme } from "~/stores/invoice-selectors";
 import type {
   InvoiceItem,
@@ -84,7 +83,7 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     rowRole: "tableRowLeft",
     headerPlaceholder: "Description",
     headerInputClassName:
-      "relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+      "relative h-full w-full rounded-none rounded-tl-sm border-none bg-transparent py-2 pl-2 hover:bg-brand-50 focus-visible:z-10 focus-visible:px-2",
     cell: {
       kind: "text",
       itemField: "description",
@@ -100,7 +99,7 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     rowRole: "tableRowCenter",
     headerPlaceholder: "Quantity",
     headerInputClassName:
-      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-brand-50 focus-visible:z-10 focus-visible:px-2",
     cell: {
       kind: "integer",
       itemField: "quantity",
@@ -115,7 +114,7 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     rowRole: "tableRowCenter",
     headerPlaceholder: "Unit",
     headerInputClassName:
-      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-brand-50 focus-visible:z-10 focus-visible:px-2",
     cell: {
       kind: "text",
       itemField: "unit",
@@ -131,7 +130,7 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     rowRole: "tableRowCenter",
     headerPlaceholder: "Unit Price",
     headerInputClassName:
-      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:px-2",
+      "relative h-full w-full rounded-none border-none bg-transparent py-2 hover:bg-brand-50 focus-visible:z-10 focus-visible:px-2",
     cell: {
       kind: "currency",
       itemField: "unitPrice",
@@ -146,7 +145,7 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
     rowRole: "tableRowRight",
     headerPlaceholder: "Amount",
     headerInputClassName:
-      "relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-blue-100 focus-visible:z-10 focus-visible:p-2",
+      "relative h-auto w-full rounded-none rounded-tr-sm border-none bg-transparent py-2 pr-2 hover:bg-brand-50 focus-visible:z-10 focus-visible:p-2",
     cell: {
       kind: "amount",
       wrapperClassName: "col-span-1 pr-2",
@@ -174,11 +173,7 @@ export function InvoiceLineItems() {
   const currencySymbol = getCurrencyMarker(currency);
 
   return (
-    <div
-      className={cn("w-[calc(100%-2rem)] lg:w-full", {
-        "w-full": items.length === 1
-      })}
-    >
+    <div className="w-full">
       <div
         role="table"
         aria-label="Invoice line items"
@@ -221,7 +216,7 @@ function TableHeader({
   return (
     <div
       role="row"
-      className="grid grid-cols-[repeat(5,1fr)] gap-2 rounded-t-sm font-medium lg:grid-cols-[1fr_80px_80px_120px_150px]"
+      className="grid grid-cols-[1fr_80px_80px_120px_150px] gap-2 rounded-t-sm font-medium"
       style={{
         backgroundColor: tableSettings.backgroundColor,
         borderColor: tableSettings.borderColor
@@ -343,7 +338,7 @@ function LineItem({
   return (
     <div
       role="row"
-      className="relative grid grid-cols-[repeat(5,1fr)] items-center gap-2 border-t lg:grid-cols-[1fr_80px_80px_120px_150px]"
+      className="relative grid grid-cols-[1fr_80px_80px_120px_150px] items-center gap-2 border-t"
       style={{ borderColor: tableSettings.borderColor }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
@@ -520,13 +515,12 @@ function RemoveItemButton({
   return (
     <div className="absolute -right-10">
       <Button
-        size="sm"
+        size="icon"
         variant="ghost"
         aria-label={`Remove item ${index + 1}`}
-        className="h-8 w-8 py-2 hover:bg-zinc-100"
         onClick={() => removeItem(itemId)}
       >
-        <IconMinus className="h-4 w-4 text-red-700" aria-hidden="true" />
+        <IconMinus className="text-destructive size-4" aria-hidden="true" />
       </Button>
     </div>
   );

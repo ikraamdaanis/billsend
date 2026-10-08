@@ -21,7 +21,7 @@ function SellerLabel() {
     <InvoiceInput
       aria-label="Seller section label"
       value={seller.label}
-      className="font-medium md:text-base"
+      className="font-medium"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
       placeholder="From"
       style={getTextStyles({
@@ -41,7 +41,7 @@ function SellerContent() {
       aria-label={`${seller.label || "Seller"} details`}
       value={seller.content}
       onChange={value => setSeller(prev => ({ ...prev, content: value }))}
-      className="field-sizing-content min-h-[5lh] w-full sm:max-w-[500px]"
+      className="field-sizing-content min-h-[5lh] w-full max-w-[500px]"
       style={getTextStyles({
         settings: getRoleSettings(theme, "sectionContent")
       })}

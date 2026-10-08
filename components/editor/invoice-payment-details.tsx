@@ -43,7 +43,7 @@ function PaymentDetailsLabel() {
     <InvoiceInput
       aria-label="Payment details section label"
       value={paymentDetails.label}
-      className="font-medium md:text-base"
+      className="font-medium"
       onChange={value => setPaymentDetails(prev => ({ ...prev, label: value }))}
       placeholder="Payment details"
       style={getTextStyles({
@@ -69,7 +69,10 @@ function PaymentDetailsField({
 
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor={fieldId} className="w-32 shrink-0 text-sm text-zinc-500">
+      <label
+        htmlFor={fieldId}
+        className="text-paper-muted-foreground w-32 shrink-0 text-sm"
+      >
         {label}
       </label>
       <InvoiceInput

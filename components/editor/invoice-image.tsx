@@ -14,6 +14,11 @@ import { useImageSlice } from "~/stores/invoice-selectors";
 // reasonable logo.
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
+/**
+ * The invoice logo dropzone. Remove sits beside the dropzone rather than inside
+ * it: a control nested in a role="button" is flattened away for assistive
+ * technology.
+ */
 export function InvoiceImage() {
   const { image: imageId, setImage } = useImageSlice();
   const imageUrl = useImageLoader(imageId);
@@ -81,21 +86,20 @@ export function InvoiceImage() {
       maxSize={MAX_IMAGE_SIZE_BYTES}
     >
       {({ getRootProps, getInputProps }) => (
-        <div
-          {...getRootProps()}
-          role="button"
-          aria-label={`${imageUrl ? "Change" : "Upload"} invoice logo. Drop an image or activate to browse.`}
-          className={cn(
-            "rounded-surface flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden",
-            isDragging
-              ? "bg-brand-100 border-brand-500 border-2 border-dashed"
-              : "bg-zinc-100",
-            "cursor-pointer"
-          )}
-        >
-          <input {...getInputProps()} />
-          {imageUrl ? (
-            <div className="group relative">
+        <div className="group relative shrink-0">
+          <div
+            {...getRootProps()}
+            role="button"
+            aria-label={`${imageUrl ? "Change" : "Upload"} invoice logo. Drop an image or activate to browse.`}
+            className={cn(
+              "rounded-surface focus-visible:ring-ring flex aspect-square h-32 min-w-32 cursor-pointer items-center justify-center overflow-hidden outline-none focus-visible:ring-2",
+              isDragging
+                ? "bg-brand-100 border-brand-500 border-2 border-dashed"
+                : "bg-paper-muted"
+            )}
+          >
+            <input {...getInputProps()} />
+            {imageUrl ? (
               <img
                 src={imageUrl}
                 alt="Invoice logo"
@@ -103,25 +107,23 @@ export function InvoiceImage() {
                 height={128}
                 className="rounded-surface h-32 w-32 object-cover"
               />
-              <div className="rounded-surface absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="bg-red-600 text-xs hover:bg-red-500"
-                  onClick={event => {
-                    event.stopPropagation();
-                    handleRemoveImage();
-                  }}
-                >
-                  Remove
-                </Button>
+            ) : (
+              <div className="text-paper-muted-foreground flex flex-col items-center justify-center gap-2 p-2">
+                <IconUpload className="size-8" aria-hidden="true" />
+                <span className="text-center text-xs">Upload logo</span>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-2 text-zinc-500">
-              <IconUpload className="mb-2 h-8 w-8" aria-hidden="true" />
-              <span className="text-center text-xs">Upload logo</span>
-            </div>
+            )}
+          </div>
+          {imageUrl && (
+            <Button
+              variant="outline"
+              size="xs"
+              aria-label="Remove invoice logo"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive shadow-menu absolute right-1.5 bottom-1.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:h-8 [@media(hover:none)]:opacity-100"
+              onClick={handleRemoveImage}
+            >
+              Remove
+            </Button>
           )}
         </div>
       )}

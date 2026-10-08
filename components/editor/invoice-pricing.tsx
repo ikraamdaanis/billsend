@@ -66,8 +66,8 @@ function PricingRowToggle({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-blue-100",
-        active ? "text-blue-700" : "text-zinc-400"
+        "hover:bg-brand-50 shrink-0 rounded px-1.5 py-0.5 text-xs transition-colors",
+        active ? "text-brand-700" : "text-paper-muted-foreground"
       )}
     >
       {children}
@@ -111,7 +111,7 @@ function SubtotalRow() {
       />
       <span
         data-testid="subtotal-value"
-        className="inline-block min-w-40 text-right text-zinc-900"
+        className="text-paper-foreground inline-block min-w-40 text-right"
         style={getTextStyles({ settings: valueSettings })}
       >
         {formatCurrency(subtotal, currency)}

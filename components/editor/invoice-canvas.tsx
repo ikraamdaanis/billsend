@@ -10,7 +10,7 @@ const CANVAS_STATIC_STYLES: CSSProperties = {
 };
 
 export function InvoiceCanvas({ children }: { children: ReactNode }) {
-  const { view } = useCanvasView();
+  const { view, setZoom } = useCanvasView();
   const theme = useTheme();
   const baseFont = getInvoiceFontDefinition(theme.font);
   const sectionRef = useRef<HTMLElement>(null);
@@ -51,10 +51,14 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
 
   const zoom = resolveZoom(view, pageSize, containerSize);
 
+  useLayoutEffect(() => {
+    setZoom(zoom);
+  }, [zoom, setZoom]);
+
   return (
     <section
       ref={sectionRef}
-      className="relative flex h-full flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8"
+      className="relative flex h-full flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 pb-20 md:p-8 md:pb-20"
     >
       <div
         className="shrink-0"
@@ -66,7 +70,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
       >
         <div
           ref={pageRef}
-          className="min-h-[297mm] w-[210mm] border border-zinc-300 bg-white p-[40pt] text-zinc-900 shadow-md"
+          className="border-paper-border bg-paper text-paper-foreground min-h-[297mm] w-[210mm] border p-[40pt] shadow-md"
           style={{
             ...CANVAS_STATIC_STYLES,
             fontFamily: baseFont.cssFamily,

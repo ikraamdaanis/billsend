@@ -9,7 +9,6 @@
 @import "@fontsource-variable/jetbrains-mono";
 @import "@fontsource-variable/inter";
 @import "@fontsource/instrument-serif";
-@import "@fontsource/instrument-serif/400-italic.css";
 @import "@fontsource-variable/dm-sans";
 @import "@fontsource-variable/ibm-plex-sans";
 @import "@fontsource-variable/lora";
@@ -51,6 +50,15 @@
     0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-floating:
     0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* The invoice page is paper: it stays white with dark ink in every app theme,
+     because it previews the printed PDF. The desk is the backdrop behind it. */
+  --color-paper: oklch(1 0 0);
+  --color-paper-foreground: oklch(0.21 0.006 285.885);
+  --color-paper-muted: oklch(0.967 0.001 286.375);
+  --color-paper-muted-foreground: oklch(0.5 0.016 286);
+  --color-paper-border: oklch(0.871 0.006 286.286);
+  --color-desk: oklch(0.92 0.004 286.32);
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
@@ -271,175 +279,67 @@ code {
   }
 }
 
-/* Homepage animations */
-@keyframes drift {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -30px) scale(1.05);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.95);
+/* Homepage hero entrance. Plain CSS so it plays on first paint instead of
+   waiting for hydration, and never leaves the hero hidden if scripts fail.
+   Elements set their own animation-delay. */
+@keyframes hero-rise {
+  from {
+    transform: translateY(115%);
   }
 }
 
-@keyframes drift-slow {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-40px, -20px) scale(1.1);
+@keyframes hero-fade {
+  from {
+    opacity: 0;
   }
 }
 
-@keyframes drift-slower {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    transform: translate(-50%, -50%) translate(20px, 30px) scale(1.08);
-  }
-}
-
-@keyframes fade-in-up {
+@keyframes hero-fade-up {
   from {
     opacity: 0;
     transform: translateY(24px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
-.animate-drift {
-  animation: drift 20s ease-in-out infinite;
-}
-
-.animate-drift-slow {
-  animation: drift-slow 25s ease-in-out infinite;
-}
-
-.animate-drift-slower {
-  animation: drift-slower 30s ease-in-out infinite;
-}
-
-.animate-fade-in-up {
-  animation: fade-in-up 0.8s ease-out forwards;
-  opacity: 0;
-}
-
-.animation-delay-100 {
-  animation-delay: 0.1s;
-}
-
-.animation-delay-200 {
-  animation-delay: 0.2s;
-}
-
-.animation-delay-300 {
-  animation-delay: 0.3s;
-}
-
-.animation-delay-400 {
-  animation-delay: 0.4s;
-}
-
-.animation-delay-500 {
-  animation-delay: 0.5s;
-}
-
-.animation-delay-600 {
-  animation-delay: 0.6s;
-}
-
-.animation-delay-700 {
-  animation-delay: 0.7s;
-}
-
-.animation-delay-800 {
-  animation-delay: 0.8s;
-}
-
-@keyframes slide-in-left {
+@keyframes hero-card {
   from {
     opacity: 0;
-    transform: translateX(-40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+    transform: translateY(60px);
   }
 }
 
-@keyframes slide-in-right {
-  from {
-    opacity: 0;
-    transform: translateX(40px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.hero-rise {
+  animation: hero-rise 1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes scale-reveal {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
+.hero-fade {
+  animation: hero-fade 0.6s ease-out both;
+}
+
+.hero-fade-up {
+  animation: hero-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-card {
+  animation: hero-card 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Reduced motion keeps the entrance as a fade, without the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-rise,
+  .hero-fade-up,
+  .hero-card {
+    animation-name: hero-fade;
+    animation-duration: 0.4s;
   }
-  to {
-    opacity: 1;
-    transform: scale(1);
+
+  /* Staggered delays are inline styles, so they need !important to drop. */
+  .hero-rise,
+  .hero-fade,
+  .hero-fade-up,
+  .hero-card {
+    animation-delay: 0s !important;
   }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.7s ease-out forwards;
-  opacity: 0;
-}
-
-.animate-slide-in-right {
-  animation: slide-in-right 0.7s ease-out forwards;
-  opacity: 0;
-}
-
-.animate-scale-reveal {
-  animation: scale-reveal 0.6s ease-out forwards;
-  opacity: 0;
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes draw {
-  from {
-    stroke-dashoffset: 200;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.animate-draw {
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-  animation: draw 0.8s ease-out 0.5s forwards;
 }
 
 @page {
