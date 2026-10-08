@@ -16,3 +16,8 @@ tsconfig.tsbuildinfo
 /playwright-report/
 /playwright/.cache/
 /blob-report/
+
+# Impeccable local settings and caches
+.impeccable/config.local.json
+.impeccable/hook.cache.json
+.impeccable/live/
