@@ -32,7 +32,7 @@ test("create, edit, save, leave, return, and download an invoice", async ({
   await page.getByRole("link", { name: "Leave" }).click();
 
   await expect(page).toHaveURL("/");
-  await page.getByRole("link", { name: "Create invoice" }).click();
+  await page.locator("#hero-create-invoice").click();
 
   await expect(page).toHaveURL("/create");
   await expect(
