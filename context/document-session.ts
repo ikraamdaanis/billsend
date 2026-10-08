@@ -10,7 +10,7 @@ import {
 import { useDocumentStore } from "~/stores/document-store";
 import { selectInvoiceData } from "~/stores/invoice-selectors";
 import { invoiceDefault, useInvoiceStore } from "~/stores/invoice-store";
-import type { InvoiceDocument } from "~/types";
+import type { InvoiceDocument, InvoiceFont } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
 
 // The editor session: the module-level document actions (load / saveAs / update
@@ -142,6 +142,26 @@ function reset(): void {
   // Discard the working draft so "New invoice" truly starts fresh, even if the
   // page is reloaded before the next autosave fires.
   void clearDraft();
+}
+
+// Sets the font on a fresh, untouched blank invoice, e.g. one picked in the
+// homepage preview. A restored draft, an open document, or an edited blank is
+// left alone so the hand-off can never change someone's work. The result
+// becomes the blank's baseline, so it doesn't read as unsaved.
+function applyStartingFont(font: InvoiceFont): void {
+  const { documentId, lastSavedInvoice } = useDocumentStore.getState();
+  const current = selectInvoiceData(useInvoiceStore.getState());
+
+  if (documentId !== null || !lastSavedInvoice) return;
+  if (!isEqual(current, lastSavedInvoice)) return;
+  if (current.theme.font === font) return;
+
+  useInvoiceStore.getState().setTheme(theme => ({ ...theme, font }));
+  useDocumentStore
+    .getState()
+    .setLastSavedInvoice(
+      structuredClone(selectInvoiceData(useInvoiceStore.getState()))
+    );
 }
 
 // Writes the live editing session (content + identity) into the working draft.
@@ -294,5 +314,6 @@ export const documentActions = {
   load,
   saveAs,
   update,
-  reset
+  reset,
+  applyStartingFont
 } as const;

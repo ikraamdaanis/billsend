@@ -360,6 +360,18 @@ export async function getAllInvoices(): Promise<InvoiceDocument[]> {
   }
 }
 
+export async function countInvoices(): Promise<number> {
+  try {
+    await ensureDbReady();
+    return await db.invoices.count();
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to count invoices in local storage."
+    );
+  }
+}
+
 export async function saveInvoice(invoice: InvoiceDocument): Promise<string> {
   try {
     await ensureDbReady();

@@ -1,35 +1,18 @@
 import instrumentSerifFont from "@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url";
-import type { Icon } from "@tabler/icons-react";
 import {
+  IconAlertTriangle,
   IconArrowRight,
-  IconCoins,
-  IconDatabase,
-  IconFileDownload,
-  IconPalette,
-  IconShieldCheck,
-  IconTemplate,
-  IconWifiOff
+  IconArrowUpRight,
+  IconLock,
+  IconPlus
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { addDays, format } from "date-fns";
-import Lenis from "lenis";
-import "lenis/dist/lenis.css";
-import {
-  motion,
-  MotionConfig,
-  useAnimationFrame,
-  useInView,
-  useMotionValue,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-  useVelocity
-} from "motion/react";
-import type { MouseEvent, ReactNode } from "react";
-import { useEffect, useRef } from "react";
-import { buttonVariants } from "~/components/ui/button";
+import type { ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import { cn } from "~/lib/utils";
+import type { InvoiceFont } from "~/types";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -49,269 +32,459 @@ export const Route = createFileRoute("/")({
   })
 });
 
-const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+const HEADER_HEIGHT = 64;
 
-const FEATURES: { icon: Icon; title: string; description: string }[] = [
+const SOURCE_URL = "https://github.com/ikraamdaanis/billsend";
+
+const HERO_CTA_ID = "hero-create-invoice";
+
+const CLOSING_CTA_ID = "closing-create-invoice";
+
+const DEFAULT_FONT: InvoiceFont = "geist";
+
+const DISPLAY_HEADING =
+  "font-instrument-serif font-normal tracking-[-0.01em] text-balance text-neutral-900";
+
+// Colour-only transitions. Tailwind's `transition-colors` also animates
+// `outline-color`, which leaves the focus ring pale for a beat after Tab.
+const COLOR_TRANSITION =
+  "transition-[color,background-color,text-decoration-color]";
+
+const CHECKS: {
+  title: string;
+  description: string;
+  link?: { href: string; label: string };
+}[] = [
   {
-    icon: IconDatabase,
-    title: "Stays on your device",
+    title: "Watch the network yourself",
     description:
-      "Everything saves straight to your browser. Nothing is ever uploaded."
+      "On a computer, open your browser’s developer tools, choose the Network tab and make an invoice. Nothing you type is sent anywhere."
   },
   {
-    icon: IconFileDownload,
-    title: "One-click PDF",
+    title: "Look for a sign-up",
     description:
-      "Export a clean, print-ready PDF in a single click, then email or print it yourself."
+      "There’s no sign-up form, password or email field anywhere in billsend, so there’s no account for your invoices to belong to."
   },
   {
-    icon: IconTemplate,
-    title: "Reusable templates",
+    title: "Read the source",
     description:
-      "Save an invoice as a template and reuse it next time instead of starting over."
+      "billsend’s code is public on GitHub, so you can see exactly what it does with your data.",
+    link: { href: SOURCE_URL, label: "View the code on GitHub" }
+  }
+];
+
+// Each entry is keyed by the marker number drawn on the tour invoice.
+const TOUR_NOTES: { marker: number; title: string; description: string }[] = [
+  {
+    marker: 1,
+    title: "Your logo, your type",
+    description:
+      "Upload your logo and set the whole invoice in any of ten fonts, at three sizes. This one is in Lora."
   },
   {
-    icon: IconPalette,
-    title: "Logo & accent colour",
+    marker: 2,
+    title: "Tax, fees and discounts",
     description:
-      "Upload your logo, pick an accent colour, and set the text size."
+      "Add VAT or sales tax as a percentage, plus fees and a fixed or percentage discount. billsend does the sums."
   },
   {
-    icon: IconCoins,
+    marker: 3,
     title: "Any currency",
     description:
-      "Pick a currency per invoice, with custom symbols when you need them."
+      "Choose the currency for each invoice, with custom symbols when you need them."
   },
   {
-    icon: IconWifiOff,
-    title: "Works offline",
+    marker: 4,
+    title: "Payment details clients can use",
     description:
-      "No network needed. It all runs on your machine, even with the wifi off."
+      "Bank name, account number, IBAN, BIC / SWIFT and sort code. They leave this browser only on the PDF you send."
   }
 ];
 
-const STEPS: { number: string; title: string; description: string }[] = [
+const QUESTIONS: { question: string; answer: string }[] = [
   {
-    number: "01",
-    title: "Create",
-    description: "Open the editor and fill in your details. No sign-up needed."
+    question: "Does billsend send the invoice to my client?",
+    answer:
+      "No. billsend makes the PDF and you send it however you like, usually as an email attachment. It never contacts your client, and there’s nothing on our side that could."
   },
   {
-    number: "02",
-    title: "Customise",
-    description:
-      "Add line items, set tax and currency, then add your logo and an accent colour."
+    question: "Can I add VAT or sales tax?",
+    answer:
+      "Yes. Enter a tax rate and billsend adds it to the total. You can also mark an invoice as tax-exempt, for reverse charge for example, and add fees and discounts."
   },
   {
-    number: "03",
-    title: "Export",
-    description:
-      "Download a clean PDF, ready to email or print whenever you like."
+    question: "Can I use it on my phone?",
+    answer:
+      "Yes. The editor opens fitted to your screen. Zoom in to edit a section, then download the PDF from the top bar."
+  },
+  {
+    question: "Where do my invoices go, and what about private windows?",
+    answer:
+      "Nowhere but this browser. billsend saves them in your browser’s storage on this device; to move them, export your data from the editor’s File menu and import it on the other device. Private windows usually throw their storage away when you close them, so download your PDF or export your data first."
+  },
+  {
+    question: "Why is it free?",
+    answer:
+      "billsend has no accounts, no database and no servers that store anything. Once the page has loaded, your browser does all the work, and the code is public on GitHub, so you can see there’s nothing else going on."
   }
 ];
 
-const STATS: { value: string; label: string }[] = [
-  { value: "0", label: "Servers" },
-  { value: "0", label: "Trackers" },
-  { value: "100%", label: "On-device" },
-  { value: "Free", label: "Forever" }
+// Real faces from the editor's invoice font library, one per category.
+const PREVIEW_FONTS: { id: InvoiceFont; label: string }[] = [
+  { id: "geist", label: "Geist" },
+  { id: "lora", label: "Lora" },
+  { id: "jetbrains-mono", label: "JetBrains Mono" }
 ];
 
-const MARQUEE_PHRASES = [
-  "No accounts",
-  "No servers",
-  "No tracking",
-  "Free forever"
+const PREVIEW_LINES: {
+  description: string;
+  quantity: string;
+  amount: string;
+}[] = [
+  { description: "Brand illustrations", quantity: "1", amount: "$1,800.00" },
+  { description: "Packaging artwork", quantity: "2", amount: "$1,100.00" },
+  { description: "Revisions (hours)", quantity: "4", amount: "$300.00" }
 ];
 
-const CARD_TONES = {
-  light: "border-neutral-200 bg-white text-neutral-900",
-  dark: "border-neutral-900 bg-neutral-900 text-neutral-50",
-  brand: "border-brand-600 bg-brand-600 text-white",
-  tint: "border-brand-200 bg-brand-50 text-brand-700"
-};
+// Matches the editor's sums: tax and a percentage discount are both taken on
+// the subtotal (2,750.00 + 19% VAT 522.50 - 10% discount 275.00 = 2,997.50).
+const TOUR_LINES: { description: string; quantity: string; amount: string }[] =
+  [
+    {
+      description: "Editorial illustrations",
+      quantity: "3",
+      amount: "€1,800.00"
+    },
+    { description: "Cover artwork", quantity: "1", amount: "€950.00" }
+  ];
 
-const BAND_ROW_ONE: { label: string; tone: keyof typeof CARD_TONES }[] = [
-  { label: "INV-0042 · $2,450.00", tone: "dark" },
-  { label: "€ EUR", tone: "light" },
-  { label: "PDF ↓", tone: "brand" },
-  { label: "Due net 30", tone: "light" },
-  { label: "£ GBP", tone: "tint" },
-  { label: "logo.png ✓", tone: "light" }
-];
-
-const BAND_ROW_TWO: { label: string; tone: keyof typeof CARD_TONES }[] = [
-  { label: "Template · Retainer", tone: "light" },
-  { label: "¥ JPY", tone: "tint" },
-  { label: "Tax 20%", tone: "dark" },
-  { label: "INV-0043 · $980.00", tone: "light" },
-  { label: "Saved locally", tone: "brand" },
-  { label: "$ USD", tone: "light" }
-];
-
-function useSmoothScroll() {
-  const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    if (prefersReducedMotion) return;
-
-    const lenis = new Lenis({ autoRaf: true, anchors: true });
-
-    return () => lenis.destroy();
-  }, [prefersReducedMotion]);
+function subscribeToNothing() {
+  return () => {};
 }
 
-function HomePage() {
-  useSmoothScroll();
-
-  return (
-    <MotionConfig reducedMotion="user">
-      <div className="min-h-svh bg-neutral-50 text-neutral-900 antialiased">
-        <SiteHeader />
-        <main className="overflow-x-clip">
-          <Hero />
-          <MarqueeBand />
-          <Manifesto />
-          <Features />
-          <Steps />
-          <SlidingBand />
-          <PrivacyFinale />
-        </main>
-      </div>
-    </MotionConfig>
+// False during server render and hydration, true once React owns the page, so
+// controls that need JavaScript never appear clickable before they work.
+function useIsHydrated() {
+  return useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
   );
 }
 
-function SiteHeader() {
+// How many invoices this browser has saved: null until known, "blocked" when
+// the browser refuses storage. The database module loads on demand so
+// first-time visitors never download it.
+function useSavedInvoiceCount() {
+  const [count, setCount] = useState<number | "blocked" | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    import("~/db")
+      .then(database => database.countInvoices())
+      .then(total => {
+        if (!cancelled) setCount(total);
+      })
+      .catch(() => {
+        if (!cancelled) setCount("blocked");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return count;
+}
+
+// The header offers Create invoice only while neither the hero's nor the
+// closing section's button is on screen, so one primary action shows at once.
+function useShouldShowHeaderCta() {
+  const [visibleCtaIds, setVisibleCtaIds] = useState<string[]>([HERO_CTA_ID]);
+
+  useEffect(() => {
+    const targets = [HERO_CTA_ID, CLOSING_CTA_ID]
+      .map(id => document.getElementById(id))
+      .filter(target => target !== null);
+    const observer = new IntersectionObserver(
+      entries => {
+        setVisibleCtaIds(previous => {
+          const next = new Set(previous);
+
+          for (const entry of entries) {
+            if (entry.isIntersecting) next.add(entry.target.id);
+            else next.delete(entry.target.id);
+          }
+
+          return [...next];
+        });
+      },
+      { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px` }
+    );
+
+    for (const target of targets) observer.observe(target);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return visibleCtaIds.length === 0;
+}
+
+// Counts every network request this page has made, split by whether it went
+// to billsend's own origin, from the browser's own performance timeline. It
+// can't flatter itself: any third-party request would show up here too. The
+// count streams from an observer (seeded with the buffered entries) rather
+// than reading the timeline buffer, which stops recording at 250 entries.
+function useRequestTally() {
+  const [tally, setTally] = useState<{
+    own: number;
+    elsewhere: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (typeof PerformanceObserver === "undefined") return;
+
+    // The page document itself is the first request to billsend.
+    const counts = { own: 1, elsewhere: 0 };
+    const observer = new PerformanceObserver(list => {
+      for (const entry of list.getEntries()) {
+        const url = new URL(entry.name, window.location.href);
+
+        if (url.protocol !== "http:" && url.protocol !== "https:") continue;
+
+        if (url.origin === window.location.origin) counts.own += 1;
+        else counts.elsewhere += 1;
+      }
+
+      setTally({ ...counts });
+    });
+
+    setTally({ ...counts });
+    observer.observe({ type: "resource", buffered: true });
+
+    return () => observer.disconnect();
+  }, []);
+
+  return tally;
+}
+
+function HomePage() {
+  const [font, setFont] = useState<InvoiceFont>(DEFAULT_FONT);
+
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/80 backdrop-blur-md">
-      <div className="mx-auto grid h-16 max-w-6xl grid-cols-[1fr_1fr] items-center px-6 md:grid-cols-[1fr_auto_1fr]">
-        <Link to="/" className="flex items-center gap-2 justify-self-start">
-          <span className="font-bricolage-grotesque text-brand-600 text-xl font-semibold tracking-tight">
-            billsend
-          </span>
-        </Link>
-        <nav className="hidden items-center gap-8 justify-self-center font-mono text-xs tracking-widest text-neutral-500 uppercase md:flex">
-          <a href="#features" className="transition hover:text-neutral-900">
-            Features
-          </a>
-          <a href="#how" className="transition hover:text-neutral-900">
-            How it works
-          </a>
-          <a href="#privacy" className="transition hover:text-neutral-900">
-            Privacy
-          </a>
-        </nav>
+    <div className="selection:bg-brand-100 selection:text-brand-950 min-h-svh bg-neutral-50 text-neutral-900 antialiased">
+      <a
+        href="#main"
+        className="focus-visible:outline-brand-600 shadow-menu fixed top-3 left-3 z-[60] -translate-y-16 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-900 outline-offset-2 transition-transform focus:translate-y-0 focus-visible:outline-2"
+      >
+        Skip to content
+      </a>
+      <SiteHeader font={font} />
+      <main id="main" className="overflow-x-clip">
+        <Hero font={font} onFontChange={setFont} />
+        <Privacy />
+        <Tour />
+        <Questions />
+        <Closing font={font} />
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+function SiteHeader({ font }: { font: InvoiceFont }) {
+  const shouldShowCta = useShouldShowHeaderCta();
+
+  return (
+    <header
+      className="sticky top-0 z-50 border-b border-neutral-200 bg-neutral-50/85 backdrop-blur-md"
+      style={{ height: `${HEADER_HEIGHT}px` }}
+    >
+      <div className="mx-auto grid h-full max-w-6xl grid-cols-[1fr_auto] items-center px-6 md:grid-cols-[1fr_auto_1fr]">
         <Link
-          to="/create"
-          preload="viewport"
-          className={cn(
-            buttonVariants({ variant: "default" }),
-            "h-9 justify-self-end px-4 text-sm"
-          )}
+          to="/"
+          className="font-bricolage-grotesque rounded-surface text-brand-600 focus-visible:outline-brand-600 justify-self-start py-2 text-xl font-semibold tracking-tight outline-offset-4 focus-visible:outline-2"
         >
-          Create invoice
-          <IconArrowRight className="size-4" />
+          billsend
         </Link>
+        <nav
+          aria-label="Sections"
+          className="hidden items-center gap-2 justify-self-center text-sm md:flex"
+        >
+          <NavLink href="#privacy">Privacy</NavLink>
+          <NavLink href="#features">Features</NavLink>
+          <NavLink href="#questions">Questions</NavLink>
+        </nav>
+        <div className="flex items-center justify-self-end">
+          <span className="md:hidden">
+            <NavLink href="#privacy">Privacy</NavLink>
+          </span>
+          <div
+            className={cn(
+              "transition-[max-width,opacity] duration-200",
+              shouldShowCta
+                ? "visible max-w-48 pl-1 opacity-100"
+                : "invisible max-w-0 overflow-hidden opacity-0"
+            )}
+          >
+            <CreateInvoiceLink size="sm" font={font} />
+          </div>
+        </div>
       </div>
     </header>
   );
 }
 
-function Hero() {
-  const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
-  const cardY = useTransform(scrollYProgress, [0, 1], [0, -110]);
-  const cardRotate = useTransform(scrollYProgress, [0, 1], [-1.5, -6]);
+function NavLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      className={cn(
+        "rounded-control focus-visible:outline-brand-600 block px-3 py-2.5 text-sm text-neutral-600 outline-offset-2 hover:text-neutral-900 focus-visible:outline-2",
+        COLOR_TRANSITION
+      )}
+    >
+      {children}
+    </a>
+  );
+}
+
+// The one primary action, worded and shaped the same everywhere it appears.
+// It carries the font picked in the hero preview into the editor.
+function CreateInvoiceLink({
+  size = "md",
+  font,
+  id
+}: {
+  size?: "sm" | "md" | "lg";
+  font: InvoiceFont;
+  id?: string;
+}) {
+  return (
+    <Link
+      id={id}
+      to="/create"
+      search={{ font: font === DEFAULT_FONT ? undefined : font }}
+      preload="viewport"
+      className={cn(
+        "group bg-brand-600 hover:bg-brand-700 focus-visible:outline-brand-600 relative inline-flex shrink-0 items-center rounded-full font-medium whitespace-nowrap text-white outline-offset-4 focus-visible:outline-2",
+        COLOR_TRANSITION,
+        size === "sm" &&
+          "h-9 gap-2 pr-1.5 pl-4 text-sm pointer-coarse:h-11 pointer-coarse:pl-5",
+        size === "md" && "h-12 gap-3 pr-1.5 pl-6 text-base",
+        size === "lg" && "h-14 gap-4 pr-2 pl-8 text-lg"
+      )}
+    >
+      Create invoice
+      <span
+        aria-hidden
+        className={cn(
+          "text-brand-600 flex items-center justify-center rounded-full bg-white transition-transform duration-300 ease-out group-hover:translate-x-0.5",
+          size === "sm" && "size-6 pointer-coarse:size-8",
+          size === "md" && "size-9",
+          size === "lg" && "size-10"
+        )}
+      >
+        <IconArrowRight
+          className={size === "sm" ? "size-3.5" : "size-5"}
+          stroke={2}
+        />
+      </span>
+    </Link>
+  );
+}
+
+function Hero({
+  font,
+  onFontChange
+}: {
+  font: InvoiceFont;
+  onFontChange: (font: InvoiceFont) => void;
+}) {
+  const savedInvoiceCount = useSavedInvoiceCount();
+  // Both secondary links share one grid cell, so the returning-user link
+  // crossfades into place instead of reflowing the row once the count loads.
+  const hasSavedInvoices =
+    typeof savedInvoiceCount === "number" && savedInvoiceCount > 0;
+  const secondaryLinkClass = cn(
+    "group rounded-control focus-visible:outline-brand-600 col-start-1 row-start-1 inline-flex items-center gap-2 py-3 text-base font-medium text-neutral-600 outline-offset-2 transition-[color,opacity,visibility] duration-200 hover:text-neutral-900 focus-visible:outline-2"
+  );
+  const secondaryRule = (
+    <span
+      aria-hidden
+      className="block h-px w-8 bg-neutral-300 transition-[width,background-color] duration-300 group-hover:w-12 group-hover:bg-neutral-900"
+    />
+  );
 
   return (
-    <section
-      ref={heroRef}
-      className="relative overflow-hidden border-b border-neutral-200"
-    >
-      <div className="relative mx-auto grid max-w-6xl items-center gap-16 px-6 pt-20 pb-24 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10 lg:pt-28 lg:pb-32">
+    <section className="border-b border-neutral-200">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 pt-8 pb-20 sm:gap-12 sm:pt-16 lg:grid-cols-[1.2fr_0.8fr] lg:gap-10 lg:pt-24 lg:pb-24">
         <div className="flex flex-col items-start">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.05 }}
-            className="text-brand-600 font-mono text-xs tracking-widest uppercase"
+          <h1
+            className={cn(
+              DISPLAY_HEADING,
+              "text-5xl leading-[0.95] sm:text-7xl xl:text-8xl"
+            )}
           >
-            ✳ A free invoice maker that lives in your browser
-          </motion.p>
-          <h1 className="font-instrument-serif mt-8 text-7xl leading-[0.95] font-normal tracking-tight text-neutral-900 sm:text-8xl lg:text-9xl">
-            <HeadlineLine delay={0.1}>Make it.</HeadlineLine>
-            <HeadlineLine delay={0.18}>
-              <span className="text-transparent [-webkit-text-stroke:1.5px_var(--color-neutral-900)]">
-                Bill it.
-              </span>
-            </HeadlineLine>
-            <HeadlineLine delay={0.26}>
-              <span className="text-brand-600 italic">Get paid.</span>
+            <HeadlineLine delay={0.1}>Make an invoice.</HeadlineLine>{" "}
+            <HeadlineLine delay={0.2}>
+              <span className="text-brand-600">Your data stays put.</span>
             </HeadlineLine>
           </h1>
-          <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.5 }}
-            className="mt-8 max-w-[46ch] text-lg text-pretty text-neutral-600"
+          <p
+            className="hero-fade-up mt-5 max-w-[42ch] text-lg text-pretty text-neutral-600 sm:mt-7"
+            style={{ animationDelay: "0.4s" }}
           >
-            No accounts, no servers, no fuss. Open it, type in what you did and
-            what it costs, then download the PDF. Everything stays on your
+            A free invoice maker that lives in your browser. Fill it in, pick a
+            font and download the PDF. No account, and nothing leaves your
             device.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: EASE_OUT_EXPO, delay: 0.6 }}
-            className="mt-9 flex flex-col gap-4 sm:flex-row sm:items-center"
+          </p>
+          <div
+            className="hero-fade-up mt-6 flex flex-wrap items-center gap-x-6 gap-y-1 sm:mt-8"
+            style={{ animationDelay: "0.5s" }}
           >
-            <Magnetic>
+            <CreateInvoiceLink id={HERO_CTA_ID} font={font} />
+            <div className="grid">
+              <a
+                href="#privacy"
+                aria-hidden={hasSavedInvoices}
+                tabIndex={hasSavedInvoices ? -1 : undefined}
+                className={cn(
+                  secondaryLinkClass,
+                  hasSavedInvoices && "invisible opacity-0"
+                )}
+              >
+                How it stays private
+                {secondaryRule}
+              </a>
               <Link
                 to="/create"
-                preload="viewport"
-                className="group bg-brand-600 relative inline-flex items-center gap-4 overflow-hidden rounded-full py-2.5 pr-2.5 pl-7 text-base font-medium text-white"
+                search={{ open: "invoices" }}
+                aria-hidden={!hasSavedInvoices}
+                tabIndex={hasSavedInvoices ? undefined : -1}
+                className={cn(
+                  secondaryLinkClass,
+                  !hasSavedInvoices && "invisible opacity-0"
+                )}
               >
-                <span
-                  aria-hidden
-                  className="bg-brand-800 absolute top-1/2 left-1/2 aspect-square w-[170%] -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full transition-transform duration-500 ease-out group-hover:scale-100"
-                />
-                <span className="relative z-10">Create your first invoice</span>
-                <span className="text-brand-600 relative z-10 flex size-10 items-center justify-center rounded-full bg-white transition-transform duration-300 ease-out group-hover:scale-110">
-                  <IconArrowRight className="size-5 -rotate-45 transition-transform duration-300 ease-out group-hover:rotate-0" />
-                </span>
+                Open your saved invoices
+                {secondaryRule}
               </Link>
-            </Magnetic>
-            <a
-              href="#how"
-              className="group inline-flex items-center gap-2 px-2 py-3 text-base font-medium text-neutral-600 transition hover:text-neutral-900"
-            >
-              See how it works
-              <span className="block h-px w-8 bg-neutral-300 transition-all duration-300 group-hover:w-12 group-hover:bg-neutral-900" />
-            </a>
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.85 }}
-            className="mt-8 font-mono text-sm text-neutral-500 tabular-nums"
-          >
-            Free · No sign-up · Works offline
-          </motion.p>
+            </div>
+          </div>
+          {savedInvoiceCount === "blocked" && (
+            <p className="mt-4 flex max-w-[46ch] items-start gap-2 text-sm text-pretty text-neutral-600">
+              <IconAlertTriangle
+                className="text-warning mt-0.5 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              This browser is blocking storage, so billsend can’t save invoices
+              here. You can still make one and download the PDF.
+            </p>
+          )}
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, ease: EASE_OUT_EXPO, delay: 0.35 }}
-          className="relative lg:pl-4"
-        >
-          <motion.div style={{ y: cardY, rotate: cardRotate }}>
-            <InvoicePreview />
-          </motion.div>
-        </motion.div>
+        <InvoicePreview font={font} onFontChange={onFontChange} />
       </div>
     </section>
   );
@@ -326,477 +499,579 @@ function HeadlineLine({
 }) {
   return (
     <span className="-mb-[0.06em] block overflow-hidden pb-[0.12em]">
-      <motion.span
-        initial={{ y: "115%" }}
-        animate={{ y: "0%" }}
-        transition={{ duration: 1, ease: EASE_OUT_EXPO, delay }}
-        className="block will-change-transform"
-      >
+      <span className="hero-rise block" style={{ animationDelay: `${delay}s` }}>
         {children}
-      </motion.span>
+      </span>
     </span>
   );
 }
 
-function InvoicePreview() {
-  const dueDate = format(addDays(new Date(), 30), "d MMM yyyy");
+/**
+ * A faithful miniature of what the editor produces. It fills itself in line
+ * by line on load (the page's one authored motion moment), and the font
+ * switcher restyles it with real faces from the invoice font library; the
+ * pick carries into the editor through every Create invoice link. The note
+ * pinned to the bank details answers the question a freelancer has at exactly
+ * that line: where do these go?
+ *
+ * The due date is today plus 30 days, so the server and the browser can
+ * disagree around midnight; that one node opts out of the hydration check.
+ */
+function InvoicePreview({
+  font,
+  onFontChange
+}: {
+  font: InvoiceFont;
+  onFontChange: (font: InvoiceFont) => void;
+}) {
+  const isHydrated = useIsHydrated();
+  const fontDefinition = getInvoiceFontDefinition(font);
+  const dueDate = format(addDays(new Date(), 30), "MMM d, yyyy");
 
   return (
-    <div className="relative mx-auto w-full max-w-md">
-      <div className="rounded-surface border border-neutral-200 bg-white shadow-2xl shadow-neutral-900/10">
-        <div className="flex items-start justify-between border-b border-neutral-200 p-6">
-          <div className="flex flex-col gap-2">
-            <div className="bg-brand-600 rounded-surface flex size-9 items-center justify-center">
-              <span className="font-instrument-serif text-base font-normal text-white">
-                b
+    <div
+      className="hero-card mx-auto flex w-full max-w-md flex-col gap-5"
+      style={{ animationDelay: "0.3s" }}
+    >
+      <div className="relative">
+        <figure
+          aria-label="Example invoice made with billsend"
+          className="rounded-surface shadow-floating flex flex-col gap-6 border border-neutral-200 bg-white p-5 text-sm text-neutral-900 sm:p-8"
+          style={{
+            fontFamily: fontDefinition.cssFamily,
+            letterSpacing: fontDefinition.letterSpacing
+          }}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-3">
+              <span className="text-3xl font-semibold tracking-tight">
+                Invoice
+              </span>
+              <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-xs tabular-nums">
+                <dt className="text-neutral-500">Invoice No.</dt>
+                <dd>INV-0042</dd>
+                <dt className="text-neutral-500">Due date</dt>
+                <dd suppressHydrationWarning>{dueDate}</dd>
+              </dl>
+            </div>
+            <LogoMark />
+          </div>
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">From</span>
+              <span className="text-neutral-600">
+                Maya Okafor
+                <br />
+                Illustration & design
               </span>
             </div>
-            <div className="text-sm font-medium text-neutral-900">
-              Acme Studio
+            <div className="flex flex-col gap-1">
+              <span className="font-medium">To</span>
+              <span className="text-neutral-600">
+                Harbor & Pine Co.
+                <br />
+                Portland, OR
+              </span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="font-instrument-serif text-2xl font-normal tracking-tight text-neutral-900">
-              Invoice
+          <div className="rounded-surface flex flex-col overflow-hidden border border-neutral-200">
+            <div className="grid grid-cols-[1fr_2rem_5rem] gap-2 bg-neutral-100 px-3 py-2 text-xs font-medium">
+              <span>Description</span>
+              <span className="text-center">Qty</span>
+              <span className="text-right">Amount</span>
             </div>
-            <div className="mt-1 font-mono text-xs text-neutral-500 tabular-nums">
-              #INV-0042
-            </div>
+            {PREVIEW_LINES.map((line, lineIndex) => (
+              <div
+                key={line.description}
+                className="hero-fade-up grid grid-cols-[1fr_2rem_5rem] gap-2 border-t border-neutral-200 px-3 py-2 tabular-nums"
+                style={{ animationDelay: `${0.8 + lineIndex * 0.15}s` }}
+              >
+                <span>{line.description}</span>
+                <span className="text-center">{line.quantity}</span>
+                <span className="text-right">{line.amount}</span>
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 border-b border-neutral-200 p-6 text-sm">
-          <div className="flex flex-col gap-1">
-            <div className="text-xs font-medium tracking-wide text-neutral-400 uppercase">
-              Billed to
-            </div>
-            <div className="text-neutral-700">Northwind Co.</div>
+          <div
+            className="hero-fade-up flex items-end justify-between gap-4 pb-4"
+            style={{ animationDelay: "1.3s" }}
+          >
+            <span className="text-xs text-neutral-600">
+              Acme Bank
+              <br />
+              Account 12345678
+              <br />
+              SWIFT ACMEUS33
+            </span>
+            <span className="flex flex-col items-end gap-0.5">
+              <span className="text-xs text-neutral-600">Total due</span>
+              <span className="text-xl font-semibold tabular-nums">
+                $3,200.00
+              </span>
+            </span>
           </div>
-          <div className="flex flex-col gap-1 text-right">
-            <div className="text-xs font-medium tracking-wide text-neutral-400 uppercase">
-              Due
-            </div>
-            <div className="font-mono text-neutral-700 tabular-nums">
-              {dueDate}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col gap-3 border-b border-neutral-200 p-6 text-sm">
-          <LineItem label="Brand identity design" amount="1,400.00" />
-          <LineItem label="Landing page build" amount="850.00" />
-          <LineItem label="Monthly retainer" amount="200.00" />
-        </div>
-        <div className="bg-brand-50 flex items-center justify-between p-6">
-          <span className="text-brand-700 text-sm font-medium">Total due</span>
-          <span className="font-instrument-serif text-brand-700 text-xl font-normal tabular-nums">
-            $2,450.00
+        </figure>
+        <div
+          className="hero-fade-up rounded-surface shadow-menu absolute -bottom-4 left-4 flex items-center gap-2 border border-neutral-200 bg-white px-3 py-2 sm:-left-4"
+          style={{ animationDelay: "1.6s" }}
+        >
+          <IconLock className="text-brand-600 size-4" aria-hidden="true" />
+          <span className="text-sm font-medium text-neutral-700">
+            Bank details only leave on your PDF
           </span>
         </div>
       </div>
-      <div className="rounded-surface absolute -bottom-4 -left-4 hidden items-center gap-2 border border-neutral-200 bg-white px-3 py-2 shadow-lg sm:flex">
-        <IconDatabase className="text-brand-600 size-4" />
-        <span className="text-sm font-medium text-neutral-700">
-          Saved locally
-        </span>
-      </div>
+      {isHydrated ? (
+        <div className="flex min-h-18 flex-col gap-2 pt-3">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span id="preview-font-label" className="text-sm text-neutral-600">
+              Try a font
+            </span>
+            <div
+              role="group"
+              aria-labelledby="preview-font-label"
+              aria-describedby="preview-font-hint"
+              className="flex items-center gap-1 rounded-full border border-neutral-200 bg-white p-1"
+            >
+              {PREVIEW_FONTS.map(previewFont => {
+                const isActive = previewFont.id === font;
+
+                return (
+                  <button
+                    key={previewFont.id}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => onFontChange(previewFont.id)}
+                    className={cn(
+                      "focus-visible:outline-brand-600 h-8 rounded-full px-3 text-sm outline-offset-2 focus-visible:outline-2 pointer-coarse:h-10",
+                      COLOR_TRANSITION,
+                      isActive
+                        ? "bg-neutral-900 text-white"
+                        : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                    )}
+                    style={{
+                      fontFamily: getInvoiceFontDefinition(previewFont.id)
+                        .cssFamily
+                    }}
+                  >
+                    {previewFont.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <p id="preview-font-hint" className="text-xs text-neutral-600">
+            Your new invoice opens in the font you pick.
+          </p>
+        </div>
+      ) : (
+        <p className="min-h-18 pt-3 text-sm text-neutral-600">
+          Set your invoice in any of ten fonts in the editor.
+        </p>
+      )}
     </div>
   );
 }
 
-function LineItem({ label, amount }: { label: string; amount: string }) {
+// The sample freelancer's logo, shared by both example invoices.
+function LogoMark() {
   return (
-    <div className="flex items-center justify-between gap-4">
-      <span className="text-neutral-600">{label}</span>
-      <span className="font-mono text-neutral-900 tabular-nums">${amount}</span>
-    </div>
+    <span
+      aria-hidden
+      className="rounded-surface font-geist flex size-12 shrink-0 items-center justify-center bg-neutral-900 text-sm font-semibold text-white"
+    >
+      MO
+    </span>
   );
 }
 
-function wrapPercent(min: number, max: number, value: number) {
-  const range = max - min;
-
-  return ((((value - min) % range) + range) % range) + min;
-}
-
-function MarqueeBand() {
-  const prefersReducedMotion = useReducedMotion();
-  const baseX = useMotionValue(0);
-  const { scrollY } = useScroll();
-  const scrollVelocity = useVelocity(scrollY);
-  const smoothVelocity = useSpring(scrollVelocity, {
-    damping: 50,
-    stiffness: 400
-  });
-  const velocityFactor = useTransform(smoothVelocity, [0, 1000], [0, 4], {
-    clamp: false
-  });
-  const directionRef = useRef(-1);
-  const x = useTransform(baseX, value => `${wrapPercent(-25, 0, value)}%`);
-
-  useAnimationFrame((_time, delta) => {
-    if (prefersReducedMotion) return;
-
-    const factor = velocityFactor.get();
-    if (factor > 0) directionRef.current = -1;
-    if (factor < 0) directionRef.current = 1;
-
-    const moveBy =
-      directionRef.current * 2.2 * (delta / 1000) * (1 + Math.abs(factor));
-    baseX.set(baseX.get() + moveBy);
-  });
-
+/**
+ * The privacy promise, set as a sheet of paper like the invoice in the hero.
+ * The sheet shows before it tells: a live count of this page's own network
+ * requests, then three checks a visitor can make themselves. The honest caveat
+ * about browser storage comes after the proof on every screen size.
+ */
+function Privacy() {
   return (
     <section
-      aria-hidden
-      className="overflow-hidden border-b border-neutral-200 py-8 sm:py-10"
+      id="privacy"
+      className="scroll-mt-16 border-b border-neutral-200 py-20 sm:py-24"
     >
-      <motion.div style={{ x }} className="flex w-max whitespace-nowrap">
-        <MarqueeStrip />
-        <MarqueeStrip />
-        <MarqueeStrip />
-        <MarqueeStrip />
-      </motion.div>
-    </section>
-  );
-}
-
-function MarqueeStrip() {
-  return (
-    <div className="font-instrument-serif flex items-center text-6xl font-normal tracking-tight text-neutral-900 uppercase sm:text-7xl">
-      {MARQUEE_PHRASES.map((phrase, phraseIndex) => (
-        <span key={phrase} className="flex items-center">
-          <span
-            className={
-              phraseIndex % 2 === 1
-                ? "px-6 text-transparent [-webkit-text-stroke:1.5px_var(--color-neutral-900)]"
-                : "px-6"
-            }
-          >
-            {phrase}
-          </span>
-          <span className="text-brand-600 text-4xl sm:text-5xl">✳</span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function Manifesto() {
-  return (
-    <section className="border-b border-neutral-200 py-24 sm:py-32">
-      <div className="mx-auto flex max-w-6xl flex-col gap-16 px-6">
-        <WordReveal
-          phrase="Made for freelancers, side hustles, and anyone who just needs to bill someone without signing up for yet another platform."
-          className="font-instrument-serif max-w-4xl text-3xl leading-tight font-normal tracking-tight text-neutral-900 sm:text-5xl"
-        />
-        <div className="grid grid-cols-2 gap-px overflow-hidden border border-neutral-200 bg-neutral-200 sm:grid-cols-4">
-          {STATS.map((stat, statIndex) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-10% 0px" }}
-              transition={{
-                duration: 0.6,
-                ease: EASE_OUT_EXPO,
-                delay: statIndex * 0.08
-              }}
-              className="flex flex-col gap-1 bg-neutral-50 px-6 py-8"
-            >
-              <span className="font-instrument-serif text-brand-600 text-4xl font-normal tracking-tight tabular-nums">
-                {stat.value}
-              </span>
-              <span className="font-mono text-xs tracking-widest text-neutral-500 uppercase">
-                {stat.label}
-              </span>
-            </motion.div>
-          ))}
+      <div className="mx-auto grid max-w-6xl items-start gap-x-16 gap-y-12 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:grid-rows-[auto_1fr]">
+        <div className="flex flex-col gap-6 lg:col-start-1 lg:row-start-1">
+          <h2 className={cn(DISPLAY_HEADING, "text-5xl sm:text-6xl")}>
+            Your invoices never leave this browser.
+          </h2>
+          <p className="max-w-[46ch] text-lg text-pretty text-neutral-600">
+            billsend has no server to send them to. Invoices, templates and
+            logos are saved in your browser’s own storage on this device, and
+            nowhere else.
+          </p>
+        </div>
+        <div className="rounded-surface shadow-floating flex flex-col overflow-hidden border border-neutral-200 bg-white lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <div className="flex flex-col gap-1 px-6 pt-7 pb-5 sm:px-8">
+            <h3 className="text-xl font-semibold tracking-tight text-neutral-900">
+              Check it yourself
+            </h3>
+            <p className="text-sm text-neutral-600">
+              Don’t take our word for it.
+            </p>
+          </div>
+          <RequestTally />
+          <ul className="flex flex-col">
+            {CHECKS.map(check => (
+              <li
+                key={check.title}
+                className="flex flex-col gap-1.5 border-t border-neutral-200 px-6 py-5 sm:px-8"
+              >
+                <span className="font-medium text-neutral-900">
+                  {check.title}
+                </span>
+                <p className="text-sm text-pretty text-neutral-600">
+                  {check.description}
+                </p>
+                {check.link && (
+                  <a
+                    href={check.link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "text-brand-700 decoration-brand-200 hover:decoration-brand-700 rounded-control focus-visible:outline-brand-600 inline-flex min-h-10 items-center gap-1 self-start text-sm font-medium underline underline-offset-4 outline-offset-2 focus-visible:outline-2 pointer-coarse:min-h-11",
+                      COLOR_TRANSITION
+                    )}
+                  >
+                    {check.link.label}
+                    <IconArrowUpRight className="size-4" aria-hidden="true" />
+                    <span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="flex max-w-[46ch] flex-col gap-2 border-t border-neutral-200 pt-6 lg:col-start-1 lg:row-start-2">
+          <h3 className="text-sm font-medium text-neutral-900">
+            One thing to know
+          </h3>
+          <p className="text-sm text-pretty text-neutral-600">
+            Because everything lives in this browser, clearing your browsing
+            data, or closing a private window, deletes it, and it won’t follow
+            you to another device. To keep a backup, choose Export Data from the
+            File menu in the editor.
+          </p>
         </div>
       </div>
     </section>
   );
 }
 
-function WordReveal({
-  phrase,
-  className
-}: {
-  phrase: string;
-  className?: string;
-}) {
-  const phraseRef = useRef<HTMLParagraphElement>(null);
-  const isInView = useInView(phraseRef, { once: true, margin: "-15% 0px" });
+/**
+ * A live readout from the browser's own performance timeline. Without
+ * JavaScript, or in a browser without the API, it falls back to telling the
+ * visitor how to look for themselves.
+ */
+function RequestTally() {
+  const tally = useRequestTally();
 
   return (
-    <p ref={phraseRef} className={className}>
-      {phrase.split(" ").map((word, wordIndex) => (
-        <span
-          key={`${word}-${wordIndex}`}
-          className="-mb-[0.1em] inline-flex overflow-hidden pb-[0.1em]"
-        >
-          <motion.span
-            initial={{ y: "110%" }}
-            animate={isInView ? { y: "0%" } : { y: "110%" }}
-            transition={{
-              duration: 0.6,
-              ease: EASE_OUT_EXPO,
-              delay: 0.02 * wordIndex
-            }}
-            className="inline-block will-change-transform"
-          >
-            {word}
-          </motion.span>
-          <span className="inline-block">&nbsp;</span>
-        </span>
-      ))}
-    </p>
+    <div className="flex min-h-36 flex-col justify-center gap-4 border-t border-neutral-200 bg-neutral-100 px-6 py-5 sm:px-8">
+      {tally ? (
+        <>
+          <span className="flex items-center gap-2 text-xs font-medium text-neutral-700">
+            <span
+              aria-hidden
+              className="bg-success size-2 rounded-full motion-safe:animate-pulse"
+            />
+            Counted live by your browser, since this page opened
+          </span>
+          <dl className="grid grid-cols-2 gap-6">
+            <div className="flex flex-col-reverse gap-1">
+              <dt className="text-sm text-neutral-600">
+                Requests to other websites
+              </dt>
+              <dd className="text-4xl font-semibold tracking-tight text-neutral-900 tabular-nums">
+                {tally.elsewhere}
+              </dd>
+            </div>
+            <div className="flex flex-col-reverse gap-1">
+              <dt className="text-sm text-neutral-600">
+                Files from billsend itself
+              </dt>
+              <dd className="text-4xl font-semibold tracking-tight text-neutral-500 tabular-nums">
+                {tally.own}
+              </dd>
+            </div>
+          </dl>
+        </>
+      ) : (
+        <p className="text-sm text-pretty text-neutral-700">
+          Open your browser’s developer tools and choose the Network tab: every
+          file this page loads comes from billsend itself, and none goes
+          anywhere else.
+        </p>
+      )}
+    </div>
   );
 }
 
-function Features() {
+function TourMarker({ marker }: { marker: number }) {
+  return (
+    <span
+      aria-hidden
+      className="bg-brand-600 font-geist flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white tabular-nums"
+    >
+      {marker}
+    </span>
+  );
+}
+
+// Pins a numbered marker into the paper's left margin beside the part of the
+// invoice a tour note describes. Below `lg` the note itself follows that part
+// directly, so a phone never has to hold the numbers in mind across a scroll.
+function MarkedRegion({
+  marker,
+  children,
+  className
+}: {
+  marker: number;
+  children: ReactNode;
+  className?: string;
+}) {
+  const note = TOUR_NOTES.find(tourNote => tourNote.marker === marker);
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className={cn("relative", className)}>
+        <span className="absolute top-0.5 -left-7 sm:-left-8">
+          <TourMarker marker={marker} />
+        </span>
+        {children}
+      </div>
+      {note && (
+        <div className="rounded-surface border-brand-200 bg-brand-50 font-geist flex flex-col gap-1 border px-3 py-2.5 tracking-normal lg:hidden">
+          <span className="text-brand-950 text-sm font-semibold">
+            {note.title}
+          </span>
+          <span className="text-brand-950 text-sm text-pretty">
+            {note.description}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The product, shown rather than listed: a fuller invoice (another client,
+ * another currency, tax and a discount, set in Lora) with numbered markers that
+ * match the notes beside it on wide screens, or beneath each part on narrow
+ * ones.
+ */
+function Tour() {
+  const lora = getInvoiceFontDefinition("lora");
+  const dueDate = format(addDays(new Date(), 14), "d MMM yyyy");
+
   return (
     <section
       id="features"
-      className="scroll-mt-16 border-b border-neutral-200 py-24 sm:py-32"
+      className="scroll-mt-16 border-b border-neutral-200 py-20 sm:py-24"
     >
-      <div className="mx-auto max-w-6xl px-6">
-        <SectionIntro
-          label="Features · 01 to 06"
-          title="Everything you need, nothing you don't"
-        />
-        <ul className="mt-16">
-          {FEATURES.map((feature, featureIndex) => (
-            <FeatureRow
-              key={feature.title}
-              feature={feature}
-              featureIndex={featureIndex}
-            />
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function FeatureRow({
-  feature,
-  featureIndex
-}: {
-  feature: { icon: Icon; title: string; description: string };
-  featureIndex: number;
-}) {
-  const FeatureIcon = feature.icon;
-
-  return (
-    <motion.li
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-8% 0px" }}
-      transition={{
-        duration: 0.6,
-        ease: EASE_OUT_EXPO,
-        delay: featureIndex * 0.04
-      }}
-      className="group border-t border-neutral-200 last:border-b"
-    >
-      <div className="grid items-center gap-x-10 gap-y-3 py-8 transition-colors duration-300 sm:grid-cols-[3.5rem_1.2fr_1fr_auto] sm:py-10">
-        <span className="font-mono text-sm text-neutral-400 tabular-nums transition-colors duration-300 group-hover:text-neutral-900">
-          {`0${featureIndex + 1}`}
-        </span>
-        <h3 className="font-instrument-serif text-3xl font-normal tracking-tight text-neutral-900 transition-transform duration-300 ease-out sm:text-4xl sm:group-hover:translate-x-3">
-          {feature.title}
-        </h3>
-        <p className="max-w-[38ch] text-sm text-pretty text-neutral-500 transition-colors duration-300 group-hover:text-neutral-700">
-          {feature.description}
-        </p>
-        <span className="border-brand-200 bg-brand-50 text-brand-600 rounded-surface hidden size-11 items-center justify-center border transition-transform duration-300 ease-out group-hover:-rotate-6 sm:flex">
-          <FeatureIcon className="size-5" />
-        </span>
-      </div>
-    </motion.li>
-  );
-}
-
-function Steps() {
-  return (
-    <section
-      id="how"
-      className="scroll-mt-16 border-b border-neutral-200 py-24 sm:py-32"
-    >
-      <div className="mx-auto max-w-6xl px-6">
-        <SectionIntro label="How it works" title="From blank page to PDF" />
-        <div className="mt-16 grid gap-12 md:grid-cols-3 md:gap-8">
-          {STEPS.map((step, stepIndex) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 48 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-10% 0px" }}
-              transition={{
-                duration: 0.7,
-                ease: EASE_OUT_EXPO,
-                delay: stepIndex * 0.12
-              }}
-              className="flex flex-col gap-5 border-t border-neutral-200 pt-6"
-            >
-              <span className="font-instrument-serif text-7xl font-normal tracking-tight text-transparent tabular-nums [-webkit-text-stroke:1.5px_var(--color-brand-400)] sm:text-8xl">
-                {step.number}
-              </span>
-              <div className="flex flex-col gap-2">
-                <h3 className="font-instrument-serif text-2xl font-normal text-neutral-900">
-                  {step.title}
-                </h3>
-                <p className="max-w-[36ch] text-sm text-pretty text-neutral-600">
-                  {step.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SectionIntro({ label, title }: { label: string; title: string }) {
-  return (
-    <div className="flex max-w-3xl flex-col gap-4">
-      <motion.span
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once: true, margin: "-10% 0px" }}
-        transition={{ duration: 0.6 }}
-        className="text-brand-600 font-mono text-xs tracking-widest uppercase"
-      >
-        {label}
-      </motion.span>
-      <WordReveal
-        phrase={title}
-        className="font-instrument-serif text-4xl font-normal tracking-tight text-balance text-neutral-900 sm:text-5xl"
-      />
-    </div>
-  );
-}
-
-function SlidingBand() {
-  const bandRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: bandRef,
-    offset: ["start end", "end start"]
-  });
-  const xLeft = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const xRight = useTransform(scrollYProgress, [0, 1], [0, -200]);
-
-  return (
-    <div
-      ref={bandRef}
-      aria-hidden
-      className="flex flex-col gap-5 overflow-hidden py-20 sm:py-24"
-    >
-      <motion.div style={{ x: xLeft }} className="-ml-40 flex w-max gap-5">
-        {[...BAND_ROW_ONE, ...BAND_ROW_ONE].map((card, cardIndex) => (
-          <MiniCard key={`${card.label}-${cardIndex}`} card={card} />
-        ))}
-      </motion.div>
-      <motion.div
-        style={{ x: xRight }}
-        className="-mr-40 flex w-max gap-5 self-end"
-      >
-        {[...BAND_ROW_TWO, ...BAND_ROW_TWO].map((card, cardIndex) => (
-          <MiniCard key={`${card.label}-${cardIndex}`} card={card} />
-        ))}
-      </motion.div>
-    </div>
-  );
-}
-
-function MiniCard({
-  card
-}: {
-  card: { label: string; tone: keyof typeof CARD_TONES };
-}) {
-  return (
-    <div
-      className={`rounded-surface flex h-24 items-center border px-10 font-mono text-lg whitespace-nowrap tabular-nums ${CARD_TONES[card.tone]}`}
-    >
-      {card.label}
-    </div>
-  );
-}
-
-function PrivacyFinale() {
-  return (
-    <section id="privacy" className="scroll-mt-16">
-      <svg
-        viewBox="0 0 1440 80"
-        preserveAspectRatio="none"
-        aria-hidden
-        className="fill-brand-950 block h-16 w-full sm:h-20"
-      >
-        <path d="M0 80 L0 64 C360 4 1080 4 1440 64 L1440 80 Z" />
-      </svg>
-      <div className="bg-brand-950 text-neutral-50">
-        <div className="mx-auto flex max-w-6xl flex-col px-6 pt-20 pb-12 sm:pt-28">
-          <span className="text-brand-300 font-mono text-xs tracking-widest uppercase">
-            Private by default
-          </span>
-          <WordReveal
-            phrase="Your invoices never leave this tab."
-            className="font-instrument-serif mt-6 max-w-3xl text-5xl font-normal tracking-tight text-balance sm:text-7xl"
-          />
-          <p className="mt-8 max-w-[56ch] text-lg text-pretty text-neutral-300">
-            There is no backend. Invoices, templates, and logos live in your
-            browser and stay on your device. Export them whenever you like,
-            clear them whenever you want. We genuinely cannot see them.
+      <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6">
+        <div className="flex max-w-3xl flex-col gap-5">
+          <h2 className={cn(DISPLAY_HEADING, "text-4xl sm:text-5xl")}>
+            Made for the invoice you need to send today
+          </h2>
+          <p className="max-w-[56ch] text-lg text-pretty text-neutral-600">
+            For freelancers and anyone with a side project who needs to bill a
+            client, not set up accounting software. Save any invoice as a
+            template and the next one for that client starts here.
           </p>
-          <div className="mt-16 grid gap-10 sm:grid-cols-3 sm:gap-8">
-            <Assurance
-              title="No accounts"
-              description="Open the app and start. There is nothing to sign up for."
-            />
-            <Assurance
-              title="No cloud sync"
-              description="Files are written to your machine, not someone else's."
-            />
-            <Assurance
-              title="No tracking"
-              description="Zero analytics scripts, zero third-party requests."
-            />
-          </div>
-          <div className="mt-24 flex flex-col items-start gap-10 border-t border-white/15 pt-12 sm:mt-32 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="font-instrument-serif text-4xl font-normal tracking-tight sm:text-6xl">
-              Ready when <span className="text-brand-300 italic">you</span> are.
-            </h2>
-            <Magnetic>
-              <Link
-                to="/create"
-                preload="viewport"
-                className="group bg-brand-500 relative inline-flex items-center gap-4 overflow-hidden rounded-full py-3 pr-3 pl-9 text-lg font-medium text-white"
-              >
-                <span
-                  aria-hidden
-                  className="bg-brand-800 absolute top-1/2 left-1/2 aspect-square w-[170%] -translate-x-1/2 -translate-y-1/2 scale-0 rounded-full transition-transform duration-500 ease-out group-hover:scale-100"
-                />
-                <span className="relative z-10">Create your invoice</span>
-                <span className="text-brand-600 relative z-10 flex size-12 items-center justify-center rounded-full bg-white transition-transform duration-300 ease-out group-hover:scale-110">
-                  <IconArrowRight className="size-6 -rotate-45 transition-transform duration-300 ease-out group-hover:rotate-0" />
+        </div>
+        <div className="grid items-start gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <figure
+            aria-label="Example invoice in euros with VAT and a discount"
+            className="rounded-surface shadow-floating flex flex-col gap-6 border border-neutral-200 bg-white px-9 py-7 text-sm text-neutral-900 sm:px-11 sm:py-9"
+            style={{
+              fontFamily: lora.cssFamily,
+              letterSpacing: lora.letterSpacing
+            }}
+          >
+            <MarkedRegion
+              marker={1}
+              className="flex items-start justify-between gap-4"
+            >
+              <div className="flex flex-col gap-3">
+                <span className="text-3xl font-semibold">Invoice</span>
+                <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-xs tabular-nums">
+                  <dt className="text-neutral-500">Invoice No.</dt>
+                  <dd>INV-0043</dd>
+                  <dt className="text-neutral-500">Due date</dt>
+                  <dd suppressHydrationWarning>{dueDate}</dd>
+                </dl>
+              </div>
+              <LogoMark />
+            </MarkedRegion>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <span className="font-medium">From</span>
+                <span className="text-neutral-600">
+                  Maya Okafor
+                  <br />
+                  London
                 </span>
-              </Link>
-            </Magnetic>
-          </div>
-          <div className="mt-20 flex flex-col items-start justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row sm:items-center">
-            <span className="font-bricolage-grotesque text-lg font-semibold tracking-tight text-white">
-              billsend
-            </span>
-            <div className="flex items-center gap-6 font-mono text-xs text-neutral-400 tabular-nums">
-              <span className="flex items-center gap-2">
-                <IconShieldCheck className="text-brand-300 size-3.5" />
-                100% local
-              </span>
-              <span>
-                © {new Date().getFullYear()} billsend.io · A local-first invoice
-                tool
-              </span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-medium">To</span>
+                <span className="text-neutral-600">
+                  Kanal & Co. GmbH
+                  <br />
+                  Berlin
+                </span>
+              </div>
             </div>
+            <div className="rounded-surface flex flex-col overflow-hidden border border-neutral-200">
+              <div className="grid grid-cols-[1fr_2rem_5.5rem] gap-2 bg-neutral-100 px-3 py-2 text-xs font-medium">
+                <span>Description</span>
+                <span className="text-center">Qty</span>
+                <span className="text-right">Amount</span>
+              </div>
+              {TOUR_LINES.map(line => (
+                <div
+                  key={line.description}
+                  className="grid grid-cols-[1fr_2rem_5.5rem] gap-2 border-t border-neutral-200 px-3 py-2 tabular-nums"
+                >
+                  <span>{line.description}</span>
+                  <span className="text-center">{line.quantity}</span>
+                  <span className="text-right">{line.amount}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col items-end gap-3 tabular-nums">
+              <div className="w-full max-w-64">
+                <MarkedRegion marker={2} className="flex flex-col gap-1.5">
+                  <TourTotalRow label="Subtotal" value="€2,750.00" />
+                  <TourTotalRow label="VAT (19%)" value="€522.50" />
+                  <TourTotalRow label="Discount (10%)" value="−€275.00" />
+                </MarkedRegion>
+              </div>
+              <div className="w-full max-w-64">
+                <MarkedRegion
+                  marker={3}
+                  className="flex items-baseline justify-between border-t border-neutral-200 pt-2"
+                >
+                  <span className="font-medium">Total</span>
+                  <span className="text-xl font-semibold">€2,997.50</span>
+                </MarkedRegion>
+              </div>
+            </div>
+            <div className="border-t border-neutral-200 pt-4">
+              <MarkedRegion marker={4} className="flex flex-col gap-1 text-xs">
+                <span className="font-medium">Payment details</span>
+                <span className="text-neutral-600 tabular-nums">
+                  IBAN DE89 3704 0044 0532 0130 00
+                  <br />
+                  BIC COBADEFFXXX
+                </span>
+              </MarkedRegion>
+            </div>
+          </figure>
+          <ol className="hidden flex-col lg:flex">
+            {TOUR_NOTES.map(note => (
+              <li
+                key={note.marker}
+                className="grid grid-cols-[auto_1fr] gap-4 border-t border-neutral-200 py-6 first:border-t-0 first:pt-2"
+              >
+                <span className="pt-1.5">
+                  <TourMarker marker={note.marker} />
+                </span>
+                <div className="flex flex-col gap-2">
+                  <h3 className={cn(DISPLAY_HEADING, "text-3xl leading-tight")}>
+                    {note.title}
+                  </h3>
+                  <p className="max-w-[46ch] text-base text-pretty text-neutral-600">
+                    {note.description}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TourTotalRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="text-neutral-600">{label}</span>
+      <span>{value}</span>
+    </div>
+  );
+}
+
+function Questions() {
+  return (
+    <section id="questions" className="scroll-mt-16 py-20 sm:py-24">
+      <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+        <div className="flex flex-col gap-5">
+          <h2 className={cn(DISPLAY_HEADING, "text-4xl sm:text-5xl")}>
+            Before you start
+          </h2>
+          <p className="max-w-[40ch] text-base text-pretty text-neutral-600">
+            Something else on your mind?{" "}
+            <a
+              href={`${SOURCE_URL}/issues`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                "text-brand-700 decoration-brand-200 hover:decoration-brand-700 rounded-control focus-visible:outline-brand-600 font-medium underline underline-offset-4 outline-offset-2 focus-visible:outline-2",
+                COLOR_TRANSITION
+              )}
+            >
+              Ask on GitHub
+              <span className="sr-only"> (opens in a new tab)</span>
+            </a>
+            .
+          </p>
+        </div>
+        <div className="flex flex-col border-b border-neutral-200">
+          {QUESTIONS.map(item => (
+            <details
+              key={item.question}
+              className="group border-t border-neutral-200"
+            >
+              <summary className="rounded-control focus-visible:outline-brand-600 flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-base font-medium text-neutral-900 outline-offset-2 focus-visible:outline-2 [&::-webkit-details-marker]:hidden">
+                {item.question}
+                <IconPlus
+                  className="size-5 shrink-0 text-neutral-500 transition-transform duration-200 group-open:rotate-45"
+                  aria-hidden="true"
+                />
+              </summary>
+              <p className="max-w-[60ch] pb-5 text-base text-pretty text-neutral-600">
+                {item.answer}
+              </p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Closing({ font }: { font: InvoiceFont }) {
+  return (
+    <section className="pb-20 sm:pb-24">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="flex flex-col items-start gap-8 border-t border-neutral-200 pt-12 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className={cn(DISPLAY_HEADING, "text-4xl sm:text-6xl")}>
+            Nothing to sign up for. Just your invoice.
+          </h2>
+          <div className="flex shrink-0 flex-col items-start gap-3 sm:items-end">
+            <CreateInvoiceLink size="lg" font={font} id={CLOSING_CTA_ID} />
+            <p className="text-sm text-neutral-600">
+              Free, and it opens straight into the editor.
+            </p>
           </div>
         </div>
       </div>
@@ -804,62 +1079,36 @@ function PrivacyFinale() {
   );
 }
 
-function Assurance({
-  title,
-  description
-}: {
-  title: string;
-  description: string;
-}) {
+function SiteFooter() {
   return (
-    <div className="flex flex-col gap-3 border-t border-white/15 pt-5">
-      <div className="text-brand-300 flex items-center gap-2 text-sm font-medium">
-        <IconShieldCheck className="size-4" />
-        {title}
+    <footer className="border-t border-neutral-200 text-sm text-neutral-600">
+      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 pt-8 pb-10 sm:flex-row sm:items-center sm:justify-between">
+        <span className="font-bricolage-grotesque text-brand-600 text-lg font-semibold tracking-tight">
+          billsend
+        </span>
+        <div className="flex flex-wrap items-center gap-x-6">
+          <FooterLink href={`${SOURCE_URL}/issues`}>Report an issue</FooterLink>
+          <FooterLink href={SOURCE_URL}>Source on GitHub</FooterLink>
+          <span className="py-2">© {new Date().getFullYear()} billsend.io</span>
+        </div>
       </div>
-      <p className="text-sm text-pretty text-neutral-400">{description}</p>
-    </div>
+    </footer>
   );
 }
 
-function Magnetic({ children }: { children: ReactNode }) {
-  const prefersReducedMotion = useReducedMotion();
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const offsetX = useMotionValue(0);
-  const offsetY = useMotionValue(0);
-  const springX = useSpring(offsetX, {
-    stiffness: 180,
-    damping: 14,
-    mass: 0.4
-  });
-  const springY = useSpring(offsetY, {
-    stiffness: 180,
-    damping: 14,
-    mass: 0.4
-  });
-
-  const handleMouseMove = (event: MouseEvent<HTMLDivElement>) => {
-    if (prefersReducedMotion || !wrapperRef.current) return;
-
-    const bounds = wrapperRef.current.getBoundingClientRect();
-    offsetX.set((event.clientX - (bounds.left + bounds.width / 2)) * 0.3);
-    offsetY.set((event.clientY - (bounds.top + bounds.height / 2)) * 0.3);
-  };
-
-  const handleMouseLeave = () => {
-    offsetX.set(0);
-    offsetY.set(0);
-  };
-
+function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <motion.div
-      ref={wrapperRef}
-      style={{ x: springX, y: springY }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="inline-block"
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "rounded-control focus-visible:outline-brand-600 inline-flex min-h-10 items-center outline-offset-2 hover:text-neutral-900 focus-visible:outline-2 pointer-coarse:min-h-11",
+        COLOR_TRANSITION
+      )}
     >
       {children}
-    </motion.div>
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
   );
 }
