@@ -7,7 +7,14 @@ import {
   IconFolderOpen,
   IconUpload
 } from "@tabler/icons-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useTransition
+} from "react";
 import { toast } from "sonner";
 import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
 import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
@@ -54,6 +61,8 @@ export function InvoiceFileMenu({
     reset
   } = useInvoiceDocument();
   const hasUnsavedChanges = useHasUnsavedChanges();
+  const { open: openRequest } = useSearch({ from: "/create" });
+  const navigate = useNavigate();
 
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [internalSaveAsDialogOpen, setInternalSaveAsDialogOpen] =
@@ -105,6 +114,22 @@ export function InvoiceFileMenu({
       setOpenDialogOpen(true);
     });
   }
+
+  // The homepage's "Open your saved invoices" link lands here with
+  // `open=invoices`. It goes through the same unsaved-changes guard as the
+  // menu item, then the param is cleared so a reload doesn't reopen the list.
+  const onOpenRequested = useEffectEvent(() => {
+    handleOpenInvoice();
+    void navigate({
+      to: "/create",
+      search: previous => ({ ...previous, open: undefined }),
+      replace: true
+    });
+  });
+
+  useEffect(() => {
+    if (openRequest === "invoices") onOpenRequested();
+  }, [openRequest]);
 
   function handleOpenTemplate() {
     runWithUnsavedGuard(() => {
