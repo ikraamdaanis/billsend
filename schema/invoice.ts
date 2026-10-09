@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getAvailableFontWeights } from "~/consts/invoice-fonts";
+import "~/lib/configure-zod";
 
 // The Zod schema is the single source of truth for the persisted invoice shape.
 // Every field is resilient (`.catch(...)`): parsing a partial, legacy, or

@@ -129,9 +129,7 @@ test("a saved invoice is offered from the hero and opens the list", async ({
 
   await page.goto("/");
 
-  const openSaved = page.getByRole("link", {
-    name: "Open your saved invoices"
-  });
+  const openSaved = page.getByRole("link", { name: /Open your invoices/ });
 
   await expect(openSaved).toBeVisible();
   await openSaved.click();
@@ -178,12 +176,11 @@ test("the live privacy check reports no requests to other websites", async ({
   page
 }) => {
   await gotoHomeHydrated(page);
-  await page.locator("#privacy").scrollIntoViewIfNeeded();
-
   const elsewhere = page
-    .locator("#privacy dl > div")
+    .getByRole("figure", { name: "Example invoice made with billsend" })
+    .locator("dl > div")
     .filter({ hasText: "Requests to other websites" })
     .locator("dd");
 
-  await expect(elsewhere).toHaveText("0");
+  await expect(elsewhere).toHaveText("000");
 });

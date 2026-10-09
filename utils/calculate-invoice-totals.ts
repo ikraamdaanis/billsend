@@ -33,33 +33,31 @@ export function calculateInvoiceTotals(
   const subtotal =
     Math.round(items.reduce((sum, item) => sum + item.amount, 0) * 100) / 100;
 
-  // A tax-exempt invoice charges no tax regardless of the stored rate, so a
-  // reverse-charge or zero-rated invoice reads zero while keeping the rate the
-  // user last entered.
-  const taxAmount = invoice.tax.exempt
-    ? 0
-    : Math.round(subtotal * (Number(invoice.tax.percentage) || 0)) / 100;
-
-  const fees = Number(invoice.fees) || 0;
-
   // A percentage discount is taken off the subtotal; a fixed discount is the
-  // entered amount. Either way the amount is clamped below so it can never push
-  // the grand total negative.
+  // entered amount. Either way it comes off the goods and services, so it is
+  // clamped to the subtotal: it can never discount fees or tax, or push the
+  // total negative.
   const discountValue = Number(invoice.discounts) || 0;
   const rawDiscount =
     invoice.discountType === "percentage"
       ? Math.round(subtotal * discountValue) / 100
       : discountValue;
+  const discountAmount = Math.min(Math.max(rawDiscount, 0), subtotal);
 
-  // A discount can never push the grand total below zero: any discount beyond
-  // the chargeable amount (subtotal + tax + fees) is dropped rather than billed
-  // as a negative total.
-  const chargeable = Math.round((subtotal + taxAmount + fees) * 100) / 100;
-  const discountAmount = Math.min(Math.max(rawDiscount, 0), chargeable);
+  // Tax is charged on the discounted amount, as VAT and sales tax are. A
+  // tax-exempt invoice charges no tax regardless of the stored rate, so a
+  // reverse-charge or zero-rated invoice reads zero while keeping the rate the
+  // user last entered.
+  const taxableAmount = Math.round((subtotal - discountAmount) * 100) / 100;
+  const taxAmount = invoice.tax.exempt
+    ? 0
+    : Math.round(taxableAmount * (Number(invoice.tax.percentage) || 0)) / 100;
+
+  const fees = Number(invoice.fees) || 0;
 
   const total = Math.max(
     0,
-    Math.round((chargeable - discountAmount) * 100) / 100
+    Math.round((taxableAmount + taxAmount + fees) * 100) / 100
   );
 
   // The balance due nets off any recorded payment/deposit. An overpayment

@@ -229,14 +229,14 @@ describe("buildInvoiceViewModel", () => {
   });
 
   describe("summaryRows", () => {
-    it("orders the rows subtotal, tax, fees, discounts, total, amount paid, balance due", () => {
+    it("orders the rows subtotal, discounts, tax, fees, total, amount paid, balance due", () => {
       const { summaryRows } = buildInvoiceViewModel(makeInvoice());
 
       expect(summaryRows.map(row => row.id)).toEqual([
         "subtotal",
+        "discounts",
         "tax",
         "fees",
-        "discounts",
         "total",
         "amountPaid",
         "balanceDue"
@@ -358,9 +358,9 @@ describe("buildInvoiceViewModel", () => {
 
       expect(visible).toEqual([
         "subtotal",
+        "discounts",
         "tax",
         "fees",
-        "discounts",
         "total"
       ]);
     });
@@ -377,14 +377,14 @@ describe("buildInvoiceViewModel", () => {
       const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));
 
       expect(byId.subtotal.value).toBe("£100.00");
-      expect(byId.tax.value).toBe("£7.50");
+      expect(byId.tax.value).toBe("£7.20");
       expect(byId.tax.percentage).toBe(7.5);
       expect(byId.fees.value).toBe("£12.00");
       expect(byId.discounts.value).toBe("-£4.00");
-      expect(byId.total.value).toBe("£115.50");
+      expect(byId.total.value).toBe("£115.20");
     });
 
-    it("caps the displayed discount so the rows reconcile when over-discounted", () => {
+    it("caps the displayed discount at the subtotal when over-discounted", () => {
       const { summaryRows } = buildInvoiceViewModel(
         makeInvoice({
           items: [makeItem({ quantity: 1, unitPrice: 100 })],
@@ -395,8 +395,9 @@ describe("buildInvoiceViewModel", () => {
       );
       const byId = Object.fromEntries(summaryRows.map(row => [row.id, row]));
 
-      expect(byId.discounts.value).toBe("-£115.00");
-      expect(byId.total.value).toBe("£0.00");
+      expect(byId.discounts.value).toBe("-£100.00");
+      expect(byId.tax.value).toBe("£0.00");
+      expect(byId.total.value).toBe("£5.00");
     });
 
     it("flags only the total row as the grand total", () => {

@@ -24,6 +24,7 @@ import { Input } from "~/components/ui/input";
 import { NativeSelect } from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import { saveTemplate } from "~/db";
+import "~/lib/configure-zod";
 import type { Invoice, InvoiceTemplate } from "~/types";
 
 const saveTemplateSchema = z.object({
