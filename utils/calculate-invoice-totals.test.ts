@@ -209,8 +209,8 @@ describe("calculateInvoiceTotals", () => {
 
     expect(totals.items[0].amount).toBe(99);
     expect(totals.subtotal).toBe(99);
-    expect(totals.taxAmount).toBe(9.9);
-    expect(totals.total).toBe(109.9);
+    expect(totals.taxAmount).toBe(9.5);
+    expect(totals.total).toBe(109.5);
   });
 
   it("treats non-numeric strings as zero", () => {
@@ -230,7 +230,22 @@ describe("calculateInvoiceTotals", () => {
     expect(totals.total).toBe(0);
   });
 
-  it("clamps the total at zero when the discount exceeds the chargeable amount", () => {
+  it("charges tax on the discounted amount", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({
+        items: [makeItem({ quantity: 1, unitPrice: 1000 })],
+        tax: { percentage: 20, exempt: false, note: "" },
+        discounts: 10,
+        discountType: "percentage"
+      })
+    );
+
+    expect(totals.discountAmount).toBe(100);
+    expect(totals.taxAmount).toBe(180);
+    expect(totals.total).toBe(1080);
+  });
+
+  it("caps the discount at the subtotal, leaving fees still due", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
@@ -241,11 +256,12 @@ describe("calculateInvoiceTotals", () => {
     );
 
     expect(totals.subtotal).toBe(100);
-    expect(totals.taxAmount).toBe(10);
-    expect(totals.total).toBe(0);
+    expect(totals.discountAmount).toBe(100);
+    expect(totals.taxAmount).toBe(0);
+    expect(totals.total).toBe(5);
   });
 
-  it("clamps to zero exactly when the discount equals the chargeable amount", () => {
+  it("clamps to zero exactly when the discount equals the subtotal", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],
@@ -281,7 +297,7 @@ describe("calculateInvoiceTotals", () => {
     expect(totals.total).toBe(180);
   });
 
-  it("reports a fixed discount amount and clamps it to the chargeable total", () => {
+  it("reports a fixed discount amount and clamps it to the subtotal", () => {
     const totals = calculateInvoiceTotals(
       makeInvoice({
         items: [makeItem({ quantity: 1, unitPrice: 100 })],

@@ -108,6 +108,17 @@ function buildSummaryRows(input: {
       isVisible: true,
       isTotal: false
     },
+    // The discount comes before tax because tax is charged on the discounted
+    // amount, so the rows read in the order the sums are done.
+    {
+      id: "discounts",
+      label: labels.discounts,
+      value: `-${formatCurrency(input.discountAmount, currency)}`,
+      percentage:
+        input.discountType === "percentage" ? input.discountValue : undefined,
+      isVisible: input.discountValue > 0,
+      isTotal: false
+    },
     {
       id: "tax",
       label: labels.tax,
@@ -124,15 +135,6 @@ function buildSummaryRows(input: {
       label: labels.fees,
       value: formatCurrency(input.fees, currency),
       isVisible: input.fees > 0,
-      isTotal: false
-    },
-    {
-      id: "discounts",
-      label: labels.discounts,
-      value: `-${formatCurrency(input.discountAmount, currency)}`,
-      percentage:
-        input.discountType === "percentage" ? input.discountValue : undefined,
-      isVisible: input.discountValue > 0,
       isTotal: false
     },
     {

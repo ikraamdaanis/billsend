@@ -7,6 +7,7 @@ import {
   getAllTemplates,
   importDataAtomically
 } from "~/db";
+import "~/lib/configure-zod";
 import {
   CURRENT_INVOICE_SCHEMA_VERSION,
   migrateInvoiceData

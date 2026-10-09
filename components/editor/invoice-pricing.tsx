@@ -82,9 +82,9 @@ export function InvoicePricing() {
   return (
     <div className="flex flex-col gap-1 text-right">
       <SubtotalRow />
+      <DiscountsRow />
       <TaxRow />
       <FeesRow />
-      <DiscountsRow />
       <TotalRow />
       <AmountPaidRow />
       <BalanceDueRow />

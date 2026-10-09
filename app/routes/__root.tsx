@@ -26,7 +26,7 @@ export const Route = createRootRoute({
     ],
     links: [
       // Geist is the base font on every route, so its latin subset preloads
-      // globally. Route-specific fonts (the homepage's Instrument Serif)
+      // globally. Route-specific fonts (the homepage's Archivo)
       // preload from their own route's head instead, so other pages don't
       // download files they never render.
       {

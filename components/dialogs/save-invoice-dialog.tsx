@@ -21,6 +21,7 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { NativeSelect } from "~/components/ui/select";
+import "~/lib/configure-zod";
 import type { InvoiceDocument } from "~/types";
 
 const saveInvoiceSchema = z.object({
