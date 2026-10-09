@@ -1,37 +1,37 @@
-import archivoFont from "@fontsource-variable/archivo/files/archivo-latin-wdth-normal.woff2?url";
-import "@fontsource-variable/archivo/wdth.css";
+import interFont from "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2?url";
 import {
   IconAlertTriangle,
-  IconArrowRight,
   IconArrowUpRight,
+  IconCheck,
+  IconChevronRight,
+  IconCloudOff,
+  IconCoins,
+  IconDownload,
+  IconEyeOff,
+  IconFileTypePdf,
   IconMenu2,
-  IconPlus
+  IconPlus,
+  IconPrinter,
+  IconTypography,
+  IconUserOff
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { addDays, format } from "date-fns";
-import type { ReactNode } from "react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import {
-  CornerRosette,
-  GuillocheBand,
-  Microprint,
-  Rosette,
-  underprintBackground
-} from "~/components/home/guilloche";
+import type { ComponentType, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import { cn } from "~/lib/utils";
 import type { InvoiceFont } from "~/types";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
-  // Archivo only sets the homepage's engraved lettering, so it preloads here
-  // rather than in the root head; other routes would download a font they
-  // never render.
+  // The homepage is set in Inter, so its latin subset preloads here rather
+  // than in the root head, where every route would download it.
   head: () => ({
     links: [
       {
         rel: "preload",
-        href: archivoFont,
+        href: interFont,
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous"
@@ -40,60 +40,98 @@ export const Route = createFileRoute("/")({
   })
 });
 
-const HEADER_HEIGHT = 64;
-
 const SOURCE_URL = "https://github.com/ikraamdaanis/billsend";
-
-const HERO_CTA_ID = "hero-create-invoice";
-
-const CLOSING_CTA_ID = "closing-create-invoice";
 
 const DEFAULT_FONT: InvoiceFont = "geist";
 
-// Engraved lettering: Archivo at its widest, like the denomination on a note.
-const ENGRAVED = "font-engraved [font-stretch:125%]";
-
-// Numbering-machine figures: Archivo at its narrowest, tabular.
-const NUMBERING = "font-engraved [font-stretch:62%] tabular-nums";
-
-// Printed form labels: small, wide, tracked capitals.
-const FORM_LABEL = cn(
-  ENGRAVED,
-  "text-[0.6875rem] leading-none font-semibold tracking-[0.14em] uppercase"
-);
-
-const HEADLINE = cn(
-  ENGRAVED,
-  "font-semibold tracking-[-0.025em] text-balance text-ink"
-);
-
-// Colour-only transitions. Tailwind's `transition-colors` also animates
-// `outline-color`, which leaves the focus ring pale for a beat after Tab.
-const COLOR_TRANSITION =
-  "transition-[color,background-color,text-decoration-color]";
+const CONTAINER = "mx-auto max-w-6xl px-6 lg:px-8";
 
 const FOCUS_RING =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
 
-const TINT_UNDERPRINT = underprintBackground("oklch(0.85 0.035 190 / 0.55)");
+const TEXT_LINK = cn(
+  "inline-flex items-center gap-1 rounded-sm text-base/7 font-medium text-zinc-950 hover:text-brand-600 sm:text-sm/6",
+  FOCUS_RING
+);
 
-const BAND_UNDERPRINT = underprintBackground("oklch(0.42 0.152 257.57 / 0.5)");
+// Headlines use Inter's Display optical size, which the browser picks up from
+// the opsz axis at large sizes.
+const HEADING = "font-semibold tracking-tight text-balance";
 
-const SLIP_UNDERPRINT = underprintBackground("oklch(0.85 0.035 190 / 0.35)");
+const BODY_TEXT = "text-base/7 text-pretty text-zinc-600 sm:text-sm/6";
 
-const MICROPRINT_TEXT =
-  "billsend keeps your invoices in this browser on this device";
-
-// Every fact on the document's foot line is checkable on this page.
-const DOCUMENT_FACTS = [
-  "0 accounts",
-  "0 analytics scripts",
-  "0 requests to other websites",
-  "Free"
+const SECTIONS = [
+  { href: "#try-it", label: "Try it" },
+  { href: "#features", label: "Features" },
+  { href: "#privacy", label: "Privacy" },
+  { href: "#questions", label: "Questions" }
 ];
 
-// The four checks, in the order a visitor can make them, each led by the plain
-// verb a banknote leaflet would use.
+const CURRENCIES = ["EUR", "GBP", "USD", "CHF"] as const;
+
+type Currency = (typeof CURRENCIES)[number];
+
+type RequestTally =
+  | { status: "counting"; elsewhere: number; data: number; files: number }
+  | { status: "pending" | "unsupported" };
+
+// A UK freelancer billing a German business: VAT is reverse charged, so the
+// total is the subtotal less the 10% discount.
+const INVOICE_LINES = [
+  { description: "Editorial illustrations", quantity: 3, unitPrice: 600 },
+  { description: "Cover artwork", quantity: 1, unitPrice: 950 }
+];
+
+const DISCOUNT_RATE = 0.1;
+
+// Real faces from the editor's invoice font library, across its categories.
+const DEMO_FONTS: InvoiceFont[] = [
+  "geist",
+  "lora",
+  "libre-baskerville",
+  "jetbrains-mono"
+];
+
+const FACTS: { label: string; icon: ComponentType<{ className?: string }> }[] =
+  [
+    { label: "No account", icon: IconUserOff },
+    { label: "No uploads", icon: IconCloudOff },
+    { label: "No analytics", icon: IconEyeOff },
+    { label: "Any currency", icon: IconCoins },
+    { label: "Ten invoice fonts", icon: IconTypography },
+    { label: "PDF and print", icon: IconPrinter }
+  ];
+
+// Each feature shows a fragment of a real invoice rather than an icon.
+const FEATURES: { title: string; description: string; specimen: ReactNode }[] =
+  [
+    {
+      title: "Your logo, your type",
+      description:
+        "Upload your logo and set the whole invoice in any of ten fonts, at three sizes.",
+      specimen: <TypeSpecimen />
+    },
+    {
+      title: "Any currency",
+      description:
+        "Choose the currency for each invoice, with custom symbols when you need them.",
+      specimen: <CurrencySpecimen />
+    },
+    {
+      title: "Tax, fees and discounts",
+      description:
+        "Add VAT or sales tax, fees, and a fixed or percentage discount. billsend does the sums, taxing the amount after any discount.",
+      specimen: <TotalsSpecimen />
+    },
+    {
+      title: "Payment details clients can use",
+      description:
+        "Bank name, account number, IBAN, BIC / SWIFT and sort code, laid out so your client can pay without asking.",
+      specimen: <PaymentSpecimen />
+    }
+  ];
+
+// The checks, in the order a visitor can make them.
 const CHECKS: {
   title: string;
   description: string;
@@ -101,9 +139,9 @@ const CHECKS: {
   link?: { href: string; label: string };
 }[] = [
   {
-    title: "Look at the red counter",
+    title: "Watch the counter",
     description:
-      "The counter marked “Requests to other websites” on the sample invoice reads your browser’s own record of every request this page makes elsewhere. Type on the invoice all you like: it stays at 000."
+      "The counter on the sample invoice reads your browser’s own record of every request this page makes to other websites. Type all you like: it stays at zero."
   },
   {
     title: "Search for a sign-up",
@@ -113,45 +151,17 @@ const CHECKS: {
   {
     title: "Ask your browser",
     description:
-      "Every billsend page, the editor included, tells your browser to block it from loading anything from, or sending data to, any other website. Your browser enforces that rule, not billsend.",
+      "Every billsend page tells your browser to block it from loading anything from, or sending data to, any other website. Your browser enforces that rule, not billsend.",
     detail: {
       summary: "See the rule on a computer",
-      text: "Open your browser’s developer tools, choose the Network tab and reload the page. Select the first request in the list and look for content-security-policy under Response Headers."
+      text: "Open your browser’s developer tools, choose the Network tab and reload the page. Select the first request and look for content-security-policy under Response Headers."
     }
   },
   {
     title: "Read the code",
     description:
       "billsend’s code is public on GitHub, so anyone can check exactly what it does with your data.",
-    link: { href: SOURCE_URL, label: "View the code on GitHub" }
-  }
-];
-
-// Each entry is keyed by the marker number drawn on the tour invoice.
-const TOUR_NOTES: { marker: number; title: string; description: string }[] = [
-  {
-    marker: 1,
-    title: "Your logo, your type",
-    description:
-      "Upload your logo and set the whole invoice in any of ten fonts, at three sizes. This one is in Lora."
-  },
-  {
-    marker: 2,
-    title: "Any currency",
-    description:
-      "Choose the currency for each invoice, with custom symbols when you need them."
-  },
-  {
-    marker: 3,
-    title: "Tax, fees and discounts",
-    description:
-      "Add VAT or sales tax as a rate, or mark the invoice tax-exempt with a note such as “Reverse charge”. Add fees and a fixed or percentage discount, and billsend does the sums, taxing the amount after any discount."
-  },
-  {
-    marker: 4,
-    title: "Payment details clients can use",
-    description:
-      "Bank name, account number, IBAN, BIC / SWIFT and sort code. They leave this browser only in files you save: the PDF you send, or your own backup."
+    link: { href: SOURCE_URL, label: "View the code" }
   }
 ];
 
@@ -191,7 +201,7 @@ const QUESTION_GROUPS: {
       {
         question: "Where are my invoices saved?",
         answer:
-          "In this browser, on this device. They only leave it in files you save: the PDFs you download and any backup you export from the editor’s File menu."
+          "In this browser, on this device. Clearing this browser’s site data deletes them, and other browsers can’t see them. To back them up or move them, choose Export Data from the editor’s File menu; the file includes your bank details, so keep it somewhere safe."
       },
       {
         question: "Can I use a private window?",
@@ -207,43 +217,9 @@ const QUESTION_GROUPS: {
   }
 ];
 
-// Real faces from the editor's invoice font library, one per category.
-const PREVIEW_FONTS: { id: InvoiceFont; label: string }[] = [
-  { id: "geist", label: "Geist" },
-  { id: "lora", label: "Lora" },
-  { id: "jetbrains-mono", label: "JetBrains Mono" }
-];
-
-// A UK freelancer billing a German business: VAT is reverse charged, so the
-// tax row carries the editor's exempt note and the total is the subtotal less
-// the 10% discount (2,750.00 - 275.00 = 2,475.00).
-const TOUR_LINES: { description: string; quantity: string; amount: string }[] =
-  [
-    {
-      description: "Editorial illustrations",
-      quantity: "3",
-      amount: "€1,800.00"
-    },
-    { description: "Cover artwork", quantity: "1", amount: "€950.00" }
-  ];
-
 // Only fetch, XHR and beacon requests let a script send data; everything else
 // a page loads is a file it downloads.
 const DATA_INITIATORS = new Set(["fetch", "xmlhttprequest", "beacon"]);
-
-function subscribeToNothing() {
-  return () => {};
-}
-
-// False during server render and hydration, true once React owns the page, so
-// controls that need JavaScript never appear clickable before they work.
-function useIsHydrated() {
-  return useSyncExternalStore(
-    subscribeToNothing,
-    () => true,
-    () => false
-  );
-}
 
 // How many invoices this browser has saved: null until known, "blocked" when
 // the browser refuses storage. The database module loads on demand so
@@ -271,40 +247,6 @@ function useSavedInvoiceCount() {
   return count;
 }
 
-// The header and the phone's bottom bar offer Create invoice only while
-// neither the hero's nor the closing section's button is on screen, so one
-// primary action shows at once.
-function useShouldShowStickyCta() {
-  const [visibleCtaIds, setVisibleCtaIds] = useState<string[]>([HERO_CTA_ID]);
-
-  useEffect(() => {
-    const targets = [HERO_CTA_ID, CLOSING_CTA_ID]
-      .map(id => document.getElementById(id))
-      .filter(target => target !== null);
-    const observer = new IntersectionObserver(
-      entries => {
-        setVisibleCtaIds(previous => {
-          const next = new Set(previous);
-
-          for (const entry of entries) {
-            if (entry.isIntersecting) next.add(entry.target.id);
-            else next.delete(entry.target.id);
-          }
-
-          return [...next];
-        });
-      },
-      { rootMargin: `-${HEADER_HEIGHT}px 0px 0px 0px` }
-    );
-
-    for (const target of targets) observer.observe(target);
-
-    return () => observer.disconnect();
-  }, []);
-
-  return visibleCtaIds.length === 0;
-}
-
 // Counts every network request this page has made from the browser's own
 // performance timeline, three ways: requests to any other website, background
 // requests (fetch, XHR or beacon, the kinds scripts use to send data) to
@@ -313,10 +255,7 @@ function useShouldShowStickyCta() {
 // (seeded with the buffered entries) rather than reading the timeline buffer,
 // which stops recording at 250 entries.
 function useRequestTally() {
-  const [tally, setTally] = useState<
-    | { status: "counting"; elsewhere: number; data: number; files: number }
-    | { status: "pending" | "unsupported" }
-  >({ status: "pending" });
+  const [tally, setTally] = useState<RequestTally>({ status: "pending" });
 
   useEffect(() => {
     if (typeof PerformanceObserver === "undefined") {
@@ -353,125 +292,97 @@ function useRequestTally() {
   return tally;
 }
 
-// Numbering machines print a fixed number of wheels.
-function formatSerial(value: number) {
-  return String(value).padStart(3, "0");
+function formatMoney(amount: number, currency: Currency) {
+  return new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency,
+    currencyDisplay: "narrowSymbol"
+  }).format(amount);
 }
 
 function HomePage() {
   const [font, setFont] = useState<InvoiceFont>(DEFAULT_FONT);
   const tally = useRequestTally();
-  const shouldShowStickyCta = useShouldShowStickyCta();
 
   return (
-    <div
-      className="selection:bg-brand-100 selection:text-brand-950 bg-tint text-ink min-h-svh antialiased"
-      style={{ backgroundImage: TINT_UNDERPRINT }}
-    >
+    <div className="selection:bg-brand-100 isolate min-h-svh bg-white font-sans [font-feature-settings:'cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
       <a
         href="#main"
         className={cn(
-          "shadow-menu rounded-control fixed top-3 left-3 z-[60] -translate-y-16 bg-white px-4 py-2 text-sm font-medium transition-transform focus:translate-y-0",
+          "fixed top-3 left-3 z-60 -translate-y-16 rounded-full bg-white px-4 py-2 text-sm font-medium shadow-lg ring-1 ring-zinc-950/10 focus:translate-y-0",
           FOCUS_RING
         )}
       >
         Skip to content
       </a>
-      <SiteHeader font={font} shouldShowCta={shouldShowStickyCta} />
+      <SiteHeader font={font} />
       <main id="main" className="overflow-x-clip">
-        <Hero font={font} onFontChange={setFont} tally={tally} />
+        <Hero font={font} tally={tally} />
+        <TryIt font={font} onFontChange={setFont} tally={tally} />
+        <Features />
+        <HowItWorks />
         <Privacy />
-        <Tour />
         <Questions />
         <Closing font={font} />
       </main>
       <SiteFooter />
-      <PhoneCtaBar font={font} isVisible={shouldShowStickyCta} />
     </div>
   );
 }
 
-function SiteHeader({
-  font,
-  shouldShowCta
-}: {
-  font: InvoiceFont;
-  shouldShowCta: boolean;
-}) {
+function Wordmark() {
   return (
-    <header
-      className="bg-tint/90 sticky top-0 z-50 backdrop-blur-md"
-      style={{ height: `${HEADER_HEIGHT}px` }}
+    <Link
+      to="/"
+      aria-label="Homepage"
+      className={cn("flex items-center gap-2 rounded-md", FOCUS_RING)}
     >
-      <div className="mx-auto grid h-full max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-6 md:grid-cols-[1fr_auto_1fr]">
-        <Link
-          to="/"
-          className={cn(
-            "font-bricolage-grotesque rounded-surface text-brand-600 justify-self-start py-2 text-xl font-semibold tracking-tight",
-            FOCUS_RING
-          )}
-        >
-          billsend
-        </Link>
+      <img
+        src="/favicon-96x96.png"
+        alt=""
+        className="size-6 shrink-0 rounded-md"
+      />
+      <span className="text-lg font-semibold tracking-tight">billsend</span>
+    </Link>
+  );
+}
+
+function SiteHeader({ font }: { font: InvoiceFont }) {
+  return (
+    <header>
+      <div className={cn(CONTAINER, "flex h-16 items-center gap-4")}>
+        <div className="flex flex-1 items-center">
+          <Wordmark />
+        </div>
         <nav
           aria-label="Sections"
-          className="hidden items-center gap-1 justify-self-center md:flex"
+          className="flex items-center gap-1 max-md:hidden"
         >
-          <NavLink href="#privacy">Privacy</NavLink>
-          <NavLink href="#features">Features</NavLink>
-          <NavLink href="#questions">Questions</NavLink>
+          {SECTIONS.map(section => (
+            <a
+              key={section.href}
+              href={section.href}
+              className={cn(
+                "rounded-full px-3 py-2 text-sm/6 text-zinc-600 hover:text-zinc-950",
+                FOCUS_RING
+              )}
+            >
+              {section.label}
+            </a>
+          ))}
         </nav>
-        <div className="flex items-center justify-self-end">
-          <div
-            aria-hidden={!shouldShowCta}
-            inert={!shouldShowCta}
-            className={cn(
-              "hidden transition-[opacity,visibility,translate] ease-out md:block",
-              shouldShowCta
-                ? "visible translate-y-0 opacity-100 duration-200"
-                : "invisible translate-y-1 opacity-0 duration-100"
-            )}
-          >
-            <CreateInvoiceLink size="sm" font={font} />
-          </div>
+        <div className="flex flex-1 items-center justify-end gap-1">
+          <CreateInvoiceLink font={font} size="sm" />
           <PhoneMenu />
         </div>
       </div>
-      <Microprint
-        text={MICROPRINT_TEXT}
-        className="text-ink/35 border-ink/10 border-b pb-px"
-      />
     </header>
   );
 }
 
-function NavLink({
-  href,
-  onNavigate,
-  children
-}: {
-  href: string;
-  onNavigate?: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <a
-      href={href}
-      onClick={onNavigate}
-      className={cn(
-        "rounded-control text-ink-muted hover:text-ink block px-3 py-2.5 text-sm font-medium pointer-coarse:py-3",
-        COLOR_TRANSITION,
-        FOCUS_RING
-      )}
-    >
-      {children}
-    </a>
-  );
-}
-
 // Below `md` the section links fold into a native disclosure, so they work
-// before hydration and never crowd the wordmark on a 320px screen. Once
-// hydrated it also closes on Escape or a tap outside, like any menu.
+// before hydration. Once hydrated it also closes on Escape or a tap outside,
+// like any menu.
 function PhoneMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDetailsElement>(null);
@@ -511,560 +422,885 @@ function PhoneMenu() {
     >
       <summary
         className={cn(
-          "rounded-control text-ink flex size-11 cursor-pointer list-none items-center justify-center [&::-webkit-details-marker]:hidden",
+          "flex size-11 cursor-pointer list-none items-center justify-center rounded-full [&::-webkit-details-marker]:hidden",
           FOCUS_RING
         )}
       >
-        <IconMenu2 className="size-5" aria-hidden="true" />
+        <IconMenu2 className="size-6 shrink-0" aria-hidden="true" />
         <span className="sr-only">Sections</span>
       </summary>
       <nav
         aria-label="Sections"
-        className="rounded-surface shadow-menu border-ink/15 absolute top-full right-0 mt-2 flex w-48 flex-col border bg-white p-1"
+        className="absolute top-full right-0 z-10 mt-2 flex w-56 flex-col rounded-xl bg-white p-1.5 shadow-lg ring-1 ring-zinc-950/10"
       >
-        {[
-          { href: "#privacy", label: "Privacy" },
-          { href: "#features", label: "Features" },
-          { href: "#questions", label: "Questions" }
-        ].map(section => (
-          <NavLink
+        {SECTIONS.map(section => (
+          <a
             key={section.href}
             href={section.href}
-            onNavigate={() => setIsOpen(false)}
+            onClick={() => setIsOpen(false)}
+            className={cn(
+              "rounded-lg px-3 py-3 text-base/6 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950",
+              FOCUS_RING
+            )}
           >
             {section.label}
-          </NavLink>
+          </a>
         ))}
       </nav>
     </details>
   );
 }
 
-// The one primary action, worded and shaped the same everywhere it appears: an
-// engraved plate with a hairline inner frame. It carries the typeface picked on
-// the sample invoice into the editor.
+// The page's one primary action, shaped the same everywhere it appears. It
+// carries the typeface picked in the sample invoice into the editor.
 function CreateInvoiceLink({
-  size = "md",
   font,
-  id,
-  className
+  size = "md",
+  tone = "dark"
 }: {
-  size?: "sm" | "md" | "lg";
   font: InvoiceFont;
-  id?: string;
-  className?: string;
+  size?: "sm" | "md";
+  tone?: "dark" | "light";
 }) {
   return (
     <Link
-      id={id}
       to="/create"
       search={{ font: font === DEFAULT_FONT ? undefined : font }}
       preload="viewport"
       className={cn(
-        "group bg-brand-700 hover:bg-brand-800 rounded-control focus-visible:outline-brand-600 relative inline-flex shrink-0 items-center justify-center font-semibold whitespace-nowrap text-white uppercase outline-offset-4 focus-visible:outline-2",
-        ENGRAVED,
-        COLOR_TRANSITION,
-        size === "sm" &&
-          "h-9 gap-2 px-4 text-xs tracking-[0.1em] pointer-coarse:h-11",
-        size === "md" && "h-12 gap-3 px-6 text-sm tracking-[0.1em]",
-        size === "lg" && "h-14 gap-3 px-8 text-base tracking-[0.08em]",
-        className
+        "relative inline-flex shrink-0 items-center rounded-full font-medium whitespace-nowrap",
+        FOCUS_RING,
+        tone === "dark" && "bg-zinc-950 text-white hover:bg-zinc-800",
+        tone === "light" &&
+          "text-brand-800 hover:bg-brand-50 bg-white focus-visible:outline-white",
+        size === "md" && "px-5 py-3 text-base/6 sm:px-4 sm:py-2.5 sm:text-sm/6",
+        size === "sm" && "px-3 py-1.5 text-sm/6"
       )}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-[3px] rounded-[2px] border border-white/30"
-      />
       Create invoice
-      <IconArrowRight
-        className={cn(
-          "transition-transform duration-300 ease-out group-hover:translate-x-0.5",
-          size === "sm" ? "size-3.5" : "size-4"
-        )}
-        stroke={2.25}
-        aria-hidden="true"
-      />
+      {size === "sm" && (
+        <span
+          aria-hidden="true"
+          className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
+        />
+      )}
     </Link>
   );
 }
 
-// On a phone the primary action rides in the thumb zone once the hero's button
-// has scrolled away, and steps aside again for the closing one.
-function PhoneCtaBar({
-  font,
-  isVisible
+function SectionHeading({
+  title,
+  description
 }: {
-  font: InvoiceFont;
-  isVisible: boolean;
+  title: string;
+  description: string;
 }) {
   return (
-    <div
-      aria-hidden={!isVisible}
-      inert={!isVisible}
-      className={cn(
-        "bg-tint/95 border-ink/15 fixed inset-x-0 bottom-0 z-40 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md transition-[opacity,visibility,translate] ease-out md:hidden",
-        isVisible
-          ? "visible translate-y-0 opacity-100 duration-200"
-          : "invisible translate-y-4 opacity-0 duration-100"
-      )}
-    >
-      <CreateInvoiceLink font={font} className="w-full" />
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+      <h2 className={cn(HEADING, "max-w-[35ch] text-4xl")}>{title}</h2>
+      <p className={cn(BODY_TEXT, "max-w-[48ch] lg:max-w-[40ch]")}>
+        {description}
+      </p>
     </div>
   );
 }
 
-function Hero({
-  font,
-  onFontChange,
-  tally
-}: {
-  font: InvoiceFont;
-  onFontChange: (font: InvoiceFont) => void;
-  tally: ReturnType<typeof useRequestTally>;
-}) {
-  const savedInvoiceCount = useSavedInvoiceCount();
-
+function Hero({ font, tally }: { font: InvoiceFont; tally: RequestTally }) {
   return (
-    <section className="px-4 pt-6 pb-16 sm:px-6 sm:pb-20">
-      <div className="border-ink/20 relative mx-auto max-w-6xl overflow-hidden border bg-white/40">
-        <GuillocheBand id="hero-band-top" className="text-guilloche" />
-        <GuillocheBand
-          id="hero-band-left"
-          orientation="vertical"
-          className="text-guilloche absolute inset-y-0 left-0 hidden sm:block"
-        />
-        <GuillocheBand
-          id="hero-band-right"
-          orientation="vertical"
-          className="text-guilloche absolute inset-y-0 right-0 hidden sm:block"
-        />
-        <CornerRosette className="text-guilloche top-0 left-0 hidden sm:flex" />
-        <CornerRosette className="text-guilloche top-0 right-0 hidden sm:flex" />
-        <CornerRosette className="text-guilloche bottom-0 left-0 hidden sm:flex" />
-        <CornerRosette className="text-guilloche right-0 bottom-0 hidden sm:flex" />
-        <Rosette
-          animate
-          className="text-guilloche absolute -right-28 -bottom-28 hidden size-[34rem] lg:block"
-        />
-        <div className="relative flex flex-col gap-8 px-5 py-8 sm:gap-10 sm:px-10 sm:py-12 lg:gap-8 lg:py-10">
+    <section className="pt-12 sm:pt-20">
+      <div className={CONTAINER}>
+        <div className="flex flex-col gap-8 xl:flex-row xl:justify-between xl:gap-16">
           <h1
             className={cn(
-              HEADLINE,
-              "text-[2.5rem] leading-[0.98] sm:text-6xl xl:text-[4.25rem]"
+              HEADING,
+              "hero-fade-up max-w-[20ch] text-4xl sm:text-6xl"
             )}
           >
-            <HeadlineLine delay={0.1}>Send the invoice.</HeadlineLine>{" "}
-            <HeadlineLine delay={0.2}>
-              <span className="text-brand-600">Keep everything else.</span>
-            </HeadlineLine>
+            <span className="block">Send the invoice.</span>
+            <span className="text-brand-600 block">Keep everything else.</span>
           </h1>
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:gap-16">
-            <div className="flex flex-col items-start">
-              <p
-                className="hero-fade-up text-ink-muted max-w-[44ch] text-lg text-pretty"
-                style={{ animationDelay: "0.4s" }}
-              >
-                A free invoice maker that works entirely in your browser: fill
-                it in and download the PDF. No account and no upload. Your
-                invoices, clients and bank details stay in this browser and
-                leave it only in files you save.
-              </p>
-              <div
-                className="hero-fade-up mt-8 flex flex-wrap items-center gap-x-6 gap-y-2"
-                style={{ animationDelay: "0.5s" }}
-              >
-                <CreateInvoiceLink id={HERO_CTA_ID} font={font} />
-                <a
-                  href="#privacy"
-                  className={cn(
-                    "text-brand-700 decoration-brand-300 hover:decoration-brand-700 rounded-control py-3 text-base font-medium underline underline-offset-4",
-                    COLOR_TRANSITION,
-                    FOCUS_RING
-                  )}
-                >
-                  Check the privacy yourself
-                </a>
-              </div>
-              {tally.status === "counting" && (
-                <p className="text-ink-muted mt-3 flex items-baseline gap-2 text-sm lg:hidden">
-                  <span
-                    className={cn(
-                      NUMBERING,
-                      "text-numbering text-xl leading-none font-bold"
-                    )}
-                  >
-                    {formatSerial(tally.elsewhere)}
-                  </span>
-                  requests to other websites so far, counted by your browser.
-                </p>
-              )}
-              <SavedInvoicesNote count={savedInvoiceCount} />
+          <div className="hero-fade-up flex flex-col items-start gap-6 [animation-delay:100ms] xl:justify-between">
+            <p className={cn(BODY_TEXT, "max-w-[48ch]")}>
+              A free invoice maker that runs in your browser. No account, no
+              upload, and your clients and bank details stay on your device.
+            </p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <CreateInvoiceLink font={font} />
+              <a href="#try-it" className={TEXT_LINK}>
+                Try the sample invoice
+              </a>
             </div>
-            <SpecimenInvoice
-              font={font}
-              onFontChange={onFontChange}
-              tally={tally}
-            />
           </div>
         </div>
-        <DocumentFoot />
-        <GuillocheBand id="hero-band-bottom" className="text-guilloche" />
+        <HeroVisual tally={tally} />
+        <SavedInvoicesNote />
+        <ul className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-zinc-950/10 py-8 sm:grid-cols-3 lg:grid-cols-6">
+          {FACTS.map(fact => (
+            <li
+              key={fact.label}
+              className="flex items-center gap-2 text-base/6 font-medium text-zinc-700 sm:text-sm/6"
+            >
+              <fact.icon
+                className="size-5 shrink-0 text-zinc-400 sm:size-4"
+                aria-hidden="true"
+              />
+              {fact.label}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
 }
 
-function HeadlineLine({
-  delay,
-  children
-}: {
-  delay: number;
-  children: ReactNode;
-}) {
+/**
+ * The editor, shown rather than described: an app window on a billsend-blue
+ * panel, cropped at the foot, with the browser's own request counter floating
+ * over it on wide screens.
+ */
+function HeroVisual({ tally }: { tally: RequestTally }) {
   return (
-    <span className="-mb-[0.06em] block overflow-hidden pb-[0.12em]">
-      <span className="hero-rise block" style={{ animationDelay: `${delay}s` }}>
-        {children}
-      </span>
-    </span>
-  );
-}
-
-// The foot of the hero document: a line of true facts set like the
-// account-number line printed along the bottom of a cheque.
-function DocumentFoot() {
-  return (
-    <div className="border-perforation relative flex flex-wrap items-center gap-x-5 gap-y-2 border-t-2 border-dashed px-5 py-3 sm:px-10">
-      {DOCUMENT_FACTS.map(fact => (
-        <span
-          key={fact}
-          className={cn(
-            NUMBERING,
-            "text-ink-muted flex items-center gap-2 text-sm font-semibold tracking-[0.06em] uppercase"
-          )}
-        >
-          <TransitMark />
-          {fact}
-        </span>
-      ))}
+    <div className="hero-fade-up bg-brand-700 relative mt-12 h-[28rem] overflow-hidden rounded-xl [animation-delay:200ms] sm:mt-16 sm:h-[36rem] lg:h-[40rem]">
+      <div className="relative px-4 pt-8 sm:px-10 sm:pt-14 lg:px-16 lg:pt-16">
+        <EditorMock />
+      </div>
+      <RequestCard tally={tally} />
     </div>
   );
 }
 
-// The bracket-and-bar mark that separates fields on a cheque's code line.
-function TransitMark() {
-  return (
-    <svg
-      aria-hidden
-      viewBox="0 0 8 12"
-      className="text-ink-muted h-3 w-2 shrink-0"
-      fill="currentColor"
-    >
-      <rect x="0" y="0" width="2" height="12" />
-      <rect x="3.5" y="0" width="1.5" height="5" />
-      <rect x="3.5" y="7" width="1.5" height="5" />
-      <rect x="6.5" y="3" width="1.5" height="6" />
-    </svg>
-  );
-}
+const EDITOR_FONTS: InvoiceFont[] = ["geist", "lora", "jetbrains-mono"];
 
-// One reserved line under the hero actions on wide screens, so nothing moves
-// when the saved invoice count arrives: returning visitors get a way back to
-// their work, and a browser that refuses storage gets told what that means and
-// how to fix it.
-function SavedInvoicesNote({ count }: { count: number | "blocked" | null }) {
-  if (count === "blocked") {
-    return (
-      <p className="hero-fade-up text-ink-muted mt-4 flex max-w-[48ch] items-start gap-2 text-sm text-pretty">
-        <IconAlertTriangle
-          className="text-warning mt-0.5 size-4 shrink-0"
-          aria-hidden="true"
-        />
-        <span>
-          This browser is blocking storage, so invoices can’t be saved here. You
-          can still make one and download the PDF. To save them, leave private
-          browsing or allow this site to store data, then reload.
-        </span>
-      </p>
-    );
-  }
+const EDITOR_SECTIONS = [
+  { label: "Your details", value: "Maya Okafor" },
+  { label: "Bill to", value: "Kanal & Co. GmbH" },
+  { label: "Line items", value: "2 items" },
+  { label: "Tax and discounts", value: "Reverse charge, −10%" },
+  { label: "Payment details", value: "IBAN, BIC" }
+];
 
-  if (typeof count !== "number" || count === 0) {
-    return <div aria-hidden className="mt-4 hidden h-10 lg:block" />;
-  }
-
-  return (
-    <Link
-      to="/create"
-      search={{ open: "invoices" }}
-      className={cn(
-        "group hero-fade-up rounded-control text-ink-muted hover:text-ink mt-4 inline-flex h-10 items-center gap-1.5 text-sm",
-        COLOR_TRANSITION,
-        FOCUS_RING
-      )}
-    >
-      <span>
-        {count === 1
-          ? "You have 1 invoice saved in this browser."
-          : `You have ${count} invoices saved in this browser.`}{" "}
-        <span className="text-brand-700 decoration-brand-300 group-hover:decoration-brand-700 font-medium underline underline-offset-4">
-          Open your invoices
-        </span>
-      </span>
-      <IconArrowRight className="text-brand-700 size-4" aria-hidden="true" />
-    </Link>
-  );
-}
-
-/**
- * The sample invoice slip: a pre-printed form, set in engraved capitals, that
- * the visitor fills in. What they type and the typeface they pick are theirs;
- * the red numbering-machine counter is the browser's own count of requests to
- * other websites, and it stays at 000 while they type. The typeface carries
- * into the editor through every Create invoice link; the typed name stays on
- * this page.
- */
-function SpecimenInvoice({
-  font,
-  onFontChange,
-  tally
-}: {
-  font: InvoiceFont;
-  onFontChange: (font: InvoiceFont) => void;
-  tally: ReturnType<typeof useRequestTally>;
-}) {
-  const isHydrated = useIsHydrated();
-  const [clientName, setClientName] = useState("");
-  const fontDefinition = getInvoiceFontDefinition(font);
-  const dueDate = format(addDays(new Date(), 14), "d MMM yyyy");
-
+function EditorMock() {
   return (
     <figure
-      aria-label="Example invoice made with billsend"
-      className="hero-card rounded-surface shadow-floating border-ink/15 relative flex flex-col self-start border bg-white"
-      style={{
-        animationDelay: "0.3s",
-        backgroundImage: SLIP_UNDERPRINT,
-        fontFamily: fontDefinition.cssFamily,
-        letterSpacing: fontDefinition.letterSpacing
-      }}
+      aria-label="The billsend editor with a sample invoice set in Lora"
+      className="@container overflow-hidden rounded-t-xl bg-white shadow-2xl ring-1 ring-black/10"
     >
-      <div className="flex flex-col gap-5 px-5 pt-5 pb-5 sm:px-7">
-        <div className="flex items-start justify-between gap-4">
-          <span className={cn(ENGRAVED, "text-ink text-lg font-bold")}>
-            INVOICE
-          </span>
-          <span className="flex items-baseline gap-1.5">
-            <span className={cn(FORM_LABEL, "text-ink-muted")}>No.</span>
-            <span
-              className={cn(
-                NUMBERING,
-                "text-numbering text-2xl leading-none font-bold"
-              )}
-            >
-              0043
-            </span>
-          </span>
-        </div>
-        <label className="flex flex-col gap-2">
-          <span className={cn(FORM_LABEL, "text-ink-muted")}>Bill to</span>
-          <input
-            type="text"
-            value={clientName}
-            onChange={event => setClientName(event.target.value)}
-            placeholder="Try it: type a client’s name"
-            autoComplete="off"
-            spellCheck={false}
-            className="border-ink/65 text-ink placeholder:text-ink-muted/80 focus:border-brand-600 focus-visible:bg-brand-50/60 h-11 w-full border-0 border-b border-dashed bg-transparent px-0 text-xl outline-none"
-          />
-        </label>
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-4">
-          <div className="flex flex-col gap-2">
-            <span className={cn(FORM_LABEL, "text-ink-muted")}>For</span>
-            <span className="text-ink text-base">
-              Illustrations and cover artwork
-            </span>
-            <span
-              className="text-ink-muted text-sm tabular-nums"
-              suppressHydrationWarning
-            >
-              Due {dueDate}
-            </span>
+      <div aria-hidden="true">
+        <div className="flex items-center justify-between gap-4 border-b border-zinc-950/10 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2 text-sm">
+            <img
+              src="/favicon-96x96.png"
+              alt=""
+              className="size-5 shrink-0 rounded"
+            />
+            <span className="text-zinc-500 @max-sm:hidden">Invoices</span>
+            <IconChevronRight
+              className="size-4 shrink-0 text-zinc-300 @max-sm:hidden"
+              aria-hidden="true"
+            />
+            <span className="truncate font-medium">INV-0043</span>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className={cn(FORM_LABEL, "text-ink-muted")}>Amount</span>
-            <span className="border-ink/30 text-ink rounded-surface border bg-white px-3 py-1.5 text-xl font-semibold tabular-nums">
-              €2,475.00
+          <div className="flex shrink-0 items-center gap-3 text-sm">
+            <span className="flex items-center gap-1.5 text-zinc-500 @max-xl:hidden">
+              <IconCheck
+                className="text-brand-600 size-4 shrink-0"
+                aria-hidden="true"
+              />
+              Saved in this browser
+            </span>
+            <span className="flex items-center gap-1.5 rounded-full bg-zinc-950 py-1.5 pr-3 pl-2.5 font-medium text-white">
+              <IconDownload className="size-4 shrink-0" aria-hidden="true" />
+              Download PDF
             </span>
           </div>
         </div>
-        <TypefaceSwitch
-          font={font}
-          onFontChange={onFontChange}
-          isHydrated={isHydrated}
-        />
+        <div className="grid @3xl:grid-cols-[15rem_minmax(0,1fr)]">
+          <div className="flex flex-col gap-1 border-r border-zinc-950/10 p-3 @max-3xl:hidden">
+            {EDITOR_SECTIONS.map(section => (
+              <div
+                key={section.label}
+                className="flex flex-col rounded-lg px-3 py-2 text-sm"
+              >
+                <span className="font-medium">{section.label}</span>
+                <span className="truncate text-zinc-500">{section.value}</span>
+              </div>
+            ))}
+            <div className="flex flex-col gap-2 rounded-lg bg-zinc-100 px-3 py-2.5 text-sm">
+              <span className="font-medium">Appearance</span>
+              <div className="flex flex-wrap gap-1.5">
+                {EDITOR_FONTS.map(demoFont => (
+                  <span
+                    key={demoFont}
+                    className={cn(
+                      "rounded-md px-2 py-1 ring-1",
+                      demoFont === "lora"
+                        ? "ring-brand-600 bg-white text-zinc-950"
+                        : "text-zinc-500 ring-zinc-950/10"
+                    )}
+                    style={{
+                      fontFamily: getInvoiceFontDefinition(demoFont).cssFamily
+                    }}
+                  >
+                    {getInvoiceFontDefinition(demoFont).name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-center bg-zinc-100 p-4 @md:p-8 @3xl:justify-start @3xl:p-10">
+            <SampleInvoice
+              font="lora"
+              currency="EUR"
+              clientName="Kanal & Co. GmbH"
+              className="w-full max-w-md"
+            />
+          </div>
+        </div>
       </div>
-      <RequestCounter tally={tally} />
     </figure>
   );
 }
 
-function TypefaceSwitch({
-  font,
-  onFontChange,
-  isHydrated
-}: {
-  font: InvoiceFont;
-  onFontChange: (font: InvoiceFont) => void;
-  isHydrated: boolean;
-}) {
-  if (!isHydrated) {
+function RequestCard({ tally }: { tally: RequestTally }) {
+  return (
+    <div className="absolute right-6 bottom-16 flex w-64 flex-col gap-4 rounded-xl bg-white p-5 shadow-xl ring-1 ring-black/5 max-lg:hidden">
+      <p className="text-sm/6 font-medium text-zinc-600">
+        Counted by your browser
+      </p>
+      <div className="flex flex-col gap-1">
+        <p className="text-5xl font-medium tracking-tight tabular-nums">
+          {tally.status === "counting" ? tally.elsewhere : "–"}
+        </p>
+        <p className="text-sm/6 text-pretty text-zinc-700">
+          requests to other websites since this page opened.
+        </p>
+      </div>
+      {tally.status === "counting" && (
+        <dl className="grid grid-cols-2 gap-4 border-t border-zinc-950/10 pt-4 text-sm/6">
+          <div className="flex flex-col-reverse">
+            <dt className="text-zinc-600">Background requests</dt>
+            <dd className="font-medium text-zinc-950 tabular-nums">
+              {tally.data}
+            </dd>
+          </div>
+          <div className="flex flex-col-reverse">
+            <dt className="text-zinc-600">billsend’s own files</dt>
+            <dd className="font-medium text-zinc-950 tabular-nums">
+              {tally.files}
+            </dd>
+          </div>
+        </dl>
+      )}
+    </div>
+  );
+}
+
+// Returning visitors get a way back to their work, and a browser that refuses
+// storage gets told what that means and how to fix it.
+function SavedInvoicesNote() {
+  const count = useSavedInvoiceCount();
+
+  if (count === "blocked") {
     return (
-      <p className="text-ink-muted font-geist flex min-h-11 items-center text-sm tracking-normal">
-        Set your invoice in any of ten fonts in the editor.
+      <p className="mt-6 flex items-start gap-2 text-base/7 text-pretty text-zinc-600 sm:text-sm/6">
+        <IconAlertTriangle
+          className="size-5 h-lh shrink-0 text-amber-600 sm:size-4"
+          aria-hidden="true"
+        />
+        This browser is blocking storage, so invoices can’t be saved here. You
+        can still make one and download the PDF. To save them, leave private
+        browsing or allow this site to store data, then reload.
       </p>
     );
   }
 
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <span id="specimen-typeface" className={cn(FORM_LABEL, "text-ink-muted")}>
-        Typeface
-      </span>
-      <div
-        role="group"
-        aria-labelledby="specimen-typeface"
-        className="border-ink/45 rounded-control flex items-center border bg-white p-0.5"
-      >
-        {PREVIEW_FONTS.map(previewFont => {
-          const isActive = previewFont.id === font;
+  if (typeof count !== "number" || count === 0) return null;
 
-          return (
-            <button
-              key={previewFont.id}
-              type="button"
-              aria-pressed={isActive}
-              onClick={() => onFontChange(previewFont.id)}
-              className={cn(
-                "rounded-surface h-8 px-2.5 text-sm pointer-coarse:h-11",
-                COLOR_TRANSITION,
-                FOCUS_RING,
-                isActive
-                  ? "bg-ink text-white"
-                  : "text-ink-muted hover:bg-tint-deep hover:text-ink"
-              )}
-              style={{
-                fontFamily: getInvoiceFontDefinition(previewFont.id).cssFamily
-              }}
-            >
-              {previewFont.label}
-            </button>
-          );
-        })}
+  return (
+    <p className="mt-6 text-base/7 text-zinc-600 sm:text-sm/6">
+      {count === 1
+        ? "You have 1 invoice saved in this browser."
+        : `You have ${count} invoices saved in this browser.`}{" "}
+      <Link
+        to="/create"
+        search={{ open: "invoices" }}
+        className={cn(
+          "text-brand-600 hover:text-brand-700 rounded-sm font-medium",
+          FOCUS_RING
+        )}
+      >
+        Open your invoices
+      </Link>
+    </p>
+  );
+}
+
+/**
+ * A miniature of the invoice billsend produces, in the face and currency
+ * given. Both the hero's editor and the try-it panel render it.
+ */
+function SampleInvoice({
+  font,
+  currency,
+  clientName,
+  className
+}: {
+  font: InvoiceFont;
+  currency: Currency;
+  clientName: string;
+  className?: string;
+}) {
+  const fontDefinition = getInvoiceFontDefinition(font);
+  const today = new Date();
+  const subtotal = INVOICE_LINES.reduce(
+    (sum, line) => sum + line.quantity * line.unitPrice,
+    0
+  );
+  const discount = subtotal * DISCOUNT_RATE;
+
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-6 rounded-sm bg-white p-6 text-xs text-zinc-900 shadow-sm ring-1 ring-zinc-950/5 sm:p-8",
+        className
+      )}
+      style={{
+        fontFamily: fontDefinition.cssFamily,
+        letterSpacing: fontDefinition.letterSpacing
+      }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3">
+          <p className="text-2xl font-semibold">Invoice</p>
+          <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 whitespace-nowrap tabular-nums">
+            <dt className="text-zinc-500">Invoice No.</dt>
+            <dd>INV-0043</dd>
+            <dt className="text-zinc-500">Date</dt>
+            <dd suppressHydrationWarning>{format(today, "d MMM yyyy")}</dd>
+            <dt className="text-zinc-500">Due date</dt>
+            <dd suppressHydrationWarning>
+              {format(addDays(today, 14), "d MMM yyyy")}
+            </dd>
+          </dl>
+        </div>
+        <div className="font-geist flex size-10 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-xs font-semibold tracking-normal text-white">
+          MO
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium">From</p>
+          <p className="text-zinc-500">
+            Maya Okafor
+            <br />
+            London
+          </p>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="font-medium">Bill to</p>
+          <p className="break-words text-zinc-500">
+            {clientName === "" ? (
+              <span className="text-zinc-400">Your client</span>
+            ) : (
+              clientName
+            )}
+            <br />
+            Berlin
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-col tabular-nums">
+        <div className="grid grid-cols-[minmax(0,1fr)_2rem_6rem] gap-2 border-b border-zinc-950/10 pb-2 font-medium">
+          <span>Description</span>
+          <span className="text-center">Qty</span>
+          <span className="text-right">Amount</span>
+        </div>
+        {INVOICE_LINES.map(line => (
+          <div
+            key={line.description}
+            className="grid grid-cols-[minmax(0,1fr)_2rem_6rem] gap-2 border-b border-zinc-950/10 py-2"
+          >
+            <span>{line.description}</span>
+            <span className="text-center">{line.quantity}</span>
+            <span className="text-right">
+              {formatMoney(line.quantity * line.unitPrice, currency)}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-end tabular-nums">
+        <dl className="grid w-full max-w-60 grid-cols-[1fr_auto] gap-x-4 gap-y-1.5">
+          <dt className="text-zinc-500">Subtotal</dt>
+          <dd className="text-right">{formatMoney(subtotal, currency)}</dd>
+          <dt className="text-zinc-500">Discount (10%)</dt>
+          <dd className="text-right">−{formatMoney(discount, currency)}</dd>
+          <dt className="text-zinc-500">VAT</dt>
+          <dd className="text-right">Reverse charge</dd>
+          <dt className="border-t border-zinc-950/10 pt-2 font-medium">
+            Total
+          </dt>
+          <dd className="border-t border-zinc-950/10 pt-2 text-right text-base font-semibold">
+            {formatMoney(subtotal - discount, currency)}
+          </dd>
+        </dl>
+      </div>
+      <div className="flex flex-col gap-1 border-t border-zinc-950/10 pt-4">
+        <p className="font-medium">Payment details</p>
+        <p className="text-zinc-500 tabular-nums">
+          IBAN DE89 3704 0044 0532 0130 00
+          <br />
+          BIC COBADEFFXXX
+        </p>
       </div>
     </div>
   );
 }
 
-// The slip's perforated counterfoil: the numbering machine's live reading of
-// requests to other websites, with the rest of the browser's count in the
-// caption. Until the browser has counted, it shows blank wheels rather than a
-// number it hasn't measured.
-function RequestCounter({
+/**
+ * The sample invoice, made editable: what the visitor types and picks stays on
+ * this page, and the browser's own count of requests to other websites sits
+ * under it the whole time. The typeface carries into the editor through every
+ * Create invoice link.
+ */
+function TryIt({
+  font,
+  onFontChange,
   tally
 }: {
-  tally: ReturnType<typeof useRequestTally>;
+  font: InvoiceFont;
+  onFontChange: (font: InvoiceFont) => void;
+  tally: RequestTally;
 }) {
+  const [clientName, setClientName] = useState("");
+  const [currency, setCurrency] = useState<Currency>("EUR");
+
   return (
-    <dl className="border-perforation font-geist flex flex-col gap-2 border-t-2 border-dashed px-5 py-4 tracking-normal sm:px-7">
-      <div className="flex items-center justify-between gap-4">
-        <dt className={cn(FORM_LABEL, "text-ink")}>
+    <section id="try-it" className="py-16 sm:py-20">
+      <div className={CONTAINER}>
+        <SectionHeading
+          title="Try it on this page."
+          description="Type a client’s name and change the typeface or currency. Your browser counts every request this page makes to another website, and it stays at zero while you type."
+        />
+        <div className="mt-12 overflow-hidden rounded-xl bg-white ring-1 ring-zinc-950/10 sm:mt-16">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-zinc-950/10 px-6 py-5">
+            <div className="flex flex-col">
+              <p className="text-base/7 font-medium sm:text-sm/6">
+                Sample invoice
+              </p>
+              <p className="text-base/7 text-zinc-500 sm:text-sm/6">
+                The typeface you pick opens with you in the editor.
+              </p>
+            </div>
+            <Link
+              to="/create"
+              search={{ font: font === DEFAULT_FONT ? undefined : font }}
+              className={TEXT_LINK}
+            >
+              Continue in the editor
+            </Link>
+          </div>
+          <div className="grid lg:grid-cols-[20rem_minmax(0,1fr)]">
+            <form
+              onSubmit={event => event.preventDefault()}
+              className="flex flex-col gap-8 border-zinc-950/10 bg-zinc-50 p-6 max-lg:border-b lg:border-r"
+            >
+              <div className="flex flex-col gap-2">
+                <label
+                  htmlFor="demo-client"
+                  className="text-base/6 font-medium sm:text-sm/6"
+                >
+                  Bill to
+                </label>
+                <input
+                  id="demo-client"
+                  name="client"
+                  type="text"
+                  value={clientName}
+                  onChange={event => setClientName(event.target.value)}
+                  placeholder="Type a client’s name"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="focus-visible:outline-brand-600 rounded-lg bg-white px-3 py-2.5 text-base/6 ring-1 ring-zinc-950/10 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:-outline-offset-1 sm:py-2 sm:text-sm/6"
+                />
+              </div>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-base/6 font-medium sm:text-sm/6">
+                  Typeface
+                </legend>
+                <div className="mt-2 flex flex-col gap-2">
+                  {DEMO_FONTS.map(demoFont => {
+                    const definition = getInvoiceFontDefinition(demoFont);
+
+                    return (
+                      <label
+                        key={demoFont}
+                        className="has-checked:ring-brand-600 has-focus-visible:outline-brand-600 flex cursor-pointer items-center justify-between gap-3 rounded-lg bg-white px-3 py-2.5 ring-1 ring-zinc-950/10 has-checked:ring-2 has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
+                      >
+                        <span className="flex flex-col">
+                          <span
+                            className="text-base/6 font-medium"
+                            style={{ fontFamily: definition.cssFamily }}
+                          >
+                            {definition.name}
+                          </span>
+                          <span className="text-sm/5 text-zinc-500 capitalize">
+                            {definition.category.replace("-", " ")}
+                          </span>
+                        </span>
+                        <input
+                          type="radio"
+                          name="typeface"
+                          value={demoFont}
+                          checked={font === demoFont}
+                          onChange={() => onFontChange(demoFont)}
+                          className="peer sr-only"
+                        />
+                        <IconCheck
+                          className="text-brand-600 size-5 shrink-0 peer-not-checked:invisible sm:size-4"
+                          aria-hidden="true"
+                        />
+                      </label>
+                    );
+                  })}
+                </div>
+              </fieldset>
+              <fieldset className="flex flex-col gap-2">
+                <legend className="text-base/6 font-medium sm:text-sm/6">
+                  Currency
+                </legend>
+                <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-zinc-200/60 p-1">
+                  {CURRENCIES.map(option => (
+                    <label
+                      key={option}
+                      className="has-focus-visible:outline-brand-600 flex cursor-pointer justify-center rounded-md py-2 text-base/6 font-medium text-zinc-600 has-checked:bg-white has-checked:text-zinc-950 has-checked:shadow-sm has-checked:ring-1 has-checked:ring-black/5 has-focus-visible:outline-2 sm:py-1.5 sm:text-sm/6"
+                    >
+                      <input
+                        type="radio"
+                        name="currency"
+                        value={option}
+                        checked={currency === option}
+                        onChange={() => setCurrency(option)}
+                        className="sr-only"
+                      />
+                      {option}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </form>
+            <div className="flex min-w-0 flex-col bg-zinc-100">
+              <div className="flex flex-1 items-start justify-center p-4 sm:p-10">
+                <SampleInvoice
+                  font={font}
+                  currency={currency}
+                  clientName={clientName}
+                  className="w-full max-w-lg"
+                />
+              </div>
+              <RequestCounter tally={tally} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RequestCounter({ tally }: { tally: RequestTally }) {
+  return (
+    <dl className="flex items-center justify-between gap-6 border-t border-zinc-950/10 bg-white px-6 py-4">
+      <div className="flex flex-col">
+        <dt className="text-base/7 font-medium sm:text-sm/6">
           Requests to other websites
         </dt>
-        <dd
-          className={cn(
-            NUMBERING,
-            "text-numbering shrink-0 text-5xl leading-none font-bold"
-          )}
-        >
-          {tally.status === "counting" ? (
-            formatSerial(tally.elsewhere)
-          ) : (
-            <span aria-label="Not counted yet" className="text-ink/25">
-              –––
-            </span>
-          )}
-        </dd>
-      </div>
-      <p className="text-ink-muted text-xs text-pretty">
-        {tally.status === "counting"
-          ? `Counted live since this page opened. Background requests: ${formatSerial(tally.data)}.`
-          : tally.status === "unsupported"
+        <dd className="text-base/7 text-pretty text-zinc-500 sm:text-sm/6">
+          {tally.status === "unsupported"
             ? "Your browser can’t count them here; the checks below still work."
             : "Counted live by your browser since this page opened."}
-      </p>
+        </dd>
+      </div>
+      <dd className="shrink-0 text-4xl font-medium tracking-tight tabular-nums">
+        {tally.status === "counting" ? tally.elsewhere : "–"}
+      </dd>
     </dl>
   );
 }
 
-/**
- * The privacy checks, flooded in intaglio blue: four plain verbs a visitor can
- * act on, in the order they can act on them, beside the band's medallion, then
- * the one honest note about keeping a copy.
- */
+function Features() {
+  return (
+    <section id="features" className="py-16 sm:py-20">
+      <div className={CONTAINER}>
+        <SectionHeading
+          title="What goes on the invoice."
+          description="For freelancers and anyone with a side project who needs to bill a client, not set up accounting software."
+        />
+        <dl className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 md:grid-cols-2">
+          {FEATURES.map(feature => (
+            <div key={feature.title} className="flex flex-col gap-6">
+              <div
+                aria-hidden="true"
+                className="flex min-h-48 items-center rounded-xl bg-zinc-50 p-6 ring-1 ring-zinc-950/5 ring-inset sm:p-8"
+              >
+                {feature.specimen}
+              </div>
+              <div className="flex flex-col gap-2">
+                <dt className="text-lg/7 font-medium sm:text-base/7">
+                  {feature.title}
+                </dt>
+                <dd className={cn(BODY_TEXT, "max-w-[52ch]")}>
+                  {feature.description}
+                </dd>
+              </div>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
+  );
+}
+
+function TypeSpecimen() {
+  return (
+    <div className="grid w-full grid-cols-3 gap-4">
+      {EDITOR_FONTS.map(specimenFont => {
+        const definition = getInvoiceFontDefinition(specimenFont);
+
+        return (
+          <div key={specimenFont} className="flex flex-col gap-2">
+            <p
+              className="text-2xl text-zinc-950 sm:text-3xl"
+              style={{
+                fontFamily: definition.cssFamily,
+                letterSpacing: definition.letterSpacing
+              }}
+            >
+              Invoice
+            </p>
+            <p className="text-sm/5 text-zinc-500">{definition.name}</p>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function CurrencySpecimen() {
+  return (
+    <ul className="grid w-full grid-cols-2 gap-x-6 gap-y-3 text-lg text-zinc-950 tabular-nums sm:text-2xl">
+      {["€2,475.00", "£2,475.00", "CHF 2,475.00", "¥2,475"].map(amount => (
+        <li key={amount} className="whitespace-nowrap">
+          {amount}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// 10% off 2,750.00 is 2,475.00, and 20% VAT on that is 495.00.
+function TotalsSpecimen() {
+  return (
+    <dl className="mx-auto grid w-full max-w-72 grid-cols-[1fr_auto] gap-x-6 gap-y-2 text-sm/6 tabular-nums">
+      <dt className="text-zinc-500">Subtotal</dt>
+      <dd className="text-right">£2,750.00</dd>
+      <dt className="text-zinc-500">Discount (10%)</dt>
+      <dd className="text-right">−£275.00</dd>
+      <dt className="text-zinc-500">VAT (20%)</dt>
+      <dd className="text-right">£495.00</dd>
+      <dt className="border-t border-zinc-950/10 pt-2 font-medium">Total</dt>
+      <dd className="border-t border-zinc-950/10 pt-2 text-right text-base font-semibold">
+        £2,970.00
+      </dd>
+    </dl>
+  );
+}
+
+function PaymentSpecimen() {
+  return (
+    <dl className="grid w-full grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm/6 tabular-nums">
+      <dt className="text-zinc-500">Bank</dt>
+      <dd>Commerzbank</dd>
+      <dt className="text-zinc-500">IBAN</dt>
+      <dd>DE89 3704 0044 0532 0130 00</dd>
+      <dt className="text-zinc-500">BIC / SWIFT</dt>
+      <dd>COBADEFFXXX</dd>
+      <dt className="text-zinc-500">Sort code</dt>
+      <dd>04-00-04</dd>
+    </dl>
+  );
+}
+
+const STEPS: {
+  title: string;
+  description: string;
+  illustration: ReactNode;
+}[] = [
+  {
+    title: "Add the details",
+    description:
+      "Your details, your client and the line items. billsend does the sums as you type.",
+    illustration: <FillIllustration />
+  },
+  {
+    title: "Send the PDF",
+    description:
+      "Download an A4 PDF or print it, then send it to your client however you like.",
+    illustration: <DownloadIllustration />
+  },
+  {
+    title: "Keep a copy",
+    description:
+      "Invoices and templates save in this browser, so a repeat client’s next invoice starts from the last one. Export a backup from the File menu whenever you want one elsewhere.",
+    illustration: <KeepIllustration />
+  }
+];
+
+function HowItWorks() {
+  return (
+    <section className="py-16 sm:py-20">
+      <div className={CONTAINER}>
+        <SectionHeading
+          title="From a blank page to a PDF."
+          description="No sign-up at any point, and your client and bank details never leave your device on the way."
+        />
+        <ol className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 lg:grid-cols-3">
+          {STEPS.map(step => (
+            <li key={step.title} className="flex flex-col gap-6">
+              <div
+                aria-hidden="true"
+                className="bg-brand-50 flex aspect-[4/3] items-center justify-center rounded-xl p-6 sm:p-10 lg:p-6 xl:p-10"
+              >
+                {step.illustration}
+              </div>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg/7 font-medium sm:text-base/7">
+                  {step.title}
+                </h3>
+                <p className={cn(BODY_TEXT, "max-w-[44ch]")}>
+                  {step.description}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  );
+}
+
+const ILLUSTRATION_CARD =
+  "flex w-full max-w-72 flex-col gap-3 rounded-xl bg-white p-4 text-xs text-zinc-700 shadow-sm ring-1 ring-black/5";
+
+function FillIllustration() {
+  return (
+    <div className={ILLUSTRATION_CARD}>
+      <div className="flex flex-col gap-1">
+        <span className="text-zinc-500">Bill to</span>
+        <span className="ring-brand-600 rounded-md px-2 py-1.5 font-medium text-zinc-950 ring-2">
+          Kanal & Co. GmbH
+        </span>
+      </div>
+      <div className="flex flex-col gap-1">
+        <span className="text-zinc-500">Line item</span>
+        <span className="flex justify-between gap-2 rounded-md px-2 py-1.5 ring-1 ring-zinc-950/10">
+          <span className="truncate">Editorial illustrations</span>
+          <span className="shrink-0 tabular-nums">3 × €600</span>
+        </span>
+      </div>
+      <div className="flex justify-between border-t border-zinc-950/10 pt-3 font-medium text-zinc-950 tabular-nums">
+        <span>Total</span>
+        <span>€2,475.00</span>
+      </div>
+    </div>
+  );
+}
+
+function DownloadIllustration() {
+  return (
+    <div className={ILLUSTRATION_CARD}>
+      <div className="flex items-center gap-3">
+        <IconFileTypePdf
+          className="size-6 shrink-0 text-red-600"
+          aria-hidden="true"
+        />
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate font-medium text-zinc-950">
+            INV-0043.pdf
+          </span>
+          <span className="text-zinc-500">A4, 1 page</span>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <span className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-zinc-950 py-1.5 font-medium text-white">
+          <IconDownload className="size-4 shrink-0" aria-hidden="true" />
+          Download
+        </span>
+        <span className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 font-medium ring-1 ring-zinc-950/10">
+          <IconPrinter className="size-4 shrink-0" aria-hidden="true" />
+          Print
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function KeepIllustration() {
+  return (
+    <div className={ILLUSTRATION_CARD}>
+      <span className="text-zinc-500">In this browser</span>
+      {[
+        { name: "INV-0043", detail: "Kanal & Co." },
+        { name: "INV-0042", detail: "Northwind Studio" },
+        { name: "Template", detail: "Monthly retainer" }
+      ].map(item => (
+        <span
+          key={item.name}
+          className="flex justify-between gap-2 rounded-md px-2 py-1.5 ring-1 ring-zinc-950/10"
+        >
+          <span className="font-medium text-zinc-950">{item.name}</span>
+          <span className="truncate text-zinc-500">{item.detail}</span>
+        </span>
+      ))}
+      <span className="flex items-center gap-1.5 font-medium text-zinc-950">
+        <IconDownload className="size-4 shrink-0" aria-hidden="true" />
+        Export data
+      </span>
+    </div>
+  );
+}
+
 function Privacy() {
   return (
-    <section
-      id="privacy"
-      className="bg-brand-800 relative scroll-mt-16 overflow-hidden text-white"
-      style={{ backgroundImage: BAND_UNDERPRINT }}
-    >
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-6 py-20 sm:py-24 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
-        <div className="flex flex-col gap-8">
-          <h2
-            className={cn(
-              ENGRAVED,
-              "text-4xl leading-[1.02] font-semibold tracking-[-0.025em] text-balance sm:text-5xl"
-            )}
-          >
-            Privacy you can check yourself.
-          </h2>
-          <p className="text-brand-100 max-w-[42ch] text-lg text-pretty">
-            Don’t take our word for it. Most of these take under a minute, and
-            three of the four work on a phone.
-          </p>
-          <Rosette className="text-brand-500/60 hidden size-72 self-center lg:mt-4 lg:block" />
-        </div>
-        <ol className="flex flex-col">
+    <section id="privacy" className="py-16 sm:py-20">
+      <div className={CONTAINER}>
+        <SectionHeading
+          title="Check the privacy yourself."
+          description="Don’t take our word for it. Most of these take under a minute, and three of the four work on a phone."
+        />
+        <ol className="mt-12 grid gap-x-6 gap-y-10 sm:mt-16 sm:grid-cols-2 lg:grid-cols-4">
           {CHECKS.map(check => (
             <li
               key={check.title}
-              className="border-brand-400/50 flex flex-col gap-2 border-t-2 border-dashed py-6 last:border-b-2"
+              className="flex flex-col gap-2 border-t border-zinc-950/10 pt-6"
             >
-              <h3
-                className={cn(
-                  ENGRAVED,
-                  "text-lg leading-snug font-semibold sm:text-xl"
-                )}
-              >
+              <h3 className="text-lg/7 font-medium sm:text-base/7">
                 {check.title}
               </h3>
-              <p className="text-brand-100 max-w-[60ch] text-base text-pretty">
-                {check.description}
-              </p>
+              <p className={BODY_TEXT}>{check.description}</p>
               {check.detail && (
                 <details className="group">
                   <summary
                     className={cn(
-                      "rounded-control decoration-brand-300 inline-flex min-h-10 cursor-pointer list-none items-center text-sm font-medium text-white underline underline-offset-4 pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden",
-                      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      "hover:text-brand-600 inline-flex cursor-pointer list-none items-center gap-1 rounded-sm text-base/7 font-medium text-zinc-950 sm:text-sm/6 [&::-webkit-details-marker]:hidden",
+                      FOCUS_RING
                     )}
                   >
                     {check.detail.summary}
+                    <IconPlus
+                      className="size-4 shrink-0 transition-transform group-open:rotate-45"
+                      aria-hidden="true"
+                    />
                   </summary>
-                  <p className="text-brand-100 max-w-[60ch] pt-1 text-sm text-pretty">
-                    {check.detail.text}
-                  </p>
+                  <p className={cn(BODY_TEXT, "pt-2")}>{check.detail.text}</p>
                 </details>
               )}
               {check.link && (
@@ -1072,282 +1308,72 @@ function Privacy() {
                   href={check.link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cn(
-                    "rounded-control decoration-brand-300 inline-flex min-h-10 items-center gap-1 self-start text-sm font-medium text-white underline underline-offset-4 hover:decoration-white pointer-coarse:min-h-11",
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white",
-                    COLOR_TRANSITION
-                  )}
+                  className={cn(TEXT_LINK, "self-start")}
                 >
                   {check.link.label}
-                  <IconArrowUpRight className="size-4" aria-hidden="true" />
+                  <IconArrowUpRight
+                    className="size-4 shrink-0"
+                    aria-hidden="true"
+                  />
                   <span className="sr-only"> (opens in a new tab)</span>
                 </a>
               )}
             </li>
           ))}
         </ol>
-        <p className="text-brand-100 max-w-[68ch] text-base text-pretty lg:col-span-2">
-          <span className="font-semibold text-white">Keep a copy.</span> Your
-          invoices are saved in this browser, on this device: clearing this
-          browser’s site data deletes them, and other browsers can’t see them.
-          To back them up or move them, choose Export Data from the editor’s
-          File menu. The file includes your bank details, so store it somewhere
-          safe.
-        </p>
       </div>
     </section>
-  );
-}
-
-function TourMarker({ marker }: { marker: number }) {
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        NUMBERING,
-        "text-numbering block w-6 shrink-0 text-center text-2xl leading-none font-bold"
-      )}
-    >
-      {marker}
-    </span>
-  );
-}
-
-// Pins a numbered marker into the paper's left margin beside the part of the
-// invoice a tour note describes. Below `lg` the note follows that part on a
-// perforated strip torn across the sheet, set on the tinted paper outside the
-// invoice, so a phone keeps the numbers beside their notes and the invoice
-// text stays the invoice's.
-function MarkedRegion({
-  marker,
-  children,
-  className
-}: {
-  marker: number;
-  children: ReactNode;
-  className?: string;
-}) {
-  const note = TOUR_NOTES.find(tourNote => tourNote.marker === marker);
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className={cn("relative", className)}>
-        <span className="absolute top-0 -left-8 sm:-left-10">
-          <TourMarker marker={marker} />
-        </span>
-        {children}
-      </div>
-      {note && (
-        <div className="bg-tint border-perforation font-geist -mr-6 -ml-11 border-y-2 border-dashed py-4 pr-6 pl-11 tracking-normal sm:-mr-10 sm:-ml-14 sm:pr-10 sm:pl-14 lg:hidden">
-          <div className="flex flex-col gap-1">
-            <span className="text-ink text-sm font-semibold">{note.title}</span>
-            <span className="text-ink-muted text-sm text-pretty">
-              {note.description}
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * The product, shown rather than listed: a full invoice (another client,
- * another currency, reverse-charge VAT and a discount, set in Lora) with red
- * serial markers in its margin, and the notes on a perforated counterfoil
- * beside it on wide screens or on strips torn across it on narrow ones.
- */
-function Tour() {
-  const lora = getInvoiceFontDefinition("lora");
-  const today = new Date();
-  const issueDate = format(today, "d MMM yyyy");
-  const dueDate = format(addDays(today, 14), "d MMM yyyy");
-
-  return (
-    <section id="features" className="scroll-mt-16 px-6 py-20 sm:py-24">
-      <div className="mx-auto flex max-w-6xl flex-col gap-12">
-        <div className="flex max-w-3xl flex-col gap-5">
-          <h2 className={cn(HEADLINE, "text-4xl leading-[1.02] sm:text-5xl")}>
-            Features for the invoice you send today.
-          </h2>
-          <p className="text-ink-muted max-w-[56ch] text-lg text-pretty">
-            For freelancers and anyone with a side project who needs to bill a
-            client, not set up accounting software. Save any invoice as a
-            template and the next one for that client starts from it.
-          </p>
-        </div>
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
-          <figure
-            aria-label="Example invoice in euros with reverse-charge VAT and a discount"
-            className="rounded-surface shadow-floating border-ink/15 text-ink flex flex-col gap-6 border bg-white py-7 pr-6 pl-11 text-sm sm:py-9 sm:pr-10 sm:pl-14"
-            style={{
-              fontFamily: lora.cssFamily,
-              letterSpacing: lora.letterSpacing
-            }}
-          >
-            <MarkedRegion
-              marker={1}
-              className="flex items-start justify-between gap-4"
-            >
-              <div className="flex flex-col gap-3">
-                <span className="text-3xl font-semibold">Invoice</span>
-                <dl className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-xs whitespace-nowrap tabular-nums sm:gap-x-4">
-                  <dt className="text-ink-muted">Invoice No.</dt>
-                  <dd>INV-0043</dd>
-                  <dt className="text-ink-muted">Date</dt>
-                  <dd suppressHydrationWarning>{issueDate}</dd>
-                  <dt className="text-ink-muted">Due date</dt>
-                  <dd suppressHydrationWarning>{dueDate}</dd>
-                </dl>
-              </div>
-              <span
-                aria-hidden
-                className="rounded-surface font-geist bg-ink flex size-12 shrink-0 items-center justify-center text-sm font-semibold tracking-normal text-white"
-              >
-                MO
-              </span>
-            </MarkedRegion>
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">From</span>
-                <span className="text-ink-muted">
-                  Maya Okafor
-                  <br />
-                  London
-                </span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="font-medium">To</span>
-                <span className="text-ink-muted">
-                  Kanal & Co. GmbH
-                  <br />
-                  Berlin
-                  <br />
-                  VAT ID DE123456789
-                </span>
-              </div>
-            </div>
-            <MarkedRegion marker={2}>
-              <div className="rounded-surface border-ink/15 flex flex-col overflow-hidden border">
-                <div className="bg-tint grid grid-cols-[minmax(0,1fr)_1.75rem_5.5rem] gap-2 px-3 py-2 text-xs font-medium">
-                  <span>Description</span>
-                  <span className="text-center">Qty</span>
-                  <span className="text-right">Amount</span>
-                </div>
-                {TOUR_LINES.map(line => (
-                  <div
-                    key={line.description}
-                    className="border-ink/15 grid grid-cols-[minmax(0,1fr)_1.75rem_5.5rem] gap-2 border-t px-3 py-2 tabular-nums"
-                  >
-                    <span>{line.description}</span>
-                    <span className="text-center">{line.quantity}</span>
-                    <span className="text-right">{line.amount}</span>
-                  </div>
-                ))}
-              </div>
-            </MarkedRegion>
-            <MarkedRegion
-              marker={3}
-              className="flex flex-col items-end tabular-nums"
-            >
-              <div className="flex w-full max-w-64 flex-col gap-1.5">
-                <TourTotalRow label="Subtotal" value="€2,750.00" />
-                <TourTotalRow label="Discount (10%)" value="−€275.00" />
-                <TourTotalRow label="VAT" value="Reverse charge" />
-                <div className="border-ink/15 mt-1.5 flex items-baseline justify-between border-t pt-2">
-                  <span className="font-medium">Total</span>
-                  <span className="text-xl font-semibold">€2,475.00</span>
-                </div>
-              </div>
-            </MarkedRegion>
-            <div className="border-ink/15 border-t pt-4">
-              <MarkedRegion marker={4} className="flex flex-col gap-1 text-xs">
-                <span className="font-medium">Payment details</span>
-                <span className="text-ink-muted tabular-nums">
-                  IBAN DE89 3704 0044 0532 0130 00
-                  <br />
-                  BIC COBADEFFXXX
-                </span>
-              </MarkedRegion>
-            </div>
-          </figure>
-          <ol className="rounded-surface border-ink/15 hidden flex-col border bg-white/60 lg:flex">
-            {TOUR_NOTES.map(note => (
-              <li
-                key={note.marker}
-                className="border-perforation grid grid-cols-[auto_minmax(0,1fr)] gap-4 border-t-2 border-dashed px-5 py-6 first:border-t-0 sm:px-7"
-              >
-                <TourMarker marker={note.marker} />
-                <div className="flex flex-col gap-2">
-                  <h3
-                    className={cn(
-                      HEADLINE,
-                      "text-xl leading-tight sm:text-2xl"
-                    )}
-                  >
-                    {note.title}
-                  </h3>
-                  <p className="text-ink-muted max-w-[52ch] text-base text-pretty">
-                    {note.description}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function TourTotalRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-4">
-      <span className="text-ink-muted">{label}</span>
-      <span>{value}</span>
-    </div>
   );
 }
 
 function Questions() {
   return (
-    <section id="questions" className="scroll-mt-16 pb-20 sm:pb-24">
-      <Microprint text={MICROPRINT_TEXT} className="text-ink/35" />
-      <div className="mx-auto grid max-w-6xl items-start gap-10 px-6 pt-20 sm:pt-24 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:grid-rows-[auto_1fr] lg:gap-x-16">
-        <h2
-          className={cn(
-            HEADLINE,
-            "text-4xl leading-[1.02] sm:text-5xl lg:col-start-1 lg:row-start-1"
-          )}
-        >
-          Questions before you start.
-        </h2>
-        <div className="flex flex-col gap-10 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+    <section id="questions" className="py-16 sm:py-20">
+      <div className={cn(CONTAINER, "grid gap-x-6 gap-y-12 lg:grid-cols-3")}>
+        <div className="flex flex-col items-start gap-6">
+          <h2 className={cn(HEADING, "max-w-[35ch] text-4xl")}>
+            Questions before you start.
+          </h2>
+          <p className={cn(BODY_TEXT, "max-w-[40ch]")}>
+            Something else, or found a bug? Open an issue on GitHub; you’ll need
+            a free GitHub account to post.
+          </p>
+          <a
+            href={`${SOURCE_URL}/issues`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={TEXT_LINK}
+          >
+            Ask on GitHub
+            <IconArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
+            <span className="sr-only"> (opens in a new tab)</span>
+          </a>
+        </div>
+        <div className="flex flex-col gap-12 lg:col-span-2">
           {QUESTION_GROUPS.map(group => (
-            <div key={group.title} className="flex flex-col gap-3">
-              <h3 className={cn(FORM_LABEL, "text-ink-muted")}>
+            <div key={group.title} className="flex flex-col gap-4">
+              <h3 className="text-base/7 font-medium text-zinc-500 sm:text-sm/6">
                 {group.title}
               </h3>
-              <div className="border-perforation flex flex-col border-b-2 border-dashed">
+              <div className="flex flex-col border-b border-zinc-950/10">
                 {group.questions.map(item => (
                   <details
                     key={item.question}
-                    className="group border-perforation border-t-2 border-dashed"
+                    className="group border-t border-zinc-950/10"
                   >
                     <summary
                       className={cn(
-                        "rounded-control text-ink flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-base font-medium [&::-webkit-details-marker]:hidden",
+                        "flex cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-5 text-base/7 font-medium [&::-webkit-details-marker]:hidden",
                         FOCUS_RING
                       )}
                     >
                       {item.question}
                       <IconPlus
-                        className="text-ink size-5 shrink-0 transition-transform duration-200 group-open:rotate-45"
-                        stroke={2.25}
+                        className="size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-45"
                         aria-hidden="true"
                       />
                     </summary>
-                    <p className="text-ink-muted max-w-[60ch] pb-5 text-base text-pretty">
+                    <p className={cn(BODY_TEXT, "max-w-[64ch] pb-6")}>
                       {item.answer}
                     </p>
                   </details>
@@ -1356,79 +1382,40 @@ function Questions() {
             </div>
           ))}
         </div>
-        <div className="flex max-w-[40ch] flex-col gap-2 lg:col-start-1 lg:row-start-2">
-          <p className="text-ink-muted text-base text-pretty">
-            Something else, or found a bug? Open an issue on GitHub; you’ll need
-            a free GitHub account to post.
-          </p>
-          <a
-            href={`${SOURCE_URL}/issues`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "text-brand-700 decoration-brand-300 hover:decoration-brand-700 rounded-control inline-flex min-h-10 items-center gap-1 self-start text-base font-medium underline underline-offset-4 pointer-coarse:min-h-11",
-              COLOR_TRANSITION,
-              FOCUS_RING
-            )}
-          >
-            Ask a question on GitHub
-            <IconArrowUpRight className="size-4" aria-hidden="true" />
-            <span className="sr-only"> (opens in a new tab)</span>
-          </a>
-        </div>
       </div>
     </section>
   );
 }
 
-// The close is a cheque book's counterfoil: the stub you keep is filled in for
-// the next invoice, and the action sits where the cheque would be signed.
 function Closing({ font }: { font: InvoiceFont }) {
   const fontName = getInvoiceFontDefinition(font).name;
+  const caption =
+    font === DEFAULT_FONT
+      ? "Free, with no account. Opens straight into the editor."
+      : `Free, with no account. Opens straight into the editor, set in ${fontName}.`;
 
   return (
-    <section className="px-4 pb-24 sm:px-6 sm:pb-28">
-      <div
-        className="rounded-surface shadow-floating border-ink/15 mx-auto grid max-w-6xl overflow-hidden border bg-white md:grid-cols-[14rem_minmax(0,1fr)]"
-        style={{ backgroundImage: SLIP_UNDERPRINT }}
-      >
-        <div className="border-perforation flex flex-row flex-wrap items-baseline gap-x-8 gap-y-4 border-b-2 border-dashed px-6 py-5 md:flex-col md:gap-y-6 md:border-r-2 md:border-b-0 md:py-8">
-          <span className="flex items-baseline gap-1.5">
-            <span className={cn(FORM_LABEL, "text-ink-muted")}>No.</span>
-            <span
-              className={cn(
-                NUMBERING,
-                "text-numbering text-2xl leading-none font-bold"
-              )}
-            >
-              0001
-            </span>
-          </span>
-          <span className="flex flex-col gap-1.5">
-            <span className={cn(FORM_LABEL, "text-ink-muted")}>To</span>
-            <span className="text-ink text-sm">Your next client</span>
-          </span>
-          <span className="flex flex-col gap-1.5">
-            <span className={cn(FORM_LABEL, "text-ink-muted")}>Kept by</span>
-            <span className="text-ink text-sm">You, on this device</span>
-          </span>
-        </div>
-        <div className="flex flex-col items-start gap-8 px-6 py-10 sm:px-10 md:py-14 lg:flex-row lg:items-end lg:justify-between">
-          <h2 className={cn(HEADLINE, "text-4xl leading-[1.02] sm:text-5xl")}>
-            Your next invoice starts here.
-          </h2>
-          <div className="flex w-full shrink-0 flex-col items-start gap-3 sm:w-auto lg:items-end">
-            <CreateInvoiceLink
-              size="lg"
+    <section className="py-16 sm:py-20">
+      <div className={CONTAINER}>
+        <div className="bg-brand-700 grid overflow-hidden rounded-xl text-white lg:grid-cols-2">
+          <div className="flex flex-col items-start justify-center gap-8 px-6 pt-14 pb-10 sm:px-12 sm:pt-16 lg:py-24 lg:pl-16">
+            <h2 className={cn(HEADING, "max-w-[16ch] text-4xl sm:text-5xl")}>
+              Your next invoice starts here.
+            </h2>
+            <div className="flex flex-col items-start gap-4">
+              <CreateInvoiceLink font={font} tone="light" />
+              <p className="text-brand-100 max-w-[44ch] text-base/7 text-pretty sm:text-sm/6">
+                {caption}
+              </p>
+            </div>
+          </div>
+          <div aria-hidden="true" className="relative h-72 sm:h-80 lg:h-auto">
+            <SampleInvoice
               font={font}
-              id={CLOSING_CTA_ID}
-              className="max-sm:h-12 max-sm:w-full max-sm:px-5 max-sm:text-sm"
+              currency="EUR"
+              clientName=""
+              className="absolute top-0 left-1/2 w-[min(28rem,calc(100%-3rem))] -translate-x-1/2 rounded-b-none shadow-2xl lg:top-16"
             />
-            <p className="text-ink-muted text-sm">
-              {font === DEFAULT_FONT
-                ? "Free. Opens straight into the editor."
-                : `Free. Opens straight into the editor, set in ${fontName}.`}
-            </p>
           </div>
         </div>
       </div>
@@ -1438,20 +1425,32 @@ function Closing({ font }: { font: InvoiceFont }) {
 
 function SiteFooter() {
   return (
-    <footer className="text-ink-muted pb-24 text-sm md:pb-0">
-      <Microprint
-        text={MICROPRINT_TEXT}
-        className="text-ink/35 border-ink/10 border-t pt-px"
-      />
-      <div className="mx-auto flex max-w-6xl flex-col gap-3 px-6 pt-8 pb-10 sm:flex-row sm:items-center sm:justify-between">
-        <span className="font-bricolage-grotesque text-brand-600 text-lg font-semibold tracking-tight">
-          billsend
-        </span>
-        <div className="flex flex-wrap items-center gap-x-6">
-          <FooterLink href={`${SOURCE_URL}/issues`}>Report an issue</FooterLink>
-          <FooterLink href={SOURCE_URL}>Source on GitHub</FooterLink>
-          <span className="py-2">© {new Date().getFullYear()} billsend.io</span>
+    <footer>
+      <div
+        className={cn(
+          CONTAINER,
+          "flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between"
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <Wordmark />
+          <p className="text-base/7 text-zinc-500 sm:text-sm/6">
+            Invoices that stay on your device.
+          </p>
         </div>
+        <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-base/7 text-zinc-600 sm:text-sm/6">
+          <li>
+            <FooterLink href={`${SOURCE_URL}/issues`}>
+              Report an issue
+            </FooterLink>
+          </li>
+          <li>
+            <FooterLink href={SOURCE_URL}>Source on GitHub</FooterLink>
+          </li>
+          <li suppressHydrationWarning>
+            © {new Date().getFullYear()} billsend.io
+          </li>
+        </ul>
       </div>
     </footer>
   );
@@ -1464,8 +1463,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "rounded-control hover:text-ink inline-flex min-h-10 items-center pointer-coarse:min-h-11",
-        COLOR_TRANSITION,
+        "inline-flex min-h-11 items-center rounded-sm hover:text-zinc-950 sm:min-h-10",
         FOCUS_RING
       )}
     >
