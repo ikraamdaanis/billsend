@@ -4,7 +4,7 @@ const SITE_NAME = "billsend";
 export const SITE_TITLE = "billsend: Free, Private Invoice Generator";
 
 export const SITE_DESCRIPTION =
-  "Create and download professional invoices for free, right in your browser. No accounts, no servers, and nothing ever leaves your device.";
+  "Create and download professional invoices for free, right in your browser. No account and no upload: your invoices stay on your device and leave it only in files you save.";
 
 const SITE_OG_IMAGE = `${SITE_URL}/billsend.png`;
 

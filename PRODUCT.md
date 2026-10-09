@@ -33,6 +33,7 @@ Truly local-first. There are no accounts, no servers and no analytics; all data 
 - Save/load documents and templates in IndexedDB; full data import/export.
 - PDF export via @react-pdf/renderer; print is a first-class target (A4).
 - No backend and no HTTP requests; deployed as static assets on Cloudflare Workers.
+- Every page sends a Content-Security-Policy that refuses requests to any other origin. The homepage names it as a check visitors can make, so it must stay.
 - No service worker: an open tab keeps working without a connection, but a fresh visit needs one. Do not claim offline support.
 - The editor has no accent-colour control today (the theme's accent is fixed at its default); do not advertise one.
 - Must work for international users: any currency, multiple scripts and fonts, varied name and address formats.
