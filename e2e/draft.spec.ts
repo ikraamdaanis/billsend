@@ -95,7 +95,10 @@ test("leaving to home and returning preserves identity and content [R]", async (
   await page.getByRole("link", { name: "Leave" }).click();
   await expect(page).toHaveURL("/");
 
-  await page.locator("#hero-create-invoice").click();
+  await page
+    .getByRole("banner")
+    .getByRole("link", { name: "Create invoice", exact: true })
+    .click();
   await expect(page).toHaveURL("/create");
 
   await expect(
