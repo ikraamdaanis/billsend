@@ -18,6 +18,8 @@ import type {
 } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
+import type { SAMPLE_LOGOS } from "~/components/home/sample-logos";
+import { getSampleLogoSrc } from "~/components/home/sample-logos";
 import { Button } from "~/components/ui/button";
 import {
   formatCurrency,
@@ -46,7 +48,7 @@ const TOOLBAR_HEIGHT = 64;
 type SampleInvoice = {
   number: string;
   seller: string;
-  logo: { monogram: string; color: string };
+  logo: (typeof SAMPLE_LOGOS)[number];
   clientName: string;
   clientAddress: string;
   items: {
@@ -69,41 +71,13 @@ type SampleInvoice = {
 };
 
 // Each preview shows a different invoice, as a freelancer would fill it in.
-// The PDF pictures elsewhere on the homepage use their own samples too.
-export const HERO_SAMPLE: SampleInvoice = {
-  number: "INV-0043",
-  seller:
-    "Maya Okafor Illustration\n214 Bergen Street\nBrooklyn, NY 11217\n(718) 555-0142",
-  logo: { monogram: "MO", color: "#18181b" },
-  clientName: "Harbor & Pine Co.",
-  clientAddress: "1120 NW Couch Street, Suite 400\nPortland, OR 97209",
-  items: [
-    {
-      description: "Editorial illustrations",
-      quantity: 3,
-      unit: "pcs",
-      unitPrice: 600
-    },
-    { description: "Cover artwork", quantity: 1, unit: "pcs", unitPrice: 950 }
-  ],
-  discountPercentage: 10,
-  taxPercentage: 0,
-  payment: {
-    bankName: "JPMorgan Chase Bank, N.A.",
-    accountNumber: "483920175",
-    routingNumber: "021000021",
-    bic: "CHASUS33"
-  },
-  paymentInstructions: "Payment due within 30 days.",
-  font: "geist",
-  currencyCode: "USD"
-};
-
+// The PDF pictures elsewhere on the homepage, the hero's included, use their
+// own samples too.
 export const TRY_IT_SAMPLE: SampleInvoice = {
   number: "RWS-0219",
   seller:
     "Reyes Web Studio\n1907 E 7th Street\nAustin, TX 78702\n(512) 555-0186",
-  logo: { monogram: "RW", color: "#0f766e" },
+  logo: "codecraft",
   clientName: "Barton Creek Veterinary",
   clientAddress: "3801 S Lamar Boulevard, Suite 200\nAustin, TX 78704",
   items: [
@@ -142,8 +116,8 @@ export const TRY_IT_SAMPLE: SampleInvoice = {
 export const FILL_SAMPLE: SampleInvoice = {
   number: "PR-1006",
   seller:
-    "Priya Raman UX\n1550 N Damen Avenue, Unit 3\nChicago, IL 60622\n(312) 555-0131",
-  logo: { monogram: "PR", color: "#7c2d12" },
+    "Rachel Bennett UX\n1550 N Damen Avenue, Unit 3\nChicago, IL 60622\n(312) 555-0131",
+  logo: "layers",
   clientName: "Lakeview Dental Group",
   clientAddress: "2954 N Broadway\nChicago, IL 60657",
   items: [
@@ -177,7 +151,7 @@ export const KEEP_SAMPLE: SampleInvoice = {
   number: "OMP-0118",
   seller:
     "Owen Marsh Photography\n3120 SE Division Street\nPortland, OR 97202\n(503) 555-0127",
-  logo: { monogram: "OM", color: "#1e3a8a" },
+  logo: "focalpoint",
   clientName: "Willamette Valley Vineyards Tours",
   clientAddress: "8800 SW Oleson Road\nPortland, OR 97223",
   items: [
@@ -210,8 +184,7 @@ export const KEEP_SAMPLE: SampleInvoice = {
 const LINE_ITEM_GRID = "grid grid-cols-[1fr_80px_80px_120px_150px]";
 
 const FILE_MENU: (
-  | { label: string; icon: ComponentType<{ className?: string }> }
-  | "separator"
+  { label: string; icon: ComponentType<{ className?: string }> } | "separator"
 )[] = [
   { label: "New Invoice", icon: IconFilePlus },
   { label: "Open Invoice", icon: IconFolderOpen },
@@ -294,7 +267,9 @@ function getSampleTotals({
  * Shows a `width` x `height` window onto native-size content, scaled to the
  * width of its container (never above 1:1 unless `fill` is set), with `x` and
  * `y` picking the region. The scale is pure CSS, so it is right on the first
- * paint: tan(atan2(a, b)) turns the ratio of two lengths into a number.
+ * paint: tan(atan2(a, b)) turns the ratio of two lengths into a number. With
+ * `fixedScale` the frame ignores its container and is drawn at that scale on
+ * every screen, for a parent to crop.
  */
 export function ScaledFrame({
   width,
@@ -302,6 +277,7 @@ export function ScaledFrame({
   x = 0,
   y = 0,
   fill = false,
+  fixedScale,
   className,
   children
 }: {
@@ -310,6 +286,7 @@ export function ScaledFrame({
   x?: number;
   y?: number;
   fill?: boolean;
+  fixedScale?: number;
   className?: string;
   children: ReactNode;
 }) {
@@ -317,9 +294,14 @@ export function ScaledFrame({
     <div
       aria-hidden="true"
       inert
-      className={cn("@container relative w-full overflow-hidden", className)}
+      className={cn(
+        "@container relative overflow-hidden",
+        fixedScale ? "shrink-0" : "w-full",
+        className
+      )}
       style={{
-        maxWidth: fill ? undefined : width,
+        width: fixedScale ? width * fixedScale : undefined,
+        maxWidth: fill || fixedScale ? undefined : width,
         aspectRatio: `${width} / ${height}`
       }}
     >
@@ -328,7 +310,7 @@ export function ScaledFrame({
         style={{
           width,
           height,
-          scale: `tan(atan2(100cqw, ${width}px))`
+          scale: fixedScale ?? `tan(atan2(100cqw, ${width}px))`
         }}
       >
         <div className="absolute" style={{ left: -x, top: -y }}>
@@ -340,30 +322,28 @@ export function ScaledFrame({
 }
 
 /**
- * The editor on a desktop window: the toolbar, the desk and the invoice page
- * at 100%, with the canvas scrolled down by `canvasScroll` pixels.
+ * The editor on a desktop window: the toolbar, the desk and, as `children`,
+ * the invoice page at 100%.
  */
 export function EditorWindow({
-  invoice,
+  documentName,
   width,
   height,
-  canvasScroll = 0,
-  focusedField,
-  openMenu
+  openMenu,
+  children
 }: {
-  invoice: SampleInvoice;
+  documentName: string;
   width: number;
   height: number;
-  canvasScroll?: number;
-  focusedField?: "client";
   openMenu?: "file";
+  children: ReactNode;
 }) {
   return (
     <div
       className="bg-background text-foreground font-geist relative [font-feature-settings:normal] antialiased"
       style={{ width, height }}
     >
-      <EditorToolbar documentName={invoice.number} openMenu={openMenu} />
+      <EditorToolbar documentName={documentName} openMenu={openMenu} />
       <div
         className="bg-desk relative flex w-full flex-col"
         style={{ height: height - TOOLBAR_HEIGHT }}
@@ -371,13 +351,9 @@ export function EditorWindow({
         <div className="relative flex h-full flex-col items-center-safe justify-center-safe overflow-hidden p-8 pb-20">
           <div
             className="shrink-0"
-            style={{
-              width: PAGE_WIDTH,
-              height: PAGE_HEIGHT,
-              marginTop: -canvasScroll
-            }}
+            style={{ width: PAGE_WIDTH, height: PAGE_HEIGHT }}
           >
-            <InvoicePage invoice={invoice} focusedField={focusedField} />
+            {children}
           </div>
         </div>
         <ZoomControl />
@@ -520,12 +496,15 @@ export function InvoicePage({
         </div>
         <div className="group relative shrink-0">
           <div className="rounded-surface bg-paper-muted flex aspect-square h-32 min-w-32 items-center justify-center overflow-hidden">
-            <div
-              className="rounded-surface font-geist flex h-32 w-32 items-center justify-center text-4xl font-semibold tracking-normal text-white"
-              style={{ backgroundColor: invoice.logo.color }}
-            >
-              {invoice.logo.monogram}
-            </div>
+            <img
+              src={getSampleLogoSrc(invoice.logo)}
+              alt=""
+              width={128}
+              height={128}
+              loading="lazy"
+              decoding="async"
+              className="rounded-surface h-32 w-32 object-cover"
+            />
           </div>
           <Button
             variant="outline"
