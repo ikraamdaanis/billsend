@@ -35,6 +35,7 @@ import {
 } from "~/components/home/pdf-renders";
 import { formatCurrencyWithCode } from "~/consts/currencies";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
+import { typeClass } from "~/lib/type-scale";
 import { cn } from "~/lib/utils";
 import type { InvoiceFont } from "~/types";
 
@@ -65,15 +66,20 @@ const FOCUS_RING =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
 
 const TEXT_LINK = cn(
-  "inline-flex items-center gap-1 rounded-sm text-base/7 font-medium text-zinc-950 hover:text-brand-600 sm:text-sm/6",
+  "inline-flex items-center gap-1 rounded-sm font-medium text-zinc-950 hover:text-brand-600",
+  typeClass("body"),
   FOCUS_RING
 );
 
 // Headlines use Inter's Display optical size, which the browser picks up from
-// the opsz axis at large sizes.
+// the opsz axis at large sizes. Sizes come from the type roles, which the
+// homepage sets at marketing values through `.home-type`.
 const HEADING = "font-semibold tracking-tight text-balance";
 
-const BODY_TEXT = "text-base/7 text-pretty text-zinc-600 sm:text-sm/6";
+// Single-line controls: buttons, labels, nav links.
+const CONTROL_TEXT = typeClass("body", "compact");
+
+const BODY_TEXT = cn("text-pretty text-zinc-600", typeClass("body"));
 
 const SECTIONS = [
   { href: "#try-it", label: "Try it" },
@@ -244,11 +250,12 @@ function HomePage() {
   const [font, setFont] = useState<InvoiceFont>(DEFAULT_FONT);
 
   return (
-    <div className="selection:bg-brand-100 isolate min-h-svh bg-white font-sans [font-feature-settings:'cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
+    <div className="home-type selection:bg-brand-100 isolate min-h-svh bg-white font-sans [font-feature-settings:'cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
       <a
         href="#main"
         className={cn(
-          "fixed top-3 left-3 z-60 -translate-y-16 rounded-full bg-white px-4 py-2 text-sm font-medium shadow-lg ring-1 ring-zinc-950/10 focus:translate-y-0",
+          "fixed top-3 left-3 z-60 -translate-y-16 rounded-full bg-white px-4 py-2 font-medium shadow-lg ring-1 ring-zinc-950/10 focus:translate-y-0",
+          CONTROL_TEXT,
           FOCUS_RING
         )}
       >
@@ -302,7 +309,8 @@ function SiteHeader({ font }: { font: InvoiceFont }) {
               key={section.href}
               href={section.href}
               className={cn(
-                "rounded-full px-3 py-2 text-sm/6 text-zinc-600 hover:text-zinc-950",
+                "rounded-full px-3 py-2 text-zinc-600 hover:text-zinc-950",
+                CONTROL_TEXT,
                 FOCUS_RING
               )}
             >
@@ -378,7 +386,8 @@ function PhoneMenu() {
             href={section.href}
             onClick={() => setIsOpen(false)}
             className={cn(
-              "rounded-lg px-3 py-3 text-base/6 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950",
+              "rounded-lg px-3 py-3 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950",
+              CONTROL_TEXT,
               FOCUS_RING
             )}
           >
@@ -394,12 +403,10 @@ function PhoneMenu() {
 // carries the typeface picked in the sample invoice into the editor.
 function CreateInvoiceLink({
   font,
-  size = "md",
-  tone = "dark"
+  size = "md"
 }: {
   font: InvoiceFont;
   size?: "sm" | "md";
-  tone?: "dark" | "light";
 }) {
   return (
     <Link
@@ -408,12 +415,10 @@ function CreateInvoiceLink({
       preload="viewport"
       className={cn(
         "relative inline-flex shrink-0 items-center rounded-full font-medium whitespace-nowrap",
+        "bg-zinc-950 text-white hover:bg-zinc-800",
         FOCUS_RING,
-        tone === "dark" && "bg-zinc-950 text-white hover:bg-zinc-800",
-        tone === "light" &&
-          "text-brand-800 hover:bg-brand-50 bg-white focus-visible:outline-white",
-        size === "md" && "px-5 py-3 text-base/6 sm:px-4 sm:py-2.5 sm:text-sm/6",
-        size === "sm" && "px-3 py-1.5 text-sm/6"
+        size === "md" && cn(CONTROL_TEXT, "px-5 py-3 sm:px-4 sm:py-2.5"),
+        size === "sm" && cn(typeClass("caption"), "px-3 py-2")
       )}
     >
       Create invoice
@@ -436,7 +441,9 @@ function SectionHeading({
 }) {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
-      <h2 className={cn(HEADING, "max-w-[35ch] text-4xl")}>{title}</h2>
+      <h2 className={cn(HEADING, typeClass("title"), "max-w-[35ch]")}>
+        {title}
+      </h2>
       <p className={cn(BODY_TEXT, "max-w-[48ch] lg:max-w-[40ch]")}>
         {description}
       </p>
@@ -452,14 +459,15 @@ function Hero({ font }: { font: InvoiceFont }) {
           <h1
             className={cn(
               HEADING,
-              "hero-fade-up max-w-[20ch] text-4xl sm:text-6xl"
+              typeClass("display"),
+              "hero-fade-up max-w-[20ch]"
             )}
           >
             <span className="block">Send the invoice.</span>
             <span className="text-brand-600 block">Keep everything else.</span>
           </h1>
           <div className="hero-fade-up flex flex-col items-start gap-6 [animation-delay:100ms] xl:justify-between">
-            <p className={cn(BODY_TEXT, "max-w-[48ch]")}>
+            <p className={cn(BODY_TEXT, "max-w-[48ch] text-balance")}>
               A free invoice maker that runs in your browser. No account, no
               upload, and your clients and bank details stay on your device.
             </p>
@@ -477,7 +485,10 @@ function Hero({ font }: { font: InvoiceFont }) {
           {FACTS.map(fact => (
             <li
               key={fact.label}
-              className="flex items-center gap-2 text-base/6 font-medium text-zinc-700 sm:text-sm/6"
+              className={cn(
+                "flex items-center gap-2 font-medium text-zinc-700",
+                CONTROL_TEXT
+              )}
             >
               <fact.icon
                 className="size-5 shrink-0 text-zinc-400 sm:size-4"
@@ -590,7 +601,7 @@ function SavedInvoicesNote() {
 
   if (count === "blocked") {
     return (
-      <p className="mt-6 flex items-start gap-2 text-base/7 text-pretty text-zinc-600 sm:text-sm/6">
+      <p className={cn(BODY_TEXT, "mt-6 flex items-start gap-2")}>
         <IconAlertTriangle
           className="size-5 h-lh shrink-0 text-amber-600 sm:size-4"
           aria-hidden="true"
@@ -605,7 +616,7 @@ function SavedInvoicesNote() {
   if (typeof count !== "number" || count === 0) return null;
 
   return (
-    <p className="mt-6 text-base/7 text-zinc-600 sm:text-sm/6">
+    <p className={cn(BODY_TEXT, "mt-6")}>
       {count === 1
         ? "You have 1 invoice saved in this browser."
         : `You have ${count} invoices saved in this browser.`}{" "}
@@ -686,13 +697,15 @@ function TryIt({
         <div className="mt-12 overflow-hidden rounded-xl bg-white ring-1 ring-zinc-950/10 sm:mt-16">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-zinc-950/10 px-6 py-5">
             <div className="flex flex-col">
-              <p className="text-base/7 font-medium sm:text-sm/6">
+              <p className={cn(typeClass("body"), "font-medium")}>
                 Sample invoice
               </p>
-              <p className="text-base/7 text-zinc-500 max-md:hidden sm:text-sm/6">
+              <p
+                className={cn(typeClass("body"), "text-zinc-500 max-md:hidden")}
+              >
                 The typeface you pick opens with you in the editor.
               </p>
-              <p className="text-base/7 text-zinc-500 sm:text-sm/6 md:hidden">
+              <p className={cn(typeClass("body"), "text-zinc-500 md:hidden")}>
                 As it looks in the editor.
               </p>
             </div>
@@ -713,7 +726,7 @@ function TryIt({
               <div className="flex flex-col gap-2">
                 <label
                   htmlFor="demo-client"
-                  className="text-base/6 font-medium sm:text-sm/6"
+                  className={cn(CONTROL_TEXT, "font-medium")}
                 >
                   Bill to
                 </label>
@@ -726,11 +739,14 @@ function TryIt({
                   placeholder="Type a client’s name"
                   autoComplete="off"
                   spellCheck={false}
-                  className="focus-visible:outline-brand-600 rounded-lg bg-white px-3 py-2.5 text-base/6 ring-1 ring-zinc-950/10 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:-outline-offset-1 sm:py-2 sm:text-sm/6"
+                  className={cn(
+                    "focus-visible:outline-brand-600 rounded-lg bg-white px-3 py-2.5 ring-1 ring-zinc-950/10 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:-outline-offset-1 sm:py-2",
+                    CONTROL_TEXT
+                  )}
                 />
               </div>
               <fieldset className="flex flex-col gap-2">
-                <legend className="text-base/6 font-medium sm:text-sm/6">
+                <legend className={cn(CONTROL_TEXT, "font-medium")}>
                   Typeface
                 </legend>
                 <div className="mt-2 flex flex-col gap-2">
@@ -744,12 +760,20 @@ function TryIt({
                       >
                         <span className="flex flex-col">
                           <span
-                            className="text-base/6 font-medium"
+                            className={cn(
+                              typeClass("subtitle", "compact"),
+                              "font-medium"
+                            )}
                             style={{ fontFamily: definition.cssFamily }}
                           >
                             {definition.name}
                           </span>
-                          <span className="text-sm/5 text-zinc-500 capitalize">
+                          <span
+                            className={cn(
+                              typeClass("caption"),
+                              "text-zinc-500 capitalize"
+                            )}
+                          >
                             {definition.category.replace("-", " ")}
                           </span>
                         </span>
@@ -771,14 +795,17 @@ function TryIt({
                 </div>
               </fieldset>
               <fieldset className="flex flex-col gap-2">
-                <legend className="text-base/6 font-medium sm:text-sm/6">
+                <legend className={cn(CONTROL_TEXT, "font-medium")}>
                   Currency
                 </legend>
                 <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-zinc-200/60 p-1">
                   {CURRENCIES.map(option => (
                     <label
                       key={option}
-                      className="has-focus-visible:outline-brand-600 flex cursor-pointer justify-center rounded-md py-2 text-base/6 font-medium text-zinc-600 has-checked:bg-white has-checked:text-zinc-950 has-checked:shadow-sm has-checked:ring-1 has-checked:ring-black/5 has-focus-visible:outline-2 sm:py-1.5 sm:text-sm/6"
+                      className={cn(
+                        "has-focus-visible:outline-brand-600 flex cursor-pointer justify-center rounded-md py-2 font-medium text-zinc-600 has-checked:bg-white has-checked:text-zinc-950 has-checked:shadow-sm has-checked:ring-1 has-checked:ring-black/5 has-focus-visible:outline-2 sm:py-1.5",
+                        CONTROL_TEXT
+                      )}
                     >
                       <input
                         type="radio"
@@ -845,7 +872,7 @@ function Features() {
                 {feature.specimen}
               </div>
               <div className="flex flex-col gap-2">
-                <dt className="text-lg/7 font-medium sm:text-base/7">
+                <dt className={cn(typeClass("subtitle"), "font-medium")}>
                   {feature.title}
                 </dt>
                 <dd className={cn(BODY_TEXT, "max-w-[52ch]")}>
@@ -872,7 +899,7 @@ function TypeSpecimen() {
           >
             Invoice
           </p>
-          <p className="text-sm/5 text-zinc-500">
+          <p className={cn(typeClass("caption"), "text-zinc-500")}>
             {getInvoiceFontDefinition(specimenFont).name}
           </p>
         </div>
@@ -989,7 +1016,7 @@ function HowItWorks() {
                 {step.illustration}
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-lg/7 font-medium sm:text-base/7">
+                <h3 className={cn(typeClass("subtitle"), "font-medium")}>
                   {step.title}
                 </h3>
                 <p className={cn(BODY_TEXT, "max-w-[44ch]")}>
@@ -1061,7 +1088,7 @@ function Privacy() {
               key={check.title}
               className="flex flex-col gap-2 border-t border-zinc-950/10 pt-6"
             >
-              <h3 className="text-lg/7 font-medium sm:text-base/7">
+              <h3 className={cn(typeClass("subtitle"), "font-medium")}>
                 {check.title}
               </h3>
               <p className={BODY_TEXT}>{check.description}</p>
@@ -1069,7 +1096,8 @@ function Privacy() {
                 <details className="group">
                   <summary
                     className={cn(
-                      "hover:text-brand-600 inline-flex cursor-pointer list-none items-center gap-1 rounded-sm text-base/7 font-medium text-zinc-950 sm:text-sm/6 [&::-webkit-details-marker]:hidden",
+                      "hover:text-brand-600 inline-flex cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-zinc-950 [&::-webkit-details-marker]:hidden",
+                      typeClass("body"),
                       FOCUS_RING
                     )}
                   >
@@ -1110,7 +1138,7 @@ function Questions() {
     <section id="questions" className="py-16 sm:py-20">
       <div className={cn(CONTAINER, "grid gap-x-6 gap-y-12 lg:grid-cols-3")}>
         <div className="flex flex-col items-start gap-6">
-          <h2 className={cn(HEADING, "max-w-[35ch] text-4xl")}>
+          <h2 className={cn(HEADING, typeClass("title"), "max-w-[35ch]")}>
             Questions before you start.
           </h2>
           <p className={cn(BODY_TEXT, "max-w-[40ch]")}>
@@ -1131,7 +1159,9 @@ function Questions() {
         <div className="flex flex-col gap-12 lg:col-span-2">
           {QUESTION_GROUPS.map(group => (
             <div key={group.title} className="flex flex-col gap-4">
-              <h3 className="text-base/7 font-medium text-zinc-500 sm:text-sm/6">
+              <h3
+                className={cn(typeClass("body"), "font-medium text-zinc-500")}
+              >
                 {group.title}
               </h3>
               <div className="flex flex-col border-b border-zinc-950/10">
@@ -1142,7 +1172,8 @@ function Questions() {
                   >
                     <summary
                       className={cn(
-                        "flex cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-5 text-base/7 font-medium [&::-webkit-details-marker]:hidden",
+                        "flex cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-5 font-medium [&::-webkit-details-marker]:hidden",
+                        typeClass("subtitle", "compact"),
                         FOCUS_RING
                       )}
                     >
@@ -1166,11 +1197,12 @@ function Questions() {
   );
 }
 
-// Below `lg` the page sits under the copy in a box sized from the page's own
-// width, so it always shows the same top share of the page and runs off the
-// panel's foot at any width: --crop is that share times the page's
-// height-to-width ratio (1.414), so 0.99 shows 70% on phones and 0.707 shows
-// half from `sm`. From `lg` the box stretches to the copy's height instead.
+// The closing band mirrors the hero: dark headline, brand-blue second line.
+// The page rising from the band's foot is a real billsend PDF set in the
+// typeface picked in Try it. Its box is sized from the page's own width, so it
+// always shows the same top share of the page, and the page runs past the box
+// to be cut by the band's foot: square shows 70% on phones, 10:7 half from
+// `sm`.
 function Closing({ font }: { font: InvoiceFont }) {
   const fontName = getInvoiceFontDefinition(font).name;
   const closingRender = getClosingRender(font);
@@ -1180,36 +1212,45 @@ function Closing({ font }: { font: InvoiceFont }) {
       : `Free, with no account. Opens straight into the editor, set in ${fontName}.`;
 
   return (
-    <section className="py-16 sm:py-20">
-      <div className={CONTAINER}>
-        <div className="bg-brand-700 grid overflow-hidden rounded-xl text-white ring-1 ring-zinc-950/10 lg:grid-cols-2">
-          <div className="flex flex-col items-start justify-center gap-8 px-6 pt-14 pb-10 sm:px-12 sm:pt-16 lg:py-24 lg:pl-16">
-            <h2 className={cn(HEADING, "max-w-[16ch] text-4xl sm:text-5xl")}>
-              Your next invoice starts here.
-            </h2>
-            <div className="flex flex-col items-start gap-4">
-              <CreateInvoiceLink font={font} tone="light" />
-              <p className="text-brand-100 max-w-[44ch] text-base/7 text-pretty sm:text-sm/6">
-                {caption}
-              </p>
-            </div>
+    <section className="bg-brand-50 overflow-hidden pt-16 sm:pt-24">
+      <div
+        className={cn(
+          CONTAINER,
+          "flex flex-col items-center gap-12 text-center sm:gap-16"
+        )}
+      >
+        <div className="flex flex-col items-center gap-8">
+          <h2 className={cn(HEADING, typeClass("display", "compact"))}>
+            <span className="block">Your next invoice</span>
+            <span className="text-brand-600 block">starts here.</span>
+          </h2>
+          <div className="flex flex-col items-center gap-4">
+            <CreateInvoiceLink font={font} />
+            <p
+              className={cn(
+                typeClass("body"),
+                "max-w-[44ch] text-pretty text-zinc-500"
+              )}
+            >
+              {caption}
+            </p>
           </div>
-          <div aria-hidden="true" className="@container relative">
-            <div className="h-[calc(min(28rem,100cqw_-_3rem)*var(--crop))] [--crop:0.99] sm:[--crop:0.707] lg:hidden" />
-            <div className="absolute top-0 left-1/2 w-[min(28rem,calc(100%-3rem))] -translate-x-1/2 lg:top-16">
-              <img
-                src={closingRender.src}
-                alt=""
-                width={closingRender.width}
-                height={Math.round(
-                  (closingRender.width * PAGE_HEIGHT) / PAGE_WIDTH
-                )}
-                loading="lazy"
-                decoding="async"
-                className="block h-auto w-full shadow-2xl"
-              />
-            </div>
-          </div>
+        </div>
+        <div
+          aria-hidden="true"
+          className="relative aspect-square w-full max-w-md sm:aspect-10/7"
+        >
+          <img
+            src={closingRender.src}
+            alt=""
+            width={closingRender.width}
+            height={Math.round(
+              (closingRender.width * PAGE_HEIGHT) / PAGE_WIDTH
+            )}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-x-0 top-0 h-auto w-full shadow-xl outline-1 -outline-offset-1 outline-zinc-950/5"
+          />
         </div>
       </div>
     </section>
@@ -1227,11 +1268,16 @@ function SiteFooter() {
       >
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Wordmark />
-          <p className="text-base/7 text-zinc-500 sm:text-sm/6">
+          <p className={cn(typeClass("body"), "text-zinc-500")}>
             Invoices that stay on your device.
           </p>
         </div>
-        <ul className="flex flex-wrap items-center gap-x-6 gap-y-2 text-base/7 text-zinc-600 sm:text-sm/6">
+        <ul
+          className={cn(
+            typeClass("body"),
+            "flex flex-wrap items-center gap-x-6 gap-y-2 text-zinc-600"
+          )}
+        >
           <li>
             <FooterLink href={`${SOURCE_URL}/issues`}>
               Report an issue
