@@ -3,12 +3,9 @@ import {
   IconAlertTriangle,
   IconArrowUpRight,
   IconCheck,
-  IconChevronRight,
   IconCloudOff,
   IconCoins,
-  IconDownload,
   IconEyeOff,
-  IconFileTypePdf,
   IconMenu2,
   IconPlus,
   IconPrinter,
@@ -16,9 +13,27 @@ import {
   IconUserOff
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { addDays, format } from "date-fns";
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
+import {
+  EditorWindow,
+  FILL_SAMPLE,
+  getTitleStyle,
+  HERO_SAMPLE,
+  InvoicePage,
+  KEEP_SAMPLE,
+  PAGE_HEIGHT,
+  PAGE_WIDTH,
+  ScaledFrame,
+  TRY_IT_SAMPLE
+} from "~/components/home/editor-preview";
+import {
+  DEMO_FONTS,
+  getClosingRender,
+  PDF_RENDER_SCALE,
+  PDF_RENDERS
+} from "~/components/home/pdf-renders";
+import { formatCurrencyWithCode } from "~/consts/currencies";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import { cn } from "~/lib/utils";
 import type { InvoiceFont } from "~/types";
@@ -67,30 +82,13 @@ const SECTIONS = [
   { href: "#questions", label: "Questions" }
 ];
 
-const CURRENCIES = ["EUR", "GBP", "USD", "CHF"] as const;
+const CURRENCIES = ["USD", "EUR", "GBP", "CHF"] as const;
 
 type Currency = (typeof CURRENCIES)[number];
 
 type RequestTally =
   | { status: "counting"; elsewhere: number; data: number; files: number }
   | { status: "pending" | "unsupported" };
-
-// A UK freelancer billing a German business: VAT is reverse charged, so the
-// total is the subtotal less the 10% discount.
-const INVOICE_LINES = [
-  { description: "Editorial illustrations", quantity: 3, unitPrice: 600 },
-  { description: "Cover artwork", quantity: 1, unitPrice: 950 }
-];
-
-const DISCOUNT_RATE = 0.1;
-
-// Real faces from the editor's invoice font library, across its categories.
-const DEMO_FONTS: InvoiceFont[] = [
-  "geist",
-  "lora",
-  "libre-baskerville",
-  "jetbrains-mono"
-];
 
 const FACTS: { label: string; icon: ComponentType<{ className?: string }> }[] =
   [
@@ -103,33 +101,41 @@ const FACTS: { label: string; icon: ComponentType<{ className?: string }> }[] =
   ];
 
 // Each feature shows a fragment of a real invoice rather than an icon.
-const FEATURES: { title: string; description: string; specimen: ReactNode }[] =
-  [
-    {
-      title: "Your logo, your type",
-      description:
-        "Upload your logo and set the whole invoice in any of ten fonts, at three sizes.",
-      specimen: <TypeSpecimen />
-    },
-    {
-      title: "Any currency",
-      description:
-        "Choose the currency for each invoice, with custom symbols when you need them.",
-      specimen: <CurrencySpecimen />
-    },
-    {
-      title: "Tax, fees and discounts",
-      description:
-        "Add VAT or sales tax, fees, and a fixed or percentage discount. billsend does the sums, taxing the amount after any discount.",
-      specimen: <TotalsSpecimen />
-    },
-    {
-      title: "Payment details clients can use",
-      description:
-        "Bank name, account number, IBAN, BIC / SWIFT and sort code, laid out so your client can pay without asking.",
-      specimen: <PaymentSpecimen />
-    }
-  ];
+// A specimen that is a crop of a PDF page sits on the editor's desk, so the
+// paper's edge reads, and runs off the card where it was cut.
+const FEATURES: {
+  title: string;
+  description: string;
+  specimen: ReactNode;
+  isPageCrop?: boolean;
+}[] = [
+  {
+    title: "Your logo, your type",
+    description:
+      "Upload your logo and set the whole invoice in any of ten fonts, at three sizes.",
+    specimen: <TypeSpecimen />
+  },
+  {
+    title: "Any currency",
+    description:
+      "Choose the currency for each invoice, with custom symbols when you need them.",
+    specimen: <CurrencySpecimen />
+  },
+  {
+    title: "Tax, fees and discounts",
+    description:
+      "Add VAT or sales tax, fees, and a fixed or percentage discount. billsend does the sums, taxing the amount after any discount.",
+    specimen: <TotalsSpecimen />,
+    isPageCrop: true
+  },
+  {
+    title: "Payment details clients can use",
+    description:
+      "Bank name, account number, IBAN, BIC / SWIFT and sort code, laid out so your client can pay without asking.",
+    specimen: <PaymentSpecimen />,
+    isPageCrop: true
+  }
+];
 
 // The checks, in the order a visitor can make them.
 const CHECKS: {
@@ -141,7 +147,7 @@ const CHECKS: {
   {
     title: "Watch the counter",
     description:
-      "The counter on the sample invoice reads your browser’s own record of every request this page makes to other websites. Type all you like: it stays at zero."
+      "The counter under the sample invoice reads your browser’s own record of every request this page makes to other websites. However you use the page, it stays at zero."
   },
   {
     title: "Search for a sign-up",
@@ -290,14 +296,6 @@ function useRequestTally() {
   }, []);
 
   return tally;
-}
-
-function formatMoney(amount: number, currency: Currency) {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-    currencyDisplay: "narrowSymbol"
-  }).format(amount);
 }
 
 function HomePage() {
@@ -492,8 +490,8 @@ function SectionHeading({
   title,
   description
 }: {
-  title: string;
-  description: string;
+  title: ReactNode;
+  description: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
@@ -526,7 +524,7 @@ function Hero({ font, tally }: { font: InvoiceFont; tally: RequestTally }) {
             </p>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <CreateInvoiceLink font={font} />
-              <a href="#try-it" className={TEXT_LINK}>
+              <a href="#try-it" className={cn(TEXT_LINK, "max-md:hidden")}>
                 Try the sample invoice
               </a>
             </div>
@@ -554,112 +552,60 @@ function Hero({ font, tally }: { font: InvoiceFont; tally: RequestTally }) {
 }
 
 /**
- * The editor, shown rather than described: an app window on a billsend-blue
- * panel, cropped at the foot, with the browser's own request counter floating
- * over it on wide screens.
+ * The editor, shown rather than described: the real editor layout on a
+ * billsend-blue panel, cropped at the foot, with the browser's own request
+ * counter floating over it on wide screens. Below `md` the whole window would
+ * be too small to read, so it shows a close crop of its top-left instead, run
+ * off the panel's right edge where it was cut.
  */
 function HeroVisual({ tally }: { tally: RequestTally }) {
   return (
     <div className="hero-fade-up bg-brand-700 relative mt-12 h-[28rem] overflow-hidden rounded-xl [animation-delay:200ms] sm:mt-16 sm:h-[36rem] lg:h-[40rem]">
-      <div className="relative px-4 pt-8 sm:px-10 sm:pt-14 lg:px-16 lg:pt-16">
-        <EditorMock />
-      </div>
+      <figure
+        aria-label="The billsend editor with a sample invoice"
+        className="relative pt-8 [--pad:--spacing(4)] sm:pt-14 sm:[--pad:--spacing(10)] lg:pt-16 lg:[--pad:--spacing(16)]"
+      >
+        <ScaledFrame
+          width={1024}
+          height={768}
+          className="mx-(--pad) w-auto rounded-t-xl shadow-2xl max-md:hidden"
+        >
+          <EditorWindow
+            invoice={HERO_SAMPLE}
+            width={1024}
+            height={768}
+            canvasScroll={HERO_SCROLL}
+          />
+        </ScaledFrame>
+        <ScaledFrame
+          {...HERO_PHONE_CROP}
+          fill
+          className="ml-(--pad) w-auto rounded-tl-xl shadow-2xl md:hidden"
+        >
+          <EditorWindow
+            invoice={HERO_SAMPLE}
+            width={1024}
+            height={768}
+            canvasScroll={HERO_SCROLL}
+          />
+        </ScaledFrame>
+      </figure>
       <RequestCard tally={tally} />
     </div>
   );
 }
 
+// The desktop editor's top-left: toolbar, the title and both addresses.
+const HERO_PHONE_CROP = { width: 400, height: 580 };
+
+// The page's figures: invoice details, line amounts and totals, up to the
+// page's right edge.
+const TRY_IT_PHONE_CROP = { x: 358, y: 296, width: 435.7, height: 511 };
+
+// Scrolls the page's totals up to sit just under the toolbar.
+const HERO_SCROLL = 520;
+
 const EDITOR_FONTS: InvoiceFont[] = ["geist", "lora", "jetbrains-mono"];
-
-const EDITOR_SECTIONS = [
-  { label: "Your details", value: "Maya Okafor" },
-  { label: "Bill to", value: "Kanal & Co. GmbH" },
-  { label: "Line items", value: "2 items" },
-  { label: "Tax and discounts", value: "Reverse charge, −10%" },
-  { label: "Payment details", value: "IBAN, BIC" }
-];
-
-function EditorMock() {
-  return (
-    <figure
-      aria-label="The billsend editor with a sample invoice set in Lora"
-      className="@container overflow-hidden rounded-t-xl bg-white shadow-2xl ring-1 ring-black/10"
-    >
-      <div aria-hidden="true">
-        <div className="flex items-center justify-between gap-4 border-b border-zinc-950/10 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-2 text-sm">
-            <img
-              src="/favicon-96x96.png"
-              alt=""
-              className="size-5 shrink-0 rounded"
-            />
-            <span className="text-zinc-500 @max-sm:hidden">Invoices</span>
-            <IconChevronRight
-              className="size-4 shrink-0 text-zinc-300 @max-sm:hidden"
-              aria-hidden="true"
-            />
-            <span className="truncate font-medium">INV-0043</span>
-          </div>
-          <div className="flex shrink-0 items-center gap-3 text-sm">
-            <span className="flex items-center gap-1.5 text-zinc-500 @max-xl:hidden">
-              <IconCheck
-                className="text-brand-600 size-4 shrink-0"
-                aria-hidden="true"
-              />
-              Saved in this browser
-            </span>
-            <span className="flex items-center gap-1.5 rounded-full bg-zinc-950 py-1.5 pr-3 pl-2.5 font-medium text-white">
-              <IconDownload className="size-4 shrink-0" aria-hidden="true" />
-              Download PDF
-            </span>
-          </div>
-        </div>
-        <div className="grid @3xl:grid-cols-[15rem_minmax(0,1fr)]">
-          <div className="flex flex-col gap-1 border-r border-zinc-950/10 p-3 @max-3xl:hidden">
-            {EDITOR_SECTIONS.map(section => (
-              <div
-                key={section.label}
-                className="flex flex-col rounded-lg px-3 py-2 text-sm"
-              >
-                <span className="font-medium">{section.label}</span>
-                <span className="truncate text-zinc-500">{section.value}</span>
-              </div>
-            ))}
-            <div className="flex flex-col gap-2 rounded-lg bg-zinc-100 px-3 py-2.5 text-sm">
-              <span className="font-medium">Appearance</span>
-              <div className="flex flex-wrap gap-1.5">
-                {EDITOR_FONTS.map(demoFont => (
-                  <span
-                    key={demoFont}
-                    className={cn(
-                      "rounded-md px-2 py-1 ring-1",
-                      demoFont === "lora"
-                        ? "ring-brand-600 bg-white text-zinc-950"
-                        : "text-zinc-500 ring-zinc-950/10"
-                    )}
-                    style={{
-                      fontFamily: getInvoiceFontDefinition(demoFont).cssFamily
-                    }}
-                  >
-                    {getInvoiceFontDefinition(demoFont).name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="flex justify-center bg-zinc-100 p-4 @md:p-8 @3xl:justify-start @3xl:p-10">
-            <SampleInvoice
-              font="lora"
-              currency="EUR"
-              clientName="Kanal & Co. GmbH"
-              className="w-full max-w-md"
-            />
-          </div>
-        </div>
-      </div>
-    </figure>
-  );
-}
 
 function RequestCard({ tally }: { tally: RequestTally }) {
   return (
@@ -736,127 +682,6 @@ function SavedInvoicesNote() {
 }
 
 /**
- * A miniature of the invoice billsend produces, in the face and currency
- * given. Both the hero's editor and the try-it panel render it.
- */
-function SampleInvoice({
-  font,
-  currency,
-  clientName,
-  className
-}: {
-  font: InvoiceFont;
-  currency: Currency;
-  clientName: string;
-  className?: string;
-}) {
-  const fontDefinition = getInvoiceFontDefinition(font);
-  const today = new Date();
-  const subtotal = INVOICE_LINES.reduce(
-    (sum, line) => sum + line.quantity * line.unitPrice,
-    0
-  );
-  const discount = subtotal * DISCOUNT_RATE;
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col gap-6 rounded-sm bg-white p-6 text-xs text-zinc-900 shadow-sm ring-1 ring-zinc-950/5 sm:p-8",
-        className
-      )}
-      style={{
-        fontFamily: fontDefinition.cssFamily,
-        letterSpacing: fontDefinition.letterSpacing
-      }}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-3">
-          <p className="text-2xl font-semibold">Invoice</p>
-          <dl className="grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 whitespace-nowrap tabular-nums">
-            <dt className="text-zinc-500">Invoice No.</dt>
-            <dd>INV-0043</dd>
-            <dt className="text-zinc-500">Date</dt>
-            <dd suppressHydrationWarning>{format(today, "d MMM yyyy")}</dd>
-            <dt className="text-zinc-500">Due date</dt>
-            <dd suppressHydrationWarning>
-              {format(addDays(today, 14), "d MMM yyyy")}
-            </dd>
-          </dl>
-        </div>
-        <div className="font-geist flex size-10 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-xs font-semibold tracking-normal text-white">
-          MO
-        </div>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="font-medium">From</p>
-          <p className="text-zinc-500">
-            Maya Okafor
-            <br />
-            London
-          </p>
-        </div>
-        <div className="flex min-w-0 flex-col gap-1">
-          <p className="font-medium">Bill to</p>
-          <p className="break-words text-zinc-500">
-            {clientName === "" ? (
-              <span className="text-zinc-400">Your client</span>
-            ) : (
-              clientName
-            )}
-            <br />
-            Berlin
-          </p>
-        </div>
-      </div>
-      <div className="flex flex-col tabular-nums">
-        <div className="grid grid-cols-[minmax(0,1fr)_2rem_6rem] gap-2 border-b border-zinc-950/10 pb-2 font-medium">
-          <span>Description</span>
-          <span className="text-center">Qty</span>
-          <span className="text-right">Amount</span>
-        </div>
-        {INVOICE_LINES.map(line => (
-          <div
-            key={line.description}
-            className="grid grid-cols-[minmax(0,1fr)_2rem_6rem] gap-2 border-b border-zinc-950/10 py-2"
-          >
-            <span>{line.description}</span>
-            <span className="text-center">{line.quantity}</span>
-            <span className="text-right">
-              {formatMoney(line.quantity * line.unitPrice, currency)}
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-end tabular-nums">
-        <dl className="grid w-full max-w-60 grid-cols-[1fr_auto] gap-x-4 gap-y-1.5">
-          <dt className="text-zinc-500">Subtotal</dt>
-          <dd className="text-right">{formatMoney(subtotal, currency)}</dd>
-          <dt className="text-zinc-500">Discount (10%)</dt>
-          <dd className="text-right">−{formatMoney(discount, currency)}</dd>
-          <dt className="text-zinc-500">VAT</dt>
-          <dd className="text-right">Reverse charge</dd>
-          <dt className="border-t border-zinc-950/10 pt-2 font-medium">
-            Total
-          </dt>
-          <dd className="border-t border-zinc-950/10 pt-2 text-right text-base font-semibold">
-            {formatMoney(subtotal - discount, currency)}
-          </dd>
-        </dl>
-      </div>
-      <div className="flex flex-col gap-1 border-t border-zinc-950/10 pt-4">
-        <p className="font-medium">Payment details</p>
-        <p className="text-zinc-500 tabular-nums">
-          IBAN DE89 3704 0044 0532 0130 00
-          <br />
-          BIC COBADEFFXXX
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/**
  * The sample invoice, made editable: what the visitor types and picks stays on
  * this page, and the browser's own count of requests to other websites sits
  * under it the whole time. The typeface carries into the editor through every
@@ -872,14 +697,32 @@ function TryIt({
   tally: RequestTally;
 }) {
   const [clientName, setClientName] = useState("");
-  const [currency, setCurrency] = useState<Currency>("EUR");
+  const [currency, setCurrency] = useState<Currency>("USD");
 
   return (
     <section id="try-it" className="py-16 sm:py-20">
       <div className={CONTAINER}>
         <SectionHeading
-          title="Try it on this page."
-          description="Type a client’s name and change the typeface or currency. Your browser counts every request this page makes to another website, and it stays at zero while you type."
+          title={
+            <>
+              <span className="max-md:hidden">Try it on this page.</span>
+              <span className="md:hidden">Nothing leaves this page.</span>
+            </>
+          }
+          description={
+            <>
+              <span className="max-md:hidden">
+                Type a client’s name and change the typeface or currency. Your
+                browser counts every request this page makes to another website,
+                and it stays at zero while you type.
+              </span>
+              <span className="md:hidden">
+                Your browser counts every request this page makes to another
+                website, and it stays at zero. On a computer, you can edit the
+                sample invoice and watch.
+              </span>
+            </>
+          }
         />
         <div className="mt-12 overflow-hidden rounded-xl bg-white ring-1 ring-zinc-950/10 sm:mt-16">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-zinc-950/10 px-6 py-5">
@@ -887,8 +730,11 @@ function TryIt({
               <p className="text-base/7 font-medium sm:text-sm/6">
                 Sample invoice
               </p>
-              <p className="text-base/7 text-zinc-500 sm:text-sm/6">
+              <p className="text-base/7 text-zinc-500 max-md:hidden sm:text-sm/6">
                 The typeface you pick opens with you in the editor.
+              </p>
+              <p className="text-base/7 text-zinc-500 sm:text-sm/6 md:hidden">
+                As it looks in the editor.
               </p>
             </div>
             <Link
@@ -902,7 +748,7 @@ function TryIt({
           <div className="grid lg:grid-cols-[20rem_minmax(0,1fr)]">
             <form
               onSubmit={event => event.preventDefault()}
-              className="flex flex-col gap-8 border-zinc-950/10 bg-zinc-50 p-6 max-lg:border-b lg:border-r"
+              className="flex flex-col gap-8 border-zinc-950/10 bg-zinc-50 p-6 max-lg:border-b max-md:hidden lg:border-r"
             >
               <div className="flex flex-col gap-2">
                 <label
@@ -989,13 +835,28 @@ function TryIt({
               </fieldset>
             </form>
             <div className="flex min-w-0 flex-col bg-zinc-100">
-              <div className="flex flex-1 items-start justify-center p-4 sm:p-10">
-                <SampleInvoice
-                  font={font}
-                  currency={currency}
-                  clientName={clientName}
-                  className="w-full max-w-lg"
-                />
+              <div className="flex flex-1 items-start justify-center p-(--pad) [--pad:--spacing(4)] sm:[--pad:--spacing(10)]">
+                <ScaledFrame
+                  width={PAGE_WIDTH}
+                  height={PAGE_HEIGHT}
+                  className="shadow-md max-md:hidden"
+                >
+                  <InvoicePage
+                    invoice={{
+                      ...TRY_IT_SAMPLE,
+                      font,
+                      currencyCode: currency,
+                      clientName
+                    }}
+                  />
+                </ScaledFrame>
+                <ScaledFrame
+                  {...TRY_IT_PHONE_CROP}
+                  fill
+                  className="-my-(--pad) -ml-(--pad) grow md:hidden"
+                >
+                  <InvoicePage invoice={TRY_IT_SAMPLE} />
+                </ScaledFrame>
               </div>
               <RequestCounter tally={tally} />
             </div>
@@ -1039,7 +900,10 @@ function Features() {
             <div key={feature.title} className="flex flex-col gap-6">
               <div
                 aria-hidden="true"
-                className="flex min-h-48 items-center rounded-xl bg-zinc-50 p-6 ring-1 ring-zinc-950/5 ring-inset sm:p-8"
+                className={cn(
+                  "flex items-center overflow-hidden rounded-xl p-(--pad) ring-1 ring-zinc-950/10 [--pad:--spacing(6)] sm:[--pad:--spacing(8)]",
+                  feature.isPageCrop ? "bg-desk" : "min-h-48 bg-zinc-50"
+                )}
               >
                 {feature.specimen}
               </div>
@@ -1059,75 +923,91 @@ function Features() {
   );
 }
 
+// The invoice title in three of the editor's faces, set as the editor sets it.
 function TypeSpecimen() {
   return (
     <div className="grid w-full grid-cols-3 gap-4">
-      {EDITOR_FONTS.map(specimenFont => {
-        const definition = getInvoiceFontDefinition(specimenFont);
-
-        return (
-          <div key={specimenFont} className="flex flex-col gap-2">
-            <p
-              className="text-2xl text-zinc-950 sm:text-3xl"
-              style={{
-                fontFamily: definition.cssFamily,
-                letterSpacing: definition.letterSpacing
-              }}
-            >
-              Invoice
-            </p>
-            <p className="text-sm/5 text-zinc-500">{definition.name}</p>
-          </div>
-        );
-      })}
+      {EDITOR_FONTS.map(specimenFont => (
+        <div key={specimenFont} className="flex flex-col gap-2">
+          <p
+            className="text-2xl sm:text-3xl"
+            style={{ ...getTitleStyle(specimenFont), fontSize: undefined }}
+          >
+            Invoice
+          </p>
+          <p className="text-sm/5 text-zinc-500">
+            {getInvoiceFontDefinition(specimenFont).name}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
 
+// One total in four currencies, formatted by the editor's own formatter.
 function CurrencySpecimen() {
   return (
-    <ul className="grid w-full grid-cols-2 gap-x-6 gap-y-3 text-lg text-zinc-950 tabular-nums sm:text-2xl">
-      {["€2,475.00", "£2,475.00", "CHF 2,475.00", "¥2,475"].map(amount => (
-        <li key={amount} className="whitespace-nowrap">
-          {amount}
+    <ul className="font-geist flex w-full flex-col gap-2 text-lg font-semibold text-zinc-950 tabular-nums sm:text-xl">
+      {[
+        { symbol: "$", code: "USD" },
+        { symbol: "€", code: "EUR" },
+        { symbol: "£", code: "GBP" },
+        { symbol: "¥", code: "JPY" }
+      ].map(currency => (
+        <li key={currency.code} className="whitespace-nowrap">
+          {formatCurrencyWithCode(2475, currency.symbol, currency.code)}
         </li>
       ))}
     </ul>
   );
 }
 
-// 10% off 2,750.00 is 2,475.00, and 20% VAT on that is 495.00.
+/**
+ * A crop of a real billsend PDF, filling its container's width. The two
+ * feature crops share an aspect ratio so their cards match; the step crop runs
+ * taller than its card, which clips it at the foot.
+ */
+function PdfCrop({
+  render,
+  className
+}: {
+  render: (typeof PDF_RENDERS)[keyof typeof PDF_RENDERS];
+  className?: string;
+}) {
+  return (
+    <img
+      src={render.src}
+      alt=""
+      width={Math.round(render.crop.width * PDF_RENDER_SCALE)}
+      height={Math.round(render.crop.height * PDF_RENDER_SCALE)}
+      loading="lazy"
+      decoding="async"
+      className={cn("block h-auto w-full max-w-none min-w-0 grow", className)}
+    />
+  );
+}
+
+// A print studio's totals with a 10% discount, New York City's 8.875% sales
+// tax and a delivery fee. Cut from the middle of the page, it runs off the card
+// on every side but the page's right edge.
 function TotalsSpecimen() {
   return (
-    <dl className="mx-auto grid w-full max-w-72 grid-cols-[1fr_auto] gap-x-6 gap-y-2 text-sm/6 tabular-nums">
-      <dt className="text-zinc-500">Subtotal</dt>
-      <dd className="text-right">£2,750.00</dd>
-      <dt className="text-zinc-500">Discount (10%)</dt>
-      <dd className="text-right">−£275.00</dd>
-      <dt className="text-zinc-500">VAT (20%)</dt>
-      <dd className="text-right">£495.00</dd>
-      <dt className="border-t border-zinc-950/10 pt-2 font-medium">Total</dt>
-      <dd className="border-t border-zinc-950/10 pt-2 text-right text-base font-semibold">
-        £2,970.00
-      </dd>
-    </dl>
+    <PdfCrop render={PDF_RENDERS.totals} className="-my-(--pad) -ml-(--pad)" />
   );
 }
 
 function PaymentSpecimen() {
   return (
-    <dl className="grid w-full grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm/6 tabular-nums">
-      <dt className="text-zinc-500">Bank</dt>
-      <dd>Commerzbank</dd>
-      <dt className="text-zinc-500">IBAN</dt>
-      <dd>DE89 3704 0044 0532 0130 00</dd>
-      <dt className="text-zinc-500">BIC / SWIFT</dt>
-      <dd>COBADEFFXXX</dd>
-      <dt className="text-zinc-500">Sort code</dt>
-      <dd>04-00-04</dd>
-    </dl>
+    <PdfCrop render={PDF_RENDERS.payment} className="-my-(--pad) -mr-(--pad)" />
   );
 }
+
+// Regions of the editor, in its native pixels, that the editor steps show:
+// page-relative for the page crop, window-relative for the window. They run
+// taller than their cards, which clip them at the foot.
+const FILL_CROP = { x: 0, y: 246, width: 360, height: 480 };
+
+const KEEP_CROP = { width: 480, height: 640 };
 
 const STEPS: {
   title: string;
@@ -1144,7 +1024,7 @@ const STEPS: {
     title: "Send the PDF",
     description:
       "Download an A4 PDF or print it, then send it to your client however you like.",
-    illustration: <DownloadIllustration />
+    illustration: <SendIllustration />
   },
   {
     title: "Keep a copy",
@@ -1167,7 +1047,7 @@ function HowItWorks() {
             <li key={step.title} className="flex flex-col gap-6">
               <div
                 aria-hidden="true"
-                className="bg-brand-50 flex aspect-[4/3] items-center justify-center rounded-xl p-6 sm:p-10 lg:p-6 xl:p-10"
+                className="bg-brand-50 flex aspect-[4/3] items-start overflow-hidden rounded-xl p-(--pad) ring-1 ring-zinc-950/10 [--pad:--spacing(6)] sm:[--pad:--spacing(10)] lg:[--pad:--spacing(6)] xl:[--pad:--spacing(10)]"
               >
                 {step.illustration}
               </div>
@@ -1187,84 +1067,44 @@ function HowItWorks() {
   );
 }
 
-const ILLUSTRATION_CARD =
-  "flex w-full max-w-72 flex-col gap-3 rounded-xl bg-white p-4 text-xs text-zinc-700 shadow-sm ring-1 ring-black/5";
+// Each step's crop keeps the card's padding on its real edges and runs off the
+// card on the sides it was cut from.
+const ILLUSTRATION_FRAME = "grow shadow-sm";
 
+// The client's address going in, with the field focused as the editor shows it.
 function FillIllustration() {
   return (
-    <div className={ILLUSTRATION_CARD}>
-      <div className="flex flex-col gap-1">
-        <span className="text-zinc-500">Bill to</span>
-        <span className="ring-brand-600 rounded-md px-2 py-1.5 font-medium text-zinc-950 ring-2">
-          Kanal & Co. GmbH
-        </span>
-      </div>
-      <div className="flex flex-col gap-1">
-        <span className="text-zinc-500">Line item</span>
-        <span className="flex justify-between gap-2 rounded-md px-2 py-1.5 ring-1 ring-zinc-950/10">
-          <span className="truncate">Editorial illustrations</span>
-          <span className="shrink-0 tabular-nums">3 × €600</span>
-        </span>
-      </div>
-      <div className="flex justify-between border-t border-zinc-950/10 pt-3 font-medium text-zinc-950 tabular-nums">
-        <span>Total</span>
-        <span>€2,475.00</span>
-      </div>
-    </div>
+    <ScaledFrame {...FILL_CROP} fill className="-mt-(--pad) -mr-(--pad) grow">
+      <InvoicePage invoice={FILL_SAMPLE} focusedField="client" />
+    </ScaledFrame>
   );
 }
 
-function DownloadIllustration() {
+// The top-left corner of the PDF a woodworker sends, set in Lora.
+function SendIllustration() {
   return (
-    <div className={ILLUSTRATION_CARD}>
-      <div className="flex items-center gap-3">
-        <IconFileTypePdf
-          className="size-6 shrink-0 text-red-600"
-          aria-hidden="true"
-        />
-        <div className="flex min-w-0 flex-col">
-          <span className="truncate font-medium text-zinc-950">
-            INV-0043.pdf
-          </span>
-          <span className="text-zinc-500">A4, 1 page</span>
-        </div>
-      </div>
-      <div className="flex gap-2">
-        <span className="flex flex-1 items-center justify-center gap-1.5 rounded-full bg-zinc-950 py-1.5 font-medium text-white">
-          <IconDownload className="size-4 shrink-0" aria-hidden="true" />
-          Download
-        </span>
-        <span className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 font-medium ring-1 ring-zinc-950/10">
-          <IconPrinter className="size-4 shrink-0" aria-hidden="true" />
-          Print
-        </span>
-      </div>
-    </div>
+    <PdfCrop
+      render={PDF_RENDERS.send}
+      className={cn(ILLUSTRATION_FRAME, "-mr-(--pad)")}
+    />
   );
 }
 
+// The editor's File menu, where invoices, templates and backups live.
 function KeepIllustration() {
   return (
-    <div className={ILLUSTRATION_CARD}>
-      <span className="text-zinc-500">In this browser</span>
-      {[
-        { name: "INV-0043", detail: "Kanal & Co." },
-        { name: "INV-0042", detail: "Northwind Studio" },
-        { name: "Template", detail: "Monthly retainer" }
-      ].map(item => (
-        <span
-          key={item.name}
-          className="flex justify-between gap-2 rounded-md px-2 py-1.5 ring-1 ring-zinc-950/10"
-        >
-          <span className="font-medium text-zinc-950">{item.name}</span>
-          <span className="truncate text-zinc-500">{item.detail}</span>
-        </span>
-      ))}
-      <span className="flex items-center gap-1.5 font-medium text-zinc-950">
-        <IconDownload className="size-4 shrink-0" aria-hidden="true" />
-        Export data
-      </span>
-    </div>
+    <ScaledFrame
+      {...KEEP_CROP}
+      fill
+      className={cn(ILLUSTRATION_FRAME, "-mr-(--pad) rounded-tl-lg")}
+    >
+      <EditorWindow
+        invoice={KEEP_SAMPLE}
+        width={1024}
+        height={768}
+        openMenu="file"
+      />
+    </ScaledFrame>
   );
 }
 
@@ -1389,6 +1229,7 @@ function Questions() {
 
 function Closing({ font }: { font: InvoiceFont }) {
   const fontName = getInvoiceFontDefinition(font).name;
+  const closingRender = getClosingRender(font);
   const caption =
     font === DEFAULT_FONT
       ? "Free, with no account. Opens straight into the editor."
@@ -1410,12 +1251,19 @@ function Closing({ font }: { font: InvoiceFont }) {
             </div>
           </div>
           <div aria-hidden="true" className="relative h-72 sm:h-80 lg:h-auto">
-            <SampleInvoice
-              font={font}
-              currency="EUR"
-              clientName=""
-              className="absolute top-0 left-1/2 w-[min(28rem,calc(100%-3rem))] -translate-x-1/2 rounded-b-none shadow-2xl lg:top-16"
-            />
+            <div className="absolute top-0 left-1/2 w-[min(28rem,calc(100%-3rem))] -translate-x-1/2 lg:top-16">
+              <img
+                src={closingRender.src}
+                alt=""
+                width={closingRender.width}
+                height={Math.round(
+                  (closingRender.width * PAGE_HEIGHT) / PAGE_WIDTH
+                )}
+                loading="lazy"
+                decoding="async"
+                className="block h-auto w-full shadow-2xl"
+              />
+            </div>
           </div>
         </div>
       </div>
