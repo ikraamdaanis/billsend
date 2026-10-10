@@ -228,6 +228,7 @@ function buildPaymentDetails(sellerName: string): InvoicePaymentDetails {
     label: "Payment details",
     bankName: bank.name,
     accountNumber,
+    routingNumber: "",
     iban,
     bic,
     sortCode,

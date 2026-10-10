@@ -1,7 +1,6 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import type { Invoice } from "~/types";
 import { pdfRoleStyle } from "~/utils/pdf-styles";
-import { SCALE_FACTOR } from "~/utils/scale-font-size";
 
 const styles = StyleSheet.create({
   section: {
@@ -32,6 +31,7 @@ const styles = StyleSheet.create({
 const FIELDS = [
   { key: "bankName", label: "Bank name" },
   { key: "accountNumber", label: "Account number" },
+  { key: "routingNumber", label: "Routing number" },
   { key: "iban", label: "IBAN" },
   { key: "bic", label: "BIC / SWIFT" },
   { key: "sortCode", label: "Sort code" }
@@ -45,17 +45,8 @@ export function InvoicePdfPaymentDetails({ invoice }: { invoice: Invoice }) {
     return null;
   }
 
-  // The editor renders each label as a plain `text-sm text-zinc-500` span (a
-  // fixed 14px that never scales with the theme). Scale it to PDF without the
-  // rounding scaleFontSize applies: rounding 10.5 up to 11 would swallow the
-  // gap to the section heading (11pt on medium, 12pt on large), which the
-  // editor keeps because its heading scales while the label stays 14px.
-  const labelStyle = pdfRoleStyle(theme, "termsContent", {
-    ...styles.fieldLabel,
-    fontSize: 14 * SCALE_FACTOR,
-    fontWeight: 400,
-    color: "#71717a"
-  });
+  // Labels and values share the body text style, so they read as one block.
+  const labelStyle = pdfRoleStyle(theme, "termsContent", styles.fieldLabel);
   const valueStyle = pdfRoleStyle(theme, "termsContent", styles.fieldValue);
 
   return (

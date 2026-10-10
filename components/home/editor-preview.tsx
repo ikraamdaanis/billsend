@@ -57,7 +57,12 @@ type SampleInvoice = {
   }[];
   discountPercentage: number;
   taxPercentage: number;
-  payment: { bankName: string; accountNumber: string; bic: string };
+  payment: {
+    bankName: string;
+    accountNumber: string;
+    routingNumber: string;
+    bic: string;
+  };
   paymentInstructions: string;
   font: InvoiceFont;
   currencyCode: string;
@@ -86,10 +91,10 @@ export const HERO_SAMPLE: SampleInvoice = {
   payment: {
     bankName: "JPMorgan Chase Bank, N.A.",
     accountNumber: "483920175",
+    routingNumber: "021000021",
     bic: "CHASUS33"
   },
-  paymentInstructions:
-    "ACH routing number 021000021. Payment due within 30 days.",
+  paymentInstructions: "Payment due within 30 days.",
   font: "geist",
   currencyCode: "USD"
 };
@@ -126,9 +131,10 @@ export const TRY_IT_SAMPLE: SampleInvoice = {
   payment: {
     bankName: "Wells Fargo Bank, N.A.",
     accountNumber: "7429183056",
+    routingNumber: "111900659",
     bic: "WFBIUS6S"
   },
-  paymentInstructions: "ACH routing number 111900659. Net 15.",
+  paymentInstructions: "Net 15.",
   font: "geist",
   currencyCode: "USD"
 };
@@ -159,9 +165,10 @@ export const FILL_SAMPLE: SampleInvoice = {
   payment: {
     bankName: "Citibank, N.A.",
     accountNumber: "40871236",
+    routingNumber: "271070801",
     bic: "CITIUS33"
   },
-  paymentInstructions: "ACH routing number 271070801. Net 30.",
+  paymentInstructions: "Net 30.",
   font: "geist",
   currencyCode: "USD"
 };
@@ -192,9 +199,10 @@ export const KEEP_SAMPLE: SampleInvoice = {
   payment: {
     bankName: "U.S. Bank",
     accountNumber: "153710294488",
+    routingNumber: "123000220",
     bic: "USBKUS44IMT"
   },
-  paymentInstructions: "ACH routing number 123000220. Net 30.",
+  paymentInstructions: "Net 30.",
   font: "geist",
   currencyCode: "USD"
 };
@@ -961,6 +969,11 @@ function PaymentDetails({
       value: invoice.payment.accountNumber,
       placeholder: ""
     },
+    {
+      label: "Routing number",
+      value: invoice.payment.routingNumber,
+      placeholder: ""
+    },
     { label: "IBAN", value: "", placeholder: "GB29 NWBK 6016 1331 9268 19" },
     { label: "BIC / SWIFT", value: invoice.payment.bic, placeholder: "" },
     { label: "Sort code", value: "", placeholder: "12-34-56" }
@@ -976,7 +989,7 @@ function PaymentDetails({
       <div className="mt-2 flex flex-col gap-1">
         {fields.map(field => (
           <div key={field.label} className="flex items-center gap-2">
-            <span className="text-paper-muted-foreground w-32 shrink-0 text-sm">
+            <span className="w-32 shrink-0" style={contentStyle}>
               {field.label}
             </span>
             <Field

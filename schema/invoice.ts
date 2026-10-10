@@ -53,6 +53,7 @@ const DEFAULT_PAYMENT_DETAILS = {
   label: "Payment details",
   bankName: "",
   accountNumber: "",
+  routingNumber: "",
   iban: "",
   bic: "",
   sortCode: "",
@@ -97,14 +98,15 @@ function textSectionSchema(defaultLabel: string) {
 
 // Payment details mirror the terms section: a customizable label plus content.
 // The content is a set of free-text fields so they work across banking
-// conventions (bank name, account number, IBAN, BIC/SWIFT, sort code) alongside
-// free-text instructions (e.g. "Net 30", a PayPal address). An all-empty section
-// is suppressed at render.
+// conventions (bank name, account and routing numbers, IBAN, BIC/SWIFT, sort
+// code) alongside free-text instructions (e.g. "Net 30", a PayPal address). An
+// all-empty section is suppressed at render.
 const paymentDetailsSchema = z
   .object({
     label: z.string().catch(DEFAULT_PAYMENT_DETAILS.label),
     bankName: z.string().catch(""),
     accountNumber: z.string().catch(""),
+    routingNumber: z.string().catch(""),
     iban: z.string().catch(""),
     bic: z.string().catch(""),
     sortCode: z.string().catch(""),
