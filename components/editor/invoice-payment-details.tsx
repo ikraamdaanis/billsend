@@ -100,7 +100,7 @@ function PaymentDetailsTerms() {
       aria-label="Payment instructions"
       value={paymentDetails.terms}
       onChange={value => setPaymentDetails(prev => ({ ...prev, terms: value }))}
-      className="mt-2 field-sizing-content min-h-[2lh] w-full"
+      className="mt-2 field-sizing-content w-full"
       style={getTextStyles({
         settings: getRoleSettings(theme, "termsContent")
       })}

@@ -1,15 +1,28 @@
 import { InvoiceInput } from "~/components/editor/invoice-input";
+import {
+  OptionalSection,
+  RemoveSectionButton
+} from "~/components/editor/invoice-optional-section";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
 import { useNotesSlice, useTheme } from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 
-export function InvoiceNotes() {
+export function InvoiceNotes({
+  autoFocus,
+  onRemove
+}: {
+  autoFocus: boolean;
+  onRemove: () => void;
+}) {
   return (
-    <>
-      <NotesLabel />
-      <NotesContent />
-    </>
+    <OptionalSection>
+      <div className="mb-2 flex items-center gap-1">
+        <NotesLabel />
+        <RemoveSectionButton label="Remove notes" onClick={onRemove} />
+      </div>
+      <NotesContent autoFocus={autoFocus} />
+    </OptionalSection>
   );
 }
 
@@ -21,7 +34,7 @@ function NotesLabel() {
     <InvoiceInput
       aria-label="Notes section label"
       value={notes.label}
-      className="mb-2 font-medium"
+      className="font-medium"
       onChange={value => setNotes(prev => ({ ...prev, label: value }))}
       placeholder="Notes"
       style={getTextStyles({
@@ -31,7 +44,7 @@ function NotesLabel() {
   );
 }
 
-function NotesContent() {
+function NotesContent({ autoFocus }: { autoFocus: boolean }) {
   const { notes, setNotes } = useNotesSlice();
   const theme = useTheme();
 
@@ -39,6 +52,7 @@ function NotesContent() {
     <InvoiceTextArea
       id="invoice-field-notes"
       aria-label={`${notes.label || "Notes"} content`}
+      autoFocus={autoFocus}
       value={notes.content}
       onChange={value => setNotes(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[3lh] w-full"

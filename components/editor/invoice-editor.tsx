@@ -12,15 +12,13 @@ import {
   InvoiceFontFamilyMenu,
   InvoiceFontWeightMenu
 } from "~/components/editor/invoice-font-picker";
+import { InvoiceFooterSections } from "~/components/editor/invoice-footer-sections";
 import { InvoiceImage } from "~/components/editor/invoice-image";
-import { InvoiceLatePayment } from "~/components/editor/invoice-late-payment";
 import { InvoiceLineItems } from "~/components/editor/invoice-line-items";
-import { InvoiceNotes } from "~/components/editor/invoice-notes";
 import { InvoicePaymentDetails } from "~/components/editor/invoice-payment-details";
 import { InvoicePricing } from "~/components/editor/invoice-pricing";
 import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details";
 import { InvoiceShipping } from "~/components/editor/invoice-shipping";
-import { InvoiceTerms } from "~/components/editor/invoice-terms";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
 import { DownloadInvoice } from "~/components/pdf/download-invoice";
 import { Button, buttonVariants } from "~/components/ui/button";
@@ -448,15 +446,7 @@ function Bottom() {
       <div className="mt-6">
         <InvoicePaymentDetails />
       </div>
-      <div className="mt-6">
-        <InvoiceNotes />
-      </div>
-      <div className="mt-6">
-        <InvoiceTerms />
-      </div>
-      <div className="mt-6">
-        <InvoiceLatePayment />
-      </div>
+      <InvoiceFooterSections />
     </>
   );
 }
