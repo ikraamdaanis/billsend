@@ -107,6 +107,7 @@ export const invoiceDefault: Invoice = {
     label: "Payment details",
     bankName: "",
     accountNumber: "",
+    routingNumber: "",
     iban: "",
     bic: "",
     sortCode: "",

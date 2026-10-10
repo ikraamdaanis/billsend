@@ -7,6 +7,7 @@ import { getTextStyles } from "~/utils/get-text-styles";
 const PAYMENT_FIELDS = [
   { key: "bankName", label: "Bank name", placeholder: "Acme Bank" },
   { key: "accountNumber", label: "Account number", placeholder: "12345678" },
+  { key: "routingNumber", label: "Routing number", placeholder: "021000021" },
   {
     key: "iban",
     label: "IBAN",
@@ -71,7 +72,10 @@ function PaymentDetailsField({
     <div className="flex items-center gap-2">
       <label
         htmlFor={fieldId}
-        className="text-paper-muted-foreground w-32 shrink-0 text-sm"
+        className="w-32 shrink-0"
+        style={getTextStyles({
+          settings: getRoleSettings(theme, "termsContent")
+        })}
       >
         {label}
       </label>
