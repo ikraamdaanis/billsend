@@ -4,48 +4,37 @@ import { draftContains, gotoEditorSettled, saveInvoiceAs } from "./helpers";
 
 // Group A: home / landing page.
 
-// The font buttons only render once React has hydrated the page. Waiting for
-// them means later scrolls aren't undone by the router's scroll restoration,
-// and the scroll-driven header has its observer attached.
-async function gotoHomeHydrated(page: Page) {
-  await page.goto("/");
-  await expect(page.getByRole("button", { name: "Lora" })).toBeVisible();
-}
-
-test("home renders the hero CTA and holds the header CTA back", async ({
-  page
-}) => {
-  await gotoHomeHydrated(page);
-
-  await expect(page.locator("#hero-create-invoice")).toBeVisible();
-
-  // The header only offers Create invoice once the hero's button has scrolled
-  // away, so the first screen never shows the same action twice.
-  const headerCta = page
+function headerCta(page: Page) {
+  return page
     .getByRole("banner")
     .getByRole("link", { name: "Create invoice", exact: true });
+}
 
-  await expect(headerCta).toBeHidden();
+function heroCta(page: Page) {
+  return page
+    .getByRole("main")
+    .getByRole("link", { name: "Create invoice", exact: true })
+    .first();
+}
 
-  await page.locator("#features").scrollIntoViewIfNeeded();
-  await expect(headerCta).toBeVisible();
+test("home renders the hero and header CTAs", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(heroCta(page)).toBeVisible();
+  await expect(headerCta(page)).toBeVisible();
 });
 
 test("the header CTA navigates to the editor", async ({ page }) => {
-  await gotoHomeHydrated(page);
-  await page.locator("#features").scrollIntoViewIfNeeded();
+  await page.goto("/");
 
-  await page
-    .getByRole("banner")
-    .getByRole("link", { name: "Create invoice", exact: true })
-    .click();
+  await headerCta(page).click();
   await expect(page).toHaveURL("/create");
 });
 
 test("the hero CTA navigates to the editor", async ({ page }) => {
   await page.goto("/");
 
-  await page.locator("#hero-create-invoice").click();
+  await heroCta(page).click();
   await expect(page).toHaveURL("/create");
 });
 
@@ -67,14 +56,11 @@ test("in-page anchor links scroll to their sections", async ({ page }) => {
 test("the header CTA is a single link, not a nested button [R]", async ({
   page
 }) => {
-  await gotoHomeHydrated(page);
-  await page.locator("#features").scrollIntoViewIfNeeded();
+  await page.goto("/");
 
   // Guards the <a><button> nesting from the audit: the CTA renders as one link
   // (one tab stop), with no nested button element.
-  const cta = page
-    .getByRole("banner")
-    .getByRole("link", { name: "Create invoice", exact: true });
+  const cta = headerCta(page);
 
   await expect(cta).toBeVisible();
   await expect(
@@ -87,38 +73,59 @@ test("the header CTA is a single link, not a nested button [R]", async ({
   await expect(page).toHaveURL("/create");
 });
 
-test("the font picked in the hero preview carries into a new invoice", async ({
+test("the typeface picked in the sample invoice carries into a new invoice", async ({
   page
 }) => {
   await page.goto("/");
 
-  const preview = page.getByRole("figure", {
-    name: "Example invoice made with billsend"
-  });
-  const lora = page.getByRole("button", { name: "Lora" });
+  const lora = page.getByRole("radio", { name: /Lora/ });
 
-  await expect(page.getByRole("button", { name: "Geist" })).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
+  await expect(page.getByRole("radio", { name: /Geist/ })).toBeChecked();
 
-  // The page is server-rendered, so a click can land before hydration attaches
-  // the handler; retry until it takes.
-  await expect(async () => {
-    await lora.click();
-    await expect(lora).toHaveAttribute("aria-pressed", "true", {
-      timeout: 500
-    });
-  }).toPass();
-  await expect(preview).toHaveCSS("font-family", /Lora/);
+  // The radio itself is visually hidden; its label is what a visitor clicks.
+  await page.locator("label").filter({ has: lora }).click();
+  await expect(lora).toBeChecked();
+  await expect(heroCta(page)).toHaveAttribute("href", /font=lora/);
 
-  await page.locator("#hero-create-invoice").click();
+  await heroCta(page).click();
 
   await expect(page).toHaveURL("/create");
   await expect(page.locator(".bg-paper").first()).toHaveCSS(
     "font-family",
     /Lora/
   );
+});
+
+test("picks made before the page finishes loading are kept", async ({
+  page
+}) => {
+  // Hold every script back so the server-rendered form is live but React
+  // hasn't attached yet.
+  let releaseScripts = () => {};
+  const scriptsReleased = new Promise<void>(resolve => {
+    releaseScripts = resolve;
+  });
+
+  await page.route("**/*", async route => {
+    if (route.request().resourceType() === "script") await scriptsReleased;
+
+    await route.continue();
+  });
+  await page.goto("/", { waitUntil: "commit" });
+
+  const lora = page.getByRole("radio", { name: /Lora/ });
+
+  await page.locator("label").filter({ has: lora }).click();
+  await page.locator("#demo-client").fill("Early Bird Ltd");
+  await page.locator("label").filter({ hasText: /^EUR$/ }).click();
+
+  releaseScripts();
+
+  await expect(heroCta(page)).toHaveAttribute("href", /font=lora/);
+  await expect(lora).toBeChecked();
+  // The input's own value isn't page text, so these match the invoice preview.
+  await expect(page.locator("#try-it")).toContainText("Early Bird Ltd");
+  await expect(page.locator("#try-it")).toContainText("€");
 });
 
 test("a saved invoice is offered from the hero and opens the list", async ({
@@ -158,29 +165,26 @@ test("a font hand-off never restyles work in progress", async ({ page }) => {
   );
 });
 
-test("the header CTA steps aside while the closing CTA is on screen", async ({
-  page
-}) => {
-  await gotoHomeHydrated(page);
-  await page.locator("#closing-create-invoice").scrollIntoViewIfNeeded();
+test("the homepage makes no requests to other websites", async ({ page }) => {
+  const requested: string[] = [];
 
-  await expect(page.locator("#closing-create-invoice")).toBeInViewport();
-  await expect(
-    page
-      .getByRole("banner")
-      .getByRole("link", { name: "Create invoice", exact: true })
-  ).toBeHidden();
-});
+  page.on("request", request => requested.push(request.url()));
 
-test("the live privacy check reports no requests to other websites", async ({
-  page
-}) => {
-  await gotoHomeHydrated(page);
-  const elsewhere = page
-    .getByRole("figure", { name: "Example invoice made with billsend" })
-    .locator("dl > div")
-    .filter({ hasText: "Requests to other websites" })
-    .locator("dd");
+  await page.goto("/");
+  await page.locator("#demo-client").fill("Acme Corporation");
+  await page.getByRole("radio", { name: /Lora/ }).dispatchEvent("click");
+  await page
+    .getByRole("heading", { name: "Your next invoice starts here." })
+    .scrollIntoViewIfNeeded();
+  await page.waitForLoadState("networkidle");
 
-  await expect(elsewhere).toHaveText("000");
+  const homeOrigin = new URL(page.url()).origin;
+  const elsewhere = requested.filter(requestUrl => {
+    const url = new URL(requestUrl);
+
+    return url.protocol.startsWith("http") && url.origin !== homeOrigin;
+  });
+
+  expect(requested.length).toBeGreaterThan(0);
+  expect(elsewhere).toEqual([]);
 });
