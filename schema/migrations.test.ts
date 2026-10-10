@@ -63,7 +63,7 @@ describe("migrateInvoiceData", () => {
     expect(invoice.items).toEqual([]);
     expect(invoice.tax).toEqual({ percentage: 0, exempt: false, note: "" });
     expect(invoice.theme).toEqual(DEFAULT_INVOICE_THEME);
-    expect(invoice.currency).toBe("£");
+    expect(invoice.currency).toBe("$");
   });
 
   it("repairs a non-object input into a blank invoice (never throws)", () => {

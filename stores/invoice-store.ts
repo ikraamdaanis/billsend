@@ -115,8 +115,8 @@ export const invoiceDefault: Invoice = {
   pdfSettings: {
     backgroundColor: "#ffffff"
   },
-  currency: "£",
-  currencyCode: "GBP",
+  currency: "$",
+  currencyCode: "USD",
   theme: DEFAULT_INVOICE_THEME
 };
 
