@@ -19,7 +19,6 @@ import {
   EditorWindow,
   FILL_SAMPLE,
   getTitleStyle,
-  HERO_SAMPLE,
   InvoicePage,
   KEEP_SAMPLE,
   PAGE_HEIGHT,
@@ -30,6 +29,7 @@ import {
 import {
   DEMO_FONTS,
   getClosingRender,
+  HERO_INVOICE_NUMBER,
   PDF_RENDER_SCALE,
   PDF_RENDERS
 } from "~/components/home/pdf-renders";
@@ -494,55 +494,92 @@ function Hero({ font }: { font: InvoiceFont }) {
 
 /**
  * The editor, shown rather than described: the real editor layout on a
- * billsend-blue panel, cropped at the foot. Below `md` the whole window would
- * be too small to read, so it shows a close crop of its top-left instead, run
- * off the panel's right edge where it was cut.
+ * billsend-blue panel, with a real billsend PDF of the invoice on its desk.
+ * From `sm` up the whole window scales to the panel's width; below it the
+ * window would be too small to read, so phones draw it at one fixed zoom from
+ * its top-left and let the panel cut it at the right edge. Either way the
+ * window runs past the panel's foot, which cuts it there.
  */
 function HeroVisual() {
   return (
-    <div className="hero-fade-up bg-brand-700 relative mt-12 h-[28rem] overflow-hidden rounded-xl [animation-delay:200ms] sm:mt-16 sm:h-[36rem] lg:h-[40rem]">
+    <div className="hero-fade-up bg-brand-700 relative mt-12 h-[28rem] overflow-hidden rounded-xl ring-1 ring-zinc-950/10 [animation-delay:200ms] sm:mt-16 sm:h-[36rem] lg:h-[40rem]">
       <figure
         aria-label="The billsend editor with a sample invoice"
         className="relative pt-8 [--pad:--spacing(4)] sm:pt-14 sm:[--pad:--spacing(10)] lg:pt-16 lg:[--pad:--spacing(16)]"
       >
         <ScaledFrame
-          width={1024}
-          height={768}
-          className="mx-(--pad) w-auto rounded-t-xl shadow-2xl max-md:hidden"
+          width={HERO_WINDOW.width}
+          height={HERO_WINDOW.height}
+          className="mx-(--pad) w-auto rounded-t-xl shadow-2xl max-sm:hidden"
         >
-          <EditorWindow
-            invoice={HERO_SAMPLE}
-            width={1024}
-            height={768}
-            canvasScroll={HERO_SCROLL}
-          />
+          <EditorWindow documentName={HERO_INVOICE_NUMBER} {...HERO_WINDOW}>
+            <PdfPaper render={PDF_RENDERS.hero} />
+          </EditorWindow>
         </ScaledFrame>
         <ScaledFrame
-          {...HERO_PHONE_CROP}
-          fill
-          className="ml-(--pad) w-auto rounded-tl-xl shadow-2xl md:hidden"
+          width={HERO_WINDOW.width}
+          height={HERO_PHONE_WINDOW_HEIGHT}
+          fixedScale={HERO_PHONE_SCALE}
+          className="ml-(--pad) rounded-tl-xl shadow-2xl sm:hidden"
         >
           <EditorWindow
-            invoice={HERO_SAMPLE}
-            width={1024}
-            height={768}
-            canvasScroll={HERO_SCROLL}
-          />
+            documentName={HERO_INVOICE_NUMBER}
+            width={HERO_WINDOW.width}
+            height={HERO_PHONE_WINDOW_HEIGHT}
+          >
+            <PdfPaper render={PDF_RENDERS.hero} />
+          </EditorWindow>
         </ScaledFrame>
       </figure>
     </div>
   );
 }
 
-// The desktop editor's top-left: toolbar, the title and both addresses.
-const HERO_PHONE_CROP = { width: 400, height: 580 };
+// The hero's editor window, drawn taller than any panel shows so the panel's
+// foot always cuts it. The tallest need is at `sm`'s 640px with a classic 15px
+// scrollbar: 625px of page leaves a 497px frame (minus the container's and the
+// panel's padding), scaling the window to 0.485, and 520px of panel below the
+// frame's top takes 1071px of window.
+const HERO_WINDOW = { width: 1024, height: 1120 };
+
+// Phones show the window at one zoom on every screen: the toolbar, the title
+// and both addresses fill a 375px phone. At this scale the window is 614px
+// wide, past the widest phone panel (575px at 639px), so it always runs off
+// the right edge.
+const HERO_PHONE_SCALE = 0.6;
+
+// Tall enough at that scale to pass the phone panel's 416px below the frame's
+// top.
+const HERO_PHONE_WINDOW_HEIGHT = 720;
+
+/**
+ * A real billsend PDF in the editor canvas's place: a screenshot of the top of
+ * the page on the same paper, shown first thing, so it loads straight away.
+ */
+function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
+  return (
+    <div
+      className="border-paper-border bg-paper overflow-hidden border shadow-md"
+      style={{ width: PAGE_WIDTH, height: PAGE_HEIGHT }}
+    >
+      <img
+        src={render.src}
+        alt=""
+        width={render.width}
+        height={Math.round(
+          (render.width * render.crop.height) / render.crop.width
+        )}
+        fetchPriority="high"
+        decoding="async"
+        className="block h-auto w-full"
+      />
+    </div>
+  );
+}
 
 // The page's figures: invoice details, line amounts and totals, up to the
 // page's right edge.
 const TRY_IT_PHONE_CROP = { x: 358, y: 296, width: 435.7, height: 511 };
-
-// Scrolls the page's totals up to sit just under the toolbar.
-const HERO_SCROLL = 520;
 
 const EDITOR_FONTS: InvoiceFont[] = ["geist", "lora", "jetbrains-mono"];
 
@@ -999,11 +1036,13 @@ function KeepIllustration() {
       className={cn(ILLUSTRATION_FRAME, "-mr-(--pad) rounded-tl-lg")}
     >
       <EditorWindow
-        invoice={KEEP_SAMPLE}
+        documentName={KEEP_SAMPLE.number}
         width={1024}
         height={768}
         openMenu="file"
-      />
+      >
+        <InvoicePage invoice={KEEP_SAMPLE} />
+      </EditorWindow>
     </ScaledFrame>
   );
 }
@@ -1127,6 +1166,11 @@ function Questions() {
   );
 }
 
+// Below `lg` the page sits under the copy in a box sized from the page's own
+// width, so it always shows the same top share of the page and runs off the
+// panel's foot at any width: --crop is that share times the page's
+// height-to-width ratio (1.414), so 0.99 shows 70% on phones and 0.707 shows
+// half from `sm`. From `lg` the box stretches to the copy's height instead.
 function Closing({ font }: { font: InvoiceFont }) {
   const fontName = getInvoiceFontDefinition(font).name;
   const closingRender = getClosingRender(font);
@@ -1138,7 +1182,7 @@ function Closing({ font }: { font: InvoiceFont }) {
   return (
     <section className="py-16 sm:py-20">
       <div className={CONTAINER}>
-        <div className="bg-brand-700 grid overflow-hidden rounded-xl text-white lg:grid-cols-2">
+        <div className="bg-brand-700 grid overflow-hidden rounded-xl text-white ring-1 ring-zinc-950/10 lg:grid-cols-2">
           <div className="flex flex-col items-start justify-center gap-8 px-6 pt-14 pb-10 sm:px-12 sm:pt-16 lg:py-24 lg:pl-16">
             <h2 className={cn(HEADING, "max-w-[16ch] text-4xl sm:text-5xl")}>
               Your next invoice starts here.
@@ -1150,7 +1194,8 @@ function Closing({ font }: { font: InvoiceFont }) {
               </p>
             </div>
           </div>
-          <div aria-hidden="true" className="relative h-72 sm:h-80 lg:h-auto">
+          <div aria-hidden="true" className="@container relative">
+            <div className="h-[calc(min(28rem,100cqw_-_3rem)*var(--crop))] [--crop:0.99] sm:[--crop:0.707] lg:hidden" />
             <div className="absolute top-0 left-1/2 w-[min(28rem,calc(100%-3rem))] -translate-x-1/2 lg:top-16">
               <img
                 src={closingRender.src}

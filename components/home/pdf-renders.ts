@@ -7,7 +7,18 @@ import type { InvoiceFont } from "~/types";
 
 export const PDF_RENDER_SCALE = 3;
 
+// The hero's invoice, named in the editor toolbar around its render.
+export const HERO_INVOICE_NUMBER = "INV-0043";
+
 export const PDF_RENDERS = {
+  // The whole page: the desktop hero shows its top, the phone crop runs further
+  // down on narrow screens. It displays no wider than the page's CSS width, so
+  // it ships at about twice that rather than the full render scale.
+  hero: {
+    src: "/home/invoice-hero.webp",
+    crop: { x: 0, y: 0, width: 793.7, height: 1122.5 },
+    width: 1600
+  },
   // The totals, up to the page's right edge.
   totals: {
     src: "/home/invoice-totals.webp",
