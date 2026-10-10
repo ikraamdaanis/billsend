@@ -111,10 +111,11 @@ const PAYMENT_INVOICE = sampleInvoice({
     label: "Payment details",
     bankName: "Bank of America, N.A.",
     accountNumber: "3250 8874 1196",
+    routingNumber: "121000358",
     iban: "",
     bic: "BOFAUS3N",
     sortCode: "",
-    terms: "ACH routing number 121000358. Due within 30 days."
+    terms: "Due within 30 days."
   }
 });
 
@@ -173,10 +174,11 @@ const CLOSING_INVOICE = sampleInvoice({
     label: "Payment details",
     bankName: "U.S. Bank",
     accountNumber: "1534 9082 7316",
+    routingNumber: "125000105",
     iban: "",
     bic: "USBKUS44IMT",
     sortCode: "",
-    terms: "ACH routing number 125000105. Net 30."
+    terms: "Net 30."
   },
   notes: {
     label: "Notes",

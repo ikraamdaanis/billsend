@@ -16,7 +16,7 @@ export const PDF_RENDERS = {
   // The payment details, from the page's left edge.
   payment: {
     src: "/home/invoice-payment.webp",
-    crop: { x: 0, y: 671, width: 419.7, height: 209.85 }
+    crop: { x: 0, y: 690, width: 419.7, height: 209.85 }
   },
   // The page's top-left corner: the title, the sender and the client.
   send: {

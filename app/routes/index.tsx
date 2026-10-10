@@ -131,7 +131,7 @@ const FEATURES: {
   {
     title: "Payment details clients can use",
     description:
-      "Bank name, account number, IBAN, BIC / SWIFT and sort code, laid out so your client can pay without asking.",
+      "Bank name, account and routing numbers, IBAN, BIC / SWIFT and sort code, laid out so your client can pay without asking.",
     specimen: <PaymentSpecimen />,
     isPageCrop: true
   }

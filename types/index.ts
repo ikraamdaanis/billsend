@@ -112,6 +112,7 @@ export type InvoicePaymentDetails = {
   label: string;
   bankName: string;
   accountNumber: string;
+  routingNumber: string;
   iban: string;
   bic: string;
   sortCode: string;
