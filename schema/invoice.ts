@@ -228,7 +228,7 @@ export const invoiceSchema = z.object({
   pdfSettings: z
     .object({ backgroundColor: z.string().catch("#ffffff") })
     .catch({ backgroundColor: "#ffffff" }),
-  currency: z.string().catch("£"),
+  currency: z.string().catch("$"),
   currencyCode: z.string().catch(""),
   theme: invoiceThemeSchema
 });
