@@ -65,7 +65,7 @@ function weights(
   };
 }
 
-const PDF_FONT_FAMILIES: PdfFontFamily[] = [
+export const PDF_FONT_FAMILIES: PdfFontFamily[] = [
   weights("Invoice Geist", [geist400, geist500, geist600, geist700]),
   weights("Invoice Inter", [inter400, inter500, inter600, inter700]),
   weights("Invoice DM Sans", [dmSans400, dmSans500, dmSans600, dmSans700]),
