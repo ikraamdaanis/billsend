@@ -40,13 +40,13 @@ test("amount recomputes live as quantity and price change", async ({
 
   await setNumber(quantity, "3");
   await setNumber(unitPrice, "100");
-  await expect(amount).toHaveText("£300.00");
+  await expect(amount).toHaveText("$300.00");
 
   await setNumber(quantity, "4");
-  await expect(amount).toHaveText("£400.00");
+  await expect(amount).toHaveText("$400.00");
 
   await setNumber(unitPrice, "2.5");
-  await expect(amount).toHaveText("£10.00");
+  await expect(amount).toHaveText("$10.00");
 });
 
 test("accepts fractional quantities", async ({ page }) => {
@@ -54,7 +54,7 @@ test("accepts fractional quantities", async ({ page }) => {
 
   await setNumber(page.getByLabel("Quantity, item 1"), "2.5");
   await setNumber(page.getByLabel("Unit Price, item 1"), "4");
-  await expect(page.getByLabel("Amount, item 1")).toHaveText("£10.00");
+  await expect(page.getByLabel("Amount, item 1")).toHaveText("$10.00");
 });
 
 test("coerces non-numeric input to zero, never NaN", async ({ page }) => {
@@ -65,10 +65,10 @@ test("coerces non-numeric input to zero, never NaN", async ({ page }) => {
 
   await setNumber(page.getByLabel("Unit Price, item 1"), "50");
   await setNumber(quantity, "3");
-  await expect(amount).toHaveText("£150.00");
+  await expect(amount).toHaveText("$150.00");
 
   await setNumber(quantity, "abc");
-  await expect(amount).toHaveText("£0.00");
+  await expect(amount).toHaveText("$0.00");
   await expect(amount).not.toContainText("NaN");
 });
 
@@ -81,7 +81,7 @@ test("strips a leading negative sign from numeric fields", async ({ page }) => {
   await expect(quantity).toHaveValue("5");
 
   await setNumber(page.getByLabel("Unit Price, item 1"), "-10");
-  await expect(page.getByLabel("Amount, item 1")).toHaveText("£50.00");
+  await expect(page.getByLabel("Amount, item 1")).toHaveText("$50.00");
 });
 
 test("handles many items without losing rows", async ({ page }) => {

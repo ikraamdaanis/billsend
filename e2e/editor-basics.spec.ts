@@ -45,14 +45,14 @@ test("changing currency updates the symbol across totals and line items", async 
 
   await setNumber(page.getByLabel("Quantity, item 1"), "1");
   await setNumber(page.getByLabel("Unit Price, item 1"), "100");
-  await expect(page.getByTestId("subtotal-value")).toHaveText("£100.00");
+  await expect(page.getByTestId("subtotal-value")).toHaveText("$100.00");
 
   await page.getByRole("menuitem", { name: "Edit" }).click();
   await page.getByRole("menuitem", { name: "Currency" }).click();
-  await page.getByRole("menuitemradio", { name: /Dollar/ }).click();
+  await page.getByRole("menuitemradio", { name: /Euro/ }).click();
 
-  await expect(page.getByTestId("subtotal-value")).toHaveText("$100.00");
-  await expect(page.getByLabel("Amount, item 1")).toHaveText("$100.00");
+  await expect(page.getByTestId("subtotal-value")).toHaveText("€100.00");
+  await expect(page.getByLabel("Amount, item 1")).toHaveText("€100.00");
 });
 
 test("section and column labels are editable", async ({ page }) => {

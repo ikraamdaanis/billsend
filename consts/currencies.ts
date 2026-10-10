@@ -11,8 +11,8 @@ export const currencyOptions: {
   code: string;
   label: string;
 }[] = [
-  { symbol: "£", code: "GBP", label: "Pound" },
   { symbol: "$", code: "USD", label: "Dollar" },
+  { symbol: "£", code: "GBP", label: "Pound" },
   { symbol: "€", code: "EUR", label: "Euro" },
   { symbol: "¥", code: "JPY", label: "Yen" },
   { symbol: "CHF", code: "CHF", label: "Franc" },
