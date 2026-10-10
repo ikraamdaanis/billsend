@@ -86,10 +86,6 @@ const CURRENCIES = ["USD", "EUR", "GBP", "CHF"] as const;
 
 type Currency = (typeof CURRENCIES)[number];
 
-type RequestTally =
-  | { status: "counting"; elsewhere: number; data: number; files: number }
-  | { status: "pending" | "unsupported" };
-
 const FACTS: { label: string; icon: ComponentType<{ className?: string }> }[] =
   [
     { label: "No account", icon: IconUserOff },
@@ -144,11 +140,6 @@ const CHECKS: {
   detail?: { summary: string; text: string };
   link?: { href: string; label: string };
 }[] = [
-  {
-    title: "Watch the counter",
-    description:
-      "The counter under the sample invoice reads your browser’s own record of every request this page makes to other websites. However you use the page, it stays at zero."
-  },
   {
     title: "Search for a sign-up",
     description:
@@ -223,10 +214,6 @@ const QUESTION_GROUPS: {
   }
 ];
 
-// Only fetch, XHR and beacon requests let a script send data; everything else
-// a page loads is a file it downloads.
-const DATA_INITIATORS = new Set(["fetch", "xmlhttprequest", "beacon"]);
-
 // How many invoices this browser has saved: null until known, "blocked" when
 // the browser refuses storage. The database module loads on demand so
 // first-time visitors never download it.
@@ -253,54 +240,8 @@ function useSavedInvoiceCount() {
   return count;
 }
 
-// Counts every network request this page has made from the browser's own
-// performance timeline, three ways: requests to any other website, background
-// requests (fetch, XHR or beacon, the kinds scripts use to send data) to
-// anyone, and billsend's own files. It can't flatter itself: a third-party or
-// data request would show up here too. The count streams from an observer
-// (seeded with the buffered entries) rather than reading the timeline buffer,
-// which stops recording at 250 entries.
-function useRequestTally() {
-  const [tally, setTally] = useState<RequestTally>({ status: "pending" });
-
-  useEffect(() => {
-    if (typeof PerformanceObserver === "undefined") {
-      setTally({ status: "unsupported" });
-
-      return;
-    }
-
-    // The page document itself is the first of billsend's own files.
-    const counts = { elsewhere: 0, data: 0, files: 1 };
-    const observer = new PerformanceObserver(list => {
-      for (const entry of list.getEntries()) {
-        if (!(entry instanceof PerformanceResourceTiming)) continue;
-
-        const url = new URL(entry.name, window.location.href);
-
-        if (url.protocol !== "http:" && url.protocol !== "https:") continue;
-
-        if (url.origin !== window.location.origin) counts.elsewhere += 1;
-
-        if (DATA_INITIATORS.has(entry.initiatorType)) counts.data += 1;
-        else if (url.origin === window.location.origin) counts.files += 1;
-      }
-
-      setTally({ status: "counting", ...counts });
-    });
-
-    setTally({ status: "counting", ...counts });
-    observer.observe({ type: "resource", buffered: true });
-
-    return () => observer.disconnect();
-  }, []);
-
-  return tally;
-}
-
 function HomePage() {
   const [font, setFont] = useState<InvoiceFont>(DEFAULT_FONT);
-  const tally = useRequestTally();
 
   return (
     <div className="selection:bg-brand-100 isolate min-h-svh bg-white font-sans [font-feature-settings:'cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
@@ -315,8 +256,8 @@ function HomePage() {
       </a>
       <SiteHeader font={font} />
       <main id="main" className="overflow-x-clip">
-        <Hero font={font} tally={tally} />
-        <TryIt font={font} onFontChange={setFont} tally={tally} />
+        <Hero font={font} />
+        <TryIt font={font} onFontChange={setFont} />
         <Features />
         <HowItWorks />
         <Privacy />
@@ -503,7 +444,7 @@ function SectionHeading({
   );
 }
 
-function Hero({ font, tally }: { font: InvoiceFont; tally: RequestTally }) {
+function Hero({ font }: { font: InvoiceFont }) {
   return (
     <section className="pt-12 sm:pt-20">
       <div className={CONTAINER}>
@@ -530,7 +471,7 @@ function Hero({ font, tally }: { font: InvoiceFont; tally: RequestTally }) {
             </div>
           </div>
         </div>
-        <HeroVisual tally={tally} />
+        <HeroVisual />
         <SavedInvoicesNote />
         <ul className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-zinc-950/10 py-8 sm:grid-cols-3 lg:grid-cols-6">
           {FACTS.map(fact => (
@@ -553,12 +494,11 @@ function Hero({ font, tally }: { font: InvoiceFont; tally: RequestTally }) {
 
 /**
  * The editor, shown rather than described: the real editor layout on a
- * billsend-blue panel, cropped at the foot, with the browser's own request
- * counter floating over it on wide screens. Below `md` the whole window would
+ * billsend-blue panel, cropped at the foot. Below `md` the whole window would
  * be too small to read, so it shows a close crop of its top-left instead, run
  * off the panel's right edge where it was cut.
  */
-function HeroVisual({ tally }: { tally: RequestTally }) {
+function HeroVisual() {
   return (
     <div className="hero-fade-up bg-brand-700 relative mt-12 h-[28rem] overflow-hidden rounded-xl [animation-delay:200ms] sm:mt-16 sm:h-[36rem] lg:h-[40rem]">
       <figure
@@ -590,7 +530,6 @@ function HeroVisual({ tally }: { tally: RequestTally }) {
           />
         </ScaledFrame>
       </figure>
-      <RequestCard tally={tally} />
     </div>
   );
 }
@@ -606,40 +545,6 @@ const TRY_IT_PHONE_CROP = { x: 358, y: 296, width: 435.7, height: 511 };
 const HERO_SCROLL = 520;
 
 const EDITOR_FONTS: InvoiceFont[] = ["geist", "lora", "jetbrains-mono"];
-
-function RequestCard({ tally }: { tally: RequestTally }) {
-  return (
-    <div className="absolute right-6 bottom-16 flex w-64 flex-col gap-4 rounded-xl bg-white p-5 shadow-xl ring-1 ring-black/5 max-lg:hidden">
-      <p className="text-sm/6 font-medium text-zinc-600">
-        Counted by your browser
-      </p>
-      <div className="flex flex-col gap-1">
-        <p className="text-5xl font-medium tracking-tight tabular-nums">
-          {tally.status === "counting" ? tally.elsewhere : "–"}
-        </p>
-        <p className="text-sm/6 text-pretty text-zinc-700">
-          requests to other websites since this page opened.
-        </p>
-      </div>
-      {tally.status === "counting" && (
-        <dl className="grid grid-cols-2 gap-4 border-t border-zinc-950/10 pt-4 text-sm/6">
-          <div className="flex flex-col-reverse">
-            <dt className="text-zinc-600">Background requests</dt>
-            <dd className="font-medium text-zinc-950 tabular-nums">
-              {tally.data}
-            </dd>
-          </div>
-          <div className="flex flex-col-reverse">
-            <dt className="text-zinc-600">billsend’s own files</dt>
-            <dd className="font-medium text-zinc-950 tabular-nums">
-              {tally.files}
-            </dd>
-          </div>
-        </dl>
-      )}
-    </div>
-  );
-}
 
 // Returning visitors get a way back to their work, and a browser that refuses
 // storage gets told what that means and how to fix it.
@@ -683,21 +588,40 @@ function SavedInvoicesNote() {
 
 /**
  * The sample invoice, made editable: what the visitor types and picks stays on
- * this page, and the browser's own count of requests to other websites sits
- * under it the whole time. The typeface carries into the editor through every
- * Create invoice link.
+ * this page. The typeface carries into the editor through every Create invoice
+ * link.
  */
 function TryIt({
   font,
-  onFontChange,
-  tally
+  onFontChange
 }: {
   font: InvoiceFont;
   onFontChange: (font: InvoiceFont) => void;
-  tally: RequestTally;
 }) {
   const [clientName, setClientName] = useState("");
   const [currency, setCurrency] = useState<Currency>("USD");
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // The form is server-rendered, so a visitor can type or pick before React
+  // attaches. Hydration leaves those native edits on screen without firing
+  // onChange, so adopt them once on mount rather than show one thing and use
+  // another.
+  useEffect(() => {
+    if (!formRef.current) return;
+
+    const formData = new FormData(formRef.current);
+    const typedName = formData.get("client");
+    const pickedFont = DEMO_FONTS.find(
+      demoFont => demoFont === formData.get("typeface")
+    );
+    const pickedCurrency = CURRENCIES.find(
+      option => option === formData.get("currency")
+    );
+
+    if (typeof typedName === "string") setClientName(typedName);
+    if (pickedFont) onFontChange(pickedFont);
+    if (pickedCurrency) setCurrency(pickedCurrency);
+  }, []);
 
   return (
     <section id="try-it" className="py-16 sm:py-20">
@@ -712,14 +636,12 @@ function TryIt({
           description={
             <>
               <span className="max-md:hidden">
-                Type a client’s name and change the typeface or currency. Your
-                browser counts every request this page makes to another website,
-                and it stays at zero while you type.
+                Type a client’s name and change the typeface or currency. It all
+                happens in your browser, and nothing you type is sent anywhere.
               </span>
               <span className="md:hidden">
-                Your browser counts every request this page makes to another
-                website, and it stays at zero. On a computer, you can edit the
-                sample invoice and watch.
+                Everything you make in billsend stays in your browser. On a
+                computer, you can edit this sample invoice right here.
               </span>
             </>
           }
@@ -747,6 +669,7 @@ function TryIt({
           </div>
           <div className="grid lg:grid-cols-[20rem_minmax(0,1fr)]">
             <form
+              ref={formRef}
               onSubmit={event => event.preventDefault()}
               className="flex flex-col gap-8 border-zinc-950/10 bg-zinc-50 p-6 max-lg:border-b max-md:hidden lg:border-r"
             >
@@ -834,56 +757,33 @@ function TryIt({
                 </div>
               </fieldset>
             </form>
-            <div className="flex min-w-0 flex-col bg-zinc-100">
-              <div className="flex flex-1 items-start justify-center p-(--pad) [--pad:--spacing(4)] sm:[--pad:--spacing(10)]">
-                <ScaledFrame
-                  width={PAGE_WIDTH}
-                  height={PAGE_HEIGHT}
-                  className="shadow-md max-md:hidden"
-                >
-                  <InvoicePage
-                    invoice={{
-                      ...TRY_IT_SAMPLE,
-                      font,
-                      currencyCode: currency,
-                      clientName
-                    }}
-                  />
-                </ScaledFrame>
-                <ScaledFrame
-                  {...TRY_IT_PHONE_CROP}
-                  fill
-                  className="-my-(--pad) -ml-(--pad) grow md:hidden"
-                >
-                  <InvoicePage invoice={TRY_IT_SAMPLE} />
-                </ScaledFrame>
-              </div>
-              <RequestCounter tally={tally} />
+            <div className="flex min-w-0 items-start justify-center bg-zinc-100 p-(--pad) [--pad:--spacing(4)] sm:[--pad:--spacing(10)]">
+              <ScaledFrame
+                width={PAGE_WIDTH}
+                height={PAGE_HEIGHT}
+                className="shadow-md max-md:hidden"
+              >
+                <InvoicePage
+                  invoice={{
+                    ...TRY_IT_SAMPLE,
+                    font,
+                    currencyCode: currency,
+                    clientName
+                  }}
+                />
+              </ScaledFrame>
+              <ScaledFrame
+                {...TRY_IT_PHONE_CROP}
+                fill
+                className="-my-(--pad) -ml-(--pad) grow md:hidden"
+              >
+                <InvoicePage invoice={TRY_IT_SAMPLE} />
+              </ScaledFrame>
             </div>
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function RequestCounter({ tally }: { tally: RequestTally }) {
-  return (
-    <dl className="flex items-center justify-between gap-6 border-t border-zinc-950/10 bg-white px-6 py-4">
-      <div className="flex flex-col">
-        <dt className="text-base/7 font-medium sm:text-sm/6">
-          Requests to other websites
-        </dt>
-        <dd className="text-base/7 text-pretty text-zinc-500 sm:text-sm/6">
-          {tally.status === "unsupported"
-            ? "Your browser can’t count them here; the checks below still work."
-            : "Counted live by your browser since this page opened."}
-        </dd>
-      </div>
-      <dd className="shrink-0 text-4xl font-medium tracking-tight tabular-nums">
-        {tally.status === "counting" ? tally.elsewhere : "–"}
-      </dd>
-    </dl>
   );
 }
 
@@ -1114,9 +1014,9 @@ function Privacy() {
       <div className={CONTAINER}>
         <SectionHeading
           title="Check the privacy yourself."
-          description="Don’t take our word for it. Most of these take under a minute, and three of the four work on a phone."
+          description="Don’t take our word for it. Each takes under a minute, and two of the three work on a phone."
         />
-        <ol className="mt-12 grid gap-x-6 gap-y-10 sm:mt-16 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="mt-12 grid gap-x-6 gap-y-10 sm:mt-16 sm:grid-cols-2 lg:grid-cols-3">
           {CHECKS.map(check => (
             <li
               key={check.title}
