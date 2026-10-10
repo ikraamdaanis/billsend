@@ -1,4 +1,4 @@
-import { Document, Font, Page, renderToFile, Text } from "@react-pdf/renderer";
+import { Font, renderToFile } from "@react-pdf/renderer";
 import { spawn } from "bun";
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -6,13 +6,14 @@ import { join } from "node:path";
 import {
   DEMO_FONTS,
   getClosingRender,
+  HERO_INVOICE_NUMBER,
   PDF_RENDER_SCALE,
   PDF_RENDERS
 } from "~/components/home/pdf-renders";
+import { SAMPLE_LOGOS } from "~/components/home/sample-logos";
 import { InvoicePDF } from "~/components/pdf/invoice-generator";
-import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import { invoiceDefault } from "~/stores/invoice-store";
-import type { Invoice, InvoiceFont, InvoiceItem } from "~/types";
+import type { Invoice, InvoiceItem } from "~/types";
 import { PDF_FONT_FAMILIES } from "~/utils/register-invoice-pdf-fonts";
 
 // Renders the homepage's invoice pictures with the app's own PDF component, so
@@ -21,6 +22,11 @@ import { PDF_FONT_FAMILIES } from "~/utils/register-invoice-pdf-fonts";
 // layout or the samples; it needs poppler (pdftoppm) and cwebp on the PATH.
 
 const OUTPUT_DIR = join(import.meta.dir, "..", "public");
+
+const LOGO_DIR = join(import.meta.dir, "assets", "logos");
+
+// The editor previews show a logo at 128 CSS pixels; this covers 2x screens.
+const LOGO_WEB_SIZE = 256;
 
 // The page in CSS pixels; pdftoppm renders 72pt to 96px at 96 DPI.
 const RENDER_DPI = 96 * PDF_RENDER_SCALE;
@@ -54,6 +60,42 @@ function sampleInvoice(
     }
   };
 }
+
+// A Brooklyn illustrator's commission for a Portland design shop, with a
+// returning-client discount. The hero shows it inside the editor's window.
+const HERO_INVOICE = sampleInvoice({
+  number: HERO_INVOICE_NUMBER,
+  invoiceDate: "2026-10-05",
+  dueDate: "2026-11-04",
+  seller: {
+    label: "From",
+    content:
+      "Emma Collins Illustration\n214 Bergen Street\nBrooklyn, NY 11217\n(718) 555-0142",
+    placeholder: ""
+  },
+  client: {
+    label: "Bill to",
+    content:
+      "Harbor & Pine Co.\n1120 NW Couch Street, Suite 400\nPortland, OR 97209",
+    placeholder: ""
+  },
+  items: items([
+    ["Editorial illustrations", 3, "pcs", 600],
+    ["Cover artwork", 1, "pcs", 950]
+  ]),
+  discounts: 10,
+  discountType: "percentage",
+  paymentDetails: {
+    label: "Payment details",
+    bankName: "JPMorgan Chase Bank, N.A.",
+    accountNumber: "483920175",
+    routingNumber: "021000021",
+    iban: "",
+    bic: "CHASUS33",
+    sortCode: "",
+    terms: "Payment due within 30 days."
+  }
+});
 
 // A print studio's menu job for a Manhattan restaurant: a percentage discount,
 // New York City's 8.875% sales tax on the printed goods, and a delivery fee.
@@ -148,7 +190,6 @@ const SEND_INVOICE = sampleInvoice({
 // A Seattle app studio's monthly invoice, filled out top to bottom.
 const CLOSING_INVOICE = sampleInvoice({
   number: "NL-1042",
-  poNumber: "PO-55120",
   invoiceDate: "2026-10-02",
   dueDate: "2026-11-01",
   servicePeriod: "Sep 1–30, 2026",
@@ -189,53 +230,6 @@ const CLOSING_INVOICE = sampleInvoice({
     content: "Balances more than 30 days past due accrue 1.5% interest a month."
   }
 });
-
-// A square logo in the invoice's face, rendered to PNG through react-pdf so the
-// script needs nothing beyond the PDF tools it already uses.
-async function renderLogo({
-  directory,
-  name,
-  monogram,
-  color,
-  font
-}: {
-  directory: string;
-  name: string;
-  monogram: string;
-  color: string;
-  font: InvoiceFont;
-}) {
-  const pdfPath = join(directory, `${name}.pdf`);
-  const pngPath = join(directory, name);
-
-  await renderToFile(
-    <Document>
-      <Page
-        size={[96, 96]}
-        style={{
-          backgroundColor: color,
-          alignItems: "center",
-          justifyContent: "center"
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: getInvoiceFontDefinition(font).pdfFamily,
-            fontWeight: 600,
-            fontSize: 34,
-            color: "#ffffff"
-          }}
-        >
-          {monogram}
-        </Text>
-      </Page>
-    </Document>,
-    pdfPath
-  );
-  await run(["pdftoppm", "-r", "432", "-png", "-singlefile", pdfPath, pngPath]);
-
-  return `${pngPath}.png`;
-}
 
 async function run(command: string[]) {
   const child = spawn(command, { stderr: "pipe" });
@@ -308,12 +302,29 @@ const directory = await mkdtemp(join(tmpdir(), "billsend-renders-"));
 try {
   await mkdir(join(OUTPUT_DIR, "home"), { recursive: true });
 
-  const sendLogo = await renderLogo({
-    directory,
-    name: "logo-hollis",
-    monogram: "HR",
-    color: "#2f4a3a",
-    font: "lora"
+  await mkdir(join(OUTPUT_DIR, "home", "logos"), { recursive: true });
+
+  for (const logo of SAMPLE_LOGOS) {
+    await run([
+      "cwebp",
+      "-quiet",
+      "-q",
+      "90",
+      "-resize",
+      String(LOGO_WEB_SIZE),
+      String(LOGO_WEB_SIZE),
+      join(LOGO_DIR, `${logo}.png`),
+      "-o",
+      join(OUTPUT_DIR, "home", "logos", `${logo}.webp`)
+    ]);
+  }
+
+  await writeWebp({
+    pngPath: await renderPage(directory, "hero", {
+      ...HERO_INVOICE,
+      image: join(LOGO_DIR, "magnolia.png")
+    }),
+    ...PDF_RENDERS.hero
   });
 
   await writeWebp({
@@ -327,24 +338,16 @@ try {
   await writeWebp({
     pngPath: await renderPage(directory, "send", {
       ...SEND_INVOICE,
-      image: sendLogo
+      image: join(LOGO_DIR, "cubekit.png")
     }),
     ...PDF_RENDERS.send
   });
 
   for (const font of DEMO_FONTS) {
-    const closingLogo = await renderLogo({
-      directory,
-      name: `logo-northline-${font}`,
-      monogram: "NL",
-      color: "#1e3a5f",
-      font
-    });
-
     await writeWebp({
       pngPath: await renderPage(directory, `closing-${font}`, {
         ...CLOSING_INVOICE,
-        image: closingLogo,
+        image: join(LOGO_DIR, "constellation.png"),
         theme: { ...CLOSING_INVOICE.theme, font }
       }),
       ...getClosingRender(font)
