@@ -16,6 +16,7 @@ import type {
   CSSProperties,
   ReactNode
 } from "react";
+import { useEffect, useRef, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
 import type { SAMPLE_LOGOS } from "~/components/home/sample-logos";
@@ -266,10 +267,10 @@ function getSampleTotals({
 /**
  * Shows a `width` x `height` window onto native-size content, scaled to the
  * width of its container (never above 1:1 unless `fill` is set), with `x` and
- * `y` picking the region. The scale is pure CSS, so it is right on the first
- * paint: tan(atan2(a, b)) turns the ratio of two lengths into a number. With
- * `fixedScale` the frame ignores its container and is drawn at that scale on
- * every screen, for a parent to crop.
+ * `y` picking the region. The first paint scales in pure CSS, where
+ * tan(atan2(a, b)) turns the ratio of two lengths into a number. Once hydrated
+ * the frame measures itself instead: iOS Safari resolves that 100cqw before a
+ * flex item grows and never updates it, which left grown frames drawn tiny.
  */
 export function ScaledFrame({
   width,
@@ -277,7 +278,6 @@ export function ScaledFrame({
   x = 0,
   y = 0,
   fill = false,
-  fixedScale,
   className,
   children
 }: {
@@ -286,22 +286,36 @@ export function ScaledFrame({
   x?: number;
   y?: number;
   fill?: boolean;
-  fixedScale?: number;
   className?: string;
   children: ReactNode;
 }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [measuredScale, setMeasuredScale] = useState<number | null>(null);
+
+  useEffect(() => {
+    const frame = frameRef.current;
+
+    if (!frame) return;
+
+    const observer = new ResizeObserver(entries => {
+      const frameWidth = entries[0]?.contentRect.width;
+
+      if (frameWidth) setMeasuredScale(frameWidth / width);
+    });
+
+    observer.observe(frame);
+
+    return () => observer.disconnect();
+  }, [width]);
+
   return (
     <div
+      ref={frameRef}
       aria-hidden="true"
       inert
-      className={cn(
-        "@container relative overflow-hidden",
-        fixedScale ? "shrink-0" : "w-full",
-        className
-      )}
+      className={cn("@container relative w-full overflow-hidden", className)}
       style={{
-        width: fixedScale ? width * fixedScale : undefined,
-        maxWidth: fill || fixedScale ? undefined : width,
+        maxWidth: fill ? undefined : width,
         aspectRatio: `${width} / ${height}`
       }}
     >
@@ -310,7 +324,7 @@ export function ScaledFrame({
         style={{
           width,
           height,
-          scale: fixedScale ?? `tan(atan2(100cqw, ${width}px))`
+          scale: measuredScale ?? `tan(atan2(100cqw, ${width}px))`
         }}
       >
         <div className="absolute" style={{ left: -x, top: -y }}>
