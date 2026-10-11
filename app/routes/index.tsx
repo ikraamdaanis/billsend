@@ -504,40 +504,33 @@ function Hero({ font }: { font: InvoiceFont }) {
 }
 
 /**
- * The editor, shown rather than described: the real editor layout on a
- * billsend-blue panel, with a real billsend PDF of the invoice on its desk.
- * From `sm` up the whole window scales to the panel's width; below it the
- * window would be too small to read, so phones draw it at one fixed zoom from
- * its top-left and let the panel cut it at the right edge. Either way the
- * window runs past the panel's foot, which cuts it there.
+ * The editor, shown rather than described: the real editor layout on a soft
+ * blue backdrop, with a real billsend PDF of the invoice on its desk.
+ * The panel keeps one 17:10 shape at every width and its padding is a share of
+ * that width, so the whole picture scales like an image: phones see the same
+ * crop as desktops, with the window running past the panel's foot.
  */
 function HeroVisual() {
   return (
-    <div className="hero-fade-up bg-brand-700 relative mt-12 h-[28rem] overflow-hidden rounded-xl ring-1 ring-zinc-950/10 [animation-delay:200ms] sm:mt-16 sm:h-[36rem] lg:h-[40rem]">
+    <div className="hero-fade-up bg-brand-100 @container relative mt-12 aspect-17/10 overflow-hidden rounded-xl ring-1 ring-zinc-950/10 [animation-delay:200ms] sm:mt-16">
+      <img
+        src="/home/hero-background.webp"
+        alt=""
+        width={1792}
+        height={1008}
+        decoding="async"
+        className="absolute inset-0 size-full object-cover"
+      />
       <figure
         aria-label="The billsend editor with a sample invoice"
-        className="relative pt-8 [--pad:--spacing(4)] sm:pt-14 sm:[--pad:--spacing(10)] lg:pt-16 lg:[--pad:--spacing(16)]"
+        className="relative px-(--pad) pt-(--pad) [--pad:6cqw]"
       >
         <ScaledFrame
           width={HERO_WINDOW.width}
           height={HERO_WINDOW.height}
-          className="mx-(--pad) w-auto rounded-t-xl shadow-2xl max-sm:hidden"
+          className="rounded-t-[1.1cqw] shadow-2xl"
         >
           <EditorWindow documentName={HERO_INVOICE_NUMBER} {...HERO_WINDOW}>
-            <PdfPaper render={PDF_RENDERS.hero} />
-          </EditorWindow>
-        </ScaledFrame>
-        <ScaledFrame
-          width={HERO_WINDOW.width}
-          height={HERO_PHONE_WINDOW_HEIGHT}
-          fixedScale={HERO_PHONE_SCALE}
-          className="ml-(--pad) rounded-tl-xl shadow-2xl sm:hidden"
-        >
-          <EditorWindow
-            documentName={HERO_INVOICE_NUMBER}
-            width={HERO_WINDOW.width}
-            height={HERO_PHONE_WINDOW_HEIGHT}
-          >
             <PdfPaper render={PDF_RENDERS.hero} />
           </EditorWindow>
         </ScaledFrame>
@@ -546,22 +539,10 @@ function HeroVisual() {
   );
 }
 
-// The hero's editor window, drawn taller than any panel shows so the panel's
-// foot always cuts it. The tallest need is at `sm`'s 640px with a classic 15px
-// scrollbar: 625px of page leaves a 497px frame (minus the container's and the
-// panel's padding), scaling the window to 0.485, and 520px of panel below the
-// frame's top takes 1071px of window.
-const HERO_WINDOW = { width: 1024, height: 1120 };
-
-// Phones show the window at one zoom on every screen: the toolbar, the title
-// and both addresses fill a 375px phone. At this scale the window is 614px
-// wide, past the widest phone panel (575px at 639px), so it always runs off
-// the right edge.
-const HERO_PHONE_SCALE = 0.6;
-
-// Tall enough at that scale to pass the phone panel's 416px below the frame's
-// top.
-const HERO_PHONE_WINDOW_HEIGHT = 720;
+// The hero's editor window, drawn taller than the panel shows so its foot
+// always cuts it. The window fills 88% of the panel's width from 6% down, so
+// at any width the panel shows the top 614px of it.
+const HERO_WINDOW = { width: 1024, height: 720 };
 
 /**
  * A real billsend PDF in the editor canvas's place: a screenshot of the top of
