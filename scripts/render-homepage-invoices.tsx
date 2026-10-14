@@ -79,9 +79,16 @@ const HERO_INVOICE = sampleInvoice({
       "Harbor & Pine Co.\n1120 NW Couch Street, Suite 400\nPortland, OR 97209",
     placeholder: ""
   },
+  // Enough rows that the table runs past the hero panel's foot at every
+  // width, which shows down to about 670 page pixels on a phone.
   items: items([
     ["Editorial illustrations", 3, "pcs", 600],
-    ["Cover artwork", 1, "pcs", 950]
+    ["Cover artwork", 1, "pcs", 950],
+    ["Spot illustrations", 6, "pcs", 175],
+    ["Concept sketches", 4, "pcs", 120],
+    ["Revisions", 3, "hrs", 85],
+    ["Print and web license", 1, "ea", 400],
+    ["Print-ready files", 1, "ea", 150]
   ]),
   discounts: 10,
   discountType: "percentage",
