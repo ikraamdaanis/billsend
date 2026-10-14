@@ -19,15 +19,16 @@ export const PDF_RENDERS = {
     crop: { x: 0, y: 0, width: 793.7, height: 1122.5 },
     width: 1600
   },
-  // The totals, up to the page's right edge.
+  // The totals, up to the page's right edge, and the payment details with
+  // their label, from the page's left edge. Each crop centres its block's ink
+  // (totals 592 to 711, payment 673 to 801), so the two cards frame alike.
   totals: {
     src: "/home/invoice-totals.webp",
-    crop: { x: 374, y: 592, width: 419.7, height: 209.85 }
+    crop: { x: 374, y: 546.7, width: 419.7, height: 209.85 }
   },
-  // The payment details, from the page's left edge.
   payment: {
     src: "/home/invoice-payment.webp",
-    crop: { x: 0, y: 690, width: 419.7, height: 209.85 }
+    crop: { x: 0, y: 631.9, width: 419.7, height: 209.85 }
   }
 };
 
