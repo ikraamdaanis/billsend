@@ -1,11 +1,13 @@
 import { Image as PDFImage, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { PdfMultilineText } from "~/components/pdf/invoice-pdf-text";
 import type { Invoice } from "~/types";
-import { pdfRoleStyle } from "~/utils/pdf-styles";
+import { PDF_ROW_LINE_HEIGHT, pdfRoleStyle } from "~/utils/pdf-styles";
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 20,
+    // The editor's 8px gap plus the two fields' 1px borders, at the PDF's
+    // 0.75 scale.
+    marginBottom: 7.5,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start"
@@ -23,13 +25,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF3E8",
     marginLeft: 24
   },
-  sellerInfo: {
-    marginBottom: 4
-  },
   sellerLabel: {
-    marginBottom: 4,
     fontWeight: "medium",
-    fontSize: 12
+    fontSize: 12,
+    lineHeight: PDF_ROW_LINE_HEIGHT
   }
 });
 
@@ -46,7 +45,7 @@ export function InvoicePdfHeader({
     <View style={styles.header}>
       <View style={styles.headerContent}>
         <Text style={pdfRoleStyle(theme, "title")}>{invoice.title}</Text>
-        <View style={styles.sellerInfo}>
+        <View>
           {invoice.seller.label && (
             <Text
               style={{
@@ -59,7 +58,9 @@ export function InvoicePdfHeader({
           )}
           <PdfMultilineText
             text={invoice.seller.content}
-            style={pdfRoleStyle(theme, "sectionContent", { marginBottom: 2 })}
+            style={pdfRoleStyle(theme, "sectionContent", {
+              lineHeight: PDF_ROW_LINE_HEIGHT
+            })}
           />
         </View>
       </View>

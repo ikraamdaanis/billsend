@@ -96,7 +96,7 @@ function DetailRow({
           aria-label={`${placeholders.label} field label`}
           value={row.label}
           onChange={handleLabelChange}
-          className="field-sizing-content h-[unset]! w-auto min-w-fit py-0"
+          className="leading-paper-row field-sizing-content h-[unset]! w-auto min-w-fit py-0"
           style={labelStyle}
           placeholder={placeholders.label}
         />
@@ -106,7 +106,7 @@ function DetailRow({
         aria-label={row.label || placeholders.label}
         value={row.value}
         onChange={setValue}
-        className="h-[unset]! w-full py-0"
+        className="leading-paper-row h-[unset]! w-full py-0"
         style={valueStyle}
         placeholder={placeholders.value}
       />

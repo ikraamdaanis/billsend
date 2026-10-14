@@ -113,7 +113,7 @@ function Field({
     <InvoiceInput
       {...props}
       readOnly
-      className={cn(className, "leading-[calc(1.25/0.875)]")}
+      className={cn("leading-[calc(1.25/0.875)]", className)}
     />
   );
 }
@@ -354,10 +354,10 @@ export function InvoicePage({ invoice }: { invoice: SampleInvoice }) {
             className="w-full text-5xl font-semibold"
             style={roleStyle(theme, "title")}
           />
-          <section className="flex flex-col gap-1">
+          <section className="flex flex-col">
             <Field
               value="From"
-              className="font-medium"
+              className="leading-paper-row font-medium"
               style={roleStyle(theme, "sectionLabel")}
             />
             <InvoiceTextArea
@@ -398,7 +398,7 @@ export function InvoicePage({ invoice }: { invoice: SampleInvoice }) {
           />
           <AddSectionLink>Add shipping address</AddSectionLink>
         </div>
-        <div className="flex flex-1 flex-col items-start justify-end">
+        <div className="flex flex-1 flex-col items-start">
           <div className="flex flex-col">
             <DetailRow
               theme={theme}
@@ -458,10 +458,10 @@ function ClientDetails({
   const contentStyle = roleStyle(theme, "sectionContent");
 
   return (
-    <section className="flex flex-col gap-1">
+    <section className="flex flex-col">
       <Field
         value="To"
-        className="font-medium"
+        className="leading-paper-row font-medium"
         style={roleStyle(theme, "sectionLabel")}
       />
       <div
@@ -495,7 +495,7 @@ function DetailRow({
       <div className="flex min-w-32 items-center" style={labelStyle}>
         <Field
           value={label}
-          className="field-sizing-content h-[unset]! w-auto min-w-fit py-0"
+          className="leading-paper-row field-sizing-content h-[unset]! w-auto min-w-fit py-0"
           style={labelStyle}
         />
       </div>
@@ -503,7 +503,7 @@ function DetailRow({
         value={value}
         placeholder={placeholder}
         suppressHydrationWarning
-        className="h-[unset]! w-full py-0"
+        className="leading-paper-row h-[unset]! w-full py-0"
         style={roleStyle(theme, "detailValue")}
       />
     </div>
