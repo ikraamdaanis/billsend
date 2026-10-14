@@ -69,8 +69,7 @@ const HERO_INVOICE = sampleInvoice({
   dueDate: "2026-11-04",
   seller: {
     label: "From",
-    content:
-      "Emma Collins Illustration\n214 Bergen Street\nBrooklyn, NY 11217\n(718) 555-0142",
+    content: "Emma Collins Illustration\n214 Bergen Street\nBrooklyn, NY 11217",
     placeholder: ""
   },
   client: {
@@ -88,7 +87,8 @@ const HERO_INVOICE = sampleInvoice({
     ["Concept sketches", 4, "pcs", 120],
     ["Revisions", 3, "hrs", 85],
     ["Print and web license", 1, "ea", 400],
-    ["Print-ready files", 1, "ea", 150]
+    ["Print-ready files", 1, "ea", 150],
+    ["Social media versions", 1, "ea", 180]
   ]),
   discounts: 10,
   discountType: "percentage",
@@ -177,7 +177,7 @@ const CLOSING_INVOICE = sampleInvoice({
   seller: {
     label: "From",
     content:
-      "Northline Software LLC\n2200 Western Avenue, Suite 300\nSeattle, WA 98121\n(206) 555-0163\nbilling@northline.dev",
+      "Northline Software LLC\n2200 Western Avenue, Suite 300\nSeattle, WA 98121\nbilling@northline.dev",
     placeholder: ""
   },
   client: {
