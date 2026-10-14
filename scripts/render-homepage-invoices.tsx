@@ -161,32 +161,6 @@ const PAYMENT_INVOICE = sampleInvoice({
   }
 });
 
-// A Vermont woodworker's fit-out for a café, sent as a Lora PDF with a logo.
-const SEND_INVOICE = sampleInvoice({
-  number: "HRW-2031",
-  poNumber: "MMC-0412",
-  invoiceDate: "2026-09-26",
-  dueDate: "2026-10-26",
-  seller: {
-    label: "From",
-    content:
-      "Hollis Ridge Woodworks\n418 Pine Street\nBurlington, VT 05401\n(802) 555-0173",
-    placeholder: ""
-  },
-  client: {
-    label: "Bill to",
-    content: "Maple & Main Café\n92 Church Street\nBurlington, VT 05401",
-    placeholder: ""
-  },
-  items: items([
-    ["Walnut bar top, 14 ft", 1, "ea", 6800],
-    ["White oak bench seating", 3, "ea", 1450],
-    ["Delivery and installation", 1, "ea", 600]
-  ]),
-  tax: { percentage: 6, exempt: false, note: "" },
-  theme: { ...invoiceDefault.theme, font: "lora" }
-});
-
 // A Seattle app studio's monthly invoice, filled out top to bottom.
 const CLOSING_INVOICE = sampleInvoice({
   number: "NL-1042",
@@ -334,13 +308,6 @@ try {
   await writeWebp({
     pngPath: await renderPage(directory, "payment", PAYMENT_INVOICE),
     ...PDF_RENDERS.payment
-  });
-  await writeWebp({
-    pngPath: await renderPage(directory, "send", {
-      ...SEND_INVOICE,
-      image: join(LOGO_DIR, "cubekit.png")
-    }),
-    ...PDF_RENDERS.send
   });
 
   for (const font of DEMO_FONTS) {
