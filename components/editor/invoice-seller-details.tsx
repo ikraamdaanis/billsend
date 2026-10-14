@@ -6,7 +6,7 @@ import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceSellerDetails() {
   return (
-    <section className="flex flex-col gap-1">
+    <section className="flex flex-col">
       <SellerLabel />
       <SellerContent />
     </section>
@@ -21,7 +21,7 @@ function SellerLabel() {
     <InvoiceInput
       aria-label="Seller section label"
       value={seller.label}
-      className="font-medium"
+      className="leading-paper-row font-medium"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
       placeholder="From"
       style={getTextStyles({

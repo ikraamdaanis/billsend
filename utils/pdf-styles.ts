@@ -4,6 +4,11 @@ import { getFontWeight } from "~/utils/get-font-weight";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { scaleFontSize } from "~/utils/scale-font-size";
 
+// Line height shared by section labels, address lines and detail rows, the
+// PDF twin of the editor's leading-paper-row, so the details column lands on
+// the same lines as the address beside it.
+export const PDF_ROW_LINE_HEIGHT = 1.5;
+
 /**
  * Convert TextSettings to a PDF-compatible style object.
  * Handles font size scaling and weight mapping internally.
