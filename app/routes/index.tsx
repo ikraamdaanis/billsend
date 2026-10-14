@@ -4,23 +4,20 @@ import {
   IconArrowUpRight,
   IconCheck,
   IconCloudOff,
-  IconCoins,
+  IconCode,
   IconEyeOff,
   IconMenu2,
   IconPlus,
-  IconPrinter,
-  IconTypography,
-  IconUserOff
+  IconUserOff,
+  IconX
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { ComponentType, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   EditorWindow,
-  FILL_SAMPLE,
   getTitleStyle,
   InvoicePage,
-  KEEP_SAMPLE,
   PAGE_HEIGHT,
   PAGE_WIDTH,
   ScaledFrame,
@@ -83,8 +80,8 @@ const BODY_TEXT = cn("text-pretty text-zinc-600", typeClass("body"));
 
 const SECTIONS = [
   { href: "#try-it", label: "Try it" },
-  { href: "#features", label: "Features" },
   { href: "#privacy", label: "Privacy" },
+  { href: "#features", label: "Features" },
   { href: "#questions", label: "Questions" }
 ];
 
@@ -92,14 +89,14 @@ const CURRENCIES = ["USD", "EUR", "GBP", "CHF"] as const;
 
 type Currency = (typeof CURRENCIES)[number];
 
+// The privacy promise in four words, checked further down the page. Features
+// get their own section, so they stay out of this strip.
 const FACTS: { label: string; icon: ComponentType<{ className?: string }> }[] =
   [
     { label: "No account", icon: IconUserOff },
     { label: "No uploads", icon: IconCloudOff },
     { label: "No analytics", icon: IconEyeOff },
-    { label: "Any currency", icon: IconCoins },
-    { label: "Ten invoice fonts", icon: IconTypography },
-    { label: "PDF and print", icon: IconPrinter }
+    { label: "Open source", icon: IconCode }
   ];
 
 // Each feature shows a fragment of a real invoice rather than an icon.
@@ -139,6 +136,18 @@ const FEATURES: {
   }
 ];
 
+// The rest of what the editor does, too small for a card each.
+const MORE_FEATURES = [
+  "Templates for repeat clients",
+  "Import and export backups",
+  "Shipping address",
+  "PO number and service period",
+  "Notes and terms",
+  "Late payment terms",
+  "Tax-exempt invoices",
+  "Amount paid and balance due"
+];
+
 // The checks, in the order a visitor can make them.
 const CHECKS: {
   title: string;
@@ -166,6 +175,28 @@ const CHECKS: {
       "billsend’s code is public on GitHub, so anyone can check exactly what it does with your data.",
     link: { href: SOURCE_URL, label: "View the code" }
   }
+];
+
+// What a visitor would otherwise reach for. The other columns describe the
+// typical tool of each kind, not any one product, and a cell that varies says
+// so rather than claim a tick or a cross.
+const COMPARISON_COLUMNS = [
+  "billsend",
+  "Online invoice generators",
+  "Accounting software"
+];
+
+// On a phone each row's label takes its own line above the three values.
+const COMPARISON_GRID =
+  "grid grid-cols-3 md:grid-cols-[minmax(0,1fr)_repeat(3,10rem)] lg:grid-cols-[minmax(0,1fr)_repeat(3,12rem)]";
+
+const COMPARISON_ROWS: { label: string; cells: (boolean | string)[] }[] = [
+  { label: "Free, with no paid plan", cells: [true, "Some", false] },
+  { label: "No account needed", cells: [true, "Some", false] },
+  { label: "Invoice data stays on your device", cells: [true, false, false] },
+  { label: "No watermark on the PDF", cells: [true, "Some", true] },
+  { label: "Open source", cells: [true, false, false] },
+  { label: "Sends invoices and tracks payment", cells: [false, "Some", true] }
 ];
 
 // Grouped so no list asks the reader to weigh more than four questions.
@@ -265,9 +296,11 @@ function HomePage() {
       <main id="main" className="overflow-x-clip">
         <Hero font={font} />
         <TryIt font={font} onFontChange={setFont} />
+        <div className="border-y border-zinc-950/5 bg-zinc-50">
+          <Privacy />
+          <Comparison />
+        </div>
         <Features />
-        <HowItWorks />
-        <Privacy />
         <Questions />
         <Closing font={font} />
       </main>
@@ -434,11 +467,24 @@ function CreateInvoiceLink({
 
 function SectionHeading({
   title,
-  description
+  description,
+  isCentered = false
 }: {
   title: ReactNode;
   description: ReactNode;
+  isCentered?: boolean;
 }) {
+  if (isCentered) {
+    return (
+      <div className="flex flex-col items-center gap-6 text-center">
+        <h2 className={cn(HEADING, typeClass("title"), "max-w-[35ch]")}>
+          {title}
+        </h2>
+        <p className={cn(BODY_TEXT, "max-w-[48ch]")}>{description}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
       <h2 className={cn(HEADING, typeClass("title"), "max-w-[35ch]")}>
@@ -481,7 +527,7 @@ function Hero({ font }: { font: InvoiceFont }) {
         </div>
         <HeroVisual />
         <SavedInvoicesNote />
-        <ul className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-zinc-950/10 py-8 sm:grid-cols-3 lg:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-zinc-950/10 py-8 lg:grid-cols-4">
           {FACTS.map(fact => (
             <li
               key={fact.label}
@@ -627,6 +673,25 @@ function SavedInvoicesNote() {
     </p>
   );
 }
+
+// What happens after the sample, in the order a visitor does it.
+const STEPS: { title: string; description: string }[] = [
+  {
+    title: "Add the details",
+    description:
+      "Your details, your client and the line items. billsend does the sums as you type."
+  },
+  {
+    title: "Send the PDF",
+    description:
+      "Download an A4 PDF or print it, then send it to your client however you like."
+  },
+  {
+    title: "Keep a copy",
+    description:
+      "Invoices and templates save in this browser, so a repeat client’s next invoice starts from the last one. Export a backup from the File menu whenever you want one elsewhere."
+  }
+];
 
 /**
  * The sample invoice, made editable: what the visitor types and picks stays on
@@ -840,6 +905,32 @@ function TryIt({
             </div>
           </div>
         </div>
+        <ol className="mt-10 grid gap-x-6 gap-y-8 sm:mt-12 md:grid-cols-3">
+          {STEPS.map((step, index) => (
+            <li key={step.title} className="flex flex-col gap-2">
+              <h3
+                className={cn(
+                  typeClass("subtitle"),
+                  "flex items-center gap-3 font-medium"
+                )}
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    typeClass("caption"),
+                    "bg-brand-50 text-brand-600 flex size-7 shrink-0 items-center justify-center rounded-full font-semibold tabular-nums"
+                  )}
+                >
+                  {index + 1}
+                </span>
+                {step.title}
+              </h3>
+              <p className={cn(BODY_TEXT, "max-w-[44ch]")}>
+                {step.description}
+              </p>
+            </li>
+          ))}
+        </ol>
       </div>
     </section>
   );
@@ -876,6 +967,28 @@ function Features() {
             </div>
           ))}
         </dl>
+        <div className="mt-12 flex flex-col gap-6 border-t border-zinc-950/10 pt-8 sm:mt-16">
+          <h3 className={cn(typeClass("subtitle"), "font-medium")}>
+            Also in the editor
+          </h3>
+          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+            {MORE_FEATURES.map(feature => (
+              <li
+                key={feature}
+                className={cn(
+                  "flex items-center gap-2 text-zinc-700",
+                  CONTROL_TEXT
+                )}
+              >
+                <IconCheck
+                  className="text-brand-600 size-5 shrink-0 sm:size-4"
+                  aria-hidden="true"
+                />
+                {feature}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );
@@ -922,8 +1035,7 @@ function CurrencySpecimen() {
 
 /**
  * A crop of a real billsend PDF, filling its container's width. The two
- * feature crops share an aspect ratio so their cards match; the step crop runs
- * taller than its card, which clips it at the foot.
+ * feature crops share an aspect ratio so their cards match.
  */
 function PdfCrop({
   render,
@@ -957,114 +1069,6 @@ function TotalsSpecimen() {
 function PaymentSpecimen() {
   return (
     <PdfCrop render={PDF_RENDERS.payment} className="-my-(--pad) -mr-(--pad)" />
-  );
-}
-
-// Regions of the editor, in its native pixels, that the editor steps show:
-// page-relative for the page crop, window-relative for the window. They run
-// taller than their cards, which clip them at the foot.
-const FILL_CROP = { x: 0, y: 246, width: 360, height: 480 };
-
-const KEEP_CROP = { width: 480, height: 640 };
-
-const STEPS: {
-  title: string;
-  description: string;
-  illustration: ReactNode;
-}[] = [
-  {
-    title: "Add the details",
-    description:
-      "Your details, your client and the line items. billsend does the sums as you type.",
-    illustration: <FillIllustration />
-  },
-  {
-    title: "Send the PDF",
-    description:
-      "Download an A4 PDF or print it, then send it to your client however you like.",
-    illustration: <SendIllustration />
-  },
-  {
-    title: "Keep a copy",
-    description:
-      "Invoices and templates save in this browser, so a repeat client’s next invoice starts from the last one. Export a backup from the File menu whenever you want one elsewhere.",
-    illustration: <KeepIllustration />
-  }
-];
-
-function HowItWorks() {
-  return (
-    <section className="py-16 sm:py-20">
-      <div className={CONTAINER}>
-        <SectionHeading
-          title="From a blank page to a PDF."
-          description="No sign-up at any point, and your client and bank details never leave your device on the way."
-        />
-        <ol className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 lg:grid-cols-3">
-          {STEPS.map(step => (
-            <li key={step.title} className="flex flex-col gap-6">
-              <div
-                aria-hidden="true"
-                className="bg-brand-50 flex aspect-[4/3] items-start overflow-hidden rounded-xl p-(--pad) ring-1 ring-zinc-950/10 [--pad:--spacing(6)] sm:[--pad:--spacing(10)] lg:[--pad:--spacing(6)] xl:[--pad:--spacing(10)]"
-              >
-                {step.illustration}
-              </div>
-              <div className="flex flex-col gap-2">
-                <h3 className={cn(typeClass("subtitle"), "font-medium")}>
-                  {step.title}
-                </h3>
-                <p className={cn(BODY_TEXT, "max-w-[44ch]")}>
-                  {step.description}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-// Each step's crop keeps the card's padding on its real edges and runs off the
-// card on the sides it was cut from.
-const ILLUSTRATION_FRAME = "grow shadow-sm";
-
-// The client's address going in, with the field focused as the editor shows it.
-function FillIllustration() {
-  return (
-    <ScaledFrame {...FILL_CROP} fill className="-mt-(--pad) -mr-(--pad) grow">
-      <InvoicePage invoice={FILL_SAMPLE} focusedField="client" />
-    </ScaledFrame>
-  );
-}
-
-// The top-left corner of the PDF a woodworker sends, set in Lora.
-function SendIllustration() {
-  return (
-    <PdfCrop
-      render={PDF_RENDERS.send}
-      className={cn(ILLUSTRATION_FRAME, "-mr-(--pad)")}
-    />
-  );
-}
-
-// The editor's File menu, where invoices, templates and backups live.
-function KeepIllustration() {
-  return (
-    <ScaledFrame
-      {...KEEP_CROP}
-      fill
-      className={cn(ILLUSTRATION_FRAME, "-mr-(--pad) rounded-tl-lg")}
-    >
-      <EditorWindow
-        documentName={KEEP_SAMPLE.number}
-        width={1024}
-        height={768}
-        openMenu="file"
-      >
-        <InvoicePage invoice={KEEP_SAMPLE} />
-      </EditorWindow>
-    </ScaledFrame>
   );
 }
 
@@ -1124,6 +1128,114 @@ function Privacy() {
         </ol>
       </div>
     </section>
+  );
+}
+
+function Comparison() {
+  return (
+    <section id="compare" className="py-16 sm:py-20">
+      <div className={CONTAINER}>
+        <SectionHeading
+          title="How billsend compares."
+          description="billsend makes the invoice and stops there. If you want invoices emailed for you and payments tracked, accounting software does that."
+          isCentered
+        />
+        <div
+          role="table"
+          aria-label="billsend compared with online invoice generators and accounting software"
+          className="mx-auto mt-12 max-w-4xl sm:mt-16"
+        >
+          <div role="rowgroup">
+            <div role="row" className={COMPARISON_GRID}>
+              <span role="columnheader" className="max-md:hidden">
+                <span className="sr-only">Feature</span>
+              </span>
+              {COMPARISON_COLUMNS.map((column, index) => (
+                <span
+                  key={column}
+                  role="columnheader"
+                  className={cn(
+                    typeClass("caption"),
+                    "flex items-end justify-center px-2 pt-4 pb-3 text-center font-medium text-balance md:px-4",
+                    index === 0
+                      ? "text-brand-700 md:bg-brand-50 font-semibold md:rounded-t-xl"
+                      : "text-zinc-500"
+                  )}
+                >
+                  {column}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div role="rowgroup">
+            {COMPARISON_ROWS.map((row, rowIndex) => {
+              const isLastRow = rowIndex === COMPARISON_ROWS.length - 1;
+
+              return (
+                <div
+                  key={row.label}
+                  role="row"
+                  className={cn(COMPARISON_GRID, "border-t border-zinc-950/10")}
+                >
+                  <span
+                    role="rowheader"
+                    className={cn(
+                      typeClass("body"),
+                      "col-span-3 pt-4 text-pretty text-zinc-950 md:col-span-1 md:py-4 md:pr-6"
+                    )}
+                  >
+                    {row.label}
+                  </span>
+                  {row.cells.map((cell, cellIndex) => (
+                    <span
+                      key={COMPARISON_COLUMNS[cellIndex]}
+                      role="cell"
+                      className={cn(
+                        "flex items-center justify-center px-2 py-3 md:px-4 md:py-4",
+                        cellIndex === 0 && "md:bg-brand-50",
+                        cellIndex === 0 && isLastRow && "md:rounded-b-xl"
+                      )}
+                    >
+                      <ComparisonCell value={cell} />
+                    </span>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ComparisonCell({ value }: { value: boolean | string }) {
+  if (typeof value === "string") {
+    return (
+      <span className={cn(typeClass("caption"), "text-zinc-500")}>{value}</span>
+    );
+  }
+
+  if (value) {
+    return (
+      <>
+        <IconCheck
+          className="text-brand-600 mx-auto size-5 shrink-0"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Yes</span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <IconX
+        className="mx-auto size-5 shrink-0 text-zinc-300"
+        aria-hidden="true"
+      />
+      <span className="sr-only">No</span>
+    </>
   );
 }
 
@@ -1232,7 +1344,7 @@ function Closing({ font }: { font: InvoiceFont }) {
         </div>
         <div
           aria-hidden="true"
-          className="relative aspect-square w-full max-w-md sm:aspect-10/7"
+          className="relative aspect-square w-full max-w-md sm:aspect-10/7 sm:max-w-xl lg:max-w-2xl"
         >
           <img
             src={closingRender.src}

@@ -5,14 +5,7 @@
 // shadow effects are stripped and the mark made solid white, as a printed logo
 // would be. `bun run render:home` embeds those in the PDF
 // renders and writes the web copies the editor previews show.
-export const SAMPLE_LOGOS = [
-  "magnolia",
-  "codecraft",
-  "layers",
-  "focalpoint",
-  "cubekit",
-  "constellation"
-] as const;
+export const SAMPLE_LOGOS = ["magnolia", "codecraft", "constellation"] as const;
 
 export function getSampleLogoSrc(logo: (typeof SAMPLE_LOGOS)[number]) {
   return `/home/logos/${logo}.webp`;

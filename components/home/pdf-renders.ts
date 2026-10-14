@@ -28,11 +28,6 @@ export const PDF_RENDERS = {
   payment: {
     src: "/home/invoice-payment.webp",
     crop: { x: 0, y: 690, width: 419.7, height: 209.85 }
-  },
-  // The page's top-left corner: the title, the sender and the client.
-  send: {
-    src: "/home/invoice-send.webp",
-    crop: { x: 0, y: 0, width: 410, height: 560 }
   }
 };
 
@@ -46,7 +41,7 @@ export const DEMO_FONTS: InvoiceFont[] = [
   "jetbrains-mono"
 ];
 
-// A whole page, shown no wider than 28rem, so it ships at a smaller size.
+// A whole page, shown no wider than 42rem, so it ships at about twice that.
 export function getClosingRender(font: InvoiceFont) {
-  return { src: `/home/invoice-closing-${font}.webp`, width: 1200 };
+  return { src: `/home/invoice-closing-${font}.webp`, width: 1400 };
 }
