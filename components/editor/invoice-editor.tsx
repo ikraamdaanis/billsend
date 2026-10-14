@@ -429,7 +429,7 @@ function Mid() {
         <InvoiceClientDetails />
         <InvoiceShipping />
       </div>
-      <div className="flex flex-1 flex-col items-start justify-end">
+      <div className="flex flex-1 flex-col items-start">
         <InvoiceDetails />
       </div>
     </div>

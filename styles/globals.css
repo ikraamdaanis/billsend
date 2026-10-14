@@ -371,6 +371,13 @@ code {
   }
 }
 
+/* A one-line paper input that steps at the address textarea's 1.5 line
+   height: the line plus the input's 2px border makes exactly 1.5em, so labels
+   and detail rows land on the same lines as the address beside them. */
+@theme {
+  --leading-paper-row: calc(1.5em - 2px);
+}
+
 @page {
   size: A4;
   margin: 16mm;

@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import { PdfMultilineText } from "~/components/pdf/invoice-pdf-text";
 import type { Invoice, InvoiceDetailRow } from "~/types";
-import { pdfRoleStyle } from "~/utils/pdf-styles";
+import { PDF_ROW_LINE_HEIGHT, pdfRoleStyle } from "~/utils/pdf-styles";
 
 const styles = StyleSheet.create({
   detailsSection: {
@@ -19,25 +19,26 @@ const styles = StyleSheet.create({
     flex: 1
   },
   clientLabel: {
-    marginBottom: 4,
     fontWeight: "medium",
-    fontSize: 12
+    fontSize: 12,
+    lineHeight: PDF_ROW_LINE_HEIGHT
   },
   shippingBlock: {
     marginTop: 12
   },
   detailsField: {
     flexDirection: "row",
-    marginBottom: 4,
     alignItems: "center"
   },
   detailsLabel: {
     width: "40%",
     fontSize: 10,
-    color: "#6b7280"
+    color: "#6b7280",
+    lineHeight: PDF_ROW_LINE_HEIGHT
   },
   detailsValue: {
-    flex: 1
+    flex: 1,
+    lineHeight: PDF_ROW_LINE_HEIGHT
   }
 });
 
@@ -58,21 +59,23 @@ export function InvoicePdfDetails({
 
   return (
     <View style={styles.detailsSection}>
-      {invoice.client.label && (
-        <Text
-          style={{
-            ...styles.clientLabel,
-            ...pdfRoleStyle(theme, "sectionLabel")
-          }}
-        >
-          {invoice.client.label}
-        </Text>
-      )}
       <View style={styles.detailsRow}>
         <View style={styles.clientInfo}>
+          {invoice.client.label && (
+            <Text
+              style={{
+                ...styles.clientLabel,
+                ...pdfRoleStyle(theme, "sectionLabel")
+              }}
+            >
+              {invoice.client.label}
+            </Text>
+          )}
           <PdfMultilineText
             text={invoice.client.content}
-            style={pdfRoleStyle(theme, "sectionContent", { marginBottom: 2 })}
+            style={pdfRoleStyle(theme, "sectionContent", {
+              lineHeight: PDF_ROW_LINE_HEIGHT
+            })}
           />
           {hasShipping && (
             <View style={styles.shippingBlock}>
@@ -89,7 +92,7 @@ export function InvoicePdfDetails({
               <PdfMultilineText
                 text={invoice.shipping.content}
                 style={pdfRoleStyle(theme, "sectionContent", {
-                  marginBottom: 2
+                  lineHeight: PDF_ROW_LINE_HEIGHT
                 })}
               />
             </View>
