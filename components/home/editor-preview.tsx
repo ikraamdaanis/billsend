@@ -1,21 +1,6 @@
-import {
-  IconBookmark,
-  IconDeviceFloppy,
-  IconDownload,
-  IconFile,
-  IconFilePlus,
-  IconFolderOpen,
-  IconMinus,
-  IconPlus,
-  IconUpload
-} from "@tabler/icons-react";
+import { IconMinus, IconPlus } from "@tabler/icons-react";
 import { addDays, endOfMonth, format, subMonths } from "date-fns";
-import type {
-  ComponentProps,
-  ComponentType,
-  CSSProperties,
-  ReactNode
-} from "react";
+import type { ComponentProps, CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
@@ -114,91 +99,7 @@ export const TRY_IT_SAMPLE: SampleInvoice = {
   currencyCode: "USD"
 };
 
-export const FILL_SAMPLE: SampleInvoice = {
-  number: "PR-1006",
-  seller:
-    "Rachel Bennett UX\n1550 N Damen Avenue, Unit 3\nChicago, IL 60622\n(312) 555-0131",
-  logo: "layers",
-  clientName: "Lakeview Dental Group",
-  clientAddress: "2954 N Broadway\nChicago, IL 60657",
-  items: [
-    {
-      description: "Patient portal UX audit",
-      quantity: 1,
-      unit: "ea",
-      unitPrice: 3800
-    },
-    {
-      description: "Usability test sessions",
-      quantity: 8,
-      unit: "ea",
-      unitPrice: 225
-    }
-  ],
-  discountPercentage: 0,
-  taxPercentage: 0,
-  payment: {
-    bankName: "Citibank, N.A.",
-    accountNumber: "40871236",
-    routingNumber: "271070801",
-    bic: "CITIUS33"
-  },
-  paymentInstructions: "Net 30.",
-  font: "geist",
-  currencyCode: "USD"
-};
-
-export const KEEP_SAMPLE: SampleInvoice = {
-  number: "OMP-0118",
-  seller:
-    "Owen Marsh Photography\n3120 SE Division Street\nPortland, OR 97202\n(503) 555-0127",
-  logo: "focalpoint",
-  clientName: "Willamette Valley Vineyards Tours",
-  clientAddress: "8800 SW Oleson Road\nPortland, OR 97223",
-  items: [
-    {
-      description: "Harvest season photo shoot",
-      quantity: 2,
-      unit: "days",
-      unitPrice: 1400
-    },
-    {
-      description: "Edited images, web and print",
-      quantity: 60,
-      unit: "pcs",
-      unitPrice: 15
-    }
-  ],
-  discountPercentage: 0,
-  taxPercentage: 0,
-  payment: {
-    bankName: "U.S. Bank",
-    accountNumber: "153710294488",
-    routingNumber: "123000220",
-    bic: "USBKUS44IMT"
-  },
-  paymentInstructions: "Net 30.",
-  font: "geist",
-  currencyCode: "USD"
-};
-
 const LINE_ITEM_GRID = "grid grid-cols-[1fr_80px_80px_120px_150px]";
-
-const FILE_MENU: (
-  { label: string; icon: ComponentType<{ className?: string }> } | "separator"
-)[] = [
-  { label: "New Invoice", icon: IconFilePlus },
-  { label: "Open Invoice", icon: IconFolderOpen },
-  "separator",
-  { label: "Save", icon: IconDeviceFloppy },
-  { label: "Save As...", icon: IconFile },
-  "separator",
-  { label: "Open Template", icon: IconBookmark },
-  { label: "Save As Template", icon: IconDeviceFloppy },
-  "separator",
-  { label: "Export Data", icon: IconDownload },
-  { label: "Import Data", icon: IconUpload }
-];
 
 // The editor's fields take a taller line height below `md`, and its controls
 // grow on touch screens. The previews always show the desktop editor, so a
@@ -343,13 +244,11 @@ export function EditorWindow({
   documentName,
   width,
   height,
-  openMenu,
   children
 }: {
   documentName: string;
   width: number;
   height: number;
-  openMenu?: "file";
   children: ReactNode;
 }) {
   return (
@@ -357,7 +256,7 @@ export function EditorWindow({
       className="bg-background text-foreground font-geist relative [font-feature-settings:normal] antialiased"
       style={{ width, height }}
     >
-      <EditorToolbar documentName={documentName} openMenu={openMenu} />
+      <EditorToolbar documentName={documentName} />
       <div
         className="bg-desk relative flex w-full flex-col"
         style={{ height: height - TOOLBAR_HEIGHT }}
@@ -372,18 +271,11 @@ export function EditorWindow({
         </div>
         <ZoomControl />
       </div>
-      {openMenu === "file" && <FileMenu />}
     </div>
   );
 }
 
-function EditorToolbar({
-  documentName,
-  openMenu
-}: {
-  documentName: string;
-  openMenu?: "file";
-}) {
+function EditorToolbar({ documentName }: { documentName: string }) {
   return (
     <div
       className="bg-background border-border flex w-full items-center gap-1 border-b px-3"
@@ -406,10 +298,7 @@ function EditorToolbar({
           {["File", "Edit", "View"].map(menu => (
             <span
               key={menu}
-              className={cn(
-                "rounded-surface flex items-center px-1.5 py-[2px] text-sm font-medium select-none",
-                openMenu === "file" && menu === "File" && "bg-muted"
-              )}
+              className="rounded-surface flex items-center px-1.5 py-[2px] text-sm font-medium select-none"
             >
               {menu}
             </span>
@@ -419,29 +308,6 @@ function EditorToolbar({
       <div className="ml-auto flex items-center gap-2">
         <Button>Download</Button>
       </div>
-    </div>
-  );
-}
-
-function FileMenu() {
-  return (
-    <div
-      className="bg-background text-foreground rounded-surface absolute z-50 flex flex-col p-1 shadow-md ring-1 ring-black/10"
-      style={{ top: TOOLBAR_HEIGHT, left: 51 }}
-    >
-      {FILE_MENU.map((entry, index) =>
-        entry === "separator" ? (
-          <div key={index} className="bg-border -mx-1 my-1 h-px" />
-        ) : (
-          <div
-            key={entry.label}
-            className="rounded-surface flex items-center gap-1.5 px-1.5 py-1 text-sm"
-          >
-            <entry.icon className="mr-2 h-4 w-4 shrink-0" />
-            {entry.label}
-          </div>
-        )
-      )}
     </div>
   );
 }
@@ -465,13 +331,7 @@ function ZoomControl() {
 /**
  * The invoice page on its own, as the editor's canvas renders it.
  */
-export function InvoicePage({
-  invoice,
-  focusedField
-}: {
-  invoice: SampleInvoice;
-  focusedField?: "client";
-}) {
+export function InvoicePage({ invoice }: { invoice: SampleInvoice }) {
   const theme = getSampleTheme(invoice.font);
   const fontDefinition = getInvoiceFontDefinition(invoice.font);
   const currency = normalizeCurrency(invoice.currencyCode);
@@ -535,7 +395,6 @@ export function InvoicePage({
             theme={theme}
             clientName={invoice.clientName}
             clientAddress={invoice.clientAddress}
-            isFocused={focusedField === "client"}
           />
           <AddSectionLink>Add shipping address</AddSectionLink>
         </div>
@@ -590,13 +449,11 @@ export function InvoicePage({
 function ClientDetails({
   theme,
   clientName,
-  clientAddress,
-  isFocused
+  clientAddress
 }: {
   theme: InvoiceTheme;
   clientName: string;
   clientAddress: string;
-  isFocused: boolean;
 }) {
   const contentStyle = roleStyle(theme, "sectionContent");
 
@@ -608,18 +465,12 @@ function ClientDetails({
         style={roleStyle(theme, "sectionLabel")}
       />
       <div
-        className={cn(
-          "rounded-surface relative min-h-[5lh] w-full max-w-[500px] border border-transparent whitespace-pre-wrap",
-          isFocused && "border-brand-500 bg-brand-50 z-20 p-2"
-        )}
+        className="rounded-surface relative min-h-[5lh] w-full max-w-[500px] border border-transparent whitespace-pre-wrap"
         style={contentStyle}
       >
         <span className={cn(!clientName && "text-paper-muted-foreground")}>
           {clientName || "Your client"}
         </span>
-        {isFocused && (
-          <span className="bg-paper-foreground ml-px inline-block h-[1.1em] w-px translate-y-[0.15em]" />
-        )}
         {`\n${clientAddress}`}
       </div>
     </section>
