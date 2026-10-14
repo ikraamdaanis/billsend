@@ -1,6 +1,7 @@
 import interFont from "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2?url";
 import {
   IconAlertTriangle,
+  IconArrowRight,
   IconArrowUpRight,
   IconCheck,
   IconCloudOff,
@@ -12,7 +13,7 @@ import {
   IconX
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { ComponentType, ReactNode } from "react";
+import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   EditorWindow,
@@ -182,17 +183,31 @@ const CHECKS: {
 // What a visitor would otherwise reach for. The other columns describe the
 // typical tool of each kind, not any one product, and a cell that varies says
 // so rather than claim a tick or a cross.
+// Short labels fit the narrow value columns on phones.
 const COMPARISON_COLUMNS = [
-  "billsend",
-  "Online invoice generators",
-  "Accounting software"
+  { label: "billsend", shortLabel: "billsend" },
+  { label: "Online invoice generators", shortLabel: "Generators" },
+  { label: "Accounting software", shortLabel: "Accounting" }
 ];
 
-// On a phone each row's label takes its own line above the three values.
+// One row per feature at every width: the label, then one value column per
+// entry in the columns list (`--comparison-columns`, set on the table). The
+// columns share the width in proportion, label first: 1.3 under 400px so the
+// short headers fit, 1.5 on larger phones, 2 from `md`. Proportions rather
+// than fixed widths keep the label readable when the text size goes up.
 const COMPARISON_GRID =
-  "grid grid-cols-3 md:grid-cols-[minmax(0,1fr)_repeat(3,10rem)] lg:grid-cols-[minmax(0,1fr)_repeat(3,12rem)]";
+  "grid grid-cols-[minmax(0,1.3fr)_repeat(var(--comparison-columns),minmax(0,1fr))] min-[400px]:grid-cols-[minmax(0,1.5fr)_repeat(var(--comparison-columns),minmax(0,1fr))] md:grid-cols-[minmax(0,2fr)_repeat(var(--comparison-columns),minmax(0,1fr))]";
 
-const COMPARISON_ROWS: { label: string; cells: (boolean | string)[] }[] = [
+// A cell is a tick, a cross, or one short word where tools vary; longer
+// phrases wrap into tall rows in the narrow phone columns.
+type ComparisonValue = boolean | "Some" | "Paid" | "Varies";
+
+// One value per column, in column order. Keep labels to about 35 characters so
+// a phone shows them in two or three lines.
+const COMPARISON_ROWS: {
+  label: string;
+  cells: [ComparisonValue, ComparisonValue, ComparisonValue];
+}[] = [
   { label: "Free, with no paid plan", cells: [true, "Some", false] },
   { label: "No account needed", cells: [true, "Some", false] },
   { label: "Invoice data stays on your device", cells: [true, false, false] },
@@ -283,7 +298,7 @@ function HomePage() {
   const [font, setFont] = useState<InvoiceFont>(DEFAULT_FONT);
 
   return (
-    <div className="home-type selection:bg-brand-100 isolate min-h-svh bg-white font-sans [font-feature-settings:'cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
+    <div className="home-type selection:bg-brand-100 isolate min-h-svh bg-white font-sans font-features-['cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
       <a
         href="#main"
         className={cn(
@@ -354,7 +369,7 @@ function SiteHeader({ font }: { font: InvoiceFont }) {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end gap-1">
-          <CreateInvoiceLink font={font} size="sm" />
+          <HeaderAction font={font} />
           <PhoneMenu />
         </div>
       </div>
@@ -434,35 +449,50 @@ function PhoneMenu() {
   );
 }
 
-// The page's one primary action, shaped the same everywhere it appears. It
-// carries the typeface picked in the sample invoice into the editor.
-function CreateInvoiceLink({
-  font,
-  size = "md"
-}: {
-  font: InvoiceFont;
-  size?: "sm" | "md";
-}) {
+// The page's one primary action, shaped the same everywhere it appears: a slim
+// deep-navy button (the brand's darkest blue), its label in Geist. It carries the
+// typeface picked in the sample invoice into the editor.
+function CreateInvoiceLink({ font }: { font: InvoiceFont }) {
   return (
     <Link
       to="/create"
       search={{ font: font === DEFAULT_FONT ? undefined : font }}
       preload="viewport"
       className={cn(
-        "relative inline-flex shrink-0 items-center rounded-full font-medium whitespace-nowrap",
-        "bg-zinc-950 text-white hover:bg-zinc-800",
-        FOCUS_RING,
-        size === "md" && cn(CONTROL_TEXT, "px-5 py-3 sm:px-4 sm:py-2.5"),
-        size === "sm" && cn(typeClass("caption"), "px-3 py-2")
+        "bg-brand-900 hover:bg-brand-800 font-geist relative inline-flex shrink-0 items-center rounded-md px-3.5 py-2 font-medium whitespace-nowrap text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(0_0_0/0.16)] transition-colors",
+        typeClass("caption"),
+        FOCUS_RING
       )}
     >
       Create invoice
-      {size === "sm" && (
-        <span
-          aria-hidden="true"
-          className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
-        />
+      <span
+        aria-hidden="true"
+        className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
+      />
+    </Link>
+  );
+}
+
+// The header's way into the editor: a quiet text link, so it never repeats
+// the hero's button right below it. Phones skip it: the hero's button is the
+// first thing under the header, and the link would crowd the menu button.
+function HeaderAction({ font }: { font: InvoiceFont }) {
+  return (
+    <Link
+      to="/create"
+      search={{ font: font === DEFAULT_FONT ? undefined : font }}
+      className={cn(
+        "hover:text-brand-600 relative inline-flex items-center gap-1 rounded-sm px-1 py-2 font-medium whitespace-nowrap text-zinc-950 max-sm:hidden",
+        CONTROL_TEXT,
+        FOCUS_RING
       )}
+    >
+      Open the editor
+      <IconArrowRight className="size-4 shrink-0" aria-hidden="true" />
+      <span
+        aria-hidden="true"
+        className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
+      />
     </Link>
   );
 }
@@ -563,7 +593,7 @@ function HeroVisual() {
   return (
     <div className="hero-fade-up bg-brand-100 relative mt-12 aspect-4/5 overflow-hidden rounded-xl ring-1 ring-zinc-950/10 [animation-delay:200ms] sm:mt-16 sm:aspect-17/10">
       <img
-        src="/home/hero-background.webp"
+        src="/home/hero-sky.webp"
         alt=""
         width={1792}
         height={1008}
@@ -1137,6 +1167,12 @@ function Privacy() {
 }
 
 function Comparison() {
+  const [ownColumn, ...otherColumns] = COMPARISON_COLUMNS;
+  const tableLabel = `${ownColumn.label} compared with ${new Intl.ListFormat(
+    "en",
+    { type: "conjunction" }
+  ).format(otherColumns.map(column => column.label.toLowerCase()))}`;
+
   return (
     <section id="compare" className="py-16 sm:py-20">
       <div className={CONTAINER}>
@@ -1147,27 +1183,34 @@ function Comparison() {
         />
         <div
           role="table"
-          aria-label="billsend compared with online invoice generators and accounting software"
+          aria-label={tableLabel}
           className="mx-auto mt-12 max-w-4xl sm:mt-16"
+          style={
+            {
+              "--comparison-columns": COMPARISON_COLUMNS.length
+            } as CSSProperties
+          }
         >
           <div role="rowgroup">
             <div role="row" className={COMPARISON_GRID}>
-              <span role="columnheader" className="max-md:hidden">
+              <span role="columnheader">
                 <span className="sr-only">Feature</span>
               </span>
               {COMPARISON_COLUMNS.map((column, index) => (
                 <span
-                  key={column}
+                  key={column.label}
                   role="columnheader"
                   className={cn(
-                    typeClass("caption"),
-                    "flex items-end justify-center px-2 pt-4 pb-3 text-center font-medium text-balance md:px-4",
+                    // Phones set the short headers small (11px under 400px,
+                    // then 12px) so they fit the narrowest columns.
+                    "flex items-end justify-center px-0.5 pt-4 pb-3 text-center text-[11px]/4 font-medium text-balance min-[400px]:px-1 min-[400px]:text-xs/4 sm:text-sm/5 md:px-4",
                     index === 0
-                      ? "text-brand-700 md:bg-brand-50 font-semibold md:rounded-t-xl"
+                      ? "text-brand-700 rounded-t-xl bg-blue-50 font-semibold"
                       : "text-zinc-500"
                   )}
                 >
-                  {column}
+                  <span className="md:hidden">{column.shortLabel}</span>
+                  <span className="max-md:hidden">{column.label}</span>
                 </span>
               ))}
             </div>
@@ -1185,23 +1228,23 @@ function Comparison() {
                   <span
                     role="rowheader"
                     className={cn(
-                      typeClass("body"),
-                      "col-span-3 pt-4 text-balance text-zinc-950 md:col-span-1 md:py-4 md:pr-6"
+                      typeClass("caption"),
+                      "self-center py-4 pr-2 text-balance wrap-break-word text-zinc-950 min-[400px]:pr-3 md:pr-6"
                     )}
                   >
                     {row.label}
                   </span>
-                  {row.cells.map((cell, cellIndex) => (
+                  {COMPARISON_COLUMNS.map((column, cellIndex) => (
                     <span
-                      key={COMPARISON_COLUMNS[cellIndex]}
+                      key={column.label}
                       role="cell"
                       className={cn(
-                        "flex items-center justify-center px-2 py-3 md:px-4 md:py-4",
-                        cellIndex === 0 && "md:bg-brand-50",
-                        cellIndex === 0 && isLastRow && "md:rounded-b-xl"
+                        "flex items-center justify-center px-1 py-4 md:px-4",
+                        cellIndex === 0 && "bg-blue-50",
+                        cellIndex === 0 && isLastRow && "rounded-b-xl"
                       )}
                     >
-                      <ComparisonCell value={cell} />
+                      <ComparisonCell value={row.cells[cellIndex]} />
                     </span>
                   ))}
                 </div>
@@ -1214,7 +1257,7 @@ function Comparison() {
   );
 }
 
-function ComparisonCell({ value }: { value: boolean | string }) {
+function ComparisonCell({ value }: { value: ComparisonValue }) {
   if (typeof value === "string") {
     return (
       <span className={cn(typeClass("caption"), "text-zinc-500")}>{value}</span>
@@ -1311,11 +1354,11 @@ function Questions() {
 }
 
 // The closing band mirrors the hero: dark headline, brand-blue second line.
-// The page rising from the band's foot is a real billsend PDF set in the
+// The page rising from the panel's foot is a real billsend PDF set in the
 // typeface picked in Try it. Its box is sized from the page's own width, so it
 // always shows the same top share of the page, and the page runs past the box
-// to be cut by the band's foot: square shows 70% on phones, 10:7 half from
-// `sm`.
+// to be cut by the panel's foot: 4:3 shows about half on phones, 16:9 about
+// 40% from `sm`. Like the hero, the copy sits on the page above the panel.
 function Closing({ font }: { font: InvoiceFont }) {
   const fontName = getInvoiceFontDefinition(font).name;
   const closingRender = getClosingRender(font);
@@ -1325,45 +1368,44 @@ function Closing({ font }: { font: InvoiceFont }) {
       : `Free, with no account. Opens straight into the editor, set in ${fontName}.`;
 
   return (
-    <section className="bg-brand-50 overflow-hidden pt-16 sm:pt-24">
-      <div
-        className={cn(
-          CONTAINER,
-          "flex flex-col items-center gap-12 text-center sm:gap-16"
-        )}
-      >
-        <div className="flex flex-col items-center gap-8">
-          <h2 className={cn(HEADING, typeClass("display", "compact"))}>
+    <section className="bg-blue-50/50 pt-16 sm:pt-20">
+      <div className={CONTAINER}>
+        <div className="flex flex-col gap-8 xl:flex-row xl:justify-between xl:gap-16">
+          <h2 className={cn(HEADING, typeClass("display"), "max-w-[20ch]")}>
             <span className="block">Your next invoice</span>
             <span className="text-brand-600 block">starts here.</span>
           </h2>
-          <div className="flex flex-col items-center gap-4">
+          <div className="flex flex-col items-start gap-6 xl:justify-end">
+            <p className={cn(BODY_TEXT, "max-w-[48ch]")}>{caption}</p>
             <CreateInvoiceLink font={font} />
-            <p
-              className={cn(
-                typeClass("body"),
-                "max-w-[44ch] text-balance text-zinc-500"
-              )}
-            >
-              {caption}
-            </p>
           </div>
         </div>
-        <div
-          aria-hidden="true"
-          className="relative aspect-square w-full max-w-md sm:aspect-10/7 sm:max-w-xl lg:max-w-2xl"
-        >
+        <div className="relative isolate mt-12 flex justify-center overflow-hidden rounded-t-xl border border-zinc-950/10 bg-blue-100 px-6 pt-12 pb-16 sm:mt-16 sm:pt-16 sm:pb-20">
           <img
-            src={closingRender.src}
+            src="/home/closing-skyline.webp"
             alt=""
-            width={closingRender.width}
-            height={Math.round(
-              (closingRender.width * PAGE_HEIGHT) / PAGE_WIDTH
-            )}
+            width={1792}
+            height={1008}
             loading="lazy"
             decoding="async"
-            className="absolute inset-x-0 top-0 h-auto w-full shadow-xl outline-1 -outline-offset-1 outline-zinc-950/5"
+            className="absolute inset-0 -z-10 size-full object-cover"
           />
+          <div
+            aria-hidden="true"
+            className="relative aspect-4/3 w-full max-w-md sm:aspect-video sm:max-w-xl lg:max-w-2xl"
+          >
+            <img
+              src={closingRender.src}
+              alt=""
+              width={closingRender.width}
+              height={Math.round(
+                (closingRender.width * PAGE_HEIGHT) / PAGE_WIDTH
+              )}
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-x-0 top-0 h-auto w-full shadow-[0_24px_64px_-12px_rgb(0_0_0/0.5)] outline-1 -outline-offset-1 outline-zinc-950/5"
+            />
+          </div>
         </div>
       </div>
     </section>
