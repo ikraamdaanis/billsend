@@ -76,7 +76,9 @@ const HEADING = "font-semibold tracking-tight text-balance";
 // Single-line controls: buttons, labels, nav links.
 const CONTROL_TEXT = typeClass("body", "compact");
 
-const BODY_TEXT = cn("text-pretty text-zinc-600", typeClass("body"));
+// Balanced so short copy never ends on a stub of a line; past six lines
+// browsers fall back to normal wrapping.
+const BODY_TEXT = cn("text-balance text-zinc-600", typeClass("body"));
 
 const SECTIONS = [
   { href: "#try-it", label: "Try it" },
@@ -946,7 +948,10 @@ function Features() {
         />
         <dl className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 md:grid-cols-2">
           {FEATURES.map(feature => (
-            <div key={feature.title} className="flex flex-col gap-6">
+            <div
+              key={feature.title}
+              className="row-span-2 grid grid-rows-subgrid gap-6"
+            >
               <div
                 aria-hidden="true"
                 className={cn(
@@ -971,7 +976,7 @@ function Features() {
           <h3 className={cn(typeClass("subtitle"), "font-medium")}>
             Also in the editor
           </h3>
-          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="grid gap-x-6 gap-y-4 sm:grid-cols-2 xl:grid-cols-4">
             {MORE_FEATURES.map(feature => (
               <li
                 key={feature}
@@ -1137,7 +1142,7 @@ function Comparison() {
       <div className={CONTAINER}>
         <SectionHeading
           title="How billsend compares."
-          description="billsend makes the invoice and stops there. If you want invoices emailed for you and payments tracked, accounting software does that."
+          description="billsend makes the invoice and stops there. To email invoices and track payments, you want accounting software."
           isCentered
         />
         <div
@@ -1181,7 +1186,7 @@ function Comparison() {
                     role="rowheader"
                     className={cn(
                       typeClass("body"),
-                      "col-span-3 pt-4 text-pretty text-zinc-950 md:col-span-1 md:py-4 md:pr-6"
+                      "col-span-3 pt-4 text-balance text-zinc-950 md:col-span-1 md:py-4 md:pr-6"
                     )}
                   >
                     {row.label}
@@ -1289,7 +1294,9 @@ function Questions() {
                         aria-hidden="true"
                       />
                     </summary>
-                    <p className={cn(BODY_TEXT, "max-w-[64ch] pb-6")}>
+                    <p
+                      className={cn(BODY_TEXT, "max-w-[64ch] pb-6 text-pretty")}
+                    >
                       {item.answer}
                     </p>
                   </details>
@@ -1335,7 +1342,7 @@ function Closing({ font }: { font: InvoiceFont }) {
             <p
               className={cn(
                 typeClass("body"),
-                "max-w-[44ch] text-pretty text-zinc-500"
+                "max-w-[44ch] text-balance text-zinc-500"
               )}
             >
               {caption}
