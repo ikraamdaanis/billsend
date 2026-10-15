@@ -326,19 +326,22 @@ function HomePage() {
   );
 }
 
+// The wordmark: the name in Geist, filled top to bottom with the app icon's
+// gradient (#1a78e0 to brand-600, #005fca). leading-none fits the fill to the
+// letters rather than the taller line box.
 function Wordmark() {
   return (
     <Link
       to="/"
       aria-label="Homepage"
-      className={cn("flex items-center gap-2 rounded-md", FOCUS_RING)}
+      className={cn(
+        "font-geist flex items-center rounded-md text-lg font-semibold tracking-tight",
+        FOCUS_RING
+      )}
     >
-      <img
-        src="/favicon-96x96.png"
-        alt=""
-        className="size-6 shrink-0 rounded-md"
-      />
-      <span className="text-lg font-semibold tracking-tight">billsend</span>
+      <span className="to-brand-600 dark:from-brand-200 dark:to-brand-400 bg-linear-to-b from-[#1a78e0] bg-clip-text leading-none text-transparent">
+        billsend
+      </span>
     </Link>
   );
 }
