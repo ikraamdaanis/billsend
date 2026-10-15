@@ -107,7 +107,7 @@ lib/                 # Helper utilities (cn() classname merger)
 ## Key Architecture Decisions
 
 - **No backend**; all persistence is IndexedDB via Dexie
-- **Content-Security-Policy** on every page (`consts/content-security-policy.ts`, sent from `app/server.ts`) only allows billsend's own origin; the homepage cites it as privacy proof, so never loosen it to add a third-party request. Zod runs jitless (`lib/configure-zod.ts`, imported wherever zod is) because the policy forbids eval
+- **Content-Security-Policy** on every page (`consts/content-security-policy.ts`, sent from `app/server.ts`) only allows billsend's own origin; it is what keeps billsend's no-data-leaves-the-device promise true, so never loosen it to add a third-party request. Zod runs jitless (`lib/configure-zod.ts`, imported wherever zod is) because the policy forbids eval
 - **React Compiler enabled**: automatic memoization; avoid manual useMemo/useCallback unless necessary
 - **PDF generation** (`@react-pdf/renderer`) lives in the `invoice-pdf-*` / `download-invoice` modules; it is currently statically imported, so it loads with the editor route (a known initial-bundle cost, not yet code-split)
 - **No barrel exports**; import directly from the source file
