@@ -75,6 +75,24 @@
   --color-brand-900: oklch(0.235 0.085 257.39);
   --color-brand-950: oklch(0.18 0.064 257.25);
 
+  /* The homepage's warm canvas and its four secondary hues. Blue stays the
+     brand's; these mark content. Each hue has a tint for card washes and an
+     ink for marks and short text on white (at least 4.5:1). The tints share
+     one lightness and a low chroma, leaning warm to sit on the canvas. */
+  --color-canvas: oklch(0.99 0.003 85);
+  /* The homepage's text: a warm near-black for copy and a deep, muted blue for
+     the second line of headings and for blue text. */
+  --color-ink: #262823;
+  --color-ink-blue: #2460a8;
+  --color-lavender-tint: oklch(0.948 0.02 295);
+  --color-lavender-ink: oklch(0.5 0.13 295);
+  --color-sage-tint: oklch(0.948 0.026 145);
+  --color-sage-ink: oklch(0.5 0.1 150);
+  --color-butter-tint: oklch(0.958 0.038 92);
+  --color-butter-ink: oklch(0.5 0.1 65);
+  --color-blush-tint: oklch(0.948 0.022 35);
+  --color-blush-ink: oklch(0.5 0.15 25);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

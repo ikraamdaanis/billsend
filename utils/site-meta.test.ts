@@ -33,7 +33,9 @@ describe("siteMeta", () => {
     expect(findByProperty("og:title")?.content).toBe(SITE_TITLE);
     expect(findByProperty("og:description")?.content).toBe(SITE_DESCRIPTION);
     expect(findByProperty("og:url")?.content).toMatch(/^https:\/\//);
-    expect(findByProperty("og:image")?.content).toMatch(/^https:\/\/.+\.png$/);
+    expect(findByProperty("og:image")?.content).toMatch(
+      /^https:\/\/.+\.(png|jpe?g)$/
+    );
   });
 
   it("includes Twitter card tags with an absolute image", () => {

@@ -1,9 +1,6 @@
-import type { InvoiceFont } from "~/types";
-
 // The homepage's pictures of finished invoices: real billsend PDFs, rendered
 // by scripts/render-homepage-invoices.tsx at PDF_RENDER_SCALE times the page's
-// CSS pixel size. Crops are in the page's CSS pixels (793.7 x 1122.5), so they
-// line up with the editor previews' crops.
+// CSS pixel size. Crops are in the page's CSS pixels (793.7 x 1122.5).
 
 export const PDF_RENDER_SCALE = 3;
 
@@ -32,17 +29,9 @@ export const PDF_RENDERS = {
   }
 };
 
-// Real faces from the editor's invoice font library, across its categories:
-// the ones a visitor can pick on the homepage. The closing invoice is rendered
-// in each.
-export const DEMO_FONTS: InvoiceFont[] = [
-  "geist",
-  "lora",
-  "libre-baskerville",
-  "jetbrains-mono"
-];
-
-// A whole page, shown no wider than 42rem, so it ships at about twice that.
-export function getClosingRender(font: InvoiceFont) {
-  return { src: `/home/invoice-closing-${font}.webp`, width: 1400 };
-}
+// The closing invoice: a whole page, shown no wider than 42rem, so it ships at
+// about twice that.
+export const CLOSING_RENDER = {
+  src: "/home/invoice-closing.webp",
+  width: 1400
+};
