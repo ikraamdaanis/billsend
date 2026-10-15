@@ -14,11 +14,20 @@ export default defineConfig({
   plugins: [
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     tailwindcss(),
+    // The homepage is the same for every visitor, so it is rendered once at
+    // build time and served as a static file instead of by the Worker on each
+    // request. Its security headers then come from public/_headers.
     tanstackStart({
       srcDirectory: "./app",
       router: {
         routesDirectory: "./routes"
-      }
+      },
+      prerender: {
+        enabled: true,
+        autoStaticPathsDiscovery: false,
+        crawlLinks: false
+      },
+      pages: [{ path: "/", prerender: { enabled: true } }]
     }),
     viteReact()
   ]
