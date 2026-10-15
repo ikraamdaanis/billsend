@@ -856,6 +856,10 @@ function HowItWorks() {
   );
 }
 
+// The page's pictures below the hero load straight away at low priority, not
+// lazily: lazy loading fetches an image only as it nears the viewport (late
+// in Safari), so it popped in while scrolling. They total about 450 KB, and
+// low priority keeps them behind the hero.
 function Wash({ hue }: { hue: keyof typeof WASHES }) {
   return (
     <img
@@ -863,8 +867,7 @@ function Wash({ hue }: { hue: keyof typeof WASHES }) {
       alt=""
       width={1200}
       height={900}
-      loading="lazy"
-      decoding="async"
+      fetchPriority="low"
       className="absolute inset-0 -z-10 size-full object-cover"
     />
   );
@@ -1071,8 +1074,7 @@ function PdfCrop({
       alt=""
       width={Math.round(render.crop.width * PDF_RENDER_SCALE)}
       height={Math.round(render.crop.height * PDF_RENDER_SCALE)}
-      loading="lazy"
-      decoding="async"
+      fetchPriority="low"
       className={cn("block h-auto w-full max-w-none min-w-0 grow", className)}
     />
   );
@@ -1316,8 +1318,7 @@ function Closing() {
           alt=""
           width={1792}
           height={1008}
-          loading="lazy"
-          decoding="async"
+          fetchPriority="low"
           className="absolute inset-0 -z-10 size-full object-cover"
         />
         <div
@@ -1331,8 +1332,7 @@ function Closing() {
             height={Math.round(
               (CLOSING_RENDER.width * PAGE_HEIGHT) / PAGE_WIDTH
             )}
-            loading="lazy"
-            decoding="async"
+            fetchPriority="low"
             className="absolute inset-x-0 top-0 h-auto w-full shadow-[0_24px_64px_-12px_rgb(0_0_0/0.5)] outline-1 -outline-offset-1 outline-zinc-950/5"
           />
         </div>
