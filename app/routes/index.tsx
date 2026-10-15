@@ -593,17 +593,17 @@ function Hero() {
           )}
         >
           <div className="flex flex-col items-center gap-6">
-            <h1 className={cn(HEADING, typeClass("display"), "hero-fade-up")}>
+            <h1 className={cn(HEADING, typeClass("display"))}>
               <span className="block">Send the invoice.</span>
               <span className="text-ink-blue block">Keep everything else.</span>
             </h1>
-            <p className="hero-fade-up text-ink/75 max-w-[48ch] text-lg/7 text-pretty [animation-delay:100ms]">
+            <p className="text-ink/75 max-w-[48ch] text-lg/7 text-pretty">
               A free invoice maker that runs in your browser.{" "}
               <br className="max-sm:hidden" />
               No account, and your details never leave your device.
             </p>
           </div>
-          <div className="hero-fade-up flex flex-wrap items-center justify-center gap-x-6 gap-y-3 [animation-delay:150ms]">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
             <CreateInvoiceLink />
             <a
               href="#how-it-works"
@@ -663,7 +663,7 @@ function HeroVisual() {
       aria-label="The billsend editor with a sample invoice"
       className={cn(
         CONTAINER,
-        "hero-fade-up relative mt-14 h-[calc(638px*0.6)] min-h-0 [animation-delay:200ms] sm:mt-16 sm:aspect-17/10 sm:h-auto"
+        "relative mt-14 h-[calc(638px*0.6)] min-h-0 sm:mt-16 sm:aspect-17/10 sm:h-auto"
       )}
     >
       <div className="pl-(--pad) [--pad:--spacing(5)] sm:[--pad:--spacing(10)] lg:px-(--pad) lg:[--pad:--spacing(16)]">
@@ -1266,7 +1266,7 @@ function Questions() {
                     >
                       {item.question}
                       <IconPlus
-                        className="size-5 shrink-0 text-zinc-500 transition-transform group-open:rotate-45"
+                        className="size-5 shrink-0 text-zinc-500 group-open:rotate-45"
                         aria-hidden="true"
                       />
                     </summary>
