@@ -79,7 +79,7 @@ const HERO_PORTRAIT_SRCSET =
   "/home/hero-harbour-portrait-900.webp 900w, /home/hero-harbour-portrait-1350.webp 1350w";
 
 const HERO_LANDSCAPE_SRCSET =
-  "/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w, /home/hero-harbour-4096.webp 4096w";
+  "/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w";
 
 const HERO_LANDSCAPE_SIZES = "(max-width: 1023px) 1960px, max(100vw, 2250px)";
 
@@ -551,13 +551,14 @@ function SectionHeading({
 }
 
 // The hero is one painting, the full width of the viewport, from behind the
-// header (the section pulls up under it) to the editor window's cut. The
-// painting is cut from an 8K master in four widths; covering a hero taller
-// than 16:9 draws it wider than the viewport (about 1960px by `lg`, 2250px
-// from there), hence the sizes. Phones get a 9:16 centre crop, since they
-// only ever show its middle. The copy
+// header (the section pulls up under it) to the editor window's cut. The copy
 // sits centred on its sky, over a fade to the canvas colour that keeps the
 // nav and headline legible, and the window rises from the painting's foot.
+// The painting is cut from an 8K master in three widths, up to 3200px: on a
+// 2x screen a 4096px cut looked no different and weighed twice as much.
+// Covering a hero taller than 16:9 draws it wider than the viewport (about
+// 1960px by `lg`, 2250px from there), hence the sizes. Phones get a 9:16
+// centre crop, since they only ever show its middle.
 function Hero() {
   return (
     <section className="-mt-16">
@@ -575,8 +576,8 @@ function Hero() {
             srcSet={HERO_LANDSCAPE_SRCSET}
             sizes={HERO_LANDSCAPE_SIZES}
             alt=""
-            width={4096}
-            height={2304}
+            width={3200}
+            height={1800}
             decoding="async"
             fetchPriority="high"
             className="absolute inset-0 -z-10 size-full object-cover"
