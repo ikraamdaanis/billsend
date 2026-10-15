@@ -4,13 +4,11 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  DEMO_FONTS,
-  getClosingRender,
+  CLOSING_RENDER,
   HERO_INVOICE_NUMBER,
   PDF_RENDER_SCALE,
   PDF_RENDERS
 } from "~/components/home/pdf-renders";
-import { SAMPLE_LOGOS } from "~/components/home/sample-logos";
 import { InvoicePDF } from "~/components/pdf/invoice-generator";
 import { invoiceDefault } from "~/stores/invoice-store";
 import type { Invoice, InvoiceItem } from "~/types";
@@ -23,10 +21,12 @@ import { PDF_FONT_FAMILIES } from "~/utils/register-invoice-pdf-fonts";
 
 const OUTPUT_DIR = join(import.meta.dir, "..", "public");
 
+// The sample businesses' logos: app-icon marks from Untitled UI's free logo
+// set (untitledui.com/logos), free for commercial use without attribution; the
+// companies are fictional. These are 384px PNG masters rasterised from their
+// SVGs, flattened first: the bevel, rim, sheen and shadow effects are stripped
+// and the mark made solid white, as a printed logo would be.
 const LOGO_DIR = join(import.meta.dir, "assets", "logos");
-
-// The editor previews show a logo at 128 CSS pixels; this covers 2x screens.
-const LOGO_WEB_SIZE = 256;
 
 // The page in CSS pixels; pdftoppm renders 72pt to 96px at 96 DPI.
 const RENDER_DPI = 96 * PDF_RENDER_SCALE;
@@ -283,23 +283,6 @@ const directory = await mkdtemp(join(tmpdir(), "billsend-renders-"));
 try {
   await mkdir(join(OUTPUT_DIR, "home"), { recursive: true });
 
-  await mkdir(join(OUTPUT_DIR, "home", "logos"), { recursive: true });
-
-  for (const logo of SAMPLE_LOGOS) {
-    await run([
-      "cwebp",
-      "-quiet",
-      "-q",
-      "90",
-      "-resize",
-      String(LOGO_WEB_SIZE),
-      String(LOGO_WEB_SIZE),
-      join(LOGO_DIR, `${logo}.png`),
-      "-o",
-      join(OUTPUT_DIR, "home", "logos", `${logo}.webp`)
-    ]);
-  }
-
   await writeWebp({
     pngPath: await renderPage(directory, "hero", {
       ...HERO_INVOICE,
@@ -317,16 +300,13 @@ try {
     ...PDF_RENDERS.payment
   });
 
-  for (const font of DEMO_FONTS) {
-    await writeWebp({
-      pngPath: await renderPage(directory, `closing-${font}`, {
-        ...CLOSING_INVOICE,
-        image: join(LOGO_DIR, "constellation.png"),
-        theme: { ...CLOSING_INVOICE.theme, font }
-      }),
-      ...getClosingRender(font)
-    });
-  }
+  await writeWebp({
+    pngPath: await renderPage(directory, "closing", {
+      ...CLOSING_INVOICE,
+      image: join(LOGO_DIR, "constellation.png")
+    }),
+    ...CLOSING_RENDER
+  });
 
   process.stdout.write(
     `Wrote the invoice renders to ${join(OUTPUT_DIR, "home")}\n`

@@ -7,6 +7,7 @@ import {
   IconCloudOff,
   IconCode,
   IconEyeOff,
+  IconFileTypePdf,
   IconMenu2,
   IconPlus,
   IconUserOff,
@@ -18,15 +19,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   EditorWindow,
   getTitleStyle,
-  InvoicePage,
   PAGE_HEIGHT,
   PAGE_WIDTH,
-  ScaledFrame,
-  TRY_IT_SAMPLE
+  ScaledFrame
 } from "~/components/home/editor-preview";
 import {
-  DEMO_FONTS,
-  getClosingRender,
+  CLOSING_RENDER,
   HERO_INVOICE_NUMBER,
   PDF_RENDER_SCALE,
   PDF_RENDERS
@@ -56,15 +54,13 @@ export const Route = createFileRoute("/")({
 
 const SOURCE_URL = "https://github.com/ikraamdaanis/billsend";
 
-const DEFAULT_FONT: InvoiceFont = "geist";
-
 const CONTAINER = "mx-auto max-w-6xl px-6 lg:px-8";
 
 const FOCUS_RING =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
 
 const TEXT_LINK = cn(
-  "inline-flex items-center gap-1 rounded-sm font-medium text-zinc-950 hover:text-brand-600",
+  "inline-flex items-center gap-1 rounded-sm font-medium text-ink hover:text-ink-blue",
   typeClass("body"),
   FOCUS_RING
 );
@@ -72,7 +68,7 @@ const TEXT_LINK = cn(
 // Headlines use Inter's Display optical size, which the browser picks up from
 // the opsz axis at large sizes. Sizes come from the type roles, which the
 // homepage sets at marketing values through `.home-type`.
-const HEADING = "font-semibold tracking-tight text-balance";
+const HEADING = "font-medium tracking-[-0.035em] text-balance";
 
 // Single-line controls: buttons, labels, nav links.
 const CONTROL_TEXT = typeClass("body", "compact");
@@ -82,52 +78,86 @@ const CONTROL_TEXT = typeClass("body", "compact");
 const BODY_TEXT = cn("text-balance text-zinc-600", typeClass("body"));
 
 const SECTIONS = [
-  { href: "#try-it", label: "Try it" },
-  { href: "#privacy", label: "Privacy" },
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#compare", label: "Compare" },
   { href: "#features", label: "Features" },
   { href: "#questions", label: "Questions" }
 ];
 
-const CURRENCIES = ["USD", "EUR", "GBP", "CHF"] as const;
+// The privacy promise in four words, each on a tile of one of the secondary
+// hues. Features get their own section, so they stay out of this strip.
+const FACTS: {
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  tile: string;
+}[] = [
+  {
+    label: "No account",
+    icon: IconUserOff,
+    tile: "bg-blush-tint text-blush-ink"
+  },
+  {
+    label: "No uploads",
+    icon: IconCloudOff,
+    tile: "bg-sage-tint text-sage-ink"
+  },
+  {
+    label: "No analytics",
+    icon: IconEyeOff,
+    tile: "bg-butter-tint text-butter-ink"
+  },
+  {
+    label: "Open source",
+    icon: IconCode,
+    tile: "bg-lavender-tint text-lavender-ink"
+  }
+];
 
-type Currency = (typeof CURRENCIES)[number];
+// Paper lifted off a feature card's wash.
+const PAPER_SHADOW =
+  "shadow-[0_4px_16px_-6px_rgb(0_0_0/0.12)] outline-1 -outline-offset-1 outline-zinc-950/5";
 
-// The privacy promise in four words, checked further down the page. Features
-// get their own section, so they stay out of this strip.
-const FACTS: { label: string; icon: ComponentType<{ className?: string }> }[] =
-  [
-    { label: "No account", icon: IconUserOff },
-    { label: "No uploads", icon: IconCloudOff },
-    { label: "No analytics", icon: IconEyeOff },
-    { label: "Open source", icon: IconCode }
-  ];
+// The secondary hues' washes: a pale painting in each hue, over its flat tint
+// so the panel already has its colour while the painting loads.
+const WASHES = {
+  lavender: { tint: "bg-lavender-tint", src: "/home/wash-lavender.webp" },
+  sage: { tint: "bg-sage-tint", src: "/home/wash-sage.webp" },
+  butter: { tint: "bg-butter-tint", src: "/home/wash-butter.webp" },
+  blush: { tint: "bg-blush-tint", src: "/home/wash-blush.webp" }
+};
 
-// Each feature shows a fragment of a real invoice rather than an icon.
-// A specimen that is a crop of a PDF page sits on the editor's desk, so the
-// paper's edge reads, and runs off the card where it was cut.
+// Each feature shows a fragment of a real invoice rather than an icon, on a
+// pale wash of its own colour. Blue belongs to billsend and its controls, so
+// the features take the secondary hues, all at the same lightness. A specimen
+// that is a crop of a PDF page runs off the card where it was cut, so only the
+// paper's edge shows; the others sit on a slip of paper.
 const FEATURES: {
   title: string;
   description: string;
   specimen: ReactNode;
+  hue: keyof typeof WASHES;
   isPageCrop?: boolean;
 }[] = [
   {
     title: "Your logo, your type",
     description:
       "Upload your logo and set the whole invoice in any of ten fonts, at three sizes.",
-    specimen: <TypeSpecimen />
+    specimen: <TypeSpecimen />,
+    hue: "lavender"
   },
   {
     title: "Any currency",
     description:
       "Choose the currency for each invoice, with custom symbols when you need them.",
-    specimen: <CurrencySpecimen />
+    specimen: <CurrencySpecimen />,
+    hue: "sage"
   },
   {
     title: "Tax, fees and discounts",
     description:
       "Add VAT or sales tax, fees, and a fixed or percentage discount. billsend does the sums, taxing the amount after any discount.",
     specimen: <TotalsSpecimen />,
+    hue: "butter",
     isPageCrop: true
   },
   {
@@ -135,6 +165,7 @@ const FEATURES: {
     description:
       "Bank name, account and routing numbers, IBAN, BIC / SWIFT and sort code, laid out so your client can pay without asking.",
     specimen: <PaymentSpecimen />,
+    hue: "blush",
     isPageCrop: true
   }
 ];
@@ -149,35 +180,6 @@ const MORE_FEATURES = [
   "Late payment terms",
   "Tax-exempt invoices",
   "Amount paid and balance due"
-];
-
-// The checks, in the order a visitor can make them.
-const CHECKS: {
-  title: string;
-  description: string;
-  detail?: { summary: string; text: string };
-  link?: { href: string; label: string };
-}[] = [
-  {
-    title: "Search for a sign-up",
-    description:
-      "There’s no sign-up form, password or email field anywhere in billsend, so there’s no account for your invoices to sit in."
-  },
-  {
-    title: "Ask your browser",
-    description:
-      "Every billsend page tells your browser to block it from loading anything from, or sending data to, any other website. Your browser enforces that rule, not billsend.",
-    detail: {
-      summary: "See the rule on a computer",
-      text: "Open your browser’s developer tools, choose the Network tab and reload the page. Select the first request and look for content-security-policy under Response Headers."
-    }
-  },
-  {
-    title: "Read the code",
-    description:
-      "billsend’s code is public on GitHub, so anyone can check exactly what it does with your data.",
-    link: { href: SOURCE_URL, label: "View the code" }
-  }
 ];
 
 // What a visitor would otherwise reach for. The other columns describe the
@@ -295,10 +297,8 @@ function useSavedInvoiceCount() {
 }
 
 function HomePage() {
-  const [font, setFont] = useState<InvoiceFont>(DEFAULT_FONT);
-
   return (
-    <div className="home-type selection:bg-brand-100 isolate min-h-svh bg-white font-sans font-features-['cv02','cv03','cv04','cv11'] text-zinc-950 antialiased">
+    <div className="home-type selection:bg-brand-100 bg-canvas text-ink isolate min-h-svh font-sans font-features-['cv02','cv03','cv04','cv11'] antialiased">
       <a
         href="#main"
         className={cn(
@@ -309,26 +309,21 @@ function HomePage() {
       >
         Skip to content
       </a>
-      <SiteHeader font={font} />
+      <SiteHeader />
       <main id="main" className="overflow-x-clip">
-        <Hero font={font} />
-        <TryIt font={font} onFontChange={setFont} />
-        <div className="border-y border-zinc-950/5 bg-zinc-50">
-          <Privacy />
-          <Comparison />
-        </div>
+        <Hero />
+        <HowItWorks />
+        <Comparison />
         <Features />
         <Questions />
-        <Closing font={font} />
+        <Closing />
       </main>
       <SiteFooter />
     </div>
   );
 }
 
-// The wordmark: the name in Geist, filled top to bottom with the app icon's
-// gradient (#1a78e0 to brand-600, #005fca). leading-none fits the fill to the
-// letters rather than the taller line box.
+// The wordmark: the name in Geist, in the homepage's heading blue.
 function Wordmark() {
   return (
     <Link
@@ -339,16 +334,14 @@ function Wordmark() {
         FOCUS_RING
       )}
     >
-      <span className="to-brand-600 dark:from-brand-200 dark:to-brand-400 bg-linear-to-b from-[#1a78e0] bg-clip-text leading-none text-transparent">
-        billsend
-      </span>
+      <span className="text-ink-blue">billsend</span>
     </Link>
   );
 }
 
-function SiteHeader({ font }: { font: InvoiceFont }) {
+function SiteHeader() {
   return (
-    <header>
+    <header className="relative z-10">
       <div className={cn(CONTAINER, "flex h-16 items-center gap-4")}>
         <div className="flex flex-1 items-center">
           <Wordmark />
@@ -362,7 +355,7 @@ function SiteHeader({ font }: { font: InvoiceFont }) {
               key={section.href}
               href={section.href}
               className={cn(
-                "rounded-full px-3 py-2 text-zinc-600 hover:text-zinc-950",
+                "hover:text-ink rounded-full px-3 py-2 text-zinc-600",
                 CONTROL_TEXT,
                 FOCUS_RING
               )}
@@ -372,7 +365,7 @@ function SiteHeader({ font }: { font: InvoiceFont }) {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end gap-1">
-          <HeaderAction font={font} />
+          <HeaderAction />
           <PhoneMenu />
         </div>
       </div>
@@ -439,7 +432,7 @@ function PhoneMenu() {
             href={section.href}
             onClick={() => setIsOpen(false)}
             className={cn(
-              "rounded-lg px-3 py-3 text-zinc-700 hover:bg-zinc-100 hover:text-zinc-950",
+              "hover:text-ink rounded-lg px-3 py-3 text-zinc-700 hover:bg-zinc-100",
               CONTROL_TEXT,
               FOCUS_RING
             )}
@@ -452,18 +445,15 @@ function PhoneMenu() {
   );
 }
 
-// The page's one primary action, shaped the same everywhere it appears: a slim
-// deep-navy button (the brand's darkest blue), its label in Geist. It carries the
-// typeface picked in the sample invoice into the editor.
-function CreateInvoiceLink({ font }: { font: InvoiceFont }) {
+// The page's one primary action, shaped the same everywhere it appears: a pill
+// in the homepage ink, larger on touch screens.
+function CreateInvoiceLink() {
   return (
     <Link
       to="/create"
-      search={{ font: font === DEFAULT_FONT ? undefined : font }}
       preload="viewport"
       className={cn(
-        "bg-brand-900 hover:bg-brand-800 font-geist relative inline-flex shrink-0 items-center rounded-md px-3.5 py-2 font-medium whitespace-nowrap text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(0_0_0/0.16)] transition-colors",
-        typeClass("caption"),
+        "bg-ink hover:bg-ink/85 relative inline-flex shrink-0 items-center rounded-full px-4 py-2.5 text-base font-medium whitespace-nowrap text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(0_0_0/0.16)] sm:py-2 sm:text-sm",
         FOCUS_RING
       )}
     >
@@ -479,13 +469,12 @@ function CreateInvoiceLink({ font }: { font: InvoiceFont }) {
 // The header's way into the editor: a quiet text link, so it never repeats
 // the hero's button right below it. Phones skip it: the hero's button is the
 // first thing under the header, and the link would crowd the menu button.
-function HeaderAction({ font }: { font: InvoiceFont }) {
+function HeaderAction() {
   return (
     <Link
       to="/create"
-      search={{ font: font === DEFAULT_FONT ? undefined : font }}
       className={cn(
-        "hover:text-brand-600 relative inline-flex items-center gap-1 rounded-sm px-1 py-2 font-medium whitespace-nowrap text-zinc-950 max-sm:hidden",
+        "hover:text-ink-blue text-ink relative inline-flex items-center gap-1 rounded-sm px-1 py-2 font-medium whitespace-nowrap max-sm:hidden",
         CONTROL_TEXT,
         FOCUS_RING
       )}
@@ -532,49 +521,91 @@ function SectionHeading({
   );
 }
 
-function Hero({ font }: { font: InvoiceFont }) {
+// The hero is one painting, the full width of the viewport, from behind the
+// header (the section pulls up under it) to the editor window's cut. The
+// painting is cut from an 8K master in four widths; covering a hero taller
+// than 16:9 draws it wider than the viewport (about 1960px by `lg`, 2250px
+// from there), hence the sizes. Phones get a 9:16 centre crop, since they
+// only ever show its middle. The copy
+// sits centred on its sky, over a fade to the canvas colour that keeps the
+// nav and headline legible, and the window rises from the painting's foot.
+function Hero() {
   return (
-    <section className="pt-12 sm:pt-20">
-      <div className={CONTAINER}>
-        <div className="flex flex-col gap-8 xl:flex-row xl:justify-between xl:gap-16">
-          <h1
-            className={cn(
-              HEADING,
-              typeClass("display"),
-              "hero-fade-up max-w-[20ch]"
-            )}
-          >
-            <span className="block">Send the invoice.</span>
-            <span className="text-brand-600 block">Keep everything else.</span>
-          </h1>
-          <div className="hero-fade-up flex flex-col items-start gap-6 [animation-delay:100ms] xl:justify-between">
-            <p className={cn(BODY_TEXT, "max-w-[48ch] text-balance")}>
-              A free invoice maker that runs in your browser. No account, no
-              upload, and your clients and bank details stay on your device.
+    <section className="-mt-16">
+      <div className="relative isolate overflow-hidden pt-16">
+        <picture>
+          <source
+            media="(max-width: 639px)"
+            srcSet="/home/hero-harbour-portrait-900.webp 900w, /home/hero-harbour-portrait-1350.webp 1350w"
+            sizes="100vw"
+            width={1350}
+            height={2400}
+          />
+          <img
+            src="/home/hero-harbour-2400.webp"
+            srcSet="/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w, /home/hero-harbour-4096.webp 4096w"
+            sizes="(max-width: 1023px) 1960px, max(100vw, 2250px)"
+            alt=""
+            width={4096}
+            height={2304}
+            decoding="async"
+            fetchPriority="high"
+            className="absolute inset-0 -z-10 size-full object-cover"
+          />
+        </picture>
+        <div
+          aria-hidden="true"
+          className="from-canvas/60 via-canvas/25 absolute inset-x-0 top-0 -z-10 h-1/2 bg-linear-to-b to-transparent"
+        />
+        <div
+          className={cn(
+            CONTAINER,
+            "flex flex-col items-center gap-10 pt-16 text-center sm:pt-24"
+          )}
+        >
+          <div className="flex flex-col items-center gap-6">
+            <h1 className={cn(HEADING, typeClass("display"), "hero-fade-up")}>
+              <span className="block">Send the invoice.</span>
+              <span className="text-ink-blue block">Keep everything else.</span>
+            </h1>
+            <p className="hero-fade-up text-ink/75 max-w-[48ch] text-lg/7 text-pretty [animation-delay:100ms]">
+              A free invoice maker that runs in your browser.{" "}
+              <br className="max-sm:hidden" />
+              No account, and your details never leave your device.
             </p>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <CreateInvoiceLink font={font} />
-              <a href="#try-it" className={cn(TEXT_LINK, "max-md:hidden")}>
-                Try the sample invoice
-              </a>
-            </div>
+          </div>
+          <div className="hero-fade-up flex flex-wrap items-center justify-center gap-x-6 gap-y-3 [animation-delay:150ms]">
+            <CreateInvoiceLink />
+            <a
+              href="#how-it-works"
+              className={cn(TEXT_LINK, "py-2.5 text-base sm:py-2 sm:text-sm")}
+            >
+              See how it works
+            </a>
           </div>
         </div>
         <HeroVisual />
+      </div>
+      <div className={CONTAINER}>
         <SavedInvoicesNote />
         <ul className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-zinc-950/10 py-8 lg:grid-cols-4">
           {FACTS.map(fact => (
             <li
               key={fact.label}
               className={cn(
-                "flex items-center gap-2 font-medium text-zinc-700",
+                "flex items-center gap-3 font-medium text-zinc-700",
                 CONTROL_TEXT
               )}
             >
-              <fact.icon
-                className="size-5 shrink-0 text-zinc-400 sm:size-4"
+              <span
                 aria-hidden="true"
-              />
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-lg",
+                  fact.tile
+                )}
+              >
+                <fact.icon className="size-4" />
+              </span>
               {fact.label}
             </li>
           ))}
@@ -585,28 +616,28 @@ function Hero({ font }: { font: InvoiceFont }) {
 }
 
 /**
- * The editor, shown rather than described: the real editor layout on a soft
- * blue backdrop, with a real billsend PDF of the invoice on its desk. From
- * `lg` the whole window sits centred in the 17:10 card. Below it the window
- * is drawn at a fixed zoom, the same distance (--pad) from the card's top and
- * left edges, and runs off its right and bottom ones, so phones and tablets
- * see a readable crop of its top-left corner; phones get a taller card.
+ * The editor, shown rather than described: the real editor layout with a real
+ * billsend PDF of the invoice on its desk, rising from the foot of the hero's
+ * painting. The window keeps to the page's column inside a 17:10 frame; on
+ * phones the frame is a fixed 638px of window tall (at the 0.6 zoom), which
+ * ends it just under the fourth line item. The frame's min-h-0 holds its
+ * height while the window overflows it, and the painting's overflow-hidden
+ * makes the cut. The window starts at the frame's top. From `lg` the whole
+ * window sits centred in the frame. Below it the window is drawn at a fixed
+ * zoom, inset --pad from the frame's left edge, and runs off the viewport's
+ * right edge and the frame's foot, so phones and tablets see a readable crop
+ * of its top-left corner.
  */
 function HeroVisual() {
   return (
-    <div className="hero-fade-up bg-brand-100 relative mt-12 aspect-4/5 overflow-hidden rounded-xl ring-1 ring-zinc-950/10 [animation-delay:200ms] sm:mt-16 sm:aspect-17/10">
-      <img
-        src="/home/hero-sky.webp"
-        alt=""
-        width={1792}
-        height={1008}
-        decoding="async"
-        className="absolute inset-0 size-full object-cover"
-      />
-      <figure
-        aria-label="The billsend editor with a sample invoice"
-        className="relative pt-(--pad) pl-(--pad) [--pad:--spacing(5)] sm:[--pad:--spacing(10)] lg:px-(--pad) lg:[--pad:--spacing(16)]"
-      >
+    <figure
+      aria-label="The billsend editor with a sample invoice"
+      className={cn(
+        CONTAINER,
+        "hero-fade-up relative mt-14 h-[calc(638px*0.6)] min-h-0 [animation-delay:200ms] sm:mt-16 sm:aspect-17/10 sm:h-auto"
+      )}
+    >
+      <div className="pl-(--pad) [--pad:--spacing(5)] sm:[--pad:--spacing(10)] lg:px-(--pad) lg:[--pad:--spacing(16)]">
         <div className="w-[calc(1024px*var(--zoom))] [--zoom:0.6] sm:[--zoom:0.7] md:[--zoom:0.92] lg:hidden">
           <ScaledFrame
             {...HERO_WINDOW}
@@ -626,16 +657,16 @@ function HeroVisual() {
             <PdfPaper render={PDF_RENDERS.hero} />
           </EditorWindow>
         </ScaledFrame>
-      </figure>
-    </div>
+      </div>
+    </figure>
   );
 }
 
-// The hero's editor window, drawn taller than any card shows so the card's
-// foot always cuts it: the tallest need is a 639px phone, whose 4:5 card shows
-// 1198px of window at 0.6. Each crop zoom is the smallest that still reaches
-// the card's right edge at the top of its range (571px of window at 639px,
-// 679px at 767px, 935px at 1023px).
+// The hero's editor window, drawn taller than any frame shows so the frame's
+// foot always cuts it: the tallest need is a phone's 638px of window. Each
+// crop zoom is the smallest that still reaches the frame's right edge at the
+// top of its range (571px of window at 639px, 679px at 767px, 935px at
+// 1023px).
 const HERO_WINDOW = { width: 1024, height: 1240 };
 
 /**
@@ -662,10 +693,6 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
     </div>
   );
 }
-
-// The page's figures: invoice details, line amounts and totals, up to the
-// page's right edge.
-const TRY_IT_PHONE_CROP = { x: 358, y: 296, width: 435.7, height: 511 };
 
 const EDITOR_FONTS: InvoiceFont[] = ["geist", "lora", "jetbrains-mono"];
 
@@ -699,7 +726,7 @@ function SavedInvoicesNote() {
         to="/create"
         search={{ open: "invoices" }}
         className={cn(
-          "text-brand-600 hover:text-brand-700 rounded-sm font-medium",
+          "text-ink-blue hover:text-ink rounded-sm font-medium",
           FOCUS_RING
         )}
       >
@@ -709,265 +736,176 @@ function SavedInvoicesNote() {
   );
 }
 
-// What happens after the sample, in the order a visitor does it.
-const STEPS: { title: string; description: string }[] = [
+// From a blank page to a sent invoice, in the order a visitor does it. Each
+// step shows a slip of the app doing it, on a wash of one of the secondary
+// hues, like the feature cards further down.
+const STEPS: {
+  title: string;
+  description: string;
+  specimen: ReactNode;
+  hue: keyof typeof WASHES;
+}[] = [
   {
     title: "Add the details",
     description:
-      "Your details, your client and the line items. billsend does the sums as you type."
+      "Your details, your client and the line items. billsend does the sums as you type.",
+    specimen: <DetailsSpecimen />,
+    hue: "butter"
   },
   {
     title: "Send the PDF",
     description:
-      "Download an A4 PDF or print it, then send it to your client however you like."
+      "Download an A4 PDF or print it, then send it to your client however you like.",
+    specimen: <PdfSpecimen />,
+    hue: "blush"
   },
   {
     title: "Keep a copy",
     description:
-      "Invoices and templates save in this browser, so a repeat client’s next invoice starts from the last one. Export a backup from the File menu whenever you want one elsewhere."
+      "Invoices save in this browser, so a repeat client’s next invoice starts from the last one.",
+    specimen: <SavedSpecimen />,
+    hue: "sage"
   }
 ];
 
-/**
- * The sample invoice, made editable: what the visitor types and picks stays on
- * this page. The typeface carries into the editor through every Create invoice
- * link.
- */
-function TryIt({
-  font,
-  onFontChange
-}: {
-  font: InvoiceFont;
-  onFontChange: (font: InvoiceFont) => void;
-}) {
-  const [clientName, setClientName] = useState("");
-  const [currency, setCurrency] = useState<Currency>("USD");
-  const formRef = useRef<HTMLFormElement>(null);
+// The slip each step's specimen sits on: the app's own surface, in Geist.
+const SLIP = cn(
+  PAPER_SHADOW,
+  "font-geist flex w-full max-w-64 flex-col rounded-lg bg-white p-3 text-xs text-zinc-950"
+);
 
-  // The form is server-rendered, so a visitor can type or pick before React
-  // attaches. Hydration leaves those native edits on screen without firing
-  // onChange, so adopt them once on mount rather than show one thing and use
-  // another.
-  useEffect(() => {
-    if (!formRef.current) return;
-
-    const formData = new FormData(formRef.current);
-    const typedName = formData.get("client");
-    const pickedFont = DEMO_FONTS.find(
-      demoFont => demoFont === formData.get("typeface")
-    );
-    const pickedCurrency = CURRENCIES.find(
-      option => option === formData.get("currency")
-    );
-
-    if (typeof typedName === "string") setClientName(typedName);
-    if (pickedFont) onFontChange(pickedFont);
-    if (pickedCurrency) setCurrency(pickedCurrency);
-  }, []);
-
+function HowItWorks() {
   return (
-    <section id="try-it" className="py-16 sm:py-20">
+    <section id="how-it-works" className="py-16 sm:py-20">
       <div className={CONTAINER}>
         <SectionHeading
-          title={
-            <>
-              <span className="max-md:hidden">Try it on this page.</span>
-              <span className="md:hidden">Nothing leaves this page.</span>
-            </>
-          }
-          description={
-            <>
-              <span className="max-md:hidden">
-                Type a client’s name and change the typeface or currency. It all
-                happens in your browser, and nothing you type is sent anywhere.
-              </span>
-              <span className="md:hidden">
-                Everything you make in billsend stays in your browser. On a
-                computer, you can edit this sample invoice right here.
-              </span>
-            </>
-          }
+          title="How it works."
+          description="No sign-up and nothing to install. Open the editor and start typing."
         />
-        <div className="mt-12 overflow-hidden rounded-xl bg-white ring-1 ring-zinc-950/10 sm:mt-16">
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-zinc-950/10 px-6 py-5">
-            <div className="flex flex-col">
-              <p className={cn(typeClass("body"), "font-medium")}>
-                Sample invoice
-              </p>
-              <p
-                className={cn(typeClass("body"), "text-zinc-500 max-md:hidden")}
-              >
-                The typeface you pick opens with you in the editor.
-              </p>
-              <p className={cn(typeClass("body"), "text-zinc-500 md:hidden")}>
-                As it looks in the editor.
-              </p>
-            </div>
-            <Link
-              to="/create"
-              search={{ font: font === DEFAULT_FONT ? undefined : font }}
-              className={TEXT_LINK}
-            >
-              Continue in the editor
-            </Link>
-          </div>
-          <div className="grid lg:grid-cols-[20rem_minmax(0,1fr)]">
-            <form
-              ref={formRef}
-              onSubmit={event => event.preventDefault()}
-              className="flex flex-col gap-8 border-zinc-950/10 bg-zinc-50 p-6 max-lg:border-b max-md:hidden lg:border-r"
-            >
-              <div className="flex flex-col gap-2">
-                <label
-                  htmlFor="demo-client"
-                  className={cn(CONTROL_TEXT, "font-medium")}
-                >
-                  Bill to
-                </label>
-                <input
-                  id="demo-client"
-                  name="client"
-                  type="text"
-                  value={clientName}
-                  onChange={event => setClientName(event.target.value)}
-                  placeholder="Type a client’s name"
-                  autoComplete="off"
-                  spellCheck={false}
-                  className={cn(
-                    "focus-visible:outline-brand-600 rounded-lg bg-white px-3 py-2.5 ring-1 ring-zinc-950/10 placeholder:text-zinc-400 focus-visible:outline-2 focus-visible:-outline-offset-1 sm:py-2",
-                    CONTROL_TEXT
-                  )}
-                />
-              </div>
-              <fieldset className="flex flex-col gap-2">
-                <legend className={cn(CONTROL_TEXT, "font-medium")}>
-                  Typeface
-                </legend>
-                <div className="mt-2 flex flex-col gap-2">
-                  {DEMO_FONTS.map(demoFont => {
-                    const definition = getInvoiceFontDefinition(demoFont);
-
-                    return (
-                      <label
-                        key={demoFont}
-                        className="has-checked:ring-brand-600 has-focus-visible:outline-brand-600 flex cursor-pointer items-center justify-between gap-3 rounded-lg bg-white px-3 py-2.5 ring-1 ring-zinc-950/10 has-checked:ring-2 has-focus-visible:outline-2 has-focus-visible:outline-offset-2"
-                      >
-                        <span className="flex flex-col">
-                          <span
-                            className={cn(
-                              typeClass("subtitle", "compact"),
-                              "font-medium"
-                            )}
-                            style={{ fontFamily: definition.cssFamily }}
-                          >
-                            {definition.name}
-                          </span>
-                          <span
-                            className={cn(
-                              typeClass("caption"),
-                              "text-zinc-500 capitalize"
-                            )}
-                          >
-                            {definition.category.replace("-", " ")}
-                          </span>
-                        </span>
-                        <input
-                          type="radio"
-                          name="typeface"
-                          value={demoFont}
-                          checked={font === demoFont}
-                          onChange={() => onFontChange(demoFont)}
-                          className="peer sr-only"
-                        />
-                        <IconCheck
-                          className="text-brand-600 size-5 shrink-0 peer-not-checked:invisible sm:size-4"
-                          aria-hidden="true"
-                        />
-                      </label>
-                    );
-                  })}
-                </div>
-              </fieldset>
-              <fieldset className="flex flex-col gap-2">
-                <legend className={cn(CONTROL_TEXT, "font-medium")}>
-                  Currency
-                </legend>
-                <div className="mt-2 grid grid-cols-4 gap-1 rounded-lg bg-zinc-200/60 p-1">
-                  {CURRENCIES.map(option => (
-                    <label
-                      key={option}
-                      className={cn(
-                        "has-focus-visible:outline-brand-600 flex cursor-pointer justify-center rounded-md py-2 font-medium text-zinc-600 has-checked:bg-white has-checked:text-zinc-950 has-checked:shadow-sm has-checked:ring-1 has-checked:ring-black/5 has-focus-visible:outline-2 sm:py-1.5",
-                        CONTROL_TEXT
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="currency"
-                        value={option}
-                        checked={currency === option}
-                        onChange={() => setCurrency(option)}
-                        className="sr-only"
-                      />
-                      {option}
-                    </label>
-                  ))}
-                </div>
-              </fieldset>
-            </form>
-            <div className="flex min-w-0 items-start justify-center bg-zinc-100 p-(--pad) [--pad:--spacing(4)] sm:[--pad:--spacing(10)]">
-              <ScaledFrame
-                width={PAGE_WIDTH}
-                height={PAGE_HEIGHT}
-                className="shadow-md max-md:hidden"
-              >
-                <InvoicePage
-                  invoice={{
-                    ...TRY_IT_SAMPLE,
-                    font,
-                    currencyCode: currency,
-                    clientName
-                  }}
-                />
-              </ScaledFrame>
-              <ScaledFrame
-                {...TRY_IT_PHONE_CROP}
-                fill
-                className="-my-(--pad) -ml-(--pad) grow md:hidden"
-              >
-                <InvoicePage invoice={TRY_IT_SAMPLE} />
-              </ScaledFrame>
-            </div>
-          </div>
-        </div>
-        <ol className="mt-10 grid gap-x-6 gap-y-8 sm:mt-12 md:grid-cols-3">
+        <ol className="mt-12 grid gap-6 sm:mt-16 md:grid-cols-3">
           {STEPS.map((step, index) => (
-            <li key={step.title} className="flex flex-col gap-2">
-              <h3
+            <li
+              key={step.title}
+              className="flex flex-col overflow-hidden rounded-xl bg-white ring-1 ring-zinc-950/10"
+            >
+              <div
+                aria-hidden="true"
                 className={cn(
-                  typeClass("subtitle"),
-                  "flex items-center gap-3 font-medium"
+                  "relative isolate flex h-48 items-center justify-center p-6",
+                  WASHES[step.hue].tint
                 )}
               >
-                <span
-                  aria-hidden="true"
+                <Wash hue={step.hue} />
+                {step.specimen}
+              </div>
+              <div className="flex flex-col gap-2 p-6">
+                <h3
                   className={cn(
-                    typeClass("caption"),
-                    "bg-brand-50 text-brand-600 flex size-7 shrink-0 items-center justify-center rounded-full font-semibold tabular-nums"
+                    typeClass("subtitle"),
+                    "flex items-center gap-3 font-medium"
                   )}
                 >
-                  {index + 1}
-                </span>
-                {step.title}
-              </h3>
-              <p className={cn(BODY_TEXT, "max-w-[44ch]")}>
-                {step.description}
-              </p>
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      typeClass("caption"),
+                      "bg-brand-50 text-ink-blue flex size-7 shrink-0 items-center justify-center rounded-full font-semibold tabular-nums"
+                    )}
+                  >
+                    {index + 1}
+                  </span>
+                  {step.title}
+                </h3>
+                <p className={BODY_TEXT}>{step.description}</p>
+              </div>
             </li>
           ))}
         </ol>
       </div>
     </section>
+  );
+}
+
+function Wash({ hue }: { hue: keyof typeof WASHES }) {
+  return (
+    <img
+      src={WASHES[hue].src}
+      alt=""
+      width={1200}
+      height={900}
+      loading="lazy"
+      decoding="async"
+      className="absolute inset-0 -z-10 size-full object-cover"
+    />
+  );
+}
+
+// A client typed in, and the lines summing as they go.
+function DetailsSpecimen() {
+  return (
+    <div className={cn(SLIP, "gap-2")}>
+      <span className="text-zinc-500">Bill to</span>
+      <span className="ring-brand-600 rounded-md px-2 py-1.5 font-medium ring-2">
+        Harbor & Pine Co.
+        <span className="bg-brand-600 ml-px inline-block h-3.5 w-px translate-y-0.5" />
+      </span>
+      <div className="mt-1 flex flex-col gap-1.5 border-t border-zinc-950/10 pt-2.5 tabular-nums">
+        <span className="flex justify-between gap-4">
+          Editorial illustrations
+          <span>$1,800.00</span>
+        </span>
+        <span className="flex justify-between gap-4">
+          Cover artwork
+          <span>$950.00</span>
+        </span>
+        <span className="flex justify-between gap-4 font-semibold">
+          Total
+          <span>$2,750.00 USD</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// The finished file, ready to download.
+function PdfSpecimen() {
+  return (
+    <div className={cn(SLIP, "gap-3")}>
+      <div className="flex items-center gap-3">
+        <span className="bg-blush-tint text-blush-ink flex size-9 shrink-0 items-center justify-center rounded-md">
+          <IconFileTypePdf className="size-5" />
+        </span>
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate font-medium">INV-0043.pdf</span>
+          <span className="text-zinc-500">A4, 1 page</span>
+        </span>
+      </div>
+      <span className="bg-brand-600 rounded-md py-1.5 text-center font-medium text-white">
+        Download
+      </span>
+    </div>
+  );
+}
+
+// Past invoices waiting in the browser, a repeat client among them.
+function SavedSpecimen() {
+  return (
+    <div className={cn(SLIP, "gap-1")}>
+      <span className="pb-1 text-zinc-500">Saved in this browser</span>
+      {[
+        { number: "INV-0043", client: "Harbor & Pine Co." },
+        { number: "INV-0042", client: "Fieldnote Press" },
+        { number: "INV-0041", client: "Harbor & Pine Co." }
+      ].map(saved => (
+        <span
+          key={saved.number}
+          className="flex items-center justify-between gap-3 rounded-md px-2 py-1.5 odd:bg-zinc-50"
+        >
+          <span className="font-medium tabular-nums">{saved.number}</span>
+          <span className="truncate text-zinc-500">{saved.client}</span>
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -988,11 +926,24 @@ function Features() {
               <div
                 aria-hidden="true"
                 className={cn(
-                  "flex items-center overflow-hidden rounded-xl p-(--pad) ring-1 ring-zinc-950/10 [--pad:--spacing(6)] sm:[--pad:--spacing(8)]",
-                  feature.isPageCrop ? "bg-desk" : "min-h-48 bg-zinc-50"
+                  "relative isolate flex items-center overflow-hidden rounded-xl p-(--pad) ring-1 ring-zinc-950/5 [--pad:--spacing(6)] sm:[--pad:--spacing(8)]",
+                  WASHES[feature.hue].tint,
+                  !feature.isPageCrop && "min-h-48 max-sm:[--pad:--spacing(4)]"
                 )}
               >
-                {feature.specimen}
+                <Wash hue={feature.hue} />
+                {feature.isPageCrop ? (
+                  feature.specimen
+                ) : (
+                  <div
+                    className={cn(
+                      PAPER_SHADOW,
+                      "w-full rounded-lg bg-white p-4 sm:p-6"
+                    )}
+                  >
+                    {feature.specimen}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <dt className={cn(typeClass("subtitle"), "font-medium")}>
@@ -1005,7 +956,7 @@ function Features() {
             </div>
           ))}
         </dl>
-        <div className="mt-12 flex flex-col gap-6 border-t border-zinc-950/10 pt-8 sm:mt-16">
+        <div className="mt-12 flex flex-col gap-6 rounded-xl bg-white p-6 ring-1 ring-zinc-950/10 sm:mt-16 sm:p-8">
           <h3 className={cn(typeClass("subtitle"), "font-medium")}>
             Also in the editor
           </h3>
@@ -1033,13 +984,15 @@ function Features() {
 }
 
 // The invoice title in three of the editor's faces, set as the editor sets it.
+// The size follows the card's width so three titles fit a phone's paper slip:
+// the monospace "Invoice" is 4.2em wide, so three plus two gaps need 12.6em.
 function TypeSpecimen() {
   return (
-    <div className="grid w-full grid-cols-3 gap-4">
+    <div className="@container grid w-full grid-cols-3 gap-4">
       {EDITOR_FONTS.map(specimenFont => (
         <div key={specimenFont} className="flex flex-col gap-2">
           <p
-            className="text-2xl sm:text-3xl"
+            className="text-[length:min(1.875rem,calc((100cqi-2rem)/12.6))] leading-tight"
             style={{ ...getTitleStyle(specimenFont), fontSize: undefined }}
           >
             Invoice
@@ -1100,72 +1053,19 @@ function PdfCrop({
 // on every side but the page's right edge.
 function TotalsSpecimen() {
   return (
-    <PdfCrop render={PDF_RENDERS.totals} className="-my-(--pad) -ml-(--pad)" />
+    <PdfCrop
+      render={PDF_RENDERS.totals}
+      className={cn(PAPER_SHADOW, "-my-(--pad) -ml-(--pad) sm:mr-[16%]")}
+    />
   );
 }
 
 function PaymentSpecimen() {
   return (
-    <PdfCrop render={PDF_RENDERS.payment} className="-my-(--pad) -mr-(--pad)" />
-  );
-}
-
-function Privacy() {
-  return (
-    <section id="privacy" className="py-16 sm:py-20">
-      <div className={CONTAINER}>
-        <SectionHeading
-          title="Check the privacy yourself."
-          description="Don’t take our word for it. Each takes under a minute, and two of the three work on a phone."
-        />
-        <ol className="mt-12 grid gap-x-6 gap-y-10 sm:mt-16 sm:grid-cols-2 lg:grid-cols-3">
-          {CHECKS.map(check => (
-            <li
-              key={check.title}
-              className="flex flex-col gap-2 border-t border-zinc-950/10 pt-6"
-            >
-              <h3 className={cn(typeClass("subtitle"), "font-medium")}>
-                {check.title}
-              </h3>
-              <p className={BODY_TEXT}>{check.description}</p>
-              {check.detail && (
-                <details className="group">
-                  <summary
-                    className={cn(
-                      "hover:text-brand-600 inline-flex cursor-pointer list-none items-center gap-1 rounded-sm font-medium text-zinc-950 [&::-webkit-details-marker]:hidden",
-                      typeClass("body"),
-                      FOCUS_RING
-                    )}
-                  >
-                    {check.detail.summary}
-                    <IconPlus
-                      className="size-4 shrink-0 transition-transform group-open:rotate-45"
-                      aria-hidden="true"
-                    />
-                  </summary>
-                  <p className={cn(BODY_TEXT, "pt-2")}>{check.detail.text}</p>
-                </details>
-              )}
-              {check.link && (
-                <a
-                  href={check.link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(TEXT_LINK, "self-start")}
-                >
-                  {check.link.label}
-                  <IconArrowUpRight
-                    className="size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              )}
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+    <PdfCrop
+      render={PDF_RENDERS.payment}
+      className={cn(PAPER_SHADOW, "-my-(--pad) -mr-(--pad) sm:ml-[16%]")}
+    />
   );
 }
 
@@ -1187,7 +1087,7 @@ function Comparison() {
         <div
           role="table"
           aria-label={tableLabel}
-          className="mx-auto mt-12 max-w-4xl sm:mt-16"
+          className="mx-auto mt-12 max-w-4xl rounded-2xl bg-white p-2 ring-1 ring-zinc-950/10 sm:mt-16 sm:p-6 md:p-8"
           style={
             {
               "--comparison-columns": COMPARISON_COLUMNS.length
@@ -1208,7 +1108,7 @@ function Comparison() {
                     // then 12px) so they fit the narrowest columns.
                     "flex items-end justify-center px-0.5 pt-4 pb-3 text-center text-[11px]/4 font-medium text-balance min-[400px]:px-1 min-[400px]:text-xs/4 sm:text-sm/5 md:px-4",
                     index === 0
-                      ? "text-brand-700 rounded-t-xl bg-blue-50 font-semibold"
+                      ? "text-ink-blue rounded-t-xl bg-blue-50 font-semibold"
                       : "text-zinc-500"
                   )}
                 >
@@ -1232,7 +1132,7 @@ function Comparison() {
                     role="rowheader"
                     className={cn(
                       typeClass("caption"),
-                      "self-center py-4 pr-2 text-balance wrap-break-word text-zinc-950 min-[400px]:pr-3 md:pr-6"
+                      "text-ink self-center py-4 pr-2 text-balance wrap-break-word min-[400px]:pr-3 md:pr-6"
                     )}
                   >
                     {row.label}
@@ -1260,10 +1160,14 @@ function Comparison() {
   );
 }
 
+// Colour carries the answer: sage yes, blush no, butter where tools vary. The
+// shapes differ too, so the table reads without colour.
 function ComparisonCell({ value }: { value: ComparisonValue }) {
   if (typeof value === "string") {
     return (
-      <span className={cn(typeClass("caption"), "text-zinc-500")}>{value}</span>
+      <span className={cn(typeClass("caption"), "text-butter-ink font-medium")}>
+        {value}
+      </span>
     );
   }
 
@@ -1271,7 +1175,7 @@ function ComparisonCell({ value }: { value: ComparisonValue }) {
     return (
       <>
         <IconCheck
-          className="text-brand-600 mx-auto size-5 shrink-0"
+          className="text-sage-ink mx-auto size-5 shrink-0"
           aria-hidden="true"
         />
         <span className="sr-only">Yes</span>
@@ -1282,7 +1186,7 @@ function ComparisonCell({ value }: { value: ComparisonValue }) {
   return (
     <>
       <IconX
-        className="mx-auto size-5 shrink-0 text-zinc-300"
+        className="text-blush-ink mx-auto size-5 shrink-0"
         aria-hidden="true"
       />
       <span className="sr-only">No</span>
@@ -1321,12 +1225,9 @@ function Questions() {
               >
                 {group.title}
               </h3>
-              <div className="flex flex-col border-b border-zinc-950/10">
+              <div className="flex flex-col gap-px overflow-hidden rounded-xl bg-zinc-950/10 ring-1 ring-zinc-950/10">
                 {group.questions.map(item => (
-                  <details
-                    key={item.question}
-                    className="group border-t border-zinc-950/10"
-                  >
+                  <details key={item.question} className="group bg-white px-5">
                     <summary
                       className={cn(
                         "flex cursor-pointer list-none items-center justify-between gap-6 rounded-sm py-5 font-medium [&::-webkit-details-marker]:hidden",
@@ -1356,59 +1257,54 @@ function Questions() {
   );
 }
 
-// The closing band mirrors the hero: dark headline, brand-blue second line.
-// The page rising from the panel's foot is a real billsend PDF set in the
-// typeface picked in Try it. Its box is sized from the page's own width, so it
-// always shows the same top share of the page, and the page runs past the box
-// to be cut by the panel's foot: 4:3 shows about half on phones, 16:9 about
-// 40% from `sm`. Like the hero, the copy sits on the page above the panel.
-function Closing({ font }: { font: InvoiceFont }) {
-  const fontName = getInvoiceFontDefinition(font).name;
-  const closingRender = getClosingRender(font);
-  const caption =
-    font === DEFAULT_FONT
-      ? "Free, with no account. Opens straight into the editor."
-      : `Free, with no account. Opens straight into the editor, set in ${fontName}.`;
-
+// The closing band mirrors the hero: dark headline, blue second line, and a
+// painting that runs the full width of the viewport. The page rising from the
+// panel's foot is a real billsend PDF. Its box is sized from the page's own
+// width, so it always shows the same top share of the page, and the page runs
+// past the box to be cut by the panel's foot: 4:3 shows about half on phones,
+// 16:9 about 40% from `sm`. Like the hero, the copy sits above the panel.
+function Closing() {
   return (
-    <section className="bg-blue-50/50 pt-16 sm:pt-20">
+    <section className="bg-white pt-16 sm:pt-20">
       <div className={CONTAINER}>
         <div className="flex flex-col gap-8 xl:flex-row xl:justify-between xl:gap-16">
           <h2 className={cn(HEADING, typeClass("display"), "max-w-[20ch]")}>
             <span className="block">Your next invoice</span>
-            <span className="text-brand-600 block">starts here.</span>
+            <span className="text-ink-blue block">starts here.</span>
           </h2>
           <div className="flex flex-col items-start gap-6 xl:justify-end">
-            <p className={cn(BODY_TEXT, "max-w-[48ch]")}>{caption}</p>
-            <CreateInvoiceLink font={font} />
+            <p className={cn(BODY_TEXT, "max-w-[48ch]")}>
+              Free, with no account. Opens straight into the editor.
+            </p>
+            <CreateInvoiceLink />
           </div>
         </div>
-        <div className="relative isolate mt-12 flex justify-center overflow-hidden rounded-t-xl border border-zinc-950/10 bg-blue-100 px-6 pt-12 pb-16 sm:mt-16 sm:pt-16 sm:pb-20">
+      </div>
+      <div className="relative isolate mt-12 flex justify-center overflow-hidden bg-blue-100 px-6 pt-12 pb-16 sm:mt-16 sm:pt-16 sm:pb-20">
+        <img
+          src="/home/closing-city.webp"
+          alt=""
+          width={1792}
+          height={1008}
+          loading="lazy"
+          decoding="async"
+          className="absolute inset-0 -z-10 size-full object-cover"
+        />
+        <div
+          aria-hidden="true"
+          className="relative aspect-4/3 w-full max-w-md sm:aspect-video sm:max-w-xl lg:max-w-2xl"
+        >
           <img
-            src="/home/closing-skyline.webp"
+            src={CLOSING_RENDER.src}
             alt=""
-            width={1792}
-            height={1008}
+            width={CLOSING_RENDER.width}
+            height={Math.round(
+              (CLOSING_RENDER.width * PAGE_HEIGHT) / PAGE_WIDTH
+            )}
             loading="lazy"
             decoding="async"
-            className="absolute inset-0 -z-10 size-full object-cover"
+            className="absolute inset-x-0 top-0 h-auto w-full shadow-[0_24px_64px_-12px_rgb(0_0_0/0.5)] outline-1 -outline-offset-1 outline-zinc-950/5"
           />
-          <div
-            aria-hidden="true"
-            className="relative aspect-4/3 w-full max-w-md sm:aspect-video sm:max-w-xl lg:max-w-2xl"
-          >
-            <img
-              src={closingRender.src}
-              alt=""
-              width={closingRender.width}
-              height={Math.round(
-                (closingRender.width * PAGE_HEIGHT) / PAGE_WIDTH
-              )}
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-x-0 top-0 h-auto w-full shadow-[0_24px_64px_-12px_rgb(0_0_0/0.5)] outline-1 -outline-offset-1 outline-zinc-950/5"
-            />
-          </div>
         </div>
       </div>
     </section>
@@ -1460,7 +1356,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "inline-flex min-h-11 items-center rounded-sm hover:text-zinc-950 sm:min-h-10",
+        "hover:text-ink inline-flex min-h-11 items-center rounded-sm sm:min-h-10",
         FOCUS_RING
       )}
     >
