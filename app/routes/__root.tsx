@@ -1,11 +1,20 @@
 import geistFont from "@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url";
-import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+  HeadContent,
+  ScriptOnce,
+  Scripts,
+  createRootRoute
+} from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { StrictMode } from "react";
 import { Toaster } from "sonner";
 import { NotFound } from "~/components/not-found";
 import { RootErrorBoundary } from "~/components/root-error-boundary";
 import appCss from "~/styles/globals.css?url";
+import {
+  HIDE_UNTIL_SCROLL_RESTORED_SCRIPT,
+  REVEAL_AFTER_SCROLL_RESTORED_SCRIPT
+} from "~/utils/scroll-restoration-cloak";
 import { siteMeta } from "~/utils/site-meta";
 
 export const Route = createRootRoute({
@@ -54,7 +63,8 @@ export const Route = createRootRoute({
         href: "/apple-touch-icon.png"
       },
       { rel: "manifest", href: "/site.webmanifest" }
-    ]
+    ],
+    scripts: [{ children: HIDE_UNTIL_SCROLL_RESTORED_SCRIPT }]
   }),
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
@@ -69,8 +79,8 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         <StrictMode>{children}</StrictMode>
+        <ScriptOnce>{REVEAL_AFTER_SCROLL_RESTORED_SCRIPT}</ScriptOnce>
         <Toaster richColors />
-
         <Scripts />
       </body>
     </html>

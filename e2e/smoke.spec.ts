@@ -34,7 +34,7 @@ test("create, edit, save, leave, return, and download an invoice", async ({
   await expect(page).toHaveURL("/");
   await page
     .getByRole("banner")
-    .getByRole("link", { name: "Create invoice", exact: true })
+    .getByRole("link", { name: "Open the editor", exact: true })
     .click();
 
   await expect(page).toHaveURL("/create");
