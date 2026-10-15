@@ -39,6 +39,8 @@ export const Route = createFileRoute("/")({
   component: HomePage,
   // The homepage is set in Inter, so its latin subset preloads here rather
   // than in the root head, where every route would download it.
+  // The hero painting preloads too, so it downloads alongside the CSS rather
+  // than after it; each preload mirrors one branch of the hero's <picture>.
   head: () => ({
     links: [
       {
@@ -47,12 +49,39 @@ export const Route = createFileRoute("/")({
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous"
+      },
+      {
+        rel: "preload",
+        as: "image",
+        type: "image/webp",
+        media: "(max-width: 639px)",
+        imageSrcSet: HERO_PORTRAIT_SRCSET,
+        imageSizes: "100vw",
+        fetchPriority: "high"
+      },
+      {
+        rel: "preload",
+        as: "image",
+        type: "image/webp",
+        media: "(min-width: 640px)",
+        imageSrcSet: HERO_LANDSCAPE_SRCSET,
+        imageSizes: HERO_LANDSCAPE_SIZES,
+        fetchPriority: "high"
       }
     ]
   })
 });
 
 const SOURCE_URL = "https://github.com/ikraamdaanis/billsend";
+
+// The hero painting's sizes, shared by its <picture> and the head's preloads.
+const HERO_PORTRAIT_SRCSET =
+  "/home/hero-harbour-portrait-900.webp 900w, /home/hero-harbour-portrait-1350.webp 1350w";
+
+const HERO_LANDSCAPE_SRCSET =
+  "/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w, /home/hero-harbour-4096.webp 4096w";
+
+const HERO_LANDSCAPE_SIZES = "(max-width: 1023px) 1960px, max(100vw, 2250px)";
 
 const CONTAINER = "mx-auto max-w-6xl px-6 lg:px-8";
 
@@ -532,19 +561,19 @@ function SectionHeading({
 function Hero() {
   return (
     <section className="-mt-16">
-      <div className="relative isolate overflow-hidden pt-16">
+      <div className="bg-hero-placeholder relative isolate overflow-hidden pt-16">
         <picture>
           <source
             media="(max-width: 639px)"
-            srcSet="/home/hero-harbour-portrait-900.webp 900w, /home/hero-harbour-portrait-1350.webp 1350w"
+            srcSet={HERO_PORTRAIT_SRCSET}
             sizes="100vw"
             width={1350}
             height={2400}
           />
           <img
             src="/home/hero-harbour-2400.webp"
-            srcSet="/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w, /home/hero-harbour-4096.webp 4096w"
-            sizes="(max-width: 1023px) 1960px, max(100vw, 2250px)"
+            srcSet={HERO_LANDSCAPE_SRCSET}
+            sizes={HERO_LANDSCAPE_SIZES}
             alt=""
             width={4096}
             height={2304}
