@@ -14,3 +14,11 @@
   Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
 /fonts/*
   Cache-Control: public, max-age=2592000, stale-while-revalidate=604800
+
+# The homepage is pre-rendered (vite.config.ts) and served as a static file,
+# so the Worker that adds this policy to every other page never sees it. Keep
+# it identical to consts/content-security-policy.ts; a unit test checks.
+/
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
+/index.html
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' data: blob:; worker-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'
