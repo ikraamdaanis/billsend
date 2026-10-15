@@ -299,22 +299,21 @@ const QUESTION_GROUPS: {
   }
 ];
 
-// How many invoices this browser has saved: null until known, "blocked" when
-// the browser refuses storage. The database module loads on demand so
-// first-time visitors never download it.
-function useSavedInvoiceCount() {
-  const [count, setCount] = useState<number | "blocked" | null>(null);
+// Whether this browser refuses storage: null until known. The database module
+// loads on demand so first-time visitors never download it.
+function useStorageBlocked() {
+  const [blocked, setBlocked] = useState<boolean | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     import("~/db")
       .then(database => database.countInvoices())
-      .then(total => {
-        if (!cancelled) setCount(total);
+      .then(() => {
+        if (!cancelled) setBlocked(false);
       })
       .catch(() => {
-        if (!cancelled) setCount("blocked");
+        if (!cancelled) setBlocked(true);
       });
 
     return () => {
@@ -322,7 +321,7 @@ function useSavedInvoiceCount() {
     };
   }, []);
 
-  return count;
+  return blocked;
 }
 
 function HomePage() {
@@ -558,7 +557,9 @@ function SectionHeading({
 // 2x screen a 4096px cut looked no different and weighed twice as much.
 // Covering a hero taller than 16:9 draws it wider than the viewport (about
 // 1960px by `lg`, 2250px from there), hence the sizes. Phones get a 9:16
-// centre crop, since they only ever show its middle.
+// centre crop, since they only ever show its middle. It decodes in step with
+// the page (no decoding="async"), so a reload with the file cached paints it
+// in the first frame instead of flashing the placeholder for a frame or two.
 function Hero() {
   return (
     <section className="-mt-16">
@@ -578,7 +579,6 @@ function Hero() {
             alt=""
             width={3200}
             height={1800}
-            decoding="async"
             fetchPriority="high"
             className="absolute inset-0 -z-10 size-full object-cover"
           />
@@ -617,7 +617,7 @@ function Hero() {
         <HeroVisual />
       </div>
       <div className={CONTAINER}>
-        <SavedInvoicesNote />
+        <StorageBlockedNote />
         <ul className="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-zinc-950/10 py-8 lg:grid-cols-4">
           {FACTS.map(fact => (
             <li
@@ -701,7 +701,8 @@ const HERO_WINDOW = { width: 1024, height: 1240 };
 
 /**
  * A real billsend PDF in the editor canvas's place: a screenshot of the top of
- * the page on the same paper, shown first thing, so it loads straight away.
+ * the page on the same paper, shown first thing, so it loads straight away
+ * and, like the hero painting, decodes in step with the page.
  */
 function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
   return (
@@ -717,7 +718,6 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
           (render.width * render.crop.height) / render.crop.width
         )}
         fetchPriority="high"
-        decoding="async"
         className="block h-auto w-full"
       />
     </div>
@@ -726,42 +726,21 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
 
 const EDITOR_FONTS: InvoiceFont[] = ["geist", "lora", "jetbrains-mono"];
 
-// Returning visitors get a way back to their work, and a browser that refuses
-// storage gets told what that means and how to fix it.
-function SavedInvoicesNote() {
-  const count = useSavedInvoiceCount();
+// A browser that refuses storage gets told what that means and how to fix it.
+function StorageBlockedNote() {
+  const blocked = useStorageBlocked();
 
-  if (count === "blocked") {
-    return (
-      <p className={cn(BODY_TEXT, "mt-6 flex items-start gap-2")}>
-        <IconAlertTriangle
-          className="size-5 h-lh shrink-0 text-amber-600 sm:size-4"
-          aria-hidden="true"
-        />
-        This browser is blocking storage, so invoices can’t be saved here. You
-        can still make one and download the PDF. To save them, leave private
-        browsing or allow this site to store data, then reload.
-      </p>
-    );
-  }
-
-  if (typeof count !== "number" || count === 0) return null;
+  if (!blocked) return null;
 
   return (
-    <p className={cn(BODY_TEXT, "mt-6")}>
-      {count === 1
-        ? "You have 1 invoice saved in this browser."
-        : `You have ${count} invoices saved in this browser.`}{" "}
-      <Link
-        to="/create"
-        search={{ open: "invoices" }}
-        className={cn(
-          "text-ink-blue hover:text-ink rounded-sm font-medium",
-          FOCUS_RING
-        )}
-      >
-        Open your invoices
-      </Link>
+    <p className={cn(BODY_TEXT, "mt-6 flex items-start gap-2")}>
+      <IconAlertTriangle
+        className="size-5 h-lh shrink-0 text-amber-600 sm:size-4"
+        aria-hidden="true"
+      />
+      This browser is blocking storage, so invoices can’t be saved here. You can
+      still make one and download the PDF. To save them, leave private browsing
+      or allow this site to store data, then reload.
     </p>
   );
 }
@@ -1333,7 +1312,7 @@ function Closing() {
               (CLOSING_RENDER.width * PAGE_HEIGHT) / PAGE_WIDTH
             )}
             fetchPriority="low"
-            className="absolute inset-x-0 top-0 h-auto w-full shadow-[0_24px_64px_-12px_rgb(0_0_0/0.5)] outline-1 -outline-offset-1 outline-zinc-950/5"
+            className="absolute inset-x-0 top-0 h-auto w-full shadow-[0_12px_32px_-12px_rgb(0_0_0/0.25)] outline-1 -outline-offset-1 outline-zinc-950/5"
           />
         </div>
       </div>
