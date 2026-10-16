@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CustomCurrencyDialog } from "~/components/dialogs/custom-currency-dialog";
 import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
+import { EditorThemeToggle } from "~/components/editor/editor-theme-toggle";
 import { InvoiceCanvas } from "~/components/editor/invoice-canvas";
 import { InvoiceClientDetails } from "~/components/editor/invoice-client-details";
 import { InvoiceDetails } from "~/components/editor/invoice-details";
@@ -195,7 +196,10 @@ function Toolbar({
         </Menubar>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        <DownloadInvoice className="pointer-coarse:h-11 pointer-coarse:px-4" />
+        <DownloadInvoice
+          variant="primary"
+          className="pointer-coarse:h-11 pointer-coarse:px-4"
+        />
       </div>
       <RenameInvoiceDialog
         open={toolbar.renameDialogOpen}
@@ -366,6 +370,8 @@ function ZoomControl() {
       >
         <IconPlus aria-hidden="true" />
       </Button>
+      <span aria-hidden="true" className="bg-border mx-0.5 h-5 w-px" />
+      <EditorThemeToggle className="pointer-coarse:size-11" />
     </div>
   );
 }
