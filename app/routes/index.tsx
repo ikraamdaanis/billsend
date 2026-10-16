@@ -13,7 +13,7 @@ import {
   IconUserOff,
   IconX
 } from "@tabler/icons-react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, ScriptOnce } from "@tanstack/react-router";
 import type {
   ComponentProps,
   ComponentType,
@@ -118,18 +118,20 @@ function toAvif(srcSet: string) {
   return srcSet.replaceAll(".webp", ".avif");
 }
 
-// Runs as the HTML is parsed, straight after the hero painting, since the
-// painting usually lands before React hydrates. If the painting isn't loaded
-// yet it hides it, so the blurred placeholder shows, and fades it in once it
-// loads. One that loads within 100ms (cached, or a fast connection) shows at
-// once instead, as it beats the first paint and a fade would only delay it.
-const HERO_FADE_SCRIPT = `(function () {
+// Runs as the HTML is parsed, straight after the hero painting and before the
+// copy. It marks the hero to play its entrance (globals.css), which only
+// happens when the homepage loads as a page: ScriptOnce writes the script into
+// the server's HTML alone, so coming back through a link shows the hero at
+// rest. The painting usually lands before React hydrates, so the check is made
+// here too: if it isn't loaded yet it holds back its entrance, so the blurred
+// placeholder shows, and plays it once the painting loads.
+const HERO_ENTRANCE_SCRIPT = `(function () {
+  var hero = document.getElementById("hero");
+  if (hero) hero.dataset.entrance = "";
   var painting = document.getElementById("hero-painting");
   if (!painting || painting.complete) return;
-  var start = performance.now();
   painting.dataset.loading = "";
   function show() {
-    if (performance.now() - start < 100) painting.dataset.instant = "";
     delete painting.dataset.loading;
   }
   painting.addEventListener("load", show, { once: true });
@@ -595,11 +597,12 @@ function SectionHeading({
 // centre crop, since they only ever show its middle. It decodes in step with
 // the page (no decoding="async"), so a reload with the file cached paints it
 // in the first frame instead of flashing the placeholder for a frame or two.
-// When it does arrive after the first paint, HERO_FADE_SCRIPT fades it in over
-// the placeholder rather than letting it snap into place.
+// Its entrance waits for it: HERO_ENTRANCE_SCRIPT holds it back until it loads.
+// The copy comes into focus line by line, 80ms apart, then the editor window
+// fades in.
 function Hero() {
   return (
-    <section className="-mt-16">
+    <section id="hero" suppressHydrationWarning className="-mt-16">
       <div className="bg-hero-placeholder relative isolate overflow-hidden pt-16">
         <picture>
           <source
@@ -632,10 +635,10 @@ function Hero() {
             height={1800}
             fetchPriority="high"
             suppressHydrationWarning
-            className="absolute inset-0 -z-10 size-full object-cover data-instant:transition-none data-loading:opacity-0 motion-safe:transition-opacity motion-safe:duration-500 motion-safe:ease-out"
+            className="hero-settle absolute inset-0 -z-10 size-full object-cover"
           />
         </picture>
-        <script dangerouslySetInnerHTML={{ __html: HERO_FADE_SCRIPT }} />
+        <ScriptOnce>{HERO_ENTRANCE_SCRIPT}</ScriptOnce>
         <div
           aria-hidden="true"
           className="from-canvas/60 via-canvas/25 absolute inset-x-0 top-0 -z-10 h-1/2 bg-linear-to-b to-transparent"
@@ -648,16 +651,18 @@ function Hero() {
         >
           <div className="flex flex-col items-center gap-6">
             <h1 className={cn(HEADING, typeClass("display"))}>
-              <span className="block">Send the invoice.</span>
-              <span className="text-ink-blue block">Keep everything else.</span>
+              <span className="hero-focus block">Send the invoice.</span>
+              <span className="hero-focus text-ink-blue block [animation-delay:80ms]">
+                Keep everything else.
+              </span>
             </h1>
-            <p className="text-ink/75 max-w-[48ch] text-lg/7 text-pretty">
+            <p className="hero-focus text-ink/75 max-w-[48ch] text-lg/7 text-pretty [animation-delay:160ms]">
               A free invoice generator in your browser.{" "}
               <br className="max-sm:hidden" />
               No account, and your details never leave your device.
             </p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+          <div className="hero-focus flex flex-wrap items-center justify-center gap-x-6 gap-y-3 [animation-delay:240ms]">
             <CreateInvoiceLink />
             <a
               href="#how-it-works"
@@ -717,7 +722,7 @@ function HeroVisual() {
       aria-label="The billsend editor with a sample invoice"
       className={cn(
         CONTAINER,
-        "relative mt-14 h-[calc(638px*0.6)] min-h-0 sm:mt-16 sm:aspect-17/10 sm:h-auto"
+        "hero-fade relative mt-14 h-[calc(638px*0.6)] min-h-0 [animation-delay:320ms] sm:mt-16 sm:aspect-17/10 sm:h-auto"
       )}
     >
       <div className="pl-(--pad) [--pad:--spacing(5)] sm:[--pad:--spacing(10)] lg:px-(--pad) lg:[--pad:--spacing(16)]">
