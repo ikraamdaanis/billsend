@@ -60,6 +60,7 @@ const EditorUiContext = createContext<{
   setPanelOpen: (side: keyof PanelState, open: boolean) => void;
   togglePanel: (side: keyof PanelState) => void;
   toggleAllPanels: () => void;
+  closePanels: () => void;
   paletteOpen: boolean;
   setPaletteOpen: (open: boolean) => void;
 } | null>(null);
@@ -126,6 +127,7 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
       setPanelsBeforePreview(null);
       applyPanels({ left: !anyOpen, right: !anyOpen && !isNarrow });
     },
+    closePanels: () => applyPanels({ left: false, right: false }),
     paletteOpen,
     setPaletteOpen
   };

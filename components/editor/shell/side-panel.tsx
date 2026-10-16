@@ -48,6 +48,24 @@ export function SidePanel({
   );
 }
 
+// On a phone the open panel covers the page; tapping the dimmed page beside it
+// closes it, like a sheet.
+export function PanelBackdrop() {
+  const { isNarrow, leftPanelOpen, rightPanelOpen, closePanels } =
+    useEditorUi();
+
+  if (!isNarrow || (!leftPanelOpen && !rightPanelOpen)) return null;
+
+  return (
+    <button
+      type="button"
+      aria-label="Close panel"
+      onClick={closePanels}
+      className="animate-in fade-in-0 absolute inset-0 z-20 bg-black/30 md:hidden"
+    />
+  );
+}
+
 export function PanelToggle({ side }: { side: "left" | "right" }) {
   const { leftPanelOpen, rightPanelOpen, togglePanel } = useEditorUi();
   const open = side === "left" ? leftPanelOpen : rightPanelOpen;
