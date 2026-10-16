@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_INVOICE_SECTIONS } from "~/schema/invoice";
 import type { Invoice, InvoiceItem } from "~/types";
 import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 
@@ -72,6 +73,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       size: "medium",
       accent: "#1a1a1a"
     },
+    sections: { ...DEFAULT_INVOICE_SECTIONS },
     ...overrides
   };
 }

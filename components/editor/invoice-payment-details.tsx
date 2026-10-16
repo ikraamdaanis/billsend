@@ -1,6 +1,14 @@
 import { InvoiceInput } from "~/components/editor/invoice-input";
+import {
+  OptionalSection,
+  RemoveSectionButton
+} from "~/components/editor/invoice-optional-section";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
-import { usePaymentDetailsSlice, useTheme } from "~/stores/invoice-selectors";
+import {
+  usePaymentDetailsSlice,
+  useSectionsSlice,
+  useTheme
+} from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 
@@ -18,9 +26,19 @@ const PAYMENT_FIELDS = [
 ] as const;
 
 export function InvoicePaymentDetails() {
+  const { sections, setSection } = useSectionsSlice();
+
+  if (!sections.paymentDetails) return null;
+
   return (
-    <>
-      <PaymentDetailsLabel />
+    <OptionalSection className="mt-6">
+      <div className="flex items-center gap-1">
+        <PaymentDetailsLabel />
+        <RemoveSectionButton
+          label="Hide payment details"
+          onClick={() => setSection("paymentDetails", false)}
+        />
+      </div>
       <div className="mt-2 flex flex-col gap-1">
         {PAYMENT_FIELDS.map(field => (
           <PaymentDetailsField
@@ -32,7 +50,7 @@ export function InvoicePaymentDetails() {
         ))}
       </div>
       <PaymentDetailsTerms />
-    </>
+    </OptionalSection>
   );
 }
 

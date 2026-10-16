@@ -2,7 +2,10 @@ import { addDays, format } from "date-fns";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { DEFAULT_INVOICE_THEME } from "~/schema/invoice";
+import {
+  DEFAULT_INVOICE_SECTIONS,
+  DEFAULT_INVOICE_THEME
+} from "~/schema/invoice";
 import { migrateInvoiceData } from "~/schema/migrations";
 import type {
   Invoice,
@@ -10,6 +13,7 @@ import type {
   InvoiceItem,
   InvoiceLabels,
   InvoicePaymentDetails,
+  InvoiceSectionKey,
   InvoiceSeller,
   InvoiceTerms,
   InvoiceTheme,
@@ -118,7 +122,8 @@ export const invoiceDefault: Invoice = {
   },
   currency: "$",
   currencyCode: "USD",
-  theme: DEFAULT_INVOICE_THEME
+  theme: DEFAULT_INVOICE_THEME,
+  sections: DEFAULT_INVOICE_SECTIONS
 };
 
 /**
@@ -160,6 +165,9 @@ interface InvoiceActions {
   setTheme: (
     theme: InvoiceTheme | ((prev: InvoiceTheme) => InvoiceTheme)
   ) => void;
+
+  // Sections
+  setSection: (section: InvoiceSectionKey, on: boolean) => void;
 
   // Title
   setTitle: (title: string) => void;
@@ -275,6 +283,12 @@ export const useInvoiceStore = create<InvoiceStore>()(
       setTheme: theme =>
         set(state => {
           state.theme = applyUpdater(state.theme, theme);
+        }),
+
+      // Sections
+      setSection: (section, on) =>
+        set(state => {
+          state.sections[section] = on;
         }),
 
       // Title

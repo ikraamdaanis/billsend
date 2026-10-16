@@ -7,7 +7,7 @@ import { Button } from "~/components/ui/button";
 import { cleanupOrphanedImages, getImageBlob, saveImage } from "~/db";
 import { useImageLoader } from "~/hooks/use-image-loader";
 import { cn } from "~/lib/utils";
-import { useImageSlice } from "~/stores/invoice-selectors";
+import { useImageSlice, useSectionsSlice } from "~/stores/invoice-selectors";
 
 // A logo is embedded verbatim into every data export (base64), so an oversized
 // image bloats storage and later slows exports to a crawl. Cap it well above any
@@ -21,6 +21,7 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
  */
 export function InvoiceImage() {
   const { image: imageId, setImage } = useImageSlice();
+  const { sections } = useSectionsSlice();
   const imageUrl = useImageLoader(imageId);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -75,6 +76,8 @@ export function InvoiceImage() {
     void cleanupOrphanedImages();
   }
 
+  if (!sections.logo) return null;
+
   return (
     <Dropzone
       onDrop={handleDrop}
@@ -95,7 +98,9 @@ export function InvoiceImage() {
               "rounded-surface focus-visible:ring-ring flex aspect-square h-32 min-w-32 cursor-pointer items-center justify-center overflow-hidden outline-none focus-visible:ring-2",
               isDragging
                 ? "bg-brand-100 border-brand-500 border-2 border-dashed"
-                : "bg-paper-muted"
+                : imageUrl
+                  ? "bg-paper-muted"
+                  : "border-paper-border hover:border-paper-muted-foreground hover:bg-paper-muted focus-visible:bg-paper-muted border border-dashed transition-colors"
             )}
           >
             <input {...getInputProps()} />
@@ -109,8 +114,10 @@ export function InvoiceImage() {
               />
             ) : (
               <div className="text-paper-muted-foreground flex flex-col items-center justify-center gap-2 p-2">
-                <IconUpload className="size-8" aria-hidden="true" />
-                <span className="text-center text-xs">Upload logo</span>
+                <IconUpload className="size-6 opacity-60" aria-hidden="true" />
+                <span className="text-center text-xs opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100">
+                  Upload logo
+                </span>
               </div>
             )}
           </div>

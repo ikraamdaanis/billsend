@@ -1,6 +1,7 @@
 import type { Invoice } from "~/schema/invoice";
 import {
   CURRENT_INVOICE_SCHEMA_VERSION,
+  DEFAULT_INVOICE_SECTIONS,
   invoiceSchema
 } from "~/schema/invoice";
 
@@ -56,10 +57,40 @@ function migrateV0ToV1(raw: Record<string, unknown>): Record<string, unknown> {
   return next;
 }
 
+function hasContent(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.content === "string" &&
+    value.content.trim().length > 0
+  );
+}
+
+// v1 -> v2: section switches. Before v2 a section existed when it had content,
+// so the switches start on for anything already filled in. The rest take the
+// new-invoice defaults, which match what the editor showed before (PO, service
+// period, the pricing rows and payment details were always on the page).
+function migrateV1ToV2(raw: Record<string, unknown>): Record<string, unknown> {
+  if (isRecord(raw.sections)) return raw;
+
+  return {
+    ...raw,
+    sections: {
+      ...DEFAULT_INVOICE_SECTIONS,
+      shipping: hasContent(raw.shipping),
+      notes: hasContent(raw.notes),
+      terms: hasContent(raw.terms),
+      latePayment: hasContent(raw.latePayment)
+    }
+  };
+}
+
 const migrations: {
   to: number;
   up: (raw: Record<string, unknown>) => Record<string, unknown>;
-}[] = [{ to: 1, up: migrateV0ToV1 }];
+}[] = [
+  { to: 1, up: migrateV0ToV1 },
+  { to: 2, up: migrateV1ToV2 }
+];
 
 /**
  * Bring any stored or imported invoice data to the current shape: run the
