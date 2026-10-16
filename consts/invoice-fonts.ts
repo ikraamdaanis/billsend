@@ -35,7 +35,7 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     id: "geist",
     name: "Geist",
     category: "sans-serif",
-    cssFamily: '"Geist Variable", sans-serif',
+    cssFamily: '"Geist Variable", "Geist Fallback", sans-serif',
     pdfFamily: "Invoice Geist",
     previewClassName: "font-geist",
     weights: STANDARD_WEIGHTS
@@ -44,7 +44,7 @@ export const INVOICE_FONTS: InvoiceFontDefinition[] = [
     id: "inter",
     name: "Inter",
     category: "sans-serif",
-    cssFamily: '"Inter Variable", sans-serif',
+    cssFamily: '"Inter Variable", "Inter Fallback", sans-serif',
     pdfFamily: "Invoice Inter",
     previewClassName: "font-sans",
     weights: STANDARD_WEIGHTS
