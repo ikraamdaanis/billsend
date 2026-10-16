@@ -1,5 +1,5 @@
 import type { Table } from "dexie";
-import Dexie from "dexie";
+import Dexie, { liveQuery } from "dexie";
 import {
   CURRENT_INVOICE_SCHEMA_VERSION,
   migrateInvoiceData
@@ -346,6 +346,60 @@ export async function deleteTemplate(id: string): Promise<void> {
       "Failed to delete template from local storage."
     );
   }
+}
+
+// Keeps a listener in step with a table: called with the current rows, then
+// again whenever they change, in this tab or another (Dexie's live queries).
+// The database is opened first, outside the live query, which may only await
+// Dexie calls. Returns the unsubscribe.
+function watchTable<TRow>(
+  read: () => Promise<TRow[]>,
+  onChange: (rows: TRow[]) => void,
+  onError: (error: Error) => void
+): () => void {
+  let subscription: { unsubscribe: () => void } | null = null;
+  let stopped = false;
+
+  ensureDbReady()
+    .then(() => {
+      if (stopped) return;
+
+      subscription = liveQuery(read).subscribe({
+        next: onChange,
+        error: (error: unknown) =>
+          onError(createStorageError(error, "Failed to load from storage."))
+      });
+    })
+    .catch((error: unknown) =>
+      onError(error instanceof Error ? error : new Error(String(error)))
+    );
+
+  return () => {
+    stopped = true;
+    subscription?.unsubscribe();
+  };
+}
+
+export function watchInvoices(
+  onChange: (invoices: InvoiceDocument[]) => void,
+  onError: (error: Error) => void
+): () => void {
+  return watchTable(
+    async () => (await db.invoices.toArray()).map(migrateStoredInvoice),
+    onChange,
+    onError
+  );
+}
+
+export function watchTemplates(
+  onChange: (templates: InvoiceTemplate[]) => void,
+  onError: (error: Error) => void
+): () => void {
+  return watchTable(
+    async () => (await db.templates.toArray()).map(migrateStoredTemplate),
+    onChange,
+    onError
+  );
 }
 
 export async function getAllInvoices(): Promise<InvoiceDocument[]> {
