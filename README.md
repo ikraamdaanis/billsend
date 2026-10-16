@@ -1,39 +1,39 @@
 # billsend
 
-A free, local-first invoice generator that runs entirely in your browser. Create professional invoices with fully customisable templates. No account needed, no servers, no tracking. Your data never leaves your device.
+A free, local-first invoice generator that runs entirely in your browser. Fill in the details, pick a font and download a PDF. No account needed, no servers, no tracking. Your data never leaves your device.
 
 **Live app:** [billsend.io](https://billsend.io)
 
 ## Features
 
 - Create invoices with seller and client details, line items, tax, fees, discounts, and terms
-- Payment details section — bank name, account number, IBAN, BIC / SWIFT, sort code, and payment notes
-- Customise templates — fonts, colours, spacing, and layout
+- Payment details section: bank name, account and routing numbers, IBAN, BIC / SWIFT, sort code, and payment notes
+- Set the whole invoice in any of ten fonts, with your choice of size and weight
 - Save and load invoice documents locally in IndexedDB
 - Reusable templates for repeat work
-- Upload a logo and set an accent colour
+- Upload your logo
 - Any currency, with custom symbols when you need them
 - Export to PDF in one click
 - Import and export all data (invoices, templates, images) as a backup
-- Works offline — no network required after the first load
+- Works offline: no network needed once the editor has loaded
 - No sign-up, no accounts, no tracking
 
 ## Tech Stack
 
 - **React 19** with the React Compiler
-- **TanStack Start** and **TanStack Router** — app framework and routing
-- **Vite 8** — build tooling
-- **TypeScript** — strict mode
-- **Zustand** + **Immer** — invoice state
-- **Dexie** — IndexedDB persistence
-- **Zod** — invoice schema and validation
-- **React Hook Form** + **Zod** — dialog forms
-- **@react-pdf/renderer** — PDF export
-- **Tailwind CSS 4** + **shadcn/ui** + **Base UI** — styling and components
-- **Tabler Icons** — icon set
-- **Sonner** — toast notifications
-- **date-fns** — date formatting
-- **lodash-es** — utilities
+- **TanStack Start** and **TanStack Router**: app framework and routing
+- **Vite 8**: build tooling
+- **TypeScript**: strict mode
+- **Zustand** + **Immer**: invoice state
+- **Dexie**: IndexedDB persistence
+- **Zod**: invoice schema and validation
+- **React Hook Form** + **Zod**: dialog forms
+- **@react-pdf/renderer**: PDF export
+- **Tailwind CSS 4** + **shadcn/ui** + **Base UI**: styling and components
+- **Tabler Icons**: icon set
+- **Sonner**: toast notifications
+- **date-fns**: date formatting
+- **lodash-es**: utilities
 
 ## Getting Started
 
@@ -92,3 +92,7 @@ lib/                   # Helper utilities (cn() classname merger)
 ## Deployment
 
 Deployed to Cloudflare Workers via Wrangler. Run `bun run deploy` to build and deploy. Configure targets in `wrangler.jsonc`.
+
+## License
+
+[MIT](LICENSE)
