@@ -14,7 +14,12 @@ import {
   IconX
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import type { ComponentType, CSSProperties, ReactNode } from "react";
+import type {
+  ComponentProps,
+  ComponentType,
+  CSSProperties,
+  ReactNode
+} from "react";
 import { useEffect, useRef, useState } from "react";
 import {
   EditorWindow,
@@ -48,7 +53,8 @@ export const Route = createFileRoute("/")({
   // The homepage is set in Inter, so its latin subset preloads here rather
   // than in the root head, where every route would download it.
   // The hero painting preloads too, so it downloads alongside the CSS rather
-  // than after it; each preload mirrors one branch of the hero's <picture>.
+  // than after it; each preload mirrors one AVIF branch of the hero's
+  // <picture>, and a browser without AVIF skips them.
   head: () => ({
     meta: siteMeta({ path: "/" }),
     links: [
@@ -63,18 +69,18 @@ export const Route = createFileRoute("/")({
       {
         rel: "preload",
         as: "image",
-        type: "image/webp",
+        type: "image/avif",
         media: "(max-width: 639px)",
-        imageSrcSet: HERO_PORTRAIT_SRCSET,
+        imageSrcSet: toAvif(HERO_PORTRAIT_SRCSET),
         imageSizes: "100vw",
         fetchPriority: "high"
       },
       {
         rel: "preload",
         as: "image",
-        type: "image/webp",
+        type: "image/avif",
         media: "(min-width: 640px)",
-        imageSrcSet: HERO_LANDSCAPE_SRCSET,
+        imageSrcSet: toAvif(HERO_LANDSCAPE_SRCSET),
         imageSizes: HERO_LANDSCAPE_SIZES,
         fetchPriority: "high"
       }
@@ -98,6 +104,31 @@ const HERO_LANDSCAPE_SRCSET =
   "/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w";
 
 const HERO_LANDSCAPE_SIZES = "(max-width: 1023px) 1960px, max(100vw, 2250px)";
+
+// Every homepage picture has an AVIF beside its WebP (scripts/
+// encode-homepage-avif.ts), about 40% lighter; the WebP stays for browsers
+// without AVIF.
+function toAvif(srcSet: string) {
+  return srcSet.replaceAll(".webp", ".avif");
+}
+
+// Runs as the HTML is parsed, straight after the hero painting, since the
+// painting usually lands before React hydrates. If the painting isn't loaded
+// yet it hides it, so the blurred placeholder shows, and fades it in once it
+// loads. One that loads within 100ms (cached, or a fast connection) shows at
+// once instead, as it beats the first paint and a fade would only delay it.
+const HERO_FADE_SCRIPT = `(function () {
+  var painting = document.getElementById("hero-painting");
+  if (!painting || painting.complete) return;
+  var start = performance.now();
+  painting.dataset.loading = "";
+  function show() {
+    if (performance.now() - start < 100) painting.dataset.instant = "";
+    delete painting.dataset.loading;
+  }
+  painting.addEventListener("load", show, { once: true });
+  painting.addEventListener("error", show, { once: true });
+})();`;
 
 const TEXT_LINK = cn(
   "inline-flex items-center gap-1 rounded-sm font-medium text-ink hover:text-ink-blue",
@@ -558,11 +589,21 @@ function SectionHeading({
 // centre crop, since they only ever show its middle. It decodes in step with
 // the page (no decoding="async"), so a reload with the file cached paints it
 // in the first frame instead of flashing the placeholder for a frame or two.
+// When it does arrive after the first paint, HERO_FADE_SCRIPT fades it in over
+// the placeholder rather than letting it snap into place.
 function Hero() {
   return (
     <section className="-mt-16">
       <div className="bg-hero-placeholder relative isolate overflow-hidden pt-16">
         <picture>
+          <source
+            type="image/avif"
+            media="(max-width: 639px)"
+            srcSet={toAvif(HERO_PORTRAIT_SRCSET)}
+            sizes="100vw"
+            width={1350}
+            height={2400}
+          />
           <source
             media="(max-width: 639px)"
             srcSet={HERO_PORTRAIT_SRCSET}
@@ -570,7 +611,13 @@ function Hero() {
             width={1350}
             height={2400}
           />
+          <source
+            type="image/avif"
+            srcSet={toAvif(HERO_LANDSCAPE_SRCSET)}
+            sizes={HERO_LANDSCAPE_SIZES}
+          />
           <img
+            id="hero-painting"
             src="/home/hero-harbour-2400.webp"
             srcSet={HERO_LANDSCAPE_SRCSET}
             sizes={HERO_LANDSCAPE_SIZES}
@@ -578,9 +625,11 @@ function Hero() {
             width={3200}
             height={1800}
             fetchPriority="high"
-            className="absolute inset-0 -z-10 size-full object-cover"
+            suppressHydrationWarning
+            className="absolute inset-0 -z-10 size-full object-cover data-instant:transition-none data-loading:opacity-0 motion-safe:transition-opacity motion-safe:duration-500 motion-safe:ease-out"
           />
         </picture>
+        <script dangerouslySetInnerHTML={{ __html: HERO_FADE_SCRIPT }} />
         <div
           aria-hidden="true"
           className="from-canvas/60 via-canvas/25 absolute inset-x-0 top-0 -z-10 h-1/2 bg-linear-to-b to-transparent"
@@ -708,7 +757,7 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
       className="border-paper-border bg-paper overflow-hidden border shadow-md"
       style={{ width: PAGE_WIDTH, height: PAGE_HEIGHT }}
     >
-      <img
+      <Picture
         src={render.src}
         alt={render.alt}
         width={render.width}
@@ -719,6 +768,25 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
         className="block h-auto w-full"
       />
     </div>
+  );
+}
+
+/**
+ * An image that offers its AVIF first. The <picture> draws no box of its own,
+ * so the image keeps its place in its parent's layout.
+ */
+function Picture({
+  src,
+  srcSet,
+  sizes,
+  alt,
+  ...props
+}: ComponentProps<"img"> & { src: string; alt: string }) {
+  return (
+    <picture className="contents">
+      <source type="image/avif" srcSet={toAvif(srcSet ?? src)} sizes={sizes} />
+      <img src={src} srcSet={srcSet} sizes={sizes} alt={alt} {...props} />
+    </picture>
   );
 }
 
@@ -846,7 +914,7 @@ function Wash({ hue, sizes }: { hue: keyof typeof WASHES; sizes: string }) {
   const { name } = WASHES[hue];
 
   return (
-    <img
+    <Picture
       src={`/home/${name}.webp`}
       srcSet={`/home/${name}-600.webp 600w, /home/${name}.webp 1200w`}
       sizes={sizes}
@@ -1058,7 +1126,7 @@ function PdfCrop({
   className?: string;
 }) {
   return (
-    <img
+    <Picture
       src={render.src}
       alt={render.alt}
       width={Math.round(render.crop.width * PDF_RENDER_SCALE)}
@@ -1312,7 +1380,7 @@ function Closing() {
         </div>
       </div>
       <div className="relative isolate mt-12 flex justify-center overflow-hidden bg-blue-100 px-6 pt-12 pb-16 sm:mt-16 sm:pt-16 sm:pb-20">
-        <img
+        <Picture
           src="/home/closing-city.webp"
           srcSet="/home/closing-city-900.webp 900w, /home/closing-city-1200.webp 1200w, /home/closing-city.webp 1792w"
           sizes="100vw"
@@ -1326,7 +1394,7 @@ function Closing() {
           aria-hidden="true"
           className="relative aspect-4/3 w-full max-w-md sm:aspect-video sm:max-w-xl lg:max-w-2xl"
         >
-          <img
+          <Picture
             src={CLOSING_RENDER.src}
             alt={CLOSING_RENDER.alt}
             width={CLOSING_RENDER.width}
