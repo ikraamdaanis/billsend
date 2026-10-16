@@ -4,6 +4,7 @@ import {
   RemoveSectionButton
 } from "~/components/editor/invoice-optional-section";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
+import { useIsPreview, useShownSections } from "~/hooks/use-shown-sections";
 import {
   usePaymentDetailsSlice,
   useSectionsSlice,
@@ -26,7 +27,8 @@ const PAYMENT_FIELDS = [
 ] as const;
 
 export function InvoicePaymentDetails() {
-  const { sections, setSection } = useSectionsSlice();
+  const { setSection } = useSectionsSlice();
+  const sections = useShownSections();
 
   if (!sections.paymentDetails) return null;
 
@@ -83,8 +85,10 @@ function PaymentDetailsField({
 }) {
   const { paymentDetails, setPaymentDetails } = usePaymentDetailsSlice();
   const theme = useTheme();
-
+  const isPreview = useIsPreview();
   const fieldId = `invoice-payment-field-${fieldKey}`;
+
+  if (isPreview && !paymentDetails[fieldKey].trim()) return null;
 
   return (
     <div className="flex items-center gap-2">
@@ -115,6 +119,9 @@ function PaymentDetailsField({
 function PaymentDetailsTerms() {
   const { paymentDetails, setPaymentDetails } = usePaymentDetailsSlice();
   const theme = useTheme();
+  const isPreview = useIsPreview();
+
+  if (isPreview && !paymentDetails.terms.trim()) return null;
 
   return (
     <InvoiceTextArea

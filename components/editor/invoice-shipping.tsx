@@ -4,6 +4,7 @@ import {
   RemoveSectionButton
 } from "~/components/editor/invoice-optional-section";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
+import { useShownSections } from "~/hooks/use-shown-sections";
 import {
   useSectionsSlice,
   useShippingSlice,
@@ -14,7 +15,8 @@ import { getTextStyles } from "~/utils/get-text-styles";
 
 // Shown while the Shipping address section is switched on in the inspector.
 export function InvoiceShipping() {
-  const { sections, setSection } = useSectionsSlice();
+  const { setSection } = useSectionsSlice();
+  const sections = useShownSections();
 
   if (!sections.shipping) return null;
 

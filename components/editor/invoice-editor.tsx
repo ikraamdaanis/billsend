@@ -12,6 +12,7 @@ import { InvoiceSellerDetails } from "~/components/editor/invoice-seller-details
 import { InvoiceShipping } from "~/components/editor/invoice-shipping";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
 import { CanvasPill } from "~/components/editor/shell/canvas-pill";
+import { EditorShortcuts } from "~/components/editor/shell/editor-shortcuts";
 import { EditorTopBar } from "~/components/editor/shell/editor-top-bar";
 import { InspectorPanel } from "~/components/editor/shell/inspector/inspector-panel";
 import { PanelToggle, SidePanel } from "~/components/editor/shell/side-panel";
@@ -35,6 +36,7 @@ export function InvoiceEditor() {
     <CanvasViewProvider>
       <EditorUiProvider>
         <FileActionsProvider>
+          <EditorShortcuts />
           <div className="flex h-dvh w-full flex-col">
             <EditorTopBar
               onLeave={() => setIsLeaveDialogOpen(true)}

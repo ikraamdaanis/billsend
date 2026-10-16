@@ -1,10 +1,7 @@
 import { endOfMonth, format, subMonths } from "date-fns";
 import { InvoiceInput } from "~/components/editor/invoice-input";
-import {
-  useDetailsSlice,
-  useSectionsSlice,
-  useTheme
-} from "~/stores/invoice-selectors";
+import { useShownSections } from "~/hooks/use-shown-sections";
+import { useDetailsSlice, useTheme } from "~/stores/invoice-selectors";
 import type { InvoiceDetailRow } from "~/types";
 import { buildDetailRows } from "~/utils/build-invoice-view-model";
 import { getRoleSettings } from "~/utils/get-role-settings";
@@ -39,7 +36,7 @@ function buildDetailPlaceholders(): Record<
 export function InvoiceDetails() {
   const { number, poNumber, invoiceDate, dueDate, servicePeriod, labels } =
     useDetailsSlice();
-  const { sections } = useSectionsSlice();
+  const sections = useShownSections();
   const placeholders = buildDetailPlaceholders();
   const rows = buildDetailRows({
     labels,

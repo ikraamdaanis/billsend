@@ -1,6 +1,7 @@
 import { InvoiceLatePayment } from "~/components/editor/invoice-late-payment";
 import { InvoiceNotes } from "~/components/editor/invoice-notes";
 import { InvoiceTerms } from "~/components/editor/invoice-terms";
+import { useShownSections } from "~/hooks/use-shown-sections";
 import { useSectionsSlice } from "~/stores/invoice-selectors";
 
 /**
@@ -10,7 +11,8 @@ import { useSectionsSlice } from "~/stores/invoice-selectors";
  * was typed.
  */
 export function InvoiceFooterSections() {
-  const { sections, setSection } = useSectionsSlice();
+  const { setSection } = useSectionsSlice();
+  const sections = useShownSections();
 
   return (
     <>
