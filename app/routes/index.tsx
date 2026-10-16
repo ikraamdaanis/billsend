@@ -52,9 +52,9 @@ export const Route = createFileRoute("/")({
   component: HomePage,
   // The homepage is set in Inter, so its latin subset preloads here rather
   // than in the root head, where every route would download it.
-  // The hero painting preloads too, so it downloads alongside the CSS rather
-  // than after it; each preload mirrors one AVIF branch of the hero's
-  // <picture>, and a browser without AVIF skips them.
+  // The hero painting and the invoice in its editor window preload too, so
+  // they download alongside the CSS rather than after it; each preload mirrors
+  // one AVIF branch of a <picture>, and a browser without AVIF skips them.
   head: () => ({
     meta: siteMeta({ path: "/" }),
     links: [
@@ -65,6 +65,12 @@ export const Route = createFileRoute("/")({
         as: "font",
         type: "font/woff2",
         crossOrigin: "anonymous"
+      },
+      {
+        rel: "preload",
+        as: "image",
+        type: "image/avif",
+        href: toAvif(PDF_RENDERS.hero.src)
       },
       {
         rel: "preload",
@@ -748,8 +754,10 @@ const HERO_WINDOW = { width: 1024, height: 1240 };
 
 /**
  * A real billsend PDF in the editor canvas's place: a screenshot of the top of
- * the page on the same paper, shown first thing, so it loads straight away
- * and, like the hero painting, decodes in step with the page.
+ * the page on the same paper, shown first thing, so it preloads with the page.
+ * It decodes synchronously: left to itself, WebKit decodes a picture this
+ * large off the main thread, so a reload painted the paper blank for a frame
+ * before the invoice appeared.
  */
 function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
   return (
@@ -765,6 +773,7 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
           (render.width * render.crop.height) / render.crop.width
         )}
         fetchPriority="high"
+        decoding="sync"
         className="block h-auto w-full"
       />
     </div>
