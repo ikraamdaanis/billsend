@@ -1,6 +1,7 @@
 import { IconChevronDown } from "@tabler/icons-react";
 import type { ReactNode } from "react";
-import { useId, useState } from "react";
+import { useId } from "react";
+import { parseBoolean, usePersistentState } from "~/hooks/use-persistent-state";
 import { cn } from "~/lib/utils";
 
 // The building blocks of the inspector: collapsible sections, label/value rows
@@ -9,25 +10,38 @@ import { cn } from "~/lib/utils";
 export const inspectorFieldClassName =
   "bg-muted dark:bg-muted dark:hover:bg-muted hover:border-input focus-visible:border-ring text-foreground h-8 w-full min-w-0 rounded-md border border-transparent px-2 text-[13px] outline-none";
 
+// Open or collapsed is remembered per section across reloads. Collapsed, the
+// section is just its 44px header row, centred between the dividers.
 export function InspectorSection({
+  id,
   title,
   children
 }: {
+  id: string;
   title: string;
   children: ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = usePersistentState(
+    `billsend-editor-inspector-${id}`,
+    true,
+    parseBoolean
+  );
   const contentId = useId();
 
   return (
-    <section className="border-border flex flex-col border-b px-4 pb-4 last:border-b-0">
+    <section
+      className={cn(
+        "border-border flex flex-col border-b px-4 last:border-b-0",
+        open && "pb-4"
+      )}
+    >
       <h3>
         <button
           type="button"
           aria-expanded={open}
           aria-controls={contentId}
           onClick={() => setOpen(!open)}
-          className="text-foreground focus-visible:ring-ring -mx-1 flex h-10 w-[calc(100%+0.5rem)] items-center justify-between rounded-md px-1 text-[13px] font-semibold outline-none focus-visible:ring-1"
+          className="text-foreground focus-visible:ring-ring -mx-1 flex h-11 w-[calc(100%+0.5rem)] items-center justify-between rounded-md px-1 text-[13px] font-semibold outline-none focus-visible:ring-1"
         >
           {title}
           <IconChevronDown
