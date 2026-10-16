@@ -1,9 +1,6 @@
-import type { ComponentProps } from "react";
 import { useEffect, useTransition } from "react";
 import { toast } from "sonner";
-import { Button } from "~/components/ui/button";
 import { getImageBlob } from "~/db";
-import { cn } from "~/lib/utils";
 import { useInvoiceData } from "~/stores/invoice-selectors";
 import { isDirectImageUrl } from "~/utils/is-direct-image-url";
 
@@ -45,12 +42,10 @@ function prefetchPdfBuilder() {
   });
 }
 
-export function DownloadInvoice({
-  className,
-  ...props
-}: Omit<ComponentProps<typeof Button>, "onClick">) {
+// Builds the invoice PDF and opens it in a new tab. `prefetch` warms the PDF
+// engine early (call it on hover or focus of whatever leads to a download).
+export function useInvoicePdf() {
   const invoice = useInvoiceData();
-
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -67,8 +62,7 @@ export function DownloadInvoice({
     return () => cancelIdleCallback(idleCallback);
   }, []);
 
-  // Generate PDF blob URL for "Open in new tab" button
-  function handleCreatePdfUrl() {
+  function openPdf() {
     // Open window immediately while we still have user interaction context
     const newWindow = window.open("", "_blank");
 
@@ -121,17 +115,5 @@ export function DownloadInvoice({
     });
   }
 
-  return (
-    <Button
-      variant="default"
-      onClick={handleCreatePdfUrl}
-      onPointerEnter={prefetchPdfBuilder}
-      onFocus={prefetchPdfBuilder}
-      disabled={pending}
-      className={cn(className)}
-      {...props}
-    >
-      Download
-    </Button>
-  );
+  return { pending, openPdf, prefetch: prefetchPdfBuilder };
 }

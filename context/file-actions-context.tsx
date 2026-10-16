@@ -1,14 +1,8 @@
-import {
-  IconBookmark,
-  IconDeviceFloppy,
-  IconDownload,
-  IconFile,
-  IconFilePlus,
-  IconFolderOpen,
-  IconUpload
-} from "@tabler/icons-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import {
+  createContext,
+  useContext,
   useEffect,
   useEffectEvent,
   useRef,
@@ -24,13 +18,6 @@ import { SaveTemplateModal } from "~/components/dialogs/save-template-modal";
 import type { UnsavedChangesAction } from "~/components/dialogs/unsaved-changes-dialog";
 import { UnsavedChangesDialog } from "~/components/dialogs/unsaved-changes-dialog";
 import {
-  MenubarContent,
-  MenubarItem,
-  MenubarMenu,
-  MenubarSeparator,
-  MenubarTrigger
-} from "~/components/ui/menubar";
-import {
   DocumentNotFoundError,
   generateDefaultInvoiceName,
   useHasUnsavedChanges,
@@ -42,13 +29,25 @@ import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
 import { exportAllData } from "~/utils/export-data";
 
-export function InvoiceFileMenu({
-  saveDialogOpen: externalSaveDialogOpen,
-  onSaveDialogOpenChange: onExternalSaveDialogOpenChange
-}: {
-  saveDialogOpen?: boolean;
-  onSaveDialogOpenChange?: (open: boolean) => void;
-} = {}) {
+// Everything the editor can do with files: new, open, save, templates, import
+// and export. The project menu, the invoices panel and the command palette all
+// call these, so the unsaved-changes guard and the dialogs behave the same
+// whichever one started the action.
+const FileActionsContext = createContext<{
+  pending: boolean;
+  newInvoice: () => void;
+  showOpenInvoice: () => void;
+  openInvoice: (documentId: string) => void;
+  save: () => void;
+  saveAs: () => void;
+  showOpenTemplate: () => void;
+  applyTemplate: (template: InvoiceTemplate) => void;
+  saveAsTemplate: () => void;
+  exportData: () => void;
+  importData: () => void;
+} | null>(null);
+
+export function FileActionsProvider({ children }: { children: ReactNode }) {
   const { invoice, setInvoice } = useInvoiceDataAndActions();
   const {
     currentDocumentId,
@@ -63,13 +62,8 @@ export function InvoiceFileMenu({
   const hasUnsavedChanges = useHasUnsavedChanges();
   const { open: openRequest } = useSearch({ from: "/create" });
   const navigate = useNavigate();
-
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
-  const [internalSaveAsDialogOpen, setInternalSaveAsDialogOpen] =
-    useState(false);
-  const saveAsDialogOpen =
-    internalSaveAsDialogOpen || (externalSaveDialogOpen ?? false);
-
+  const [saveAsDialogOpen, setSaveAsDialogOpenState] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -99,8 +93,7 @@ export function InvoiceFileMenu({
   function setSaveAsDialogOpen(open: boolean) {
     if (!open) setPendingAction(null);
 
-    setInternalSaveAsDialogOpen(open);
-    onExternalSaveDialogOpenChange?.(open);
+    setSaveAsDialogOpenState(open);
   }
 
   function handleNewInvoice() {
@@ -249,10 +242,10 @@ export function InvoiceFileMenu({
     });
   }
 
-  function handleSelectInvoice(invoiceDoc: InvoiceDocument) {
+  function loadInvoice(documentId: string) {
     startTransition(async () => {
       try {
-        await load(invoiceDoc.id);
+        await load(documentId);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to open invoice"
@@ -367,61 +360,31 @@ export function InvoiceFileMenu({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleOpenInvoice, handleSave, handleSaveAs]);
 
+  const value = {
+    pending,
+    newInvoice: handleNewInvoice,
+    showOpenInvoice: handleOpenInvoice,
+    openInvoice: (documentId: string) => {
+      if (documentId === currentDocumentId) return;
+      runWithUnsavedGuard(() => loadInvoice(documentId));
+    },
+    save: () => void handleSave().catch(() => {}),
+    saveAs: handleSaveAs,
+    showOpenTemplate: handleOpenTemplate,
+    applyTemplate: (template: InvoiceTemplate) =>
+      runWithUnsavedGuard(() => handleSelectTemplate(template)),
+    saveAsTemplate: () => setSaveTemplateDialogOpen(true),
+    exportData: handleExport,
+    importData: () => setImportDialogOpen(true)
+  };
+
   return (
-    <>
-      <MenubarMenu>
-        <MenubarTrigger>File</MenubarTrigger>
-        <MenubarContent className="w-auto">
-          <MenubarItem onClick={handleNewInvoice} disabled={pending}>
-            <IconFilePlus className="mr-2 h-4 w-4" />
-            New Invoice
-          </MenubarItem>
-          <MenubarItem onClick={handleOpenInvoice} disabled={pending}>
-            <IconFolderOpen className="mr-2 h-4 w-4" />
-            Open Invoice
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem
-            onClick={() => void handleSave().catch(() => {})}
-            disabled={pending}
-          >
-            <IconDeviceFloppy className="mr-2 h-4 w-4" />
-            Save
-          </MenubarItem>
-          <MenubarItem onClick={handleSaveAs} disabled={pending}>
-            <IconFile className="mr-2 h-4 w-4" />
-            Save As...
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={handleOpenTemplate} disabled={pending}>
-            <IconBookmark className="mr-2 h-4 w-4" />
-            Open Template
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => setSaveTemplateDialogOpen(true)}
-            disabled={pending}
-          >
-            <IconDeviceFloppy className="mr-2 h-4 w-4" />
-            Save As Template
-          </MenubarItem>
-          <MenubarSeparator />
-          <MenubarItem onClick={handleExport} disabled={pending}>
-            <IconDownload className="mr-2 h-4 w-4" />
-            Export Data
-          </MenubarItem>
-          <MenubarItem
-            onClick={() => setImportDialogOpen(true)}
-            disabled={pending}
-          >
-            <IconUpload className="mr-2 h-4 w-4" />
-            Import Data
-          </MenubarItem>
-        </MenubarContent>
-      </MenubarMenu>
+    <FileActionsContext.Provider value={value}>
+      {children}
       <OpenInvoiceDialog
         open={openDialogOpen}
         onOpenChange={setOpenDialogOpen}
-        onSelectInvoice={handleSelectInvoice}
+        onSelectInvoice={invoiceDoc => loadInvoice(invoiceDoc.id)}
         currentInvoiceId={currentDocumentId}
         onCurrentInvoiceDeleted={detachCurrentDocument}
         onCurrentInvoiceRenamed={setCurrentDocumentName}
@@ -453,6 +416,16 @@ export function InvoiceFileMenu({
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
       />
-    </>
+    </FileActionsContext.Provider>
   );
+}
+
+export function useFileActions() {
+  const context = useContext(FileActionsContext);
+
+  if (!context) {
+    throw new Error("useFileActions must be used within a FileActionsProvider");
+  }
+
+  return context;
 }
