@@ -17,7 +17,11 @@ import { EditorShortcuts } from "~/components/editor/shell/editor-shortcuts";
 import { EditorTopBar } from "~/components/editor/shell/editor-top-bar";
 import { InspectorPanel } from "~/components/editor/shell/inspector/inspector-panel";
 import { InvoicesPanel } from "~/components/editor/shell/invoices-panel";
-import { PanelToggle, SidePanel } from "~/components/editor/shell/side-panel";
+import {
+  PanelBackdrop,
+  PanelToggle,
+  SidePanel
+} from "~/components/editor/shell/side-panel";
 import { Button, buttonVariants } from "~/components/ui/button";
 import {
   Dialog,
@@ -54,6 +58,7 @@ export function InvoiceEditor() {
                 <CanvasArea />
                 <CanvasPill />
               </main>
+              <PanelBackdrop />
               <SidePanel side="right" label="Inspector">
                 <InspectorPanel />
               </SidePanel>
