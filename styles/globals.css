@@ -338,6 +338,67 @@ code {
     center / cover no-repeat;
 }
 
+/* A strong ease-out for entrances: fast off the mark, long soft landing. */
+:root {
+  --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* The hero's entrance, played when the homepage loads as a page: the inline
+   script after the painting (HERO_ENTRANCE_SCRIPT) marks the hero with
+   data-entrance, so coming back to it through a link doesn't replay it. The
+   copy comes into focus line by line, fading in from a blur; the editor window
+   fades in after it; the painting fades in over its placeholder while settling
+   from a slight zoom. CSS animations run off the main thread, so they stay
+   smooth while the page is still loading. A painting that isn't loaded yet
+   (data-loading) waits hidden and plays its entrance when it arrives. With
+   reduced motion everything only fades. */
+@keyframes hero-focus {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+
+@keyframes hero-settle {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes hero-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* In the components layer, so the stagger's animation-delay utilities win. */
+@layer components {
+  [data-entrance] .hero-focus {
+    animation: hero-focus 900ms var(--ease-out-strong) both;
+  }
+
+  [data-entrance] .hero-fade {
+    animation: hero-fade 1000ms var(--ease-out-strong) both;
+  }
+
+  [data-entrance] .hero-settle {
+    animation: hero-settle 1400ms var(--ease-out-strong) both;
+  }
+
+  [data-entrance] .hero-settle[data-loading] {
+    animation: none;
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-entrance] .hero-focus,
+    [data-entrance] .hero-settle {
+      animation-name: hero-fade;
+    }
+  }
+}
+
 /* The homepage sets the Fluid Functionalism type roles at marketing sizes; the
    rest of the app keeps the stock app-UI values from :root. Compact steps are
    for single-line controls and secondary headings: display drops a notch and
