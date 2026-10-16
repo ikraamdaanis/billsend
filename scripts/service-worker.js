@@ -1,0 +1,132 @@
+// billsend's service worker, so every visit after the first loads from the
+// device and the editor opens offline. vite.config.ts writes it into the build
+// as /sw.js, with BUILD ({ version, files }) defined above this code: files
+// lists the build's scripts, styles and latin fonts.
+//
+// - The pages are served from the cache at once and refreshed in the
+//   background, so a deploy shows from the visit after it lands.
+// - Built files carry a content hash in their name, so a cached copy is always
+//   right; they come from the cache and are fetched only if missing.
+// - Everything else (pictures, icons, other fonts) comes from the cache when
+//   it's there and is refreshed in the background.
+
+const PRECACHE_PREFIX = "billsend-precache-";
+const PRECACHE = PRECACHE_PREFIX + BUILD.version;
+const RUNTIME = "billsend-runtime";
+const PAGES = ["/", "/privacy", "/create"];
+
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches
+      .open(PRECACHE)
+      .then(cache => cache.addAll([...PAGES, ...BUILD.files]))
+      .then(() => self.skipWaiting())
+  );
+});
+
+// Keeps the previous version's files as well as this one's: a tab opened on
+// the last deploy still asks for that deploy's chunks (the PDF engine loads on
+// demand), and they're no longer on the server.
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    (async () => {
+      const older = (await caches.keys()).filter(
+        name => name.startsWith(PRECACHE_PREFIX) && name !== PRECACHE
+      );
+
+      // caches.keys() lists caches oldest first, so the last is the previous
+      // version.
+      await Promise.all(older.slice(0, -1).map(name => caches.delete(name)));
+      await self.clients.claim();
+    })()
+  );
+});
+
+self.addEventListener("fetch", event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  if (request.method !== "GET" || url.origin !== self.location.origin) return;
+
+  if (request.mode === "navigate") {
+    if (PAGES.includes(url.pathname)) event.respondWith(servePage(event, url));
+
+    return;
+  }
+
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(serveBuiltFile(request));
+
+    return;
+  }
+
+  // Only files: anything without an extension is left to the network.
+  if (/\.[a-z0-9]+$/i.test(url.pathname) && url.pathname !== "/sw.js") {
+    event.respondWith(serveFile(event, request));
+  }
+});
+
+async function servePage(event, url) {
+  const cache = await caches.open(PRECACHE);
+  const cached = await cache.match(url.pathname);
+  const refresh = fetch(url.pathname).then(response => {
+    if (response.ok) cache.put(url.pathname, response.clone());
+
+    return response;
+  });
+
+  if (cached) {
+    event.waitUntil(refresh.catch(() => {}));
+
+    return asNavigationResponse(cached);
+  }
+
+  return refresh;
+}
+
+// A page cached from a redirect can't answer a navigation, so it is copied
+// into a fresh response first.
+function asNavigationResponse(response) {
+  if (!response.redirected) return response;
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers
+  });
+}
+
+async function serveBuiltFile(request) {
+  const cached =
+    (await caches.match(request, { cacheName: PRECACHE })) ??
+    (await caches.match(request));
+
+  if (cached) return cached;
+
+  const response = await fetch(request);
+
+  if (response.ok) {
+    const cache = await caches.open(RUNTIME);
+    await cache.put(request, response.clone());
+  }
+
+  return response;
+}
+
+async function serveFile(event, request) {
+  const cache = await caches.open(RUNTIME);
+  const cached = await cache.match(request);
+  const refresh = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+
+    return response;
+  });
+
+  if (cached) {
+    event.waitUntil(refresh.catch(() => {}));
+
+    return cached;
+  }
+
+  return refresh;
+}
