@@ -13,6 +13,8 @@ import { InvoiceShipping } from "~/components/editor/invoice-shipping";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
 import { CanvasPill } from "~/components/editor/shell/canvas-pill";
 import { EditorTopBar } from "~/components/editor/shell/editor-top-bar";
+import { InspectorPanel } from "~/components/editor/shell/inspector/inspector-panel";
+import { PanelToggle, SidePanel } from "~/components/editor/shell/side-panel";
 import { Button, buttonVariants } from "~/components/ui/button";
 import {
   Dialog,
@@ -34,12 +36,18 @@ export function InvoiceEditor() {
       <EditorUiProvider>
         <FileActionsProvider>
           <div className="flex h-dvh w-full flex-col">
-            <EditorTopBar onLeave={() => setIsLeaveDialogOpen(true)} />
+            <EditorTopBar
+              onLeave={() => setIsLeaveDialogOpen(true)}
+              end={<PanelToggle side="right" />}
+            />
             <div className="relative flex min-h-0 flex-1">
               <main className="bg-desk relative flex min-w-0 flex-1 flex-col">
                 <CanvasArea />
                 <CanvasPill />
               </main>
+              <SidePanel side="right" label="Inspector">
+                <InspectorPanel />
+              </SidePanel>
             </div>
           </div>
           <LeavePageDialog
