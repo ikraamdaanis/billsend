@@ -1,0 +1,193 @@
+import interFont from "@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2?url";
+import { IconArrowRight } from "@tabler/icons-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
+import {
+  CONTAINER,
+  FOCUS_RING,
+  SiteFooter,
+  Wordmark
+} from "~/components/home/site-chrome";
+import { typeClass } from "~/lib/type-scale";
+import { cn } from "~/lib/utils";
+import { canonicalLink, siteMeta, SOURCE_URL } from "~/utils/site-meta";
+
+export const Route = createFileRoute("/privacy")({
+  component: PrivacyPage,
+  head: () => ({
+    meta: siteMeta({
+      path: "/privacy",
+      title: "billsend privacy: Your invoices stay on your device",
+      description:
+        "billsend keeps your invoices in your browser, on your device, and never uploads them. What is stored, where, and what the site's host can see."
+    }),
+    links: [
+      canonicalLink("/privacy"),
+      {
+        rel: "preload",
+        href: interFont,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous"
+      }
+    ]
+  })
+});
+
+// The date the policy last changed in substance; update it with the copy.
+const LAST_UPDATED = "15 October 2026";
+
+const HEADING = "font-medium tracking-[-0.035em] text-balance";
+
+const PROSE = cn("text-pretty text-zinc-600", typeClass("body"));
+
+const INLINE_LINK = cn(
+  "text-ink hover:text-ink-blue rounded-sm font-medium underline decoration-zinc-950/20 underline-offset-4",
+  FOCUS_RING
+);
+
+// The same words as the homepage's promise, said once in full: where the
+// data lives, what leaves, what billsend never does, and what the host sees.
+function PrivacyPage() {
+  return (
+    <div className="home-type selection:bg-brand-100 bg-canvas text-ink isolate min-h-svh font-sans font-features-['cv02','cv03','cv04','cv11'] antialiased">
+      <header>
+        <div className={cn(CONTAINER, "flex h-16 items-center gap-4")}>
+          <div className="flex flex-1 items-center">
+            <Wordmark />
+          </div>
+          <Link
+            to="/create"
+            className={cn(
+              "hover:text-ink-blue text-ink relative inline-flex min-h-11 items-center gap-1 rounded-sm px-1 font-medium whitespace-nowrap",
+              typeClass("body", "compact"),
+              FOCUS_RING
+            )}
+          >
+            Open the editor
+            <IconArrowRight className="size-4 shrink-0" aria-hidden="true" />
+          </Link>
+        </div>
+      </header>
+      <main className={cn(CONTAINER, "pt-12 pb-16 sm:pt-20 sm:pb-24")}>
+        <article className="flex max-w-[64ch] flex-col gap-12">
+          <div className="flex flex-col gap-6">
+            <h1 className={cn(HEADING, typeClass("title"))}>Privacy</h1>
+            <p className={cn(PROSE, "text-lg/7")}>
+              billsend is built so that your invoices never reach us. This page
+              says what is stored, where it is stored, and what the site’s host
+              can see.
+            </p>
+            <p className={cn(typeClass("caption"), "text-zinc-500")}>
+              Last updated {LAST_UPDATED}
+            </p>
+          </div>
+          <PolicySection title="What stays on your device">
+            <p className={PROSE}>
+              Everything you type into an invoice, your logo, the invoices and
+              templates you save, and the draft the editor keeps as you work are
+              stored in this browser’s storage (IndexedDB), on this device.
+            </p>
+            <p className={PROSE}>
+              The PDF is made in your browser too. Nothing you type is uploaded,
+              and billsend has no server that could receive it.
+            </p>
+            <p className={PROSE}>
+              Other browsers and devices can’t see your invoices. Clearing this
+              browser’s site data for billsend.io deletes them.
+            </p>
+          </PolicySection>
+          <PolicySection title="What leaves your device">
+            <p className={PROSE}>
+              Only the files you choose to save: the PDF you download, and the
+              backup file from Export Data in the editor’s File menu. The backup
+              includes your bank details, so keep it somewhere safe.
+            </p>
+          </PolicySection>
+          <PolicySection title="What billsend doesn’t do">
+            <p className={PROSE}>
+              billsend has no accounts, no analytics, no ads and no tracking,
+              and sets no cookies.
+            </p>
+            <p className={PROSE}>
+              Every page is sent with a Content Security Policy that only lets
+              it connect to billsend.io itself, so your browser blocks any
+              attempt to send data anywhere else, including from billsend’s own
+              code. You can read the policy in your browser’s developer tools,
+              or in the{" "}
+              <a
+                href={`${SOURCE_URL}/blob/main/consts/content-security-policy.ts`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={INLINE_LINK}
+              >
+                source on GitHub
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+              .
+            </p>
+          </PolicySection>
+          <PolicySection title="Hosting">
+            <p className={PROSE}>
+              billsend.io is served by Cloudflare. Like any web host, Cloudflare
+              receives the technical details of each request your browser makes
+              to load the site, such as your IP address and browser type, in
+              order to deliver it and protect it from abuse, and it may set a
+              strictly necessary security cookie for that purpose. Those
+              requests never contain your invoices. Cloudflare’s handling is
+              covered by its{" "}
+              <a
+                href="https://www.cloudflare.com/privacypolicy/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={INLINE_LINK}
+              >
+                privacy policy
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+              .
+            </p>
+            <p className={PROSE}>
+              Within a tab, the site remembers how far down each page you were
+              (in session storage), so the Back button returns you to the same
+              place. It is cleared when the tab closes.
+            </p>
+          </PolicySection>
+          <PolicySection title="Checking for yourself">
+            <p className={PROSE}>
+              The code is public on GitHub under the MIT licence, so anyone can
+              check what billsend does with your data. Questions, or found
+              something that doesn’t match this page?{" "}
+              <a
+                href={`${SOURCE_URL}/issues`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={INLINE_LINK}
+              >
+                Open an issue on GitHub
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+              .
+            </p>
+          </PolicySection>
+        </article>
+      </main>
+      <SiteFooter />
+    </div>
+  );
+}
+
+function PolicySection({
+  title,
+  children
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="flex flex-col gap-4">
+      <h2 className={cn(HEADING, typeClass("subtitle"))}>{title}</h2>
+      {children}
+    </section>
+  );
+}

@@ -1,8 +1,9 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CONTENT_SECURITY_POLICY } from "~/consts/content-security-policy";
+import { SECURITY_HEADERS } from "~/consts/security-headers";
 
-// The pre-rendered homepage is a static file, so its policy comes from
+// The pre-rendered pages are static files, so their headers come from
 // public/_headers rather than the Worker; the two copies must match.
 function readHeaderRules() {
   const rules = new Map<string, Map<string, string>>();
@@ -31,12 +32,19 @@ function readHeaderRules() {
 describe("Content-Security-Policy", () => {
   const rules = readHeaderRules();
 
-  it.each(["/", "/index.html"])(
+  it.each(["/", "/index.html", "/privacy", "/privacy.html"])(
     "public/_headers sends the Worker's policy for %s",
     path => {
       expect(rules.get(path)?.get("content-security-policy")).toBe(
         CONTENT_SECURITY_POLICY
       );
+    }
+  );
+
+  it.each(Object.entries(SECURITY_HEADERS))(
+    "public/_headers sends the Worker's %s on every static file",
+    (name, value) => {
+      expect(rules.get("/*")?.get(name.toLowerCase())).toBe(value);
     }
   );
 });

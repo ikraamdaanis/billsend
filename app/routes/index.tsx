@@ -29,11 +29,19 @@ import {
   PDF_RENDER_SCALE,
   PDF_RENDERS
 } from "~/components/home/pdf-renders";
+import {
+  CONTAINER,
+  FOCUS_RING,
+  SiteFooter,
+  Wordmark
+} from "~/components/home/site-chrome";
 import { formatCurrencyWithCode } from "~/consts/currencies";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import { typeClass } from "~/lib/type-scale";
 import { cn } from "~/lib/utils";
 import type { InvoiceFont } from "~/types";
+import { canonicalLink, siteMeta, SOURCE_URL } from "~/utils/site-meta";
+import { HOME_STRUCTURED_DATA } from "~/utils/structured-data";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -42,7 +50,9 @@ export const Route = createFileRoute("/")({
   // The hero painting preloads too, so it downloads alongside the CSS rather
   // than after it; each preload mirrors one branch of the hero's <picture>.
   head: () => ({
+    meta: siteMeta({ path: "/" }),
     links: [
+      canonicalLink("/"),
       {
         rel: "preload",
         href: interFont,
@@ -68,11 +78,17 @@ export const Route = createFileRoute("/")({
         imageSizes: HERO_LANDSCAPE_SIZES,
         fetchPriority: "high"
       }
+    ],
+    // JSON-LD is data, never run. Escaping "<" keeps any text in it from
+    // closing the script tag early.
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(HOME_STRUCTURED_DATA).replace(/</g, "\\u003c")
+      }
     ]
   })
 });
-
-const SOURCE_URL = "https://github.com/ikraamdaanis/billsend";
 
 // The hero painting's sizes, shared by its <picture> and the head's preloads.
 const HERO_PORTRAIT_SRCSET =
@@ -82,11 +98,6 @@ const HERO_LANDSCAPE_SRCSET =
   "/home/hero-harbour-1600.webp 1600w, /home/hero-harbour-2400.webp 2400w, /home/hero-harbour-3200.webp 3200w";
 
 const HERO_LANDSCAPE_SIZES = "(max-width: 1023px) 1960px, max(100vw, 2250px)";
-
-const CONTAINER = "mx-auto max-w-6xl px-6 lg:px-8";
-
-const FOCUS_RING =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
 
 const TEXT_LINK = cn(
   "inline-flex items-center gap-1 rounded-sm font-medium text-ink hover:text-ink-blue",
@@ -148,11 +159,13 @@ const PAPER_SHADOW =
 
 // The secondary hues' washes: a pale painting in each hue, over its flat tint
 // so the panel already has its colour while the painting loads.
+// Each painting comes at 600px and 1200px wide; phones and the step cards
+// take the small one.
 const WASHES = {
-  lavender: { tint: "bg-lavender-tint", src: "/home/wash-lavender.webp" },
-  sage: { tint: "bg-sage-tint", src: "/home/wash-sage.webp" },
-  butter: { tint: "bg-butter-tint", src: "/home/wash-butter.webp" },
-  blush: { tint: "bg-blush-tint", src: "/home/wash-blush.webp" }
+  lavender: { tint: "bg-lavender-tint", name: "wash-lavender" },
+  sage: { tint: "bg-sage-tint", name: "wash-sage" },
+  butter: { tint: "bg-butter-tint", name: "wash-butter" },
+  blush: { tint: "bg-blush-tint", name: "wash-blush" }
 };
 
 // Each feature shows a fragment of a real invoice rather than an icon, on a
@@ -293,7 +306,7 @@ const QUESTION_GROUPS: {
       {
         question: "Why is it free, and what’s the catch?",
         answer:
-          "There’s very little to pay for. billsend keeps no accounts and stores nothing about you on a server; once a page has loaded, your browser does all the work. There’s no paid plan, no ads and no data collected to sell, and the code is public on GitHub, so you can check."
+          "There’s very little to pay for. billsend keeps no accounts and stores nothing about you on a server; once a page has loaded, your browser does all the work. There’s no paid plan, no ads and no data collected to sell, and the code is public on GitHub under the MIT licence, so you can check."
       }
     ]
   }
@@ -348,22 +361,6 @@ function HomePage() {
       </main>
       <SiteFooter />
     </div>
-  );
-}
-
-// The wordmark: the name in Geist, in the homepage's heading blue.
-function Wordmark() {
-  return (
-    <Link
-      to="/"
-      aria-label="Homepage"
-      className={cn(
-        "font-geist flex items-center rounded-md text-lg font-semibold tracking-tight",
-        FOCUS_RING
-      )}
-    >
-      <span className="text-ink-blue">billsend</span>
-    </Link>
   );
 }
 
@@ -474,12 +471,13 @@ function PhoneMenu() {
 }
 
 // The page's one primary action, shaped the same everywhere it appears: a pill
-// in the homepage ink, larger on touch screens.
+// in the homepage ink, larger on touch screens. It preloads the editor on
+// hover or touch (the router's default), not on sight: the editor's code is
+// over 500 KB and, fetched at load, it held up the hero on phones.
 function CreateInvoiceLink() {
   return (
     <Link
       to="/create"
-      preload="viewport"
       className={cn(
         "bg-ink hover:bg-ink/85 relative inline-flex shrink-0 items-center rounded-full px-4 py-2.5 text-base font-medium whitespace-nowrap text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(0_0_0/0.16)] sm:py-2 sm:text-sm",
         FOCUS_RING
@@ -599,7 +597,7 @@ function Hero() {
               <span className="text-ink-blue block">Keep everything else.</span>
             </h1>
             <p className="text-ink/75 max-w-[48ch] text-lg/7 text-pretty">
-              A free invoice maker that runs in your browser.{" "}
+              A free invoice generator in your browser.{" "}
               <br className="max-sm:hidden" />
               No account, and your details never leave your device.
             </p>
@@ -712,7 +710,7 @@ function PdfPaper({ render }: { render: typeof PDF_RENDERS.hero }) {
     >
       <img
         src={render.src}
-        alt=""
+        alt={render.alt}
         width={render.width}
         height={Math.round(
           (render.width * render.crop.height) / render.crop.width
@@ -789,7 +787,7 @@ function HowItWorks() {
       <div className={CONTAINER}>
         <SectionHeading
           title="How it works."
-          description="No sign-up and nothing to install. Open the editor and start typing."
+          description="billsend is a private invoice generator: no sign-up and nothing to install. Open the editor and start typing."
         />
         <ol className="mt-12 grid gap-6 sm:mt-16 md:grid-cols-3">
           {STEPS.map((step, index) => (
@@ -804,7 +802,10 @@ function HowItWorks() {
                   WASHES[step.hue].tint
                 )}
               >
-                <Wash hue={step.hue} />
+                <Wash
+                  hue={step.hue}
+                  sizes="(min-width: 1152px) 370px, (min-width: 768px) 33vw, 100vw"
+                />
                 {step.specimen}
               </div>
               <div className="flex flex-col gap-2 p-6">
@@ -839,10 +840,16 @@ function HowItWorks() {
 // lazily: lazy loading fetches an image only as it nears the viewport (late
 // in Safari), so it popped in while scrolling. They total about 450 KB, and
 // low priority keeps them behind the hero.
-function Wash({ hue }: { hue: keyof typeof WASHES }) {
+// `sizes` is the card's width: a third of the column for the steps, half for
+// the features, and the full width below `md`.
+function Wash({ hue, sizes }: { hue: keyof typeof WASHES; sizes: string }) {
+  const { name } = WASHES[hue];
+
   return (
     <img
-      src={WASHES[hue].src}
+      src={`/home/${name}.webp`}
+      srcSet={`/home/${name}-600.webp 600w, /home/${name}.webp 1200w`}
+      sizes={sizes}
       alt=""
       width={1200}
       height={900}
@@ -929,9 +936,9 @@ function Features() {
           title="What goes on the invoice."
           description="For freelancers and anyone with a side project who needs to bill a client, not set up accounting software."
         />
-        <dl className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 md:grid-cols-2">
+        <ul className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 md:grid-cols-2">
           {FEATURES.map(feature => (
-            <div
+            <li
               key={feature.title}
               className="row-span-2 grid grid-rows-subgrid gap-6"
             >
@@ -943,7 +950,10 @@ function Features() {
                   !feature.isPageCrop && "min-h-48 max-sm:[--pad:--spacing(4)]"
                 )}
               >
-                <Wash hue={feature.hue} />
+                <Wash
+                  hue={feature.hue}
+                  sizes="(min-width: 1152px) 560px, (min-width: 768px) 50vw, 100vw"
+                />
                 {feature.isPageCrop ? (
                   feature.specimen
                 ) : (
@@ -958,16 +968,16 @@ function Features() {
                 )}
               </div>
               <div className="flex flex-col gap-2">
-                <dt className={cn(typeClass("subtitle"), "font-medium")}>
+                <h3 className={cn(typeClass("subtitle"), "font-medium")}>
                   {feature.title}
-                </dt>
-                <dd className={cn(BODY_TEXT, "max-w-[52ch]")}>
+                </h3>
+                <p className={cn(BODY_TEXT, "max-w-[52ch]")}>
                   {feature.description}
-                </dd>
+                </p>
               </div>
-            </div>
+            </li>
           ))}
-        </dl>
+        </ul>
         <div className="mt-12 flex flex-col gap-6 rounded-xl bg-white p-6 ring-1 ring-zinc-950/10 sm:mt-16 sm:p-8">
           <h3 className={cn(typeClass("subtitle"), "font-medium")}>
             Also in the editor
@@ -1050,7 +1060,7 @@ function PdfCrop({
   return (
     <img
       src={render.src}
-      alt=""
+      alt={render.alt}
       width={Math.round(render.crop.width * PDF_RENDER_SCALE)}
       height={Math.round(render.crop.height * PDF_RENDER_SCALE)}
       fetchPriority="low"
@@ -1080,6 +1090,12 @@ function PaymentSpecimen() {
   );
 }
 
+// A real <table>, so text extractors and AI crawlers keep the comparison,
+// laid out as one grid per row. The roles repeat the elements' own because
+// Safari drops table semantics from table elements given a CSS display.
+// (jsx-a11y also reads <td> as an interactive grid cell, so it objects to
+// role="cell" on one.)
+/* eslint-disable jsx-a11y/no-redundant-roles, jsx-a11y/no-interactive-element-to-noninteractive-role */
 function Comparison() {
   const [ownColumn, ...otherColumns] = COMPARISON_COLUMNS;
   const tableLabel = `${ownColumn.label} compared with ${new Intl.ListFormat(
@@ -1091,29 +1107,30 @@ function Comparison() {
     <section id="compare" className="py-16 sm:py-20">
       <div className={CONTAINER}>
         <SectionHeading
-          title="How billsend compares."
+          title="How billsend compares with other invoice generators."
           description="billsend makes the invoice and stops there. To email invoices and track payments, you want accounting software."
           isCentered
         />
-        <div
+        <table
           role="table"
           aria-label={tableLabel}
-          className="mx-auto mt-12 max-w-4xl rounded-2xl bg-white p-2 ring-1 ring-zinc-950/10 sm:mt-16 sm:p-6 md:p-8"
+          className="mx-auto mt-12 block max-w-4xl rounded-2xl bg-white p-2 ring-1 ring-zinc-950/10 sm:mt-16 sm:p-6 md:p-8"
           style={
             {
               "--comparison-columns": COMPARISON_COLUMNS.length
             } as CSSProperties
           }
         >
-          <div role="rowgroup">
-            <div role="row" className={COMPARISON_GRID}>
-              <span role="columnheader">
+          <thead role="rowgroup" className="block">
+            <tr role="row" className={COMPARISON_GRID}>
+              <th role="columnheader" scope="col">
                 <span className="sr-only">Feature</span>
-              </span>
+              </th>
               {COMPARISON_COLUMNS.map((column, index) => (
-                <span
+                <th
                   key={column.label}
                   role="columnheader"
+                  scope="col"
                   className={cn(
                     // Phones set the short headers small (11px under 400px,
                     // then 12px) so they fit the narrowest columns.
@@ -1125,31 +1142,32 @@ function Comparison() {
                 >
                   <span className="md:hidden">{column.shortLabel}</span>
                   <span className="max-md:hidden">{column.label}</span>
-                </span>
+                </th>
               ))}
-            </div>
-          </div>
-          <div role="rowgroup">
+            </tr>
+          </thead>
+          <tbody role="rowgroup" className="block">
             {COMPARISON_ROWS.map((row, rowIndex) => {
               const isLastRow = rowIndex === COMPARISON_ROWS.length - 1;
 
               return (
-                <div
+                <tr
                   key={row.label}
                   role="row"
                   className={cn(COMPARISON_GRID, "border-t border-zinc-950/10")}
                 >
-                  <span
+                  <th
                     role="rowheader"
+                    scope="row"
                     className={cn(
                       typeClass("caption"),
-                      "text-ink self-center py-4 pr-2 text-balance wrap-break-word min-[400px]:pr-3 md:pr-6"
+                      "text-ink self-center py-4 pr-2 text-left font-normal text-balance wrap-break-word min-[400px]:pr-3 md:pr-6"
                     )}
                   >
                     {row.label}
-                  </span>
+                  </th>
                   {COMPARISON_COLUMNS.map((column, cellIndex) => (
-                    <span
+                    <td
                       key={column.label}
                       role="cell"
                       className={cn(
@@ -1159,17 +1177,19 @@ function Comparison() {
                       )}
                     >
                       <ComparisonCell value={row.cells[cellIndex]} />
-                    </span>
+                    </td>
                   ))}
-                </div>
+                </tr>
               );
             })}
-          </div>
-        </div>
+          </tbody>
+        </table>
       </div>
     </section>
   );
 }
+
+/* eslint-enable jsx-a11y/no-redundant-roles, jsx-a11y/no-interactive-element-to-noninteractive-role */
 
 // Colour carries the answer: sage yes, blush no, butter where tools vary. The
 // shapes differ too, so the table reads without colour.
@@ -1221,7 +1241,7 @@ function Questions() {
             href={`${SOURCE_URL}/issues`}
             target="_blank"
             rel="noopener noreferrer"
-            className={TEXT_LINK}
+            className={cn(TEXT_LINK, "min-h-11")}
           >
             Ask on GitHub
             <IconArrowUpRight className="size-4 shrink-0" aria-hidden="true" />
@@ -1294,6 +1314,8 @@ function Closing() {
       <div className="relative isolate mt-12 flex justify-center overflow-hidden bg-blue-100 px-6 pt-12 pb-16 sm:mt-16 sm:pt-16 sm:pb-20">
         <img
           src="/home/closing-city.webp"
+          srcSet="/home/closing-city-900.webp 900w, /home/closing-city-1200.webp 1200w, /home/closing-city.webp 1792w"
+          sizes="100vw"
           alt=""
           width={1792}
           height={1008}
@@ -1306,7 +1328,7 @@ function Closing() {
         >
           <img
             src={CLOSING_RENDER.src}
-            alt=""
+            alt={CLOSING_RENDER.alt}
             width={CLOSING_RENDER.width}
             height={Math.round(
               (CLOSING_RENDER.width * PAGE_HEIGHT) / PAGE_WIDTH
@@ -1317,60 +1339,5 @@ function Closing() {
         </div>
       </div>
     </section>
-  );
-}
-
-function SiteFooter() {
-  return (
-    <footer>
-      <div
-        className={cn(
-          CONTAINER,
-          "flex flex-col gap-6 py-10 sm:flex-row sm:items-center sm:justify-between"
-        )}
-      >
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <Wordmark />
-          <p className={cn(typeClass("body"), "text-zinc-500")}>
-            Invoices that stay on your device.
-          </p>
-        </div>
-        <ul
-          className={cn(
-            typeClass("body"),
-            "flex flex-wrap items-center gap-x-6 gap-y-2 text-zinc-600"
-          )}
-        >
-          <li>
-            <FooterLink href={`${SOURCE_URL}/issues`}>
-              Report an issue
-            </FooterLink>
-          </li>
-          <li>
-            <FooterLink href={SOURCE_URL}>Source on GitHub</FooterLink>
-          </li>
-          <li suppressHydrationWarning>
-            © {new Date().getFullYear()} billsend.io
-          </li>
-        </ul>
-      </div>
-    </footer>
-  );
-}
-
-function FooterLink({ href, children }: { href: string; children: ReactNode }) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        "hover:text-ink inline-flex min-h-11 items-center rounded-sm sm:min-h-10",
-        FOCUS_RING
-      )}
-    >
-      {children}
-      <span className="sr-only"> (opens in a new tab)</span>
-    </a>
   );
 }

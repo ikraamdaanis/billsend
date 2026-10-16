@@ -1,21 +1,46 @@
-const SITE_URL = "https://billsend.io";
-const SITE_NAME = "billsend";
+export const SITE_URL = "https://billsend.io";
+export const SITE_NAME = "billsend";
 
 export const SITE_TITLE = "billsend: Free, Private Invoice Generator";
 
 export const SITE_DESCRIPTION =
-  "Create and download professional invoices for free, right in your browser. No account and no upload: your invoices stay on your device and leave it only in files you save.";
+  "Free invoice generator that runs in your browser. Add your details, download a PDF, send it. No account, and your invoices never leave your device.";
 
-const SITE_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+export const SITE_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
 
-export function siteMeta() {
+export const SOURCE_URL = "https://github.com/ikraamdaanis/billsend";
+
+export const MAKER_NAME = "Ikraam";
+
+export const MAKER_URL = "https://github.com/ikraamdaanis";
+
+const SITE_OG_IMAGE_ALT =
+  "billsend: Send the invoice. Keep everything else. Sailing ships on a calm harbour at sunrise.";
+
+// The absolute address of a page, the form canonicals and og:url need.
+export function absoluteUrl(path: string) {
+  return new URL(path, SITE_URL).href;
+}
+
+// A page's title, description and share card. The root route sets the
+// homepage's as the fallback for pages without their own (404, errors); each
+// page passes its own path so og:url names it rather than the homepage.
+export function siteMeta({
+  path = "/",
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION
+}: {
+  path?: string;
+  title?: string;
+  description?: string;
+} = {}) {
   return [
     {
-      title: SITE_TITLE
+      title
     },
     {
       name: "description",
-      content: SITE_DESCRIPTION
+      content: description
     },
     {
       property: "og:type",
@@ -27,19 +52,31 @@ export function siteMeta() {
     },
     {
       property: "og:url",
-      content: SITE_URL
+      content: absoluteUrl(path)
     },
     {
       property: "og:title",
-      content: SITE_TITLE
+      content: title
     },
     {
       property: "og:description",
-      content: SITE_DESCRIPTION
+      content: description
     },
     {
       property: "og:image",
       content: SITE_OG_IMAGE
+    },
+    {
+      property: "og:image:width",
+      content: "1200"
+    },
+    {
+      property: "og:image:height",
+      content: "630"
+    },
+    {
+      property: "og:image:alt",
+      content: SITE_OG_IMAGE_ALT
     },
     {
       name: "twitter:card",
@@ -47,15 +84,25 @@ export function siteMeta() {
     },
     {
       name: "twitter:title",
-      content: SITE_TITLE
+      content: title
     },
     {
       name: "twitter:description",
-      content: SITE_DESCRIPTION
+      content: description
     },
     {
       name: "twitter:image",
       content: SITE_OG_IMAGE
+    },
+    {
+      name: "twitter:image:alt",
+      content: SITE_OG_IMAGE_ALT
     }
   ];
+}
+
+// Query strings (`?font=`, `?open=`, tracking tags) don't change a page, so
+// every variant points search engines at the bare address.
+export function canonicalLink(path: string) {
+  return { rel: "canonical", href: absoluteUrl(path) };
 }
