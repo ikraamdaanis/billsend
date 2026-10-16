@@ -25,7 +25,7 @@ const CUSTOM_TERMS = "custom";
 
 export function DetailsSection() {
   return (
-    <InspectorSection title="Details">
+    <InspectorSection id="details" title="Details">
       <CurrencyRow />
       <DatesRows />
     </InspectorSection>

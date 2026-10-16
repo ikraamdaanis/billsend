@@ -44,7 +44,7 @@ const SECTION_GROUPS: {
 // page and the PDF (and its money from the totals) but keeps what was typed.
 export function SectionsSection() {
   return (
-    <InspectorSection title="Sections">
+    <InspectorSection id="sections" title="Sections">
       {SECTION_GROUPS.map(group => (
         <div key={group.label} className="flex flex-col gap-0.5">
           <InspectorGroupLabel>{group.label}</InspectorGroupLabel>
