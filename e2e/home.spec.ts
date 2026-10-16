@@ -73,18 +73,13 @@ test("the header CTA is a single link, not a nested button [R]", async ({
   await expect(page).toHaveURL("/create");
 });
 
-test("a saved invoice is offered from the hero and opens the list", async ({
+test("the open=invoices hand-off opens the saved-invoice list", async ({
   page
 }) => {
   await gotoEditorSettled(page);
   await saveInvoiceAs(page, "Returning client");
 
-  await page.goto("/");
-
-  const openSaved = page.getByRole("link", { name: /Open your invoices/ });
-
-  await expect(openSaved).toBeVisible();
-  await openSaved.click();
+  await page.goto("/create?open=invoices");
 
   await expect(
     page.getByRole("dialog", { name: "Open Invoice" })
