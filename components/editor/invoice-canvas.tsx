@@ -70,6 +70,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
       >
         <div
           ref={pageRef}
+          data-paper
           className="border-paper-border bg-paper text-paper-foreground min-h-[297mm] w-[210mm] border p-[40pt] shadow-md"
           style={{
             ...CANVAS_STATIC_STYLES,

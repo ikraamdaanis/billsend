@@ -16,7 +16,9 @@
 @import "@fontsource/ibm-plex-mono/600.css";
 @import "@fontsource/ibm-plex-mono/700.css";
 
-@custom-variant dark (&:is(.dark *));
+/* The invoice page ([data-paper]) is always light, so dark: utilities skip it
+   even when the editor around it is dark. */
+@custom-variant dark (&:is(.dark *):not(:is([data-paper], [data-paper] *)));
 
 @theme inline {
   --font-geist: "Geist Variable", "Geist Fallback", sans-serif;
@@ -55,7 +57,7 @@
   --color-paper-muted: oklch(0.967 0.001 286.375);
   --color-paper-muted-foreground: oklch(0.5 0.016 286);
   --color-paper-border: oklch(0.871 0.006 286.286);
-  --color-desk: oklch(0.92 0.004 286.32);
+  --color-desk: var(--desk);
 
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
@@ -200,6 +202,7 @@ code {
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: var(--color-brand-500);
+  --desk: oklch(0.92 0.004 286.32);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -277,6 +280,60 @@ code {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* The editor's chrome: plain neutral greys with a near-black (light) or
+   near-white (dark) primary, and blue kept for focus rings and switches. The
+   /create route sets data-editor-theme on <html> (its head script before first
+   paint, then useEditorTheme), and removes it on the way out, so the homepage
+   keeps its own palette. It sits on <html> rather than an editor wrapper
+   because menus and popovers portal to <body>. Dark also adds .dark, for the
+   primitives' dark: variants; these blocks out-rank its tokens. The invoice
+   page ([data-paper]) takes the light tokens back in both themes, so the
+   inputs on it stay white with dark ink like the PDF. */
+html[data-editor-theme],
+html[data-editor-theme] [data-paper] {
+  --background: #fcfcfc;
+  --foreground: #1c1c1c;
+  --card: #ffffff;
+  --card-foreground: #1c1c1c;
+  --popover: #ffffff;
+  --popover-foreground: #1c1c1c;
+  --primary: #1c1c1c;
+  --primary-foreground: #ffffff;
+  --secondary: #f2f2f2;
+  --secondary-foreground: #1c1c1c;
+  --muted: #f2f2f2;
+  --muted-foreground: #646464;
+  --accent: #eaeaea;
+  --accent-foreground: #1c1c1c;
+  --border: #eaeaea;
+  --input: #e1e1e1;
+  --ring: #3c7eeb;
+  --desk: #f6f6f6;
+  color-scheme: light;
+}
+
+html[data-editor-theme="dark"] {
+  --background: #161616;
+  --foreground: #f5f5f5;
+  --card: #232323;
+  --card-foreground: #f5f5f5;
+  --popover: #232323;
+  --popover-foreground: #f5f5f5;
+  --primary: #f5f5f5;
+  --primary-foreground: #161616;
+  --secondary: #232323;
+  --secondary-foreground: #f5f5f5;
+  --muted: #282828;
+  --muted-foreground: #a8a8a8;
+  --accent: #282828;
+  --accent-foreground: #f5f5f5;
+  --border: #232323;
+  --input: #303030;
+  --ring: #326ccb;
+  --desk: #121212;
+  color-scheme: dark;
 }
 
 @theme inline {

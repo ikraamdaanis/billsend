@@ -11,7 +11,9 @@ import {
   InvoiceDocumentProvider,
   useInvoiceDocument
 } from "~/context/invoice-document-context";
+import { useApplyEditorTheme } from "~/hooks/use-editor-theme";
 import type { InvoiceFont } from "~/types";
+import { EDITOR_THEME_SCRIPT } from "~/utils/editor-theme";
 import { canonicalLink, siteMeta } from "~/utils/site-meta";
 
 // Optional hand-offs from the homepage: `font` starts a fresh invoice in the
@@ -26,7 +28,8 @@ export const Route = createFileRoute("/create")({
       description:
         "Fill in your details, your client and the line items, then download the invoice as a PDF. Free, with no account, and it all stays in this browser."
     }),
-    links: [canonicalLink("/create")]
+    links: [canonicalLink("/create")],
+    scripts: [{ children: EDITOR_THEME_SCRIPT }]
   }),
   validateSearch: (
     search: Record<string, unknown>
@@ -48,6 +51,7 @@ function RouteComponent() {
   return (
     <section className="mx-auto flex w-full flex-col overflow-hidden">
       <ClientOnly fallback={<EditorLoading />}>
+        <EditorThemeSync />
         <InvoiceDocumentProvider fallback={<EditorLoading />}>
           <StartingFont />
           <InvoiceEditor />
@@ -55,6 +59,14 @@ function RouteComponent() {
       </ClientOnly>
     </section>
   );
+}
+
+// The head script themes the first paint; this keeps <html> in step after that
+// (toggles, other tabs, the system scheme) and clears it when leaving.
+function EditorThemeSync() {
+  useApplyEditorTheme();
+
+  return null;
 }
 
 // Runs once hydration has settled (the provider only renders its children
