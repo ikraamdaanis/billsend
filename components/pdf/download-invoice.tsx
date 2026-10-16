@@ -1,14 +1,11 @@
-import { pdf } from "@react-pdf/renderer";
 import type { ComponentProps } from "react";
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { toast } from "sonner";
-import { InvoicePDF } from "~/components/pdf/invoice-generator";
 import { Button } from "~/components/ui/button";
 import { getImageBlob } from "~/db";
 import { cn } from "~/lib/utils";
 import { useInvoiceData } from "~/stores/invoice-selectors";
 import { isDirectImageUrl } from "~/utils/is-direct-image-url";
-import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
 
 // react-pdf can only decode PNG and JPEG. Any other logo format the uploader
 // accepts (WebP, GIF, ...) is silently dropped from the PDF, so re-encode it as
@@ -34,6 +31,20 @@ async function toPdfSafeImageBlob(blob: Blob): Promise<Blob> {
   });
 }
 
+// The PDF engine is most of the editor's code, so it stays out of the
+// editor's first load. It is fetched once the editor is idle (so a PDF can
+// still be made after going offline), or sooner when the button is hovered
+// or focused; a click awaits whichever request is already under way.
+function loadPdfBuilder() {
+  return import("~/components/pdf/build-invoice-pdf");
+}
+
+function prefetchPdfBuilder() {
+  loadPdfBuilder().catch(() => {
+    // A click tries again and reports the failure.
+  });
+}
+
 export function DownloadInvoice({
   className,
   ...props
@@ -41,6 +52,20 @@ export function DownloadInvoice({
   const invoice = useInvoiceData();
 
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (typeof requestIdleCallback === "undefined") {
+      const timeout = setTimeout(prefetchPdfBuilder, 2000);
+
+      return () => clearTimeout(timeout);
+    }
+
+    const idleCallback = requestIdleCallback(prefetchPdfBuilder, {
+      timeout: 5000
+    });
+
+    return () => cancelIdleCallback(idleCallback);
+  }, []);
 
   // Generate PDF blob URL for "Open in new tab" button
   function handleCreatePdfUrl() {
@@ -56,8 +81,6 @@ export function DownloadInvoice({
       let logoUrlIsOwned = false;
 
       try {
-        registerInvoicePdfFonts();
-
         // Resolve the logo from IndexedDB up front. The reactive image loader
         // can still be an empty string right after opening a saved invoice, so
         // reading the blob here guarantees the PDF is built with the logo.
@@ -73,7 +96,8 @@ export function DownloadInvoice({
         }
 
         const stableInvoice = { ...invoice, image: logoUrl };
-        const blob = await pdf(<InvoicePDF invoice={stableInvoice} />).toBlob();
+        const { buildInvoicePdfBlob } = await loadPdfBuilder();
+        const blob = await buildInvoicePdfBlob(stableInvoice);
         const url = URL.createObjectURL(blob);
 
         // Update the window location with the blob URL
@@ -101,6 +125,8 @@ export function DownloadInvoice({
     <Button
       variant="default"
       onClick={handleCreatePdfUrl}
+      onPointerEnter={prefetchPdfBuilder}
+      onFocus={prefetchPdfBuilder}
       disabled={pending}
       className={cn(className)}
       {...props}
