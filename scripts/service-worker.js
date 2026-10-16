@@ -7,8 +7,11 @@
 //   background, so a deploy shows from the visit after it lands.
 // - Built files carry a content hash in their name, so a cached copy is always
 //   right; they come from the cache and are fetched only if missing.
-// - Everything else (pictures, icons, other fonts) comes from the cache when
-//   it's there and is refreshed in the background.
+// - Pictures are left to the browser. Its own image cache hands a reload
+//   its pictures in the first frame; one detour through the worker is enough
+//   to paint the page without them first, so the invoice flashed white.
+// - Everything else (icons, other fonts) comes from the cache when it's there
+//   and is refreshed in the background.
 
 const PRECACHE_PREFIX = "billsend-precache-";
 const PRECACHE = PRECACHE_PREFIX + BUILD.version;
@@ -16,6 +19,19 @@ const RUNTIME = "billsend-runtime";
 const PAGES = ["/", "/privacy", "/create"];
 
 self.addEventListener("install", event => {
+  // Where the browser supports it, pictures skip the worker altogether rather
+  // than reach it and be passed on.
+  if (event.addRoutes) {
+    event.waitUntil(
+      event
+        .addRoutes({
+          condition: { requestDestination: "image" },
+          source: "network"
+        })
+        .catch(() => {})
+    );
+  }
+
   event.waitUntil(
     caches
       .open(PRECACHE)
@@ -47,6 +63,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
 
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
+  if (request.destination === "image") return;
 
   if (request.mode === "navigate") {
     if (PAGES.includes(url.pathname)) event.respondWith(servePage(event, url));
