@@ -7,6 +7,7 @@ import { formatCurrency } from "~/consts/currencies";
 import { useFileActions } from "~/context/file-actions-context";
 import { useInvoiceDocument } from "~/context/invoice-document-context";
 import { watchInvoices, watchTemplates } from "~/db";
+import { usePersistentState } from "~/hooks/use-persistent-state";
 import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 
@@ -39,7 +40,12 @@ function matchesQuery(text: string, query: string) {
 // pages list in Framer. Opening one goes through the same unsaved-changes
 // check as the project menu.
 export function InvoicesPanel() {
-  const [tab, setTab] = useState<LibraryTab>("invoices");
+  const [tab, setTab] = usePersistentState<LibraryTab>(
+    "billsend-editor-library-tab",
+    "invoices",
+    stored =>
+      stored === "invoices" || stored === "templates" ? stored : undefined
+  );
   const [query, setQuery] = useState("");
   const { newInvoice } = useFileActions();
 

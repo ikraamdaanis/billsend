@@ -38,7 +38,7 @@ export function StyleSection() {
   }
 
   return (
-    <InspectorSection title="Style">
+    <InspectorSection id="style" title="Style">
       <div className="flex flex-col gap-1.5">
         <InspectorGroupLabel>Font</InspectorGroupLabel>
         <div

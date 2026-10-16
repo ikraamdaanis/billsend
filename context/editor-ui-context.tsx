@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { createContext, useContext, useState } from "react";
 import { useMediaQuery } from "~/hooks/use-media-query";
+import {
+  readStoredValue,
+  writeStoredValue
+} from "~/hooks/use-persistent-state";
 
 type EditorMode = "edit" | "preview";
 
@@ -8,48 +12,63 @@ type PanelState = { left: boolean; right: boolean };
 
 const PANELS_STORAGE_KEY = "billsend-editor-panels";
 
+const MODE_STORAGE_KEY = "billsend-editor-mode";
+
+const ALL_CLOSED: PanelState = { left: false, right: false };
+
 // Below this width the side panels open over the canvas instead of beside it,
 // so they start closed there.
 export const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 
-function readStoredPanels(): PanelState {
-  if (window.matchMedia(NARROW_VIEWPORT_QUERY).matches) {
-    return { left: false, right: false };
+function isNarrowViewport() {
+  return window.matchMedia(NARROW_VIEWPORT_QUERY).matches;
+}
+
+function parsePanels(stored: unknown): PanelState | undefined {
+  if (
+    typeof stored !== "object" ||
+    stored === null ||
+    !("left" in stored) ||
+    !("right" in stored)
+  ) {
+    return undefined;
   }
 
-  try {
-    const stored: unknown = JSON.parse(
-      localStorage.getItem(PANELS_STORAGE_KEY) ?? "null"
-    );
+  return { left: stored.left === true, right: stored.right === true };
+}
 
-    if (
-      typeof stored === "object" &&
-      stored !== null &&
-      "left" in stored &&
-      "right" in stored
-    ) {
-      return { left: stored.left === true, right: stored.right === true };
-    }
-  } catch {
-    // Unreadable or blocked storage falls through to the default.
-  }
+function parseMode(stored: unknown): EditorMode | undefined {
+  return stored === "edit" || stored === "preview" ? stored : undefined;
+}
 
-  return { left: true, right: true };
+// The layout the editor reopens with: the panels and mode as they were left.
+// Preview reopens in Preview, with the panels it hid ready to come back. Phones
+// always start with the panels closed, since each covers the page.
+function readInitialLayout(): {
+  mode: EditorMode;
+  panels: PanelState;
+  panelsBeforePreview: PanelState | null;
+} {
+  const storedPanels = isNarrowViewport()
+    ? ALL_CLOSED
+    : (readStoredValue(PANELS_STORAGE_KEY, parsePanels) ?? {
+        left: true,
+        right: true
+      });
+  const mode = readStoredValue(MODE_STORAGE_KEY, parseMode) ?? "edit";
+
+  return mode === "preview"
+    ? { mode, panels: ALL_CLOSED, panelsBeforePreview: storedPanels }
+    : { mode, panels: storedPanels, panelsBeforePreview: null };
 }
 
 function storePanels(panels: PanelState) {
-  if (window.matchMedia(NARROW_VIEWPORT_QUERY).matches) return;
-
-  try {
-    localStorage.setItem(PANELS_STORAGE_KEY, JSON.stringify(panels));
-  } catch {
-    // Not remembering the layout is fine.
-  }
+  if (!isNarrowViewport()) writeStoredValue(PANELS_STORAGE_KEY, panels);
 }
 
 // The editor shell's own state: whether the page is being edited or previewed,
 // and which side panels are open. Previewing hides both panels and leaving it
-// puts back whichever were open.
+// puts back whichever were open. Both are remembered across reloads.
 const EditorUiContext = createContext<{
   mode: EditorMode;
   setMode: (mode: EditorMode) => void;
@@ -66,12 +85,18 @@ const EditorUiContext = createContext<{
 } | null>(null);
 
 export function EditorUiProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<EditorMode>("edit");
-  const [panels, setPanels] = useState<PanelState>(readStoredPanels);
+  const [initialLayout] = useState(readInitialLayout);
+  const [mode, setModeValue] = useState<EditorMode>(initialLayout.mode);
+  const [panels, setPanels] = useState<PanelState>(initialLayout.panels);
   const [panelsBeforePreview, setPanelsBeforePreview] =
-    useState<PanelState | null>(null);
+    useState<PanelState | null>(initialLayout.panelsBeforePreview);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const isNarrow = useMediaQuery(NARROW_VIEWPORT_QUERY);
+
+  function setModeState(next: EditorMode) {
+    setModeValue(next);
+    writeStoredValue(MODE_STORAGE_KEY, next);
+  }
 
   function applyPanels(next: PanelState) {
     setPanels(next);
