@@ -15,6 +15,7 @@ import { CanvasPill } from "~/components/editor/shell/canvas-pill";
 import { EditorShortcuts } from "~/components/editor/shell/editor-shortcuts";
 import { EditorTopBar } from "~/components/editor/shell/editor-top-bar";
 import { InspectorPanel } from "~/components/editor/shell/inspector/inspector-panel";
+import { InvoicesPanel } from "~/components/editor/shell/invoices-panel";
 import { PanelToggle, SidePanel } from "~/components/editor/shell/side-panel";
 import { Button, buttonVariants } from "~/components/ui/button";
 import {
@@ -40,9 +41,13 @@ export function InvoiceEditor() {
           <div className="flex h-dvh w-full flex-col">
             <EditorTopBar
               onLeave={() => setIsLeaveDialogOpen(true)}
+              start={<PanelToggle side="left" />}
               end={<PanelToggle side="right" />}
             />
             <div className="relative flex min-h-0 flex-1">
+              <SidePanel side="left" label="Invoices">
+                <InvoicesPanel />
+              </SidePanel>
               <main className="bg-desk relative flex min-w-0 flex-1 flex-col">
                 <CanvasArea />
                 <CanvasPill />
