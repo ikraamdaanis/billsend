@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { StrictMode } from "react";
-import { Toaster } from "sonner";
+import { AppToaster } from "~/components/app-toaster";
 import { NotFound } from "~/components/not-found";
 import { RootErrorBoundary } from "~/components/root-error-boundary";
 import appCss from "~/styles/globals.css?url";
@@ -78,15 +78,17 @@ export const Route = createRootRoute({
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
+  // The editor's head script themes <html> (data-editor-theme, .dark) before
+  // React hydrates, so its attributes legitimately differ from the server's.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
         <StrictMode>{children}</StrictMode>
         <ScriptOnce>{REVEAL_AFTER_SCROLL_RESTORED_SCRIPT}</ScriptOnce>
-        <Toaster richColors />
+        <AppToaster />
         <Scripts />
       </body>
     </html>

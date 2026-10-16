@@ -56,6 +56,12 @@ export type InvoiceFont =
 
 export type InvoiceSize = "small" | "medium" | "large";
 
+// The editor chrome's colour scheme. The preference is what the person chose
+// ("system" follows the operating system); the theme is what it resolves to.
+export type EditorThemePreference = "light" | "dark" | "system";
+
+export type EditorTheme = "light" | "dark";
+
 export type InvoiceTheme = {
   font: InvoiceFont;
   fontWeight: TextSettings["weight"];
