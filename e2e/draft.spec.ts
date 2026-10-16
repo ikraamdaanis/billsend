@@ -3,6 +3,7 @@ import {
   clickFileMenuItem,
   draftContains,
   gotoEditorReady,
+  openLeaveDialog,
   saveInvoiceAs
 } from "./helpers";
 
@@ -91,7 +92,7 @@ test("leaving to home and returning preserves identity and content [R]", async (
   await saveInvoiceAs(page, "Trip invoice");
   await page.getByLabel("From details").fill("Return seller");
 
-  await page.getByRole("button", { name: "Homepage" }).click();
+  await openLeaveDialog(page);
   await page.getByRole("link", { name: "Leave" }).click();
   await expect(page).toHaveURL("/");
 

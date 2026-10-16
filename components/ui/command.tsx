@@ -42,10 +42,6 @@ export function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>{title}</DialogTitle>
-        <DialogDescription>{description}</DialogDescription>
-      </DialogHeader>
       <DialogContent
         className={cn(
           "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
@@ -53,6 +49,10 @@ export function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
+        <DialogHeader className="sr-only">
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
         {children}
       </DialogContent>
     </Dialog>
@@ -168,6 +168,7 @@ export function CommandShortcut({
 }: ComponentProps<"span">) {
   return (
     <span
+      aria-hidden="true"
       data-slot="command-shortcut"
       className={cn(
         "text-muted-foreground group-data-selected/command-item:text-foreground ml-auto text-xs tracking-widest",

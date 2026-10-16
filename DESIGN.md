@@ -317,7 +317,7 @@ rosette engraves itself.
 - White paper on a grey desk: the invoice page previews the PDF exactly.
 - Tight geometry: 3px surfaces, 4px controls, 32px default control height.
 - Security-print homepage: tinted ground, generated guilloche, engraved Archivo capitals, red serials, perforated dividers, one engraved plate CTA.
-- Light only in practice: `.dark` tokens exist but nothing enables them yet.
+- The editor has its own neutral chrome (plain greys, a near-black or near-white primary) and a light/dark switch; the rest of the site is light.
 
 ## Colors
 
@@ -433,7 +433,9 @@ Browser chrome: the `theme-color` meta is `#005fca`, the hex of `brand-600`.
 **The One Voice Rule.** The blue-violet `brand` ramp is the only accent. Never
 introduce a second hue for emphasis; status colours are for status only. The
 homepage's numbering red is a printing ink, not an accent, and lives under the
-Numbering Red Rule.
+Numbering Red Rule. In the editor chrome the primary action is neutral
+(`primary`: near-black in light, near-white in dark), and blue appears only as
+`ring`, on focus rings and switches.
 
 **The 600 Fill Rule.** Solid brand fills under white text are `brand-600` or
 darker. `brand-500` is for rings and borders.
@@ -451,9 +453,13 @@ in the numbering face.
 security-print tokens, white paper, and the brand ramp; it uses no raw Tailwind
 greys, and the editor never uses the security-print tokens.
 
-**The Dark Mode Honesty Rule.** `.dark` values exist for every chrome role, but
-no route sets the `dark` class today. Use role tokens so dark mode stays
-possible; do not claim or test light/dark parity until something enables it.
+**The Dark Mode Honesty Rule.** Only the editor has a dark mode. The `/create`
+route sets `data-editor-theme` (and `.dark` when dark) on `<html>` before first
+paint and clears it on the way out, and the `html[data-editor-theme]` blocks in
+`globals.css` redefine the chrome roles for it (light: panels `#fcfcfc`, desk
+`#f6f6f6`; dark: panels `#161616`, desk `#121212`). The page (`[data-paper]`)
+takes the light roles back in both themes, and `dark:` utilities skip it. The
+homepage and privacy page stay light; do not claim dark mode for them.
 
 ## Typography
 
@@ -553,18 +559,20 @@ homepage route and appears only there. The editor and dialogs never use it.
   runs `xs` (24px), `sm` (28px), `default` (32px), `lg` (36px), plus square icon
   variants at matching sizes.
 - **Touch gets 44px.** Coarse pointers enlarge the targets that matter through
-  `pointer-coarse:` variants: toolbar logo, download button, zoom buttons, the
-  homepage header plate, typeface segments, and homepage nav, footer, and check
-  links (40px at rest) reach 44px; menubar triggers grow to 32 to 40px. Fine
-  pointers keep the compact sizes.
-- **Editor frame.** A 64px toolbar sits above a full-height desk. The desk
-  centres the page with 12px padding on phones and 32px from `md` up, plus
-  80px bottom padding so the zoom control never covers the page foot.
+  `pointer-coarse:` variants: the editor's top bar buttons, download button,
+  canvas pill controls, inspector rows, the homepage header plate, typeface
+  segments, and homepage nav, footer, and check links (40px at rest) reach 44px.
+  Fine pointers keep the compact sizes.
+- **Editor frame.** A 48px top bar sits above three columns: the invoices panel
+  (256px), the desk, and the inspector (288px). Both panels slide shut to
+  nothing; below 768px they open over the desk with a tap-to-close backdrop.
+  The desk centres the page with 12px padding on phones and 32px from `md` up,
+  plus 80px bottom padding so the canvas pill never covers the page foot.
 - **The page is viewport-independent.** The A4 sheet is fixed at 210mm by at
   least 297mm with 40pt padding, and nothing inside it uses responsive
   breakpoints, so what you see on screen matches the PDF. Small screens scale
   the whole sheet with zoom; they never reflow it.
-- **Zoom.** Presets run 50% to 175%, plus Fit. Below 768px the editor opens at
+- **Zoom.** Presets run 50% to 200%, plus Fit. Below 768px the editor opens at
   Fit so the whole invoice is visible; wider screens open at 100%.
 - **Homepage.** Content sits in a `max-w-6xl` (72rem) column. Order: header,
   hero document, privacy band, tour (`#features`), questions, closing
@@ -708,20 +716,34 @@ The A4 sheet (`paper`, `paper-border` hairline, `shadow-md`, 40pt padding) is
 centred on the `desk` backdrop and scaled as a whole by the zoom level. It takes
 the user's chosen invoice font and tracking.
 
-### Zoom Control (signature)
+Editing controls on the page stay out of sight until reached for: "Add item" is
+a quiet row under the table on hover or focus, remove buttons and the pricing
+type toggles appear on row hover, and the empty logo box is a faint dashed
+square whose label shows on hover. On touch they are always shown. Preview
+hides all of them, every placeholder, and every empty row the PDF would skip.
 
-A floating group pinned 12px from the bottom-right of the desk: `background`
-surface, `border` hairline, `rounded-control`, `shadow-menu`, 2px inner padding.
-Ghost icon buttons for minus and plus, and a ghost percentage button between
-them (tabular figures, min 56px wide) that toggles between Fit and 100% and
-reports `aria-pressed` when fitted. All three grow to 44px on coarse pointers.
+### Canvas Pill (signature)
+
+A floating toolbar centred 12px above the bottom of the desk, like Framer's:
+`popover` surface, `rounded-xl`, `shadow-menu`, a hairline ring. An Edit/Preview
+segmented control, zoom minus/percentage/plus (the percentage opens a zoom
+menu), the light/dark switch, and the quick actions (⌘K) button.
+
+### Inspector (signature)
+
+The right panel holds every whole-invoice setting, in collapsible sections:
+Style (font tiles, weight and size segmented controls), Details (currency,
+issue date, payment terms), and Sections (switches for each optional part of
+the invoice). Rows are 13px, labels `muted-foreground`, fields `muted` fills.
 
 ### Navigation
 
-- **Editor toolbar:** 64px, `background` with a bottom `border` hairline. Logo
-  tile (36px, 44px on touch) on the left, document title over a compact
-  menubar, download button on the right. Menubar triggers are Medium 14px,
-  `rounded-surface`, hover and open state `muted`.
+- **Editor top bar:** 48px, `background` with a bottom `border` hairline, in
+  three parts. Left: the logo opens the project menu (the file commands, quick
+  actions, back to the homepage), then the invoices panel toggle. Centre: the
+  document name (a heading button that renames or saves) and a save-status
+  chip. Right: the inspector toggle, Preview, and Download, which opens a
+  popover with the file name, total and last-saved time.
 - **Homepage skip link:** the first focusable element, "Skip to content", a
   white `rounded-control` tab with `shadow-menu` fixed 12px from the top-left,
   held 64px above the viewport and slid into place on focus (transform
