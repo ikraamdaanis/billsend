@@ -4,6 +4,7 @@ import { useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
 import { getCurrencyMarker } from "~/consts/currencies";
+import { useIsPreview } from "~/hooks/use-shown-sections";
 import { useLineItemsSlice, useTheme } from "~/stores/invoice-selectors";
 import type {
   InvoiceItem,
@@ -170,6 +171,7 @@ export function InvoiceLineItems() {
     setTableSettings
   } = useLineItemsSlice();
   const theme = useTheme();
+  const isPreview = useIsPreview();
   const currencySymbol = getCurrencyMarker(currency);
 
   return (
@@ -199,7 +201,7 @@ export function InvoiceLineItems() {
           />
         </div>
       </div>
-      <AddItemButton addItem={addItem} />
+      {!isPreview && <AddItemButton addItem={addItem} />}
     </div>
   );
 }
@@ -334,6 +336,7 @@ function LineItem({
   removeItem: RemoveItem;
 }) {
   const viewRow = buildLineItemRow(item, currency);
+  const isPreview = useIsPreview();
 
   return (
     <div
@@ -354,7 +357,7 @@ function LineItem({
           updateItem={updateItem}
         />
       ))}
-      {itemCount > 1 && (
+      {itemCount > 1 && !isPreview && (
         <RemoveItemButton
           itemId={item.id}
           index={index}

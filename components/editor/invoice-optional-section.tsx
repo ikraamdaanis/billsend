@@ -1,6 +1,7 @@
 import { IconX } from "@tabler/icons-react";
 import type { ComponentProps } from "react";
 import { Button } from "~/components/ui/button";
+import { useIsPreview } from "~/hooks/use-shown-sections";
 import { cn } from "~/lib/utils";
 
 // Editing affordances for optional sections. Like the add / remove item
@@ -33,6 +34,10 @@ export function RemoveSectionButton({
   label: string;
   onClick: () => void;
 }) {
+  const isPreview = useIsPreview();
+
+  if (isPreview) return null;
+
   return (
     <Button
       size="icon-xs"
