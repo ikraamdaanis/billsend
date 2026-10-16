@@ -2,6 +2,7 @@ import {
   IconArrowLeft,
   IconBookmark,
   IconChevronDown,
+  IconCommand,
   IconDeviceFloppy,
   IconDownload,
   IconFile,
@@ -17,12 +18,14 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger
 } from "~/components/ui/dropdown-menu";
+import { useEditorUi } from "~/context/editor-ui-context";
 import { useFileActions } from "~/context/file-actions-context";
 
 // The logo opens one menu with everything the old File menu had, plus the way
 // back to the homepage, like the project menu in Framer.
 export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
   const actions = useFileActions();
+  const { setPaletteOpen } = useEditorUi();
 
   return (
     <DropdownMenu>
@@ -95,6 +98,11 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
           Import Data
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => setPaletteOpen(true)}>
+          <IconCommand aria-hidden="true" />
+          Quick actions
+          <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={onLeave}>
           <IconArrowLeft aria-hidden="true" />
           Back to homepage

@@ -1,6 +1,7 @@
 import {
   IconCheck,
   IconChevronDown,
+  IconCommand,
   IconEye,
   IconMinus,
   IconPencil,
@@ -37,8 +38,26 @@ export function CanvasPill({ children }: { children?: ReactNode }) {
       <ZoomControls />
       <PillDivider />
       <EditorThemeToggle size="icon-sm" className="pointer-coarse:size-11" />
+      <QuickActionsButton />
       {children}
     </div>
+  );
+}
+
+function QuickActionsButton() {
+  const { setPaletteOpen } = useEditorUi();
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      aria-label="Quick actions"
+      title="Quick actions (⌘K)"
+      onClick={() => setPaletteOpen(true)}
+      className="max-md:hidden"
+    >
+      <IconCommand aria-hidden="true" />
+    </Button>
   );
 }
 
