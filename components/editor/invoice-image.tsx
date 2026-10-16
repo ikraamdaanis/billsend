@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { cleanupOrphanedImages, getImageBlob, saveImage } from "~/db";
 import { useImageLoader } from "~/hooks/use-image-loader";
+import { useIsPreview } from "~/hooks/use-shown-sections";
 import { cn } from "~/lib/utils";
 import { useImageSlice, useSectionsSlice } from "~/stores/invoice-selectors";
 
@@ -22,6 +23,7 @@ const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 export function InvoiceImage() {
   const { image: imageId, setImage } = useImageSlice();
   const { sections } = useSectionsSlice();
+  const isPreview = useIsPreview();
   const imageUrl = useImageLoader(imageId);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -77,6 +79,19 @@ export function InvoiceImage() {
   }
 
   if (!sections.logo) return null;
+
+  // Preview shows the logo as the PDF prints it, or nothing.
+  if (isPreview) {
+    return imageUrl ? (
+      <img
+        src={imageUrl}
+        alt="Invoice logo"
+        width={128}
+        height={128}
+        className="rounded-surface size-32 shrink-0 object-cover"
+      />
+    ) : null;
+  }
 
   return (
     <Dropzone

@@ -2,12 +2,12 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { formatCurrency, formatCurrencyWithCode } from "~/consts/currencies";
+import { useIsPreview, useShownSections } from "~/hooks/use-shown-sections";
 import { cn } from "~/lib/utils";
 import {
   useCurrencySymbol,
   useInvoiceTotals,
   usePricingSlice,
-  useSectionsSlice,
   useTheme
 } from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
@@ -61,6 +61,10 @@ function PricingRowToggle({
   onClick: () => void;
   children: ReactNode;
 }) {
+  const isPreview = useIsPreview();
+
+  if (isPreview) return null;
+
   return (
     <button
       type="button"
@@ -83,7 +87,7 @@ function PricingRowToggle({
  * Displays the pricing information for the invoice.
  */
 export function InvoicePricing() {
-  const { sections } = useSectionsSlice();
+  const sections = useShownSections();
 
   return (
     <div className="flex flex-col gap-1 text-right">
