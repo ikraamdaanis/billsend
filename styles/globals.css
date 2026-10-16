@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
 @import "tw-animate-css";
-@import "@fontsource-variable/geist";
+@import "./fonts.css";
 @import "@fontsource-variable/bricolage-grotesque";
 @import "@fontsource-variable/playfair-display";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist-mono";
 @import "@fontsource-variable/jetbrains-mono";
-@import "@fontsource-variable/inter/opsz.css";
 @import "@fontsource-variable/dm-sans";
 @import "@fontsource-variable/ibm-plex-sans";
 @import "@fontsource-variable/lora";
@@ -20,7 +19,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-geist: "Geist Variable", sans-serif;
+  --font-geist: "Geist Variable", "Geist Fallback", sans-serif;
   --font-geist-mono: "Geist Mono Variable", monospace;
   --font-jetbrains-mono: "JetBrains Mono Variable", monospace;
   --font-ibm-plex-mono: "IBM Plex Mono", monospace;
@@ -102,7 +101,7 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
   --font-heading: var(--font-sans);
-  --font-sans: "Inter Variable", sans-serif;
+  --font-sans: "Inter Variable", "Inter Fallback", sans-serif;
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
