@@ -60,6 +60,8 @@ const EditorUiContext = createContext<{
   setPanelOpen: (side: keyof PanelState, open: boolean) => void;
   togglePanel: (side: keyof PanelState) => void;
   toggleAllPanels: () => void;
+  paletteOpen: boolean;
+  setPaletteOpen: (open: boolean) => void;
 } | null>(null);
 
 export function EditorUiProvider({ children }: { children: ReactNode }) {
@@ -67,6 +69,7 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
   const [panels, setPanels] = useState<PanelState>(readStoredPanels);
   const [panelsBeforePreview, setPanelsBeforePreview] =
     useState<PanelState | null>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const isNarrow = useMediaQuery(NARROW_VIEWPORT_QUERY);
 
   function applyPanels(next: PanelState) {
@@ -122,7 +125,9 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
       if (mode === "preview") setModeState("edit");
       setPanelsBeforePreview(null);
       applyPanels({ left: !anyOpen, right: !anyOpen && !isNarrow });
-    }
+    },
+    paletteOpen,
+    setPaletteOpen
   };
 
   return (

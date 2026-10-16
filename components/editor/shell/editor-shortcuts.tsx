@@ -25,12 +25,26 @@ function hasOpenOverlay() {
 // The editor's single-key and view shortcuts. File shortcuts (⌘S, ⌘O, ⇧⌘S)
 // live with the file actions.
 export function EditorShortcuts() {
-  const { mode, setMode, toggleMode, toggleAllPanels } = useEditorUi();
+  const {
+    mode,
+    setMode,
+    toggleMode,
+    toggleAllPanels,
+    paletteOpen,
+    setPaletteOpen
+  } = useEditorUi();
   const { setView } = useCanvasView();
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       const mod = event.metaKey || event.ctrlKey;
+
+      if (mod && event.key.toLowerCase() === "k" && !event.shiftKey) {
+        event.preventDefault();
+        setPaletteOpen(!paletteOpen);
+
+        return;
+      }
 
       if (mod && event.key === "\\") {
         event.preventDefault();
@@ -59,7 +73,15 @@ export function EditorShortcuts() {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [mode, setMode, toggleMode, toggleAllPanels, setView]);
+  }, [
+    mode,
+    setMode,
+    toggleMode,
+    toggleAllPanels,
+    setView,
+    paletteOpen,
+    setPaletteOpen
+  ]);
 
   return null;
 }
