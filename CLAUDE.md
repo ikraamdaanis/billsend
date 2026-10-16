@@ -101,15 +101,19 @@ lib/                 # Helper utilities (cn() classname merger)
 
 ### Context (UI state)
 
-- `UIProvider`: active settings tab, canvas lock
 - `InvoiceDocumentProvider`: current document ID/name, save/load operations
+- `EditorUiProvider`: edit/preview mode, which side panels are open, the command palette
+- `FileActionsProvider`: new/open/save/templates/import/export with the unsaved-changes guard and their dialogs, shared by the project menu, invoices panel and command palette
+- `CanvasViewProvider`: zoom (a level or fit)
 
 ## Key Architecture Decisions
 
 - **No backend**; all persistence is IndexedDB via Dexie
 - **Content-Security-Policy** on every page (`consts/content-security-policy.ts`, sent from `app/server.ts`) only allows billsend's own origin; it is what keeps billsend's no-data-leaves-the-device promise true, so never loosen it to add a third-party request. Zod runs jitless (`lib/configure-zod.ts`, imported wherever zod is) because the policy forbids eval
 - **React Compiler enabled**: automatic memoization; avoid manual useMemo/useCallback unless necessary
-- **PDF generation** (`@react-pdf/renderer`) lives in the `invoice-pdf-*` / `download-invoice` modules; it is currently statically imported, so it loads with the editor route (a known initial-bundle cost, not yet code-split)
+- **PDF generation** (`@react-pdf/renderer`) lives in the `components/pdf/invoice-pdf-*` modules and is built on demand by `hooks/use-invoice-pdf.ts`, which loads the builder lazily
+- **Section switches**: `invoice.sections` (schema v2) says which optional parts are on. `utils/section-visibility.ts` (`getPrintedSections`) decides what prints, and both the PDF and the editor's Preview read it; switched-off pricing rows also drop out of `calculateInvoiceTotals`
+- **Editor theme**: the editor alone has light/dark, applied as `data-editor-theme` on `<html>` (`utils/editor-theme.ts`, `hooks/use-editor-theme.ts`); the invoice page (`[data-paper]`) stays light in both
 - **No barrel exports**; import directly from the source file
 - **date-fns** for dates (not dayjs or moment)
 - **lodash-es** for utilities (tree-shakeable ES module version)

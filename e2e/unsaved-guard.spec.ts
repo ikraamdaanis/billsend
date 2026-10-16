@@ -3,6 +3,7 @@ import {
   clearObjectStore,
   clickFileMenuItem,
   gotoEditorReady,
+  openLeaveDialog,
   saveInvoiceAs,
   storeContains
 } from "./helpers";
@@ -109,7 +110,7 @@ test("the Leave this page dialog blocks and allows navigation", async ({
 }) => {
   await gotoEditorReady(page, "Leaving soon");
 
-  await page.getByRole("button", { name: "Homepage" }).click();
+  await openLeaveDialog(page);
 
   const leave = page.getByRole("dialog", { name: "Leave this page?" });
 
@@ -118,7 +119,7 @@ test("the Leave this page dialog blocks and allows navigation", async ({
   await expect(leave).toBeHidden();
   await expect(page).toHaveURL(/\/create$/);
 
-  await page.getByRole("button", { name: "Homepage" }).click();
+  await openLeaveDialog(page);
   await page.getByRole("link", { name: "Leave" }).click();
   await expect(page).toHaveURL("/");
 });

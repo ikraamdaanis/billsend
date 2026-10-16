@@ -244,6 +244,7 @@ export function DropdownMenuShortcut({
 }: ComponentProps<"span">) {
   return (
     <span
+      aria-hidden="true"
       data-slot="dropdown-menu-shortcut"
       className={cn(
         "text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground ml-auto text-xs tracking-widest",

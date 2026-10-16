@@ -305,7 +305,9 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
       }
     }
     loadData();
-  }, [saveAsDialogOpen]);
+    // Also after a save lands (the document id changes), so the next Save As
+    // suggests the next free name rather than the one just taken.
+  }, [saveAsDialogOpen, currentDocumentId]);
 
   useEffect(() => {
     async function loadTemplates() {

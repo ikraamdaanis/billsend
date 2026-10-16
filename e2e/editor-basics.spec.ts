@@ -47,9 +47,9 @@ test("changing currency updates the symbol across totals and line items", async 
   await setNumber(page.getByLabel("Unit Price, item 1"), "100");
   await expect(page.getByTestId("subtotal-value")).toHaveText("$100.00");
 
-  await page.getByRole("menuitem", { name: "Edit" }).click();
-  await page.getByRole("menuitem", { name: "Currency" }).click();
-  await page.getByRole("menuitemradio", { name: /Euro/ }).click();
+  await page
+    .getByRole("combobox", { name: "Currency", exact: true })
+    .selectOption("€");
 
   await expect(page.getByTestId("subtotal-value")).toHaveText("€100.00");
   await expect(page.getByLabel("Amount, item 1")).toHaveText("€100.00");
