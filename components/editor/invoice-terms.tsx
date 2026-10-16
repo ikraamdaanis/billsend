@@ -8,23 +8,14 @@ import { useTermsSlice, useTheme } from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 
-export function InvoiceTerms({
-  autoFocus,
-  onRemove
-}: {
-  autoFocus: boolean;
-  onRemove: () => void;
-}) {
+export function InvoiceTerms({ onRemove }: { onRemove: () => void }) {
   return (
     <OptionalSection>
       <div className="mb-2 flex items-center gap-1">
         <TermsLabel />
-        <RemoveSectionButton
-          label="Remove terms and conditions"
-          onClick={onRemove}
-        />
+        <RemoveSectionButton label="Hide terms" onClick={onRemove} />
       </div>
-      <TermsContent autoFocus={autoFocus} />
+      <TermsContent />
     </OptionalSection>
   );
 }
@@ -47,7 +38,7 @@ function TermsLabel() {
   );
 }
 
-function TermsContent({ autoFocus }: { autoFocus: boolean }) {
+function TermsContent() {
   const { terms, setTerms } = useTermsSlice();
   const theme = useTheme();
 
@@ -55,7 +46,6 @@ function TermsContent({ autoFocus }: { autoFocus: boolean }) {
     <InvoiceTextArea
       id="invoice-field-terms"
       aria-label={`${terms.label || "Terms and conditions"} content`}
-      autoFocus={autoFocus}
       value={terms.content}
       onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full"

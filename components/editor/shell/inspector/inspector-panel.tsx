@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { DetailsSection } from "~/components/editor/shell/inspector/details-section";
+import { SectionsSection } from "~/components/editor/shell/inspector/sections-section";
 import { StyleSection } from "~/components/editor/shell/inspector/style-section";
 
 // Settings that apply to the whole invoice, moved off the old Edit menu and
@@ -14,6 +15,7 @@ export function InspectorPanel({ children }: { children?: ReactNode }) {
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <StyleSection />
         <DetailsSection />
+        <SectionsSection />
         {children}
       </div>
     </>

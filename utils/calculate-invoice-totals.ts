@@ -1,4 +1,4 @@
-import type { Invoice, InvoiceTotals } from "~/types";
+import type { Invoice, InvoiceSections, InvoiceTotals } from "~/types";
 
 // Rounds a single line amount to two decimal places, coercing non-numeric
 // quantity/price to zero. Shared by the totals calculator and the view-model so
@@ -16,13 +16,20 @@ export function calculateLineAmount(
 // Derives the money totals from an invoice's inputs (items, tax, fees,
 // discount, amount paid). Nothing here is persisted: totals are recomputed
 // wherever the invoice is rendered, so stored or imported data can never carry
-// stale numbers.
+// stale numbers. A pricing row whose section is switched off counts as zero,
+// so what the totals add up always matches the rows on the page.
 export function calculateInvoiceTotals(
   invoice: Pick<
     Invoice,
     "items" | "tax" | "fees" | "discounts" | "discountType" | "amountPaid"
-  >
+  > & {
+    sections?: Pick<
+      InvoiceSections,
+      "discounts" | "tax" | "fees" | "amountPaid"
+    >;
+  }
 ): InvoiceTotals {
+  const sections = invoice.sections;
   const items = invoice.items.map(item => ({
     ...item,
     amount: calculateLineAmount(item.quantity, item.unitPrice)
@@ -37,7 +44,8 @@ export function calculateInvoiceTotals(
   // entered amount. Either way it comes off the goods and services, so it is
   // clamped to the subtotal: it can never discount fees or tax, or push the
   // total negative.
-  const discountValue = Number(invoice.discounts) || 0;
+  const discountValue =
+    sections?.discounts === false ? 0 : Number(invoice.discounts) || 0;
   const rawDiscount =
     invoice.discountType === "percentage"
       ? Math.round(subtotal * discountValue) / 100
@@ -49,11 +57,12 @@ export function calculateInvoiceTotals(
   // reverse-charge or zero-rated invoice reads zero while keeping the rate the
   // user last entered.
   const taxableAmount = Math.round((subtotal - discountAmount) * 100) / 100;
-  const taxAmount = invoice.tax.exempt
-    ? 0
-    : Math.round(taxableAmount * (Number(invoice.tax.percentage) || 0)) / 100;
+  const taxAmount =
+    invoice.tax.exempt || sections?.tax === false
+      ? 0
+      : Math.round(taxableAmount * (Number(invoice.tax.percentage) || 0)) / 100;
 
-  const fees = Number(invoice.fees) || 0;
+  const fees = sections?.fees === false ? 0 : Number(invoice.fees) || 0;
 
   const total = Math.max(
     0,
@@ -62,7 +71,10 @@ export function calculateInvoiceTotals(
 
   // The balance due nets off any recorded payment/deposit. An overpayment
   // reads as a zero balance rather than a negative one.
-  const amountPaid = Math.max(0, Number(invoice.amountPaid) || 0);
+  const amountPaid =
+    sections?.amountPaid === false
+      ? 0
+      : Math.max(0, Number(invoice.amountPaid) || 0);
   const balanceDue = Math.max(0, Math.round((total - amountPaid) * 100) / 100);
 
   return { items, subtotal, taxAmount, discountAmount, total, balanceDue };

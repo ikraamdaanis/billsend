@@ -5,6 +5,7 @@ import type {
   InvoiceItem,
   InvoiceLabels,
   InvoiceLineItemRow,
+  InvoiceSections,
   InvoiceSummaryRow,
   InvoiceViewModel
 } from "~/types";
@@ -19,6 +20,9 @@ import {
 // builders are exported so the canvas (which only has a slice of the store, not
 // the whole Invoice) can derive the same rows without subscribing to everything.
 
+// Optional rows (PO number, service period) whose section is switched off are
+// left out altogether; switched-on ones are marked optional so the PDF skips
+// them while empty.
 export function buildDetailRows(input: {
   labels: InvoiceLabels;
   number: string;
@@ -26,8 +30,9 @@ export function buildDetailRows(input: {
   invoiceDate: string;
   dueDate: string;
   servicePeriod: string;
+  sections: Pick<InvoiceSections, "poNumber" | "servicePeriod">;
 }): InvoiceDetailRow[] {
-  return [
+  const rows: InvoiceDetailRow[] = [
     {
       id: "number",
       labelKey: "invoiceNumber",
@@ -64,6 +69,12 @@ export function buildDetailRows(input: {
       isOptional: true
     }
   ];
+
+  return rows.filter(
+    row =>
+      (row.id !== "poNumber" || input.sections.poNumber) &&
+      (row.id !== "servicePeriod" || input.sections.servicePeriod)
+  );
 }
 
 export function buildLineItemRow(
@@ -96,9 +107,10 @@ function buildSummaryRows(input: {
   balanceDue: number;
   currency: string;
   currencyCode: string;
+  sections: Pick<InvoiceSections, "discounts" | "tax" | "fees" | "amountPaid">;
 }): InvoiceSummaryRow[] {
-  const { labels, currency } = input;
-  const hasPayment = input.amountPaid > 0;
+  const { labels, currency, sections } = input;
+  const hasPayment = sections.amountPaid && input.amountPaid > 0;
 
   return [
     {
@@ -116,7 +128,7 @@ function buildSummaryRows(input: {
       value: `-${formatCurrency(input.discountAmount, currency)}`,
       percentage:
         input.discountType === "percentage" ? input.discountValue : undefined,
-      isVisible: input.discountValue > 0,
+      isVisible: sections.discounts && input.discountValue > 0,
       isTotal: false
     },
     {
@@ -127,14 +139,14 @@ function buildSummaryRows(input: {
         : formatCurrency(input.tax.amount, currency),
       percentage: input.tax.exempt ? undefined : input.tax.percentage,
       note: input.tax.exempt ? input.tax.note.trim() : undefined,
-      isVisible: input.tax.exempt || input.tax.percentage > 0,
+      isVisible: sections.tax && (input.tax.exempt || input.tax.percentage > 0),
       isTotal: false
     },
     {
       id: "fees",
       label: labels.fees,
       value: formatCurrency(input.fees, currency),
-      isVisible: input.fees > 0,
+      isVisible: sections.fees && input.fees > 0,
       isTotal: false
     },
     {
@@ -192,7 +204,8 @@ export function buildInvoiceViewModel(invoice: Invoice): InvoiceViewModel {
       amountPaid: invoice.amountPaid,
       balanceDue: totals.balanceDue,
       currency: invoice.currency,
-      currencyCode: invoice.currencyCode
+      currencyCode: invoice.currencyCode,
+      sections: invoice.sections
     })
   };
 }
