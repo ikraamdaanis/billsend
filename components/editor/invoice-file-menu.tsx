@@ -115,9 +115,9 @@ export function InvoiceFileMenu({
     });
   }
 
-  // The homepage's "Open your saved invoices" link lands here with
-  // `open=invoices`. It goes through the same unsaved-changes guard as the
-  // menu item, then the param is cleared so a reload doesn't reopen the list.
+  // A link to `/create?open=invoices` lands here. It goes through the same
+  // unsaved-changes guard as the menu item, then the param is cleared so a
+  // reload doesn't reopen the list.
   const onOpenRequested = useEffectEvent(() => {
     handleOpenInvoice();
     void navigate({
