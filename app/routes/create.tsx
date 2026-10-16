@@ -12,12 +12,22 @@ import {
   useInvoiceDocument
 } from "~/context/invoice-document-context";
 import type { InvoiceFont } from "~/types";
+import { canonicalLink, siteMeta } from "~/utils/site-meta";
 
 // Optional hand-offs from the homepage: `font` starts a fresh invoice in the
 // face picked in the preview, and `open=invoices` opens the saved-invoice list.
 // Anything unrecognised is dropped rather than trusted.
 export const Route = createFileRoute("/create")({
   component: RouteComponent,
+  head: () => ({
+    meta: siteMeta({
+      path: "/create",
+      title: "billsend editor: Create a Free Invoice PDF",
+      description:
+        "Fill in your details, your client and the line items, then download the invoice as a PDF. Free, with no account, and it all stays in this browser."
+    }),
+    links: [canonicalLink("/create")]
+  }),
   validateSearch: (
     search: Record<string, unknown>
   ): { font?: InvoiceFont; open?: "invoices" } => ({
@@ -70,13 +80,28 @@ function StartingFont() {
   return null;
 }
 
+// The server's HTML for this page is this placeholder, so it also says what
+// the page is for crawlers and anyone without JavaScript. Once the editor
+// mounts, its own heading (the document name) takes over.
 function EditorLoading() {
   return (
-    <div className="bg-desk flex h-dvh w-full items-center justify-center">
+    <div className="bg-desk flex h-dvh w-full flex-col items-center justify-center gap-4 px-6 text-center">
+      <h1 className="sr-only">billsend invoice editor</h1>
+      <p className="sr-only">
+        Create a free invoice in your browser: add your details, your client and
+        the line items, then download it as a PDF. Nothing is uploaded; your
+        invoices are saved in this browser.
+      </p>
       <IconLoader2
         className="text-muted-foreground size-6 animate-spin"
         aria-label="Loading editor"
       />
+      <noscript>
+        <p className="text-muted-foreground max-w-sm text-sm text-pretty">
+          The billsend editor runs entirely in your browser, so it needs
+          JavaScript. Turn JavaScript on for this site, then reload.
+        </p>
+      </noscript>
     </div>
   );
 }

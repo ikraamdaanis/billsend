@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { SITE_DESCRIPTION, SITE_TITLE, siteMeta } from "~/utils/site-meta";
+import {
+  SITE_DESCRIPTION,
+  SITE_TITLE,
+  canonicalLink,
+  siteMeta
+} from "~/utils/site-meta";
 
 describe("siteMeta", () => {
   const meta = siteMeta();
@@ -43,5 +48,34 @@ describe("siteMeta", () => {
     expect(findByName("twitter:title")?.content).toBe(SITE_TITLE);
     expect(findByName("twitter:description")?.content).toBe(SITE_DESCRIPTION);
     expect(findByName("twitter:image")?.content).toMatch(/^https:\/\//);
+  });
+
+  it("keeps the description short enough not to be cut off in results", () => {
+    expect(SITE_DESCRIPTION.length).toBeLessThanOrEqual(160);
+  });
+
+  it("points og:url at the page it describes", () => {
+    const pageMeta = siteMeta({
+      path: "/create",
+      title: "Create",
+      description: "Make one."
+    });
+    const ogUrl = pageMeta.find(
+      entry => "property" in entry && entry.property === "og:url"
+    );
+    const pageTitle = pageMeta.find(entry => "title" in entry);
+
+    expect(ogUrl?.content).toBe("https://billsend.io/create");
+    expect(pageTitle).toEqual({ title: "Create" });
+  });
+});
+
+describe("canonicalLink", () => {
+  it("gives an absolute address with no query string", () => {
+    expect(canonicalLink("/")).toEqual({
+      rel: "canonical",
+      href: "https://billsend.io/"
+    });
+    expect(canonicalLink("/create").href).toBe("https://billsend.io/create");
   });
 });
