@@ -133,9 +133,7 @@ function Bottom() {
         <InvoiceLineItems />
         <InvoicePricing />
       </div>
-      <div className="mt-6">
-        <InvoicePaymentDetails />
-      </div>
+      <InvoicePaymentDetails />
       <InvoiceFooterSections />
     </>
   );

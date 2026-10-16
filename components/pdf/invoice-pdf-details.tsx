@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "@react-pdf/renderer";
 import { PdfMultilineText } from "~/components/pdf/invoice-pdf-text";
 import type { Invoice, InvoiceDetailRow } from "~/types";
 import { PDF_ROW_LINE_HEIGHT, pdfRoleStyle } from "~/utils/pdf-styles";
+import { getPrintedSections } from "~/utils/section-visibility";
 
 const styles = StyleSheet.create({
   detailsSection: {
@@ -50,7 +51,7 @@ export function InvoicePdfDetails({
   detailRows: InvoiceDetailRow[];
 }) {
   const theme = invoice.theme;
-  const hasShipping = invoice.shipping.content.trim().length > 0;
+  const hasShipping = getPrintedSections(invoice).shipping;
   // Optional detail rows (PO number, service period) only appear once filled;
   // the always-present rows (number, dates) render even when blank.
   const visibleDetailRows = detailRows.filter(

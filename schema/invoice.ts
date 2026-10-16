@@ -9,7 +9,7 @@ import "~/lib/configure-zod";
 // fields (subtotal, total, per-item amount, tax.amount) are intentionally absent
 // and stripped on parse, since totals are computed at render.
 
-export const CURRENT_INVOICE_SCHEMA_VERSION = 1;
+export const CURRENT_INVOICE_SCHEMA_VERSION = 2;
 
 const INVOICE_FONTS = [
   "geist",
@@ -48,6 +48,40 @@ const DEFAULT_LABELS = {
   amountPaid: "Amount paid",
   balanceDue: "Balance due"
 } as const;
+
+// Which optional parts of the invoice are switched on. Switching one off hides
+// it in the editor and the PDF, and leaves out its money from the totals, but
+// keeps what was typed, so switching it back on restores it. An on section
+// still only prints when it has something in it.
+export const INVOICE_SECTION_KEYS = [
+  "logo",
+  "poNumber",
+  "servicePeriod",
+  "shipping",
+  "discounts",
+  "tax",
+  "fees",
+  "amountPaid",
+  "paymentDetails",
+  "notes",
+  "terms",
+  "latePayment"
+] as const;
+
+export const DEFAULT_INVOICE_SECTIONS = {
+  logo: true,
+  poNumber: true,
+  servicePeriod: true,
+  shipping: false,
+  discounts: true,
+  tax: true,
+  fees: true,
+  amountPaid: true,
+  paymentDetails: true,
+  notes: false,
+  terms: false,
+  latePayment: false
+} as const satisfies Record<(typeof INVOICE_SECTION_KEYS)[number], boolean>;
 
 const DEFAULT_PAYMENT_DETAILS = {
   label: "Payment details",
@@ -113,6 +147,23 @@ const paymentDetailsSchema = z
     terms: z.string().catch("")
   })
   .catch(DEFAULT_PAYMENT_DETAILS);
+
+const invoiceSectionsSchema = z
+  .object({
+    logo: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.logo),
+    poNumber: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.poNumber),
+    servicePeriod: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.servicePeriod),
+    shipping: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.shipping),
+    discounts: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.discounts),
+    tax: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.tax),
+    fees: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.fees),
+    amountPaid: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.amountPaid),
+    paymentDetails: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.paymentDetails),
+    notes: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.notes),
+    terms: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.terms),
+    latePayment: z.boolean().catch(DEFAULT_INVOICE_SECTIONS.latePayment)
+  })
+  .catch(DEFAULT_INVOICE_SECTIONS);
 
 const invoiceItemSchema = z.object({
   id: z.string().catch(""),
@@ -232,7 +283,8 @@ export const invoiceSchema = z.object({
     .catch({ backgroundColor: "#ffffff" }),
   currency: z.string().catch("$"),
   currencyCode: z.string().catch(""),
-  theme: invoiceThemeSchema
+  theme: invoiceThemeSchema,
+  sections: invoiceSectionsSchema
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;

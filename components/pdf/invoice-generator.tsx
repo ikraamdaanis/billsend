@@ -10,12 +10,14 @@ import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import type { Invoice } from "~/types";
 import { buildInvoiceViewModel } from "~/utils/build-invoice-view-model";
 import { registerInvoicePdfFonts } from "~/utils/register-invoice-pdf-fonts";
+import { getPrintedSections } from "~/utils/section-visibility";
 
 registerInvoicePdfFonts();
 
 export function InvoicePDF({ invoice }: { invoice: Invoice }) {
   // invoice.image should already be a blob URL or empty string
-  const imageUrl = invoice.image || "";
+  const printed = getPrintedSections(invoice);
+  const imageUrl = printed.logo ? invoice.image : "";
   // Sets the PDF's /Title metadata, which the browser's viewer uses as the
   // default filename when the user saves. Without it, saving from the preview
   // tab defaults to the blob URL's UUID (e.g. b3d1c2a8-….pdf).
@@ -40,18 +42,24 @@ export function InvoicePDF({ invoice }: { invoice: Invoice }) {
         <InvoicePdfDetails invoice={invoice} detailRows={detailRows} />
         <InvoicePdfItemsTable invoice={invoice} lineItems={lineItems} />
         <InvoicePdfTotals invoice={invoice} summaryRows={summaryRows} />
-        <InvoicePdfPaymentDetails invoice={invoice} />
-        <InvoicePdfTextSection
-          theme={invoice.theme}
-          label={invoice.notes.label}
-          content={invoice.notes.content}
-        />
-        <InvoicePdfTerms invoice={invoice} />
-        <InvoicePdfTextSection
-          theme={invoice.theme}
-          label={invoice.latePayment.label}
-          content={invoice.latePayment.content}
-        />
+        {printed.paymentDetails && (
+          <InvoicePdfPaymentDetails invoice={invoice} />
+        )}
+        {printed.notes && (
+          <InvoicePdfTextSection
+            theme={invoice.theme}
+            label={invoice.notes.label}
+            content={invoice.notes.content}
+          />
+        )}
+        {printed.terms && <InvoicePdfTerms invoice={invoice} />}
+        {printed.latePayment && (
+          <InvoicePdfTextSection
+            theme={invoice.theme}
+            label={invoice.latePayment.label}
+            content={invoice.latePayment.content}
+          />
+        )}
       </Page>
     </Document>
   );

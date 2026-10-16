@@ -173,7 +173,7 @@ export function InvoiceLineItems() {
   const currencySymbol = getCurrencyMarker(currency);
 
   return (
-    <div className="w-full">
+    <div className="group/table w-full">
       <div
         role="table"
         aria-label="Invoice line items"
@@ -338,7 +338,7 @@ function LineItem({
   return (
     <div
       role="row"
-      className="relative grid grid-cols-[1fr_80px_80px_120px_150px] items-center gap-2 border-t"
+      className="group/row relative grid grid-cols-[1fr_80px_80px_120px_150px] items-center gap-2 border-t"
       style={{ borderColor: tableSettings.borderColor }}
     >
       {LINE_ITEM_COLUMNS.map(column => (
@@ -519,8 +519,9 @@ function RemoveItemButton({
         variant="ghost"
         aria-label={`Remove item ${index + 1}`}
         onClick={() => removeItem(itemId)}
+        className="text-paper-muted-foreground hover:text-destructive opacity-0 group-focus-within/row:opacity-100 group-hover/row:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
       >
-        <IconMinus className="text-destructive size-4" aria-hidden="true" />
+        <IconMinus className="size-4" aria-hidden="true" />
       </Button>
     </div>
   );
@@ -541,10 +542,17 @@ function AddItemButton({
     });
   }
 
+  // A quiet row under the table that shows while the table is hovered or
+  // focused (always on touch), so the page reads like the PDF until you reach
+  // for it.
   return (
-    <Button size="sm" className="my-4 w-fit" onClick={handleAddItem}>
-      <IconPlus aria-hidden="true" />
+    <button
+      type="button"
+      onClick={handleAddItem}
+      className="text-paper-muted-foreground hover:bg-paper-muted hover:text-paper-foreground focus-visible:ring-ring rounded-control my-1.5 flex h-8 w-full items-center gap-1.5 px-2 text-sm opacity-0 transition-opacity outline-none group-focus-within/table:opacity-100 group-hover/table:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 pointer-coarse:h-11 pointer-coarse:opacity-100"
+    >
+      <IconPlus aria-hidden="true" className="size-3.5" />
       Add item
-    </Button>
+    </button>
   );
 }

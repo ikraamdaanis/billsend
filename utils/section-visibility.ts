@@ -1,0 +1,59 @@
+import type { Invoice, InvoiceSectionKey } from "~/types";
+
+export function hasText(value: string): boolean {
+  return value.trim().length > 0;
+}
+
+const PAYMENT_DETAIL_FIELDS = [
+  "bankName",
+  "accountNumber",
+  "routingNumber",
+  "iban",
+  "bic",
+  "sortCode",
+  "terms"
+] as const;
+
+// Whether each optional part of the invoice is printed: switched on, and with
+// something in it. The PDF and the editor's Preview both read this, so Preview
+// shows exactly what the PDF will. (While editing, a switched-on section shows
+// even when empty, so there's somewhere to type.)
+export function getPrintedSections(
+  invoice: Pick<
+    Invoice,
+    | "sections"
+    | "image"
+    | "poNumber"
+    | "servicePeriod"
+    | "shipping"
+    | "discounts"
+    | "tax"
+    | "fees"
+    | "amountPaid"
+    | "paymentDetails"
+    | "notes"
+    | "terms"
+    | "latePayment"
+  >
+): Record<InvoiceSectionKey, boolean> {
+  const { sections } = invoice;
+
+  return {
+    logo: sections.logo && invoice.image !== "",
+    poNumber: sections.poNumber && hasText(invoice.poNumber),
+    servicePeriod: sections.servicePeriod && hasText(invoice.servicePeriod),
+    shipping: sections.shipping && hasText(invoice.shipping.content),
+    discounts: sections.discounts && invoice.discounts > 0,
+    tax: sections.tax && (invoice.tax.exempt || invoice.tax.percentage > 0),
+    fees: sections.fees && invoice.fees > 0,
+    amountPaid: sections.amountPaid && invoice.amountPaid > 0,
+    paymentDetails:
+      sections.paymentDetails &&
+      PAYMENT_DETAIL_FIELDS.some(field =>
+        hasText(invoice.paymentDetails[field])
+      ),
+    notes: sections.notes && hasText(invoice.notes.content),
+    terms: sections.terms && hasText(invoice.terms.content),
+    latePayment: sections.latePayment && hasText(invoice.latePayment.content)
+  };
+}

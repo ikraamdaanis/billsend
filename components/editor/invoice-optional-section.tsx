@@ -1,10 +1,10 @@
-import { IconPlus, IconX } from "@tabler/icons-react";
-import type { ComponentProps, ReactNode } from "react";
+import { IconX } from "@tabler/icons-react";
+import type { ComponentProps } from "react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
-// Editing affordances for optional sections (see useOptionalSection). Like the
-// add / remove item buttons, they never appear in the rendered PDF.
+// Editing affordances for optional sections. Like the add / remove item
+// buttons, they never appear in the rendered PDF.
 
 /**
  * Wraps an open optional section so its remove button can reveal itself while
@@ -43,30 +43,5 @@ export function RemoveSectionButton({
     >
       <IconX aria-hidden="true" />
     </Button>
-  );
-}
-
-/**
- * A quiet "+ label" link that opens a collapsed section.
- */
-export function AddSectionButton({
-  onClick,
-  autoFocus,
-  children
-}: {
-  onClick: () => void;
-  autoFocus: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      autoFocus={autoFocus}
-      className="text-paper-muted-foreground hover:text-brand-700 focus-visible:ring-ring rounded-control -mx-1 flex w-fit items-center gap-1.5 px-1 py-0.5 text-sm transition-colors outline-none focus-visible:ring-1 pointer-coarse:min-h-11"
-    >
-      <IconPlus className="size-3.5" aria-hidden="true" />
-      {children}
-    </button>
   );
 }

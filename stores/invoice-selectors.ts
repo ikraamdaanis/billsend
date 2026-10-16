@@ -35,7 +35,8 @@ const INVOICE_DATA_KEYS = [
   "pdfSettings",
   "currency",
   "currencyCode",
-  "theme"
+  "theme",
+  "sections"
 ] as const satisfies ReadonlyArray<keyof Invoice>;
 
 type MissingInvoiceKey = Exclude<
@@ -64,6 +65,16 @@ export function useThemeSlice() {
     useShallow(state => ({
       theme: state.theme,
       setTheme: state.setTheme
+    }))
+  );
+}
+
+// Sections slice - which optional parts of the invoice are switched on
+export function useSectionsSlice() {
+  return useInvoiceStore(
+    useShallow(state => ({
+      sections: state.sections,
+      setSection: state.setSection
     }))
   );
 }
@@ -189,7 +200,8 @@ export function useInvoiceTotals(): {
         fees: state.fees,
         discounts: state.discounts,
         discountType: state.discountType,
-        amountPaid: state.amountPaid
+        amountPaid: state.amountPaid,
+        sections: state.sections
       });
 
       return {

@@ -56,6 +56,11 @@ export type InvoiceFont =
 
 export type InvoiceSize = "small" | "medium" | "large";
 
+// The invoice's optional parts and whether each is switched on.
+export type InvoiceSections = Invoice["sections"];
+
+export type InvoiceSectionKey = keyof InvoiceSections;
+
 // The editor chrome's colour scheme. The preference is what the person chose
 // ("system" follows the operating system); the theme is what it resolves to.
 export type EditorThemePreference = "light" | "dark" | "system";

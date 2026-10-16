@@ -1,40 +1,33 @@
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import {
-  AddSectionButton,
   OptionalSection,
   RemoveSectionButton
 } from "~/components/editor/invoice-optional-section";
 import { InvoiceTextArea } from "~/components/editor/invoice-textarea";
-import { useOptionalSection } from "~/hooks/use-optional-section";
-import { useShippingSlice, useTheme } from "~/stores/invoice-selectors";
+import {
+  useSectionsSlice,
+  useShippingSlice,
+  useTheme
+} from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
 import { getTextStyles } from "~/utils/get-text-styles";
 
+// Shown while the Shipping address section is switched on in the inspector.
 export function InvoiceShipping() {
-  const { shipping, setShipping } = useShippingSlice();
-  const section = useOptionalSection({
-    content: shipping.content,
-    clear: () => setShipping(prev => ({ ...prev, content: "" }))
-  });
+  const { sections, setSection } = useSectionsSlice();
 
-  if (!section.isOpen) {
-    return (
-      <AddSectionButton onClick={section.open} autoFocus={section.autoFocusAdd}>
-        Add shipping address
-      </AddSectionButton>
-    );
-  }
+  if (!sections.shipping) return null;
 
   return (
     <OptionalSection className="gap-1">
       <div className="flex items-center gap-1">
         <ShippingLabel />
         <RemoveSectionButton
-          label="Remove shipping address"
-          onClick={section.remove}
+          label="Hide shipping address"
+          onClick={() => setSection("shipping", false)}
         />
       </div>
-      <ShippingContent autoFocus={section.autoFocusContent} />
+      <ShippingContent />
     </OptionalSection>
   );
 }
@@ -57,7 +50,7 @@ function ShippingLabel() {
   );
 }
 
-function ShippingContent({ autoFocus }: { autoFocus: boolean }) {
+function ShippingContent() {
   const { shipping, setShipping } = useShippingSlice();
   const theme = useTheme();
 
@@ -65,7 +58,6 @@ function ShippingContent({ autoFocus }: { autoFocus: boolean }) {
     <InvoiceTextArea
       id="invoice-field-shipping"
       aria-label={`${shipping.label || "Shipping"} address`}
-      autoFocus={autoFocus}
       value={shipping.content}
       onChange={value => setShipping(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full max-w-[500px]"

@@ -7,6 +7,7 @@ import {
   useCurrencySymbol,
   useInvoiceTotals,
   usePricingSlice,
+  useSectionsSlice,
   useTheme
 } from "~/stores/invoice-selectors";
 import { getRoleSettings } from "~/utils/get-role-settings";
@@ -47,7 +48,8 @@ function usePricingInput(storeValue: number) {
 // A small editor-only toggle shown to the left of a pricing row (e.g. switch a
 // discount between fixed and percentage, or mark tax exempt). Like the add /
 // remove item buttons, it is an editing affordance that never appears in the
-// rendered PDF.
+// rendered PDF. It stays out of sight until the row is hovered or focused,
+// unless it's showing a non-default choice (a % discount, exempt tax).
 function PricingRowToggle({
   label,
   active,
@@ -66,8 +68,10 @@ function PricingRowToggle({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "hover:bg-brand-50 shrink-0 rounded px-1.5 py-0.5 text-xs transition-colors",
-        active ? "text-brand-700" : "text-paper-muted-foreground"
+        "hover:bg-paper-muted focus-visible:ring-ring shrink-0 rounded px-1.5 py-0.5 text-xs transition-[color,opacity] outline-none focus-visible:ring-1",
+        active
+          ? "text-paper-foreground"
+          : "text-paper-muted-foreground opacity-0 group-focus-within/pricing-row:opacity-100 group-hover/pricing-row:opacity-100 pointer-coarse:opacity-100"
       )}
     >
       {children}
@@ -79,15 +83,17 @@ function PricingRowToggle({
  * Displays the pricing information for the invoice.
  */
 export function InvoicePricing() {
+  const { sections } = useSectionsSlice();
+
   return (
     <div className="flex flex-col gap-1 text-right">
       <SubtotalRow />
-      <DiscountsRow />
-      <TaxRow />
-      <FeesRow />
+      {sections.discounts && <DiscountsRow />}
+      {sections.tax && <TaxRow />}
+      {sections.fees && <FeesRow />}
       <TotalRow />
-      <AmountPaidRow />
-      <BalanceDueRow />
+      {sections.amountPaid && <AmountPaidRow />}
+      {sections.amountPaid && <BalanceDueRow />}
     </div>
   );
 }
@@ -130,7 +136,7 @@ function TaxRow() {
   const [taxInput, setTaxInput] = usePricingInput(tax.percentage);
 
   return (
-    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
+    <div className="group/pricing-row ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <PricingRowToggle
         label="Toggle tax exempt"
         active={tax.exempt}
@@ -259,7 +265,7 @@ function DiscountsRow() {
   const isPercentage = discountType === "percentage";
 
   return (
-    <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
+    <div className="group/pricing-row ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <PricingRowToggle
         label="Toggle discount type"
         active={isPercentage}
