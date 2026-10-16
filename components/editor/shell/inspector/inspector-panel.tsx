@@ -7,17 +7,11 @@ import { StyleSection } from "~/components/editor/shell/inspector/style-section"
 // out of the page so the page only holds the invoice itself.
 export function InspectorPanel({ children }: { children?: ReactNode }) {
   return (
-    <>
-      <div className="border-border flex h-11 shrink-0 items-center justify-between gap-2 border-b px-4">
-        <h2 className="text-foreground text-[13px] font-semibold">Invoice</h2>
-        <span className="text-muted-foreground text-xs">Whole page</span>
-      </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <StyleSection />
-        <DetailsSection />
-        <SectionsSection />
-        {children}
-      </div>
-    </>
+    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <StyleSection />
+      <DetailsSection />
+      <SectionsSection />
+      {children}
+    </div>
   );
 }
