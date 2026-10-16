@@ -41,6 +41,11 @@
 /og-image.jpg
   Cache-Control: public, max-age=604800, stale-while-revalidate=604800
 
+# The service worker (vite.config.ts) is checked on every visit, so a deploy
+# reaches visitors who already have it.
+/sw.js
+  Cache-Control: no-cache
+
 # The homepage and the privacy page are pre-rendered (vite.config.ts) and
 # served as static files, so the Worker that adds this policy to every other
 # page never sees them. Keep it identical to consts/content-security-policy.ts;

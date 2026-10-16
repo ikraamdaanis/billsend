@@ -11,6 +11,7 @@ import { Toaster } from "sonner";
 import { NotFound } from "~/components/not-found";
 import { RootErrorBoundary } from "~/components/root-error-boundary";
 import appCss from "~/styles/globals.css?url";
+import { REGISTER_SERVICE_WORKER_SCRIPT } from "~/utils/register-service-worker";
 import {
   HIDE_UNTIL_SCROLL_RESTORED_SCRIPT,
   REVEAL_AFTER_SCROLL_RESTORED_SCRIPT
@@ -64,7 +65,12 @@ export const Route = createRootRoute({
       },
       { rel: "manifest", href: "/site.webmanifest" }
     ],
-    scripts: [{ children: HIDE_UNTIL_SCROLL_RESTORED_SCRIPT }]
+    scripts: [
+      { children: HIDE_UNTIL_SCROLL_RESTORED_SCRIPT },
+      ...(import.meta.env.PROD
+        ? [{ children: REGISTER_SERVICE_WORKER_SCRIPT }]
+        : [])
+    ]
   }),
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
