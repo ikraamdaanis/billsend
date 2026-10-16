@@ -119,16 +119,22 @@ export async function gotoEditorSettled(page: Page) {
   await expect(page.getByLabel("Date", { exact: true })).not.toHaveValue("");
 }
 
-// Opens the File menu, retrying until the menu content actually appears, so a
-// bare click that occasionally lands on nothing can't flake the test.
+// Opens the project menu (the logo, which holds the file commands), retrying
+// until the menu content actually appears, so a bare click that occasionally
+// lands on nothing can't flake the test.
 export async function openFileMenu(page: Page) {
-  const trigger = page.getByRole("menuitem", { name: "File" });
+  const trigger = page.getByRole("button", { name: "Project menu" });
   const firstItem = page.getByRole("menuitem", { name: "New Invoice" });
 
   await expect(async () => {
     await trigger.click();
     await expect(firstItem).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 10_000 });
+}
+
+// Opens the "Leave this page?" dialog through the project menu's way home.
+export async function openLeaveDialog(page: Page) {
+  await clickFileMenuItem(page, "Back to homepage");
 }
 
 export async function clickFileMenuItem(page: Page, name: string | RegExp) {
