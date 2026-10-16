@@ -35,7 +35,7 @@ export function InspectorSection({
         open && "pb-4"
       )}
     >
-      <h3>
+      <h2>
         <button
           type="button"
           aria-expanded={open}
@@ -52,7 +52,7 @@ export function InspectorSection({
             )}
           />
         </button>
-      </h3>
+      </h2>
       {open && (
         <div id={contentId} className="flex flex-col gap-3">
           {children}
