@@ -384,6 +384,22 @@ describe("autosave", () => {
     expect((await page.getAllInvoices())[0].templateId).toBe("template");
   });
 
+  it("duplicates the open invoice from the library with edits still in the save delay", async () => {
+    const page = await loadPage();
+
+    await page.renameCurrent("Open one");
+
+    const id = page.documentState().documentId ?? "";
+    const listed = (await page.getInvoice(id)) as InvoiceDocument;
+
+    page.edit().setTitle("Typed a moment ago");
+
+    const copy = await page.duplicateInvoice(listed);
+
+    expect(copy.invoiceData.title).toBe("Typed a moment ago");
+    expect(page.documentState().documentId).toBe(id);
+  });
+
   it("duplicates the open invoice and opens the copy", async () => {
     const page = await loadPage();
 
