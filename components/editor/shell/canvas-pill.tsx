@@ -25,6 +25,7 @@ import {
 } from "~/context/canvas-view-context";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { cn } from "~/lib/utils";
+import { useDocumentStore } from "~/stores/document-store";
 import { shortcutLabel } from "~/utils/shortcut-label";
 
 // The floating toolbar under the page, as in Framer: edit or preview, zoom,
@@ -69,8 +70,14 @@ export function PillDivider() {
   return <span aria-hidden="true" className="bg-border mx-0.5 h-5 w-px" />;
 }
 
+// While this tab can't edit the invoice (another tab is editing it), the page
+// shows as it prints and there's nothing to switch.
 function ModeSwitch() {
   const { mode, setMode } = useEditorUi();
+  const canEdit = useDocumentStore(
+    state => state.status === "editing" || state.status === "unavailable"
+  );
+  const shown = canEdit ? mode : "preview";
   const options = [
     { value: "edit", label: "Edit", icon: IconPencil },
     { value: "preview", label: "Preview", icon: IconEye }
@@ -86,11 +93,12 @@ function ModeSwitch() {
         <button
           key={option.value}
           type="button"
-          aria-pressed={mode === option.value}
+          aria-pressed={shown === option.value}
+          disabled={!canEdit}
           onClick={() => setMode(option.value)}
           className={cn(
-            "text-muted-foreground hover:text-foreground focus-visible:ring-ring flex h-6 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium outline-none focus-visible:ring-1 pointer-coarse:h-10",
-            mode === option.value &&
+            "text-muted-foreground enabled:hover:text-foreground focus-visible:ring-ring flex h-6 items-center gap-1.5 rounded-md px-2.5 text-xs font-medium outline-none focus-visible:ring-1 disabled:opacity-60 pointer-coarse:h-10",
+            shown === option.value &&
               "bg-popover text-foreground ring-foreground/10 shadow-xs ring-1"
           )}
         >
