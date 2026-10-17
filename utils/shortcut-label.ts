@@ -8,6 +8,18 @@ export function isApplePlatform(): boolean {
   );
 }
 
+// Whether a key press holds the platform's command key: ⌘ on Apple devices,
+// Ctrl elsewhere. Only that one counts, so Ctrl+K stays the text fields' own
+// "delete to end of line" on a Mac.
+export function hasPrimaryModifier(
+  event: KeyboardEvent,
+  apple: boolean = isApplePlatform()
+): boolean {
+  return apple
+    ? event.metaKey && !event.ctrlKey
+    : event.ctrlKey && !event.metaKey;
+}
+
 export function shortcutLabel(
   shortcut: string,
   apple: boolean = isApplePlatform()

@@ -18,12 +18,14 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger
 } from "~/components/ui/dropdown-menu";
-import { useCanvasView } from "~/context/canvas-view-context";
+import {
+  stepZoom,
+  useCanvasView,
+  ZOOM_STEPS
+} from "~/context/canvas-view-context";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { cn } from "~/lib/utils";
 import { shortcutLabel } from "~/utils/shortcut-label";
-
-const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 // The floating toolbar under the page, as in Framer: edit or preview, zoom,
 // and the light/dark switch. Extra controls (quick actions) slot in at the end.
@@ -103,8 +105,8 @@ function ModeSwitch() {
 function ZoomControls() {
   const { view, setView, zoom } = useCanvasView();
   // Step from the applied zoom, so leaving Fit lands on the nearest preset.
-  const zoomOutStep = ZOOM_STEPS.filter(step => step < zoom - 0.001).at(-1);
-  const zoomInStep = ZOOM_STEPS.find(step => step > zoom + 0.001);
+  const zoomOutStep = stepZoom(zoom, "out");
+  const zoomInStep = stepZoom(zoom, "in");
   const zoomPercent = `${Math.round(zoom * 100)}%`;
   const isFit = view === "fit";
 

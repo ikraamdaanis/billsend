@@ -37,6 +37,8 @@ import { useInvoiceDataAndActions } from "~/stores/invoice-selectors";
 import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
 import { exportAllData } from "~/utils/export-data";
+import { hasOpenModal } from "~/utils/open-overlay";
+import { hasPrimaryModifier } from "~/utils/shortcut-label";
 
 // Everything the editor can do with files: new, open, save, templates, import
 // and export. The project menu, the invoices panel and the command palette all
@@ -207,6 +209,14 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
       return Promise.resolve("deferred");
     }
 
+    // Nothing to write: saving again would only move the invoice up the
+    // "last edited" order.
+    if (!hasUnsavedChanges) {
+      toast.success("Invoice saved");
+
+      return Promise.resolve("saved");
+    }
+
     return new Promise<"saved" | "deferred">((resolve, reject) => {
       startTransition(async () => {
         try {
@@ -359,47 +369,44 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     loadTemplates();
   }, [saveTemplateDialogOpen]);
 
+  const handleKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    if (!hasPrimaryModifier(event)) return;
+
+    // Compare case-insensitively: holding Shift reports an uppercase key, so
+    // "s" would never match on Cmd+Shift+S without normalising first. Cmd+N is
+    // intentionally not bound because Chrome and Safari reserve it for a new
+    // browser window and never surface it to the page.
+    const key = event.key.toLowerCase();
+
+    if (key !== "o" && key !== "s") return;
+
+    event.preventDefault();
+
+    // A modal dialog owns keyboard focus; swallow file shortcuts underneath it
+    // rather than firing them (which could stack a second dialog and silently
+    // replace the pending action). Popovers are dialogs too, but not modal, so
+    // they don't block a save. A held key repeats the save; once is enough,
+    // and nothing waits while a save or an open is under way.
+    if (hasOpenModal() || event.repeat || pending) return;
+
+    if (key === "o" && !event.shiftKey) {
+      handleOpenInvoice();
+    } else if (key === "s" && !event.shiftKey) {
+      void handleSave().catch(() => {});
+    } else if (key === "s" && event.shiftKey) {
+      handleSaveAs();
+    }
+  });
+
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-      const modKey = isMac ? event.metaKey : event.ctrlKey;
-
-      if (!modKey) return;
-
-      // Compare case-insensitively: holding Shift reports an uppercase key, so
-      // "s" would never match on Cmd+Shift+S without normalising first. Cmd+N is
-      // intentionally not bound because Chrome and Safari reserve it for a new
-      // browser window and never surface it to the page.
-      const key = event.key.toLowerCase();
-
-      if (key !== "o" && key !== "s") return;
-
-      // A modal dialog owns keyboard focus; swallow file shortcuts underneath it
-      // rather than firing them (which could stack a second dialog and silently
-      // replace the pending action), but still preventDefault so the browser's
-      // own Save/Open dialog doesn't pop up either.
-      if (document.querySelector('[role="dialog"], [role="alertdialog"]')) {
-        event.preventDefault();
-
-        return;
-      }
-
-      if (key === "o" && !event.shiftKey) {
-        event.preventDefault();
-        handleOpenInvoice();
-      } else if (key === "s" && !event.shiftKey) {
-        event.preventDefault();
-        void handleSave().catch(() => {});
-      } else if (key === "s" && event.shiftKey) {
-        event.preventDefault();
-        handleSaveAs();
-      }
+    function listener(event: KeyboardEvent) {
+      handleKeyDown(event);
     }
 
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", listener);
 
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleOpenInvoice, handleSave, handleSaveAs]);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   async function handleLibraryRename(newName: string) {
     if (!renameTarget) return;
