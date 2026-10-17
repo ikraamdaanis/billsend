@@ -27,13 +27,13 @@ export function EditorTopBar({
   const { mode, toggleMode } = useEditorUi();
 
   return (
-    <header className="bg-background border-border relative z-30 grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] pointer-coarse:h-14">
-      <div className="flex min-w-0 items-center gap-1">
+    <header className="bg-background border-border relative z-30 grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] max-sm:flex max-sm:gap-2 pointer-coarse:h-14">
+      <div className="flex min-w-0 items-center gap-1 max-sm:shrink-0">
         <ProjectMenu onLeave={onLeave} />
         {start}
       </div>
       <InvoiceName />
-      <div className="flex min-w-0 items-center justify-end gap-1">
+      <div className="flex min-w-0 items-center justify-end gap-1 max-sm:shrink-0">
         {end}
         <Button
           variant="ghost"
@@ -83,7 +83,7 @@ function InvoiceName() {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 items-center gap-2 max-sm:flex-1 max-sm:justify-center">
       <h1 className="flex min-w-0">
         <button
           type="button"
@@ -94,7 +94,7 @@ function InvoiceName() {
           }}
           className="hover:bg-muted focus-visible:ring-ring flex h-7 min-w-0 items-center rounded-md px-2 outline-none focus-visible:ring-1 pointer-coarse:h-10"
         >
-          <span className="text-foreground max-w-[min(18rem,36vw)] truncate text-sm font-medium">
+          <span className="text-foreground max-w-[min(18rem,36vw)] truncate text-sm font-medium max-sm:max-w-none">
             {displayName}
           </span>
         </button>
