@@ -26,7 +26,7 @@ export function EditorTopBar({
   start?: ReactNode;
   end?: ReactNode;
 }) {
-  const { mode, toggleMode } = useEditorUi();
+  const { mode, toggleMode, isNarrow } = useEditorUi();
   const { status } = useInvoiceDocument();
   const canEdit = status === "editing" || status === "unavailable";
 
@@ -39,8 +39,8 @@ export function EditorTopBar({
       <InvoiceName />
       <div className="flex min-w-0 items-center justify-end gap-1 max-md:shrink-0">
         <div className="contents max-md:hidden">{end}</div>
-        {mode === "edit" && canEdit && (
-          <HistoryButtons className="flex items-center md:hidden" />
+        {isNarrow && mode === "edit" && canEdit && (
+          <HistoryButtons className="flex items-center" />
         )}
         <Button
           variant="ghost"
