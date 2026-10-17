@@ -335,4 +335,13 @@ describe("calculateInvoiceTotals", () => {
 
     expect(totals.balanceDue).toBe(0);
   });
+
+  it("rounds a half cent up despite floating-point noise", () => {
+    const totals = calculateInvoiceTotals(
+      makeInvoice({ items: [makeItem({ quantity: 1, unitPrice: 1.005 })] })
+    );
+
+    expect(totals.subtotal).toBe(1.01);
+    expect(totals.total).toBe(1.01);
+  });
 });

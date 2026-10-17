@@ -1,10 +1,5 @@
-import {
-  addDays,
-  differenceInCalendarDays,
-  format,
-  isValid,
-  parseISO
-} from "date-fns";
+import { addDays, differenceInCalendarDays, format } from "date-fns";
+import { parseIsoDate } from "~/utils/parse-iso-date";
 
 // Payment terms aren't stored: they're read off the gap between the invoice
 // date and the due date, and choosing one writes the due date. Any other gap
@@ -18,12 +13,6 @@ export const PAYMENT_TERMS: { days: number; label: string }[] = [
 ];
 
 const ISO_DATE_FORMAT = "yyyy-MM-dd";
-
-function parseIsoDate(value: string) {
-  const date = parseISO(value);
-
-  return isValid(date) ? date : null;
-}
 
 // The preset matching the two dates, or null when they match none of them (or
 // either date isn't a valid yyyy-MM-dd).
