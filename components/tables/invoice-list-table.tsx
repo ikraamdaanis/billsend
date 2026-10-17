@@ -170,6 +170,11 @@ export function InvoiceListTable({
   }
 
   const sortedInvoices = sortInvoices(invoices, sort, direction);
+  // The row Tab lands on: the last one used, or the first when that row has
+  // been deleted or filtered out, so the table never drops out of Tab order.
+  const tabbableId = sortedInvoices.some(invoice => invoice.id === activeId)
+    ? activeId
+    : sortedInvoices[0]?.id;
 
   const selectedSet = new Set(selectedIds);
   const deletingSet = new Set(deletingIds);
@@ -394,8 +399,7 @@ export function InvoiceListTable({
           const isStriped = index % 2 === 1;
           const isContextFocused = contextMenuRowId === invoice.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
-          const isTabbable =
-            activeId === invoice.id || (activeId === null && index === 0);
+          const isTabbable = invoice.id === tabbableId;
           const secondaryTextClass = isDeleting
             ? "text-destructive/70"
             : isSelected

@@ -20,11 +20,15 @@ import {
   DropdownMenuSeparator
 } from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
-import type { InvoiceTemplate } from "~/types";
+import type { InvoiceTemplate, SortDirection } from "~/types";
 import { formatListDate } from "~/utils/format-list-date";
 
 type SortKey = "name" | "updatedAt";
-type SortDirection = "asc" | "desc";
+
+const nameCollator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base"
+});
 
 export function TemplateListTable({
   templates,
@@ -72,8 +76,9 @@ export function TemplateListTable({
       return;
     }
 
+    // A name sort starts A to Z; a date sort starts with the newest.
     setSortKey(key);
-    setSortDirection("asc");
+    setSortDirection(key === "name" ? "asc" : "desc");
   }
 
   function startRename(template: InvoiceTemplate) {
@@ -116,18 +121,22 @@ export function TemplateListTable({
     }
   }
 
+  // Names compare naturally ("Template 2" before "Template 10"); ties go to
+  // the most recently edited.
   const sortedTemplates = [...templates].sort((a, b) => {
     const direction = sortDirection === "asc" ? 1 : -1;
+    const byUpdated =
+      new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
 
     if (sortKey === "name") {
-      return a.name.localeCompare(b.name) * direction;
+      return nameCollator.compare(a.name, b.name) * direction || -byUpdated;
     }
 
-    return (
-      (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) *
-      direction
-    );
+    return byUpdated * direction;
   });
+  const tabbableId = sortedTemplates.some(template => template.id === activeId)
+    ? activeId
+    : sortedTemplates[0]?.id;
 
   const selectedSet = new Set(selectedIds);
   const deletingSet = new Set(deletingIds);
@@ -338,8 +347,7 @@ export function TemplateListTable({
           const isStriped = index % 2 === 1;
           const isContextFocused = contextMenuRowId === template.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
-          const isTabbable =
-            activeId === template.id || (activeId === null && index === 0);
+          const isTabbable = template.id === tabbableId;
 
           return (
             <ContextMenu

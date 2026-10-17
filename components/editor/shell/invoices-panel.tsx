@@ -9,7 +9,6 @@ import {
   IconTrash,
   IconX
 } from "@tabler/icons-react";
-import { format, isValid, parseISO } from "date-fns";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { SegmentedControl } from "~/components/editor/shell/inspector/inspector-controls";
@@ -36,12 +35,14 @@ import type {
 import {
   DEFAULT_LIBRARY_VIEW,
   filterInvoices,
+  formatLibraryDate,
   getInvoiceDate,
   getInvoiceTotal,
   groupInvoices,
   parseLibraryView,
   sortInvoices
 } from "~/utils/invoice-library";
+import { parseIsoDate } from "~/utils/parse-iso-date";
 import { shortcutLabel } from "~/utils/shortcut-label";
 
 type LibraryTab = "invoices" | "templates";
@@ -320,15 +321,22 @@ function InvoiceList({
 // it's due for a due-date sort, when it was edited for the default sort).
 function invoiceMeta(document: InvoiceDocument, view: InvoiceLibraryView) {
   const { number, dueDate } = document.invoiceData;
-  const due = parseISO(dueDate);
+  const due = formatLibraryDate(parseIsoDate(dueDate));
+  const edited = formatLibraryDate(document.updatedAt);
   const date =
-    view.sort === "dueDate" && isValid(due)
-      ? `Due ${format(due, "d MMM yyyy")}`
+    view.sort === "dueDate" && due
+      ? `Due ${due}`
       : view.sort === "updated"
-        ? `Edited ${format(new Date(document.updatedAt), "d MMM yyyy")}`
-        : format(getInvoiceDate(document), "d MMM yyyy");
+        ? edited && `Edited ${edited}`
+        : formatLibraryDate(getInvoiceDate(document));
 
   return [number && `No. ${number}`, date].filter(Boolean).join(" · ");
+}
+
+function templateMeta(template: InvoiceTemplate) {
+  const edited = formatLibraryDate(template.updatedAt);
+
+  return template.description || (edited ? `Edited ${edited}` : "");
 }
 
 function TemplateList({
@@ -395,10 +403,7 @@ function TemplateList({
             key={template.id}
             current={false}
             title={template.name}
-            meta={
-              template.description ||
-              `Edited ${format(new Date(template.updatedAt), "d MMM yyyy")}`
-            }
+            meta={templateMeta(template)}
             onSelect={() => actions.applyTemplate(template)}
             menu={
               <>

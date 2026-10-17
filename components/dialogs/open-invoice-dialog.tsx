@@ -64,7 +64,7 @@ export function OpenInvoiceDialog({
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
   const [seeding, startSeedTransition] = useTransition();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selection, setSelectedIds] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<
     { mode: "selection" } | { mode: "single"; invoice: InvoiceDocument } | null
   >(null);
@@ -98,6 +98,10 @@ export function OpenInvoiceDialog({
   });
   const isNarrowed =
     invoices.length > 0 && visibleInvoices.length < invoices.length;
+  // Only what's on screen counts as selected: an invoice hidden by the search
+  // or deleted elsewhere is never opened or deleted with the rest.
+  const visibleIds = new Set(visibleInvoices.map(invoice => invoice.id));
+  const selectedIds = selection.filter(id => visibleIds.has(id));
 
   function clearFilters() {
     setQuery("");
@@ -115,7 +119,7 @@ export function OpenInvoiceDialog({
       ? []
       : deleteTarget.mode === "single"
         ? [deleteTarget.invoice]
-        : invoices.filter(invoice => selectedIds.includes(invoice.id));
+        : visibleInvoices.filter(invoice => selectedIds.includes(invoice.id));
 
   const deletePrompt =
     pendingDeleteInvoices.length === 1
@@ -134,6 +138,10 @@ export function OpenInvoiceDialog({
 
   function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
+
+    // A row menu's items are portaled, but their clicks still bubble here
+    // through React; they act on their own row.
+    if (target.closest("[role='menu'], [role='menuitem']")) return;
 
     if (pendingDeleteInvoices.length > 0) {
       if (target.closest("[data-slot='delete-confirm']")) return;
