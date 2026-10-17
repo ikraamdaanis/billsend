@@ -96,45 +96,6 @@ export async function countSavedInvoices(page: Page): Promise<number> {
   );
 }
 
-// Clears an IndexedDB object store from the page's origin. Used to simulate a
-// record being deleted in another tab (a readwrite transaction, no version
-// bump, so it never blocks the app's open connection).
-export async function clearObjectStore(page: Page, storeName: string) {
-  await page.evaluate(
-    async ([databaseName, store]) => {
-      await new Promise<void>((resolve, reject) => {
-        const request = indexedDB.open(databaseName);
-
-        request.onsuccess = () => {
-          const db = request.result;
-
-          if (!db.objectStoreNames.contains(store)) {
-            db.close();
-            resolve();
-
-            return;
-          }
-
-          const tx = db.transaction(store, "readwrite");
-
-          tx.objectStore(store).clear();
-          tx.oncomplete = () => {
-            db.close();
-            resolve();
-          };
-          tx.onerror = () => {
-            db.close();
-            reject(tx.error);
-          };
-        };
-
-        request.onerror = () => reject(request.error);
-      });
-    },
-    [DB_NAME, storeName] as const
-  );
-}
-
 // Opens the editor and sets the invoice title. The editor is gated on hydration
 // (its inputs don't mount until the invoice store is hydrated), so the moment
 // the title field is fillable the value is durable: no store reset can land

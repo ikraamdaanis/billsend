@@ -1,9 +1,9 @@
-import type { Invoice, InvoiceDocument } from "~/types";
+import type { Invoice } from "~/types";
 
 // Long client lines are cut here, so a pasted paragraph doesn't become a name.
 const MAX_CLIENT_NAME_LENGTH = 60;
 
-export const UNTITLED_INVOICE_NAME = "Untitled invoice";
+const UNTITLED_INVOICE_NAME = "Untitled invoice";
 
 function firstLine(text: string): string {
   const line =
@@ -27,16 +27,4 @@ export function deriveInvoiceName(
   const name = parts.filter(part => part.length > 0).join(" · ");
 
   return name || UNTITLED_INVOICE_NAME;
-}
-
-// What a library invoice is called: the name it was given, or for one that
-// was never named, the name its content gives it.
-export function getInvoiceName(
-  document: Pick<InvoiceDocument, "name" | "nameSource" | "invoiceData">
-): string {
-  if (document.nameSource === "auto") {
-    return deriveInvoiceName(document.invoiceData);
-  }
-
-  return document.name || UNTITLED_INVOICE_NAME;
 }

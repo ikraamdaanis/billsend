@@ -10,12 +10,12 @@
 // fires after the editor has moved on still writes to the invoice the edits
 // were made in, never to whichever one is open by then.
 
-export const SAVE_DEBOUNCE_MS = 500;
+const SAVE_DEBOUNCE_MS = 500;
 
-export const SAVE_MAX_WAIT_MS = 2000;
+const SAVE_MAX_WAIT_MS = 2000;
 
 // How long to wait before each retry of a failed write; the last repeats.
-export const SAVE_RETRY_DELAYS_MS = [1000, 2000, 5000, 10_000, 30_000];
+const SAVE_RETRY_DELAYS_MS = [1000, 2000, 5000, 10_000, 30_000];
 
 export function createSaveController<TContent>({
   write,
