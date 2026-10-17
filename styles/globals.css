@@ -387,6 +387,13 @@ html[data-editor-theme="dark"] {
   html {
     @apply font-sans;
   }
+  /* The editor zooms its page itself (invoice-canvas.tsx), so the browser's
+     pinch and double-tap zoom are off there: otherwise they scale the whole
+     editor, top bar and toolbars included. One-finger scrolling stays. */
+  html[data-editor-theme] {
+    touch-action: pan-x pan-y;
+    overscroll-behavior: none;
+  }
 }
 
 /* The hero painting at 64px, inlined so the hero shows its colours on the
