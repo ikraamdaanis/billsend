@@ -922,7 +922,7 @@ function applyTemplate(template: InvoiceTemplate): Promise<void> {
 }
 
 // "Name copy", or "Name copy 2" and so on when that's taken.
-export function nextCopyName(name: string, takenNames: string[]) {
+function nextCopyName(name: string, takenNames: string[]) {
   const taken = new Set(takenNames.map(takenName => takenName.toLowerCase()));
   let candidate = `${name} copy`;
 
@@ -962,8 +962,24 @@ async function copyInvoice(
   return copy;
 }
 
+// Duplicates a library invoice. The open one is written first and copied as
+// stored then, so edits still in the save delay come along.
 function duplicateInvoice(document: InvoiceDocument): Promise<InvoiceDocument> {
-  return enqueue(() => copyInvoice(document));
+  return enqueue(async () => {
+    const session = current;
+
+    if (session?.id !== document.id || session.status !== "editing") {
+      return copyInvoice(document);
+    }
+
+    if (!(await session.controller.flush())) {
+      throw new Error(
+        "This invoice couldn't be saved, so it can't be duplicated yet."
+      );
+    }
+
+    return copyInvoice((await getInvoice(document.id)) ?? document);
+  });
 }
 
 // Duplicates the open invoice and opens the copy (Apple's autosaving apps do
@@ -1034,8 +1050,8 @@ function renameCurrent(name: string): Promise<void> {
       session.rev = 1;
       void setLastOpenedInvoiceId(session.id);
       void requestPersistentStorage();
-    } else {
-      return;
+    } else if (session.status !== "unavailable") {
+      throw new Error("This invoice can't be renamed in this tab.");
     }
 
     session.name = trimmed;
