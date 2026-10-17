@@ -1,8 +1,8 @@
 import { expect, test } from "./fixtures";
 import {
   addLineItem,
+  clickFileMenuItem,
   gotoEditorReady,
-  openLeaveDialog,
   saveInvoiceAs
 } from "./helpers";
 
@@ -33,8 +33,8 @@ test("create, edit, save, leave, return, and download an invoice", async ({
     page.getByRole("heading", { name: "Acme Invoice" })
   ).toBeVisible();
 
-  await openLeaveDialog(page);
-  await page.getByRole("link", { name: "Leave" }).click();
+  // Everything is saved, so leaving goes straight home without asking.
+  await clickFileMenuItem(page, "Back to homepage");
 
   await expect(page).toHaveURL("/");
   await page

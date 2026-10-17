@@ -1,5 +1,6 @@
 import { IconLayoutSidebar, IconLayoutSidebarRight } from "@tabler/icons-react";
 import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "~/components/ui/button";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { cn } from "~/lib/utils";
@@ -16,15 +17,27 @@ export function SidePanel({
   label: string;
   children: ReactNode;
 }) {
-  const { leftPanelOpen, rightPanelOpen } = useEditorUi();
+  const { isNarrow, leftPanelOpen, rightPanelOpen } = useEditorUi();
   const open = side === "left" ? leftPanelOpen : rightPanelOpen;
+  const isSheet = isNarrow && open;
+  const panelRef = useRef<HTMLElement>(null);
+
+  // A sheet takes focus as it opens, so the keyboard and screen readers start
+  // in it rather than on the page it covers.
+  useEffect(() => {
+    if (isSheet) panelRef.current?.focus({ preventScroll: true });
+  }, [isSheet]);
 
   return (
     <aside
+      ref={panelRef}
       aria-label={label}
+      role={isSheet ? "dialog" : undefined}
+      aria-modal={isSheet ? true : undefined}
+      tabIndex={isSheet ? -1 : undefined}
       inert={!open}
       className={cn(
-        "bg-background border-border relative shrink-0 overflow-hidden transition-[width,translate] duration-200 ease-out motion-reduce:transition-none",
+        "bg-background border-border relative shrink-0 overflow-hidden transition-[width,translate] duration-200 ease-out outline-none motion-reduce:transition-none",
         "max-md:shadow-floating max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:h-[min(70dvh,34rem)] max-md:w-full max-md:rounded-t-2xl max-md:border-x-0 max-md:border-t",
         side === "left" ? "w-64 border-r" : "w-72 border-l",
         !open && "w-0 border-0 max-md:translate-y-full max-md:shadow-none"
