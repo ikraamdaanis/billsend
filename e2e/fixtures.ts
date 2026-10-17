@@ -4,7 +4,7 @@ import {
   DB_NAME,
   clickFileMenuItem,
   gotoEditorReady,
-  saveInvoiceAs
+  nameInvoice
 } from "./helpers";
 
 // Deletes the whole IndexedDB database from the page's origin. Each Playwright
@@ -22,15 +22,14 @@ async function resetDb(page: Page) {
   }, DB_NAME);
 }
 
-// Drives the editor UI to create and Save an invoice under a name. UI-driven
-// seeding (the issue's option 1) is the most realistic and avoids coupling to
-// the stored record shape.
+// Drives the editor UI to create an invoice and name it. UI-driven seeding is
+// the most realistic and avoids coupling to the stored record shape.
 async function seedInvoice(
   page: Page,
   overrides: { name: string; title?: string }
 ) {
   await gotoEditorReady(page, overrides.title ?? "Seeded invoice");
-  await saveInvoiceAs(page, overrides.name);
+  await nameInvoice(page, overrides.name);
 }
 
 // Drives the editor UI to save the current invoice as a template.

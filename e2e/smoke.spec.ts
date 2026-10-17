@@ -3,14 +3,14 @@ import {
   addLineItem,
   clickFileMenuItem,
   gotoEditorReady,
-  saveInvoiceAs
+  nameInvoice
 } from "./helpers";
 
 // P0 smoke path: the single happy path that exercises the create -> edit ->
-// add line item -> save -> leave -> return -> download chain end to end. This
+// add line item -> name -> leave -> return -> download chain end to end. This
 // alone would have caught the #78 detach bug, where returning to the editor
 // dropped the saved document's identity.
-test("create, edit, save, leave, return, and download an invoice", async ({
+test("create, edit, name, leave, return, and download an invoice", async ({
   page
 }) => {
   const context = page.context();
@@ -27,13 +27,13 @@ test("create, edit, save, leave, return, and download an invoice", async ({
 
   await expect(page.getByLabel("Amount, item 1")).toContainText("300");
 
-  await saveInvoiceAs(page, "Acme Invoice");
+  await nameInvoice(page, "Acme Invoice");
 
   await expect(
     page.getByRole("heading", { name: "Acme Invoice" })
   ).toBeVisible();
 
-  // Everything is saved, so leaving goes straight home without asking.
+  // Every edit saves itself, so leaving goes straight home without asking.
   await clickFileMenuItem(page, "Back to homepage");
 
   await expect(page).toHaveURL("/");
