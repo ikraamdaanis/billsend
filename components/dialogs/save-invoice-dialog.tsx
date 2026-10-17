@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -68,18 +68,19 @@ export function SaveInvoiceDialog({
     setSelectedInvoiceId(invoiceId);
   }
 
-  // Reset on every close path (Cancel, Escape, overlay click, successful save)
-  // so a previously selected overwrite target never carries into the next open.
-  // Delayed so the reset isn't visible during the dialog's close animation.
+  // Start every open fresh: a new invoice under the current suggested name, so
+  // neither an earlier overwrite target nor a typed name carries over. Done on
+  // open rather than after close, so a reopen within the close animation can't
+  // be overwritten by a reset holding the previous suggestion.
+  useEffect(() => {
+    if (!open) return;
+
+    setSelectedInvoiceId("new");
+    form.reset({ name: defaultName });
+  }, [open, defaultName, form]);
+
   function handleOpenChange(nextOpen: boolean) {
     onOpenChange(nextOpen);
-
-    if (!nextOpen) {
-      setTimeout(() => {
-        setSelectedInvoiceId("new");
-        form.reset({ name: defaultName });
-      }, 500);
-    }
   }
 
   function handleSubmit(data: SaveInvoiceFormData) {
