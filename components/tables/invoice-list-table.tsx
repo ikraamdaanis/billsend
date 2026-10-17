@@ -1,6 +1,4 @@
 import {
-  IconArrowDown,
-  IconArrowUp,
   IconCopy,
   IconFileText,
   IconFolderOpen,
@@ -10,16 +8,13 @@ import {
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { RowActionsCell } from "~/components/tables/row-actions-cell";
+import { RowMenuItems } from "~/components/tables/row-menu-items";
+import { SortHeaderCell } from "~/components/tables/sort-header-cell";
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
   ContextMenuTrigger
 } from "~/components/ui/context-menu";
-import {
-  DropdownMenuItem,
-  DropdownMenuSeparator
-} from "~/components/ui/dropdown-menu";
 import { formatCurrency } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
 import type {
@@ -352,39 +347,34 @@ export function InvoiceListTable({
       </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-sm">
-          <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 shadow-[inset_0_-1px_0_0_var(--border)]">
-            <SortHeader
-              label="Name"
-              active={sort === COLUMN_SORTS.name}
-              direction={direction}
-              onClick={() => toggleSort("name")}
-            />
-          </th>
-          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)] max-sm:hidden">
-            <SortHeader
-              label="Client"
-              active={sort === COLUMN_SORTS.client}
-              direction={direction}
-              onClick={() => toggleSort("client")}
-            />
-          </th>
-          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)] max-sm:hidden">
-            <SortHeader
-              label="Amount"
-              align="end"
-              active={sort === COLUMN_SORTS.amount}
-              direction={direction}
-              onClick={() => toggleSort("amount")}
-            />
-          </th>
-          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
-            <SortHeader
-              label="Date modified"
-              active={sort === COLUMN_SORTS.updatedAt}
-              direction={direction}
-              onClick={() => toggleSort("updatedAt")}
-            />
-          </th>
+          <SortHeaderCell
+            label="Name"
+            active={sort === COLUMN_SORTS.name}
+            direction={direction}
+            onClick={() => toggleSort("name")}
+            className="pl-4"
+          />
+          <SortHeaderCell
+            label="Client"
+            active={sort === COLUMN_SORTS.client}
+            direction={direction}
+            onClick={() => toggleSort("client")}
+            className="max-sm:hidden"
+          />
+          <SortHeaderCell
+            label="Amount"
+            align="end"
+            active={sort === COLUMN_SORTS.amount}
+            direction={direction}
+            onClick={() => toggleSort("amount")}
+            className="max-sm:hidden"
+          />
+          <SortHeaderCell
+            label="Date modified"
+            active={sort === COLUMN_SORTS.updatedAt}
+            direction={direction}
+            onClick={() => toggleSort("updatedAt")}
+          />
           <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)]">
             <span className="sr-only">Actions</span>
           </th>
@@ -400,6 +390,39 @@ export function InvoiceListTable({
           const isContextFocused = contextMenuRowId === invoice.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
           const isTabbable = invoice.id === tabbableId;
+          const rowActions = showBulkDelete
+            ? [
+                {
+                  label: `Delete ${selectedIds.length} invoices`,
+                  icon: IconTrash,
+                  onSelect: () => onDeleteInvoices(selectedInvoices),
+                  destructive: true
+                }
+              ]
+            : [
+                {
+                  label: "Open",
+                  icon: IconFolderOpen,
+                  onSelect: () => onOpenInvoice(invoice)
+                },
+                {
+                  label: "Rename",
+                  icon: IconPencil,
+                  onSelect: () => startRename(invoice)
+                },
+                {
+                  label: "Duplicate",
+                  icon: IconCopy,
+                  onSelect: () => onDuplicateInvoice(invoice)
+                },
+                {
+                  label: "Delete",
+                  icon: IconTrash,
+                  onSelect: () => onDeleteInvoices([invoice]),
+                  destructive: true,
+                  separated: true
+                }
+              ];
           const secondaryTextClass = isDeleting
             ? "text-destructive/70"
             : isSelected
@@ -455,6 +478,7 @@ export function InvoiceListTable({
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <IconFileText
+                      aria-hidden="true"
                       className={cn(
                         "size-4 shrink-0",
                         isDeleting
@@ -469,6 +493,7 @@ export function InvoiceListTable({
                         ref={inputRef}
                         name="invoiceName"
                         aria-label="Invoice name"
+                        maxLength={100}
                         value={editingValue}
                         onChange={event => setEditingValue(event.target.value)}
                         onFocus={event => event.currentTarget.select()}
@@ -533,115 +558,16 @@ export function InvoiceListTable({
                   label={`Actions for ${invoice.name}`}
                   selected={isSelected && !isDeleting}
                 >
-                  {showBulkDelete ? (
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => onDeleteInvoices(selectedInvoices)}
-                    >
-                      <IconTrash aria-hidden="true" />
-                      Delete {selectedIds.length} invoices
-                    </DropdownMenuItem>
-                  ) : (
-                    <>
-                      <DropdownMenuItem onClick={() => onOpenInvoice(invoice)}>
-                        <IconFolderOpen aria-hidden="true" />
-                        Open
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => startRename(invoice)}>
-                        <IconPencil aria-hidden="true" />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => onDuplicateInvoice(invoice)}
-                      >
-                        <IconCopy aria-hidden="true" />
-                        Duplicate
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onDeleteInvoices([invoice])}
-                      >
-                        <IconTrash aria-hidden="true" />
-                        Delete
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  <RowMenuItems menu="dropdown" actions={rowActions} />
                 </RowActionsCell>
               </ContextMenuTrigger>
               <ContextMenuContent>
-                {showBulkDelete ? (
-                  <ContextMenuItem
-                    variant="destructive"
-                    onClick={() => onDeleteInvoices(selectedInvoices)}
-                  >
-                    <IconTrash />
-                    Delete {selectedIds.length} invoices
-                  </ContextMenuItem>
-                ) : (
-                  <>
-                    <ContextMenuItem onClick={() => onOpenInvoice(invoice)}>
-                      <IconFolderOpen className="size-3 shrink-0" />
-                      Open
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => startRename(invoice)}>
-                      <IconPencil className="size-3 shrink-0" />
-                      Rename
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      onClick={() => onDuplicateInvoice(invoice)}
-                    >
-                      <IconCopy className="size-3 shrink-0" />
-                      Duplicate
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      variant="destructive"
-                      onClick={() => onDeleteInvoices([invoice])}
-                    >
-                      <IconTrash className="size-3 shrink-0" />
-                      Delete
-                    </ContextMenuItem>
-                  </>
-                )}
+                <RowMenuItems menu="context" actions={rowActions} />
               </ContextMenuContent>
             </ContextMenu>
           );
         })}
       </tbody>
     </table>
-  );
-}
-
-function SortHeader({
-  label,
-  active,
-  direction,
-  onClick,
-  align = "start"
-}: {
-  label: string;
-  active: boolean;
-  direction: SortDirection;
-  onClick: () => void;
-  align?: "start" | "end";
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-active={active}
-      className={cn(
-        "hover:text-foreground data-[active=true]:text-foreground flex w-full items-center gap-1 font-medium",
-        align === "end" && "justify-end"
-      )}
-    >
-      {label}
-      {active &&
-        (direction === "asc" ? (
-          <IconArrowUp className="size-3.5" />
-        ) : (
-          <IconArrowDown className="size-3.5" />
-        ))}
-    </button>
   );
 }

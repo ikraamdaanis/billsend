@@ -1,3 +1,4 @@
+import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import {
   DB_NAME,
@@ -128,4 +129,99 @@ test("renaming from the dialog updates the toolbar title", async ({ page }) => {
 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("heading", { name: "New name" })).toBeVisible();
+});
+
+// Saves three invoices and opens the Open Invoice dialog on them.
+async function openDialogWithThreeInvoices(page: Page) {
+  await gotoEditorReady(page, "Library");
+
+  for (const name of ["Alpha", "Bravo", "Charlie"]) {
+    await saveInvoiceAs(page, name);
+    await clickFileMenuItem(page, "New Invoice");
+  }
+
+  await clickFileMenuItem(page, "Open Invoice");
+
+  return page.getByRole("dialog", { name: "Open Invoice" });
+}
+
+test("deleting a selection skips invoices the search has hidden", async ({
+  page
+}) => {
+  const dialog = await openDialogWithThreeInvoices(page);
+
+  await dialog.getByRole("row", { name: /Alpha/ }).click();
+  await dialog
+    .getByRole("row", { name: /Bravo/ })
+    .click({ modifiers: ["ControlOrMeta"] });
+  await dialog.getByRole("searchbox").fill("Alpha");
+  await dialog.getByRole("row", { name: /Alpha/ }).press("Delete");
+
+  await expect(dialog.getByText("Delete “Alpha”?")).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete", exact: true }).click();
+  await dialog.getByRole("searchbox").fill("");
+
+  await expect(dialog.getByRole("row", { name: /Alpha/ })).toHaveCount(0);
+  await expect(dialog.getByRole("row", { name: /Bravo/ })).toBeVisible();
+  await expect(dialog.getByRole("row", { name: /Charlie/ })).toBeVisible();
+});
+
+test("a row's right-click and ⋯ menus offer the same actions", async ({
+  page
+}) => {
+  const dialog = await openDialogWithThreeInvoices(page);
+  const row = dialog.getByRole("row", { name: /Bravo/ });
+  const actions = ["Open", "Rename", "Duplicate", "Delete"];
+
+  await row.click({ button: "right" });
+  await expect(page.getByRole("menuitem")).toHaveText(actions);
+  await page.keyboard.press("Escape");
+
+  await row.getByRole("button", { name: "Actions for Bravo" }).click();
+  await expect(page.getByRole("menuitem")).toHaveText(actions);
+});
+
+test("the sorted column says which way it sorts", async ({ page }) => {
+  const dialog = await openDialogWithThreeInvoices(page);
+  const nameHeader = dialog.getByRole("columnheader", { name: "Name" });
+
+  await expect(
+    dialog.getByRole("columnheader", { name: "Date modified" })
+  ).toHaveAttribute("aria-sort", "descending");
+  await expect(nameHeader).toHaveAttribute("aria-sort", "none");
+
+  await nameHeader.getByRole("button").click();
+
+  await expect(nameHeader).toHaveAttribute("aria-sort", "ascending");
+});
+
+test("the Rename dialog starts from the name of the invoice it renames", async ({
+  page
+}) => {
+  const dialog = await openDialogWithThreeInvoices(page);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+
+  const panel = page.getByRole("complementary", { name: "Invoices" });
+  const rename = page.getByRole("dialog", { name: "Rename Invoice" });
+
+  await panel.getByRole("button", { name: "Actions for Alpha" }).click();
+  await page.getByRole("menuitem", { name: "Rename…" }).click();
+  await expect(rename.getByRole("textbox")).toHaveValue("Alpha");
+  await rename.getByRole("textbox").fill("Alpha renamed");
+  await rename.getByRole("button", { name: "Rename" }).click();
+  await expect(rename).toBeHidden();
+
+  // Straight away, before the old dialog's reset could have run.
+  await panel.getByRole("button", { name: "Actions for Bravo" }).click();
+  await page.getByRole("menuitem", { name: "Rename…" }).click();
+  await expect(rename.getByRole("textbox")).toHaveValue("Bravo");
+  await expect(rename.getByRole("button", { name: "Rename" })).toBeEnabled();
+
+  await rename.getByRole("button", { name: "Cancel" }).click();
+  await expect(rename).toBeHidden();
+  await expect(
+    panel.getByRole("button", { name: /^Alpha renamed/ })
+  ).toBeVisible();
 });

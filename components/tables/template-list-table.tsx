@@ -1,6 +1,4 @@
 import {
-  IconArrowDown,
-  IconArrowUp,
   IconFilePlus,
   IconPencil,
   IconTemplate,
@@ -9,16 +7,13 @@ import {
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { RowActionsCell } from "~/components/tables/row-actions-cell";
+import { RowMenuItems } from "~/components/tables/row-menu-items";
+import { SortHeaderCell } from "~/components/tables/sort-header-cell";
 import {
   ContextMenu,
   ContextMenuContent,
-  ContextMenuItem,
   ContextMenuTrigger
 } from "~/components/ui/context-menu";
-import {
-  DropdownMenuItem,
-  DropdownMenuSeparator
-} from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
 import type { InvoiceTemplate, SortDirection } from "~/types";
 import { formatListDate } from "~/utils/format-list-date";
@@ -318,22 +313,19 @@ export function TemplateListTable({
       </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-sm">
-          <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 shadow-[inset_0_-1px_0_0_var(--border)]">
-            <SortHeader
-              label="Name"
-              active={sortKey === "name"}
-              direction={sortDirection}
-              onClick={() => toggleSort("name")}
-            />
-          </th>
-          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
-            <SortHeader
-              label="Date modified"
-              active={sortKey === "updatedAt"}
-              direction={sortDirection}
-              onClick={() => toggleSort("updatedAt")}
-            />
-          </th>
+          <SortHeaderCell
+            label="Name"
+            active={sortKey === "name"}
+            direction={sortDirection}
+            onClick={() => toggleSort("name")}
+            className="pl-4"
+          />
+          <SortHeaderCell
+            label="Date modified"
+            active={sortKey === "updatedAt"}
+            direction={sortDirection}
+            onClick={() => toggleSort("updatedAt")}
+          />
           <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)]">
             <span className="sr-only">Actions</span>
           </th>
@@ -348,6 +340,34 @@ export function TemplateListTable({
           const isContextFocused = contextMenuRowId === template.id;
           const showBulkDelete = isSelected && selectedIds.length > 1;
           const isTabbable = template.id === tabbableId;
+          const rowActions = showBulkDelete
+            ? [
+                {
+                  label: `Delete ${selectedIds.length} templates`,
+                  icon: IconTrash,
+                  onSelect: () => onDeleteTemplates(selectedTemplates),
+                  destructive: true
+                }
+              ]
+            : [
+                {
+                  label: "Use template",
+                  icon: IconFilePlus,
+                  onSelect: () => onOpenTemplate(template)
+                },
+                {
+                  label: "Rename",
+                  icon: IconPencil,
+                  onSelect: () => startRename(template)
+                },
+                {
+                  label: "Delete",
+                  icon: IconTrash,
+                  onSelect: () => onDeleteTemplates([template]),
+                  destructive: true,
+                  separated: true
+                }
+              ];
 
           return (
             <ContextMenu
@@ -398,6 +418,7 @@ export function TemplateListTable({
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <IconTemplate
+                      aria-hidden="true"
                       className={cn(
                         "size-4 shrink-0",
                         isDeleting
@@ -412,6 +433,7 @@ export function TemplateListTable({
                         ref={inputRef}
                         name="templateName"
                         aria-label="Template name"
+                        maxLength={100}
                         value={editingValue}
                         onChange={event => setEditingValue(event.target.value)}
                         onFocus={event => event.currentTarget.select()}
@@ -443,100 +465,16 @@ export function TemplateListTable({
                   label={`Actions for ${template.name}`}
                   selected={isSelected && !isDeleting}
                 >
-                  {showBulkDelete ? (
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => onDeleteTemplates(selectedTemplates)}
-                    >
-                      <IconTrash aria-hidden="true" />
-                      Delete {selectedIds.length} templates
-                    </DropdownMenuItem>
-                  ) : (
-                    <>
-                      <DropdownMenuItem
-                        onClick={() => onOpenTemplate(template)}
-                      >
-                        <IconFilePlus aria-hidden="true" />
-                        Use template
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => startRename(template)}>
-                        <IconPencil aria-hidden="true" />
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        variant="destructive"
-                        onClick={() => onDeleteTemplates([template])}
-                      >
-                        <IconTrash aria-hidden="true" />
-                        Delete
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  <RowMenuItems menu="dropdown" actions={rowActions} />
                 </RowActionsCell>
               </ContextMenuTrigger>
               <ContextMenuContent>
-                {showBulkDelete ? (
-                  <ContextMenuItem
-                    variant="destructive"
-                    onClick={() => onDeleteTemplates(selectedTemplates)}
-                  >
-                    <IconTrash />
-                    Delete {selectedIds.length} templates
-                  </ContextMenuItem>
-                ) : (
-                  <>
-                    <ContextMenuItem onClick={() => onOpenTemplate(template)}>
-                      <IconFilePlus className="size-3 shrink-0" />
-                      Use template
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => startRename(template)}>
-                      <IconPencil className="size-3 shrink-0" />
-                      Rename
-                    </ContextMenuItem>
-                    <ContextMenuItem
-                      variant="destructive"
-                      onClick={() => onDeleteTemplates([template])}
-                    >
-                      <IconTrash className="size-3 shrink-0" />
-                      Delete
-                    </ContextMenuItem>
-                  </>
-                )}
+                <RowMenuItems menu="context" actions={rowActions} />
               </ContextMenuContent>
             </ContextMenu>
           );
         })}
       </tbody>
     </table>
-  );
-}
-
-function SortHeader({
-  label,
-  active,
-  direction,
-  onClick
-}: {
-  label: string;
-  active: boolean;
-  direction: SortDirection;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      data-active={active}
-      className="hover:text-foreground data-[active=true]:text-foreground flex w-full items-center gap-1 font-medium"
-    >
-      {label}
-      {active &&
-        (direction === "asc" ? (
-          <IconArrowUp className="size-3.5" />
-        ) : (
-          <IconArrowDown className="size-3.5" />
-        ))}
-    </button>
   );
 }
