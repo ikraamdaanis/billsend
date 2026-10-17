@@ -733,8 +733,9 @@ menu), the light/dark switch, and the quick actions (⌘K) button.
 
 The right panel holds every whole-invoice setting, in collapsible sections:
 Style (font tiles, weight and size segmented controls), Details (currency,
-issue date, payment terms), and Sections (switches for each optional part of
-the invoice). Rows are 13px, labels `muted-foreground`, fields `muted` fills.
+issue date, payment terms, date format), and Sections (switches for each
+optional part of the invoice). Dates are always picked from a calendar, on
+the page and in the inspector, and written in the invoice's date format. Rows are 13px, labels `muted-foreground`, fields `muted` fills.
 
 ### Navigation
 

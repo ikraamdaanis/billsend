@@ -1,4 +1,5 @@
-import { format } from "date-fns";
+import { IconCalendar } from "@tabler/icons-react";
+import { format, isValid, parseISO } from "date-fns";
 import { useState } from "react";
 import { CustomCurrencyDialog } from "~/components/dialogs/custom-currency-dialog";
 import {
@@ -6,6 +7,12 @@ import {
   InspectorRow,
   InspectorSection
 } from "~/components/editor/shell/inspector/inspector-controls";
+import { Calendar } from "~/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "~/components/ui/popover";
 import { NativeSelect } from "~/components/ui/select";
 import {
   currencyOptions,
@@ -16,6 +23,7 @@ import {
 import { cn } from "~/lib/utils";
 import { INVOICE_DATE_FORMATS } from "~/schema/invoice";
 import { useCurrencySlice, useDetailsSlice } from "~/stores/invoice-selectors";
+import { formatInvoiceDate } from "~/utils/format-invoice-date";
 import {
   addDaysToIsoDate,
   dueDateForNewInvoiceDate,
@@ -119,6 +127,55 @@ function DateFormatRow() {
   );
 }
 
+// The same calendar as the page's date fields, with the date written in the
+// invoice's format.
+function IssueDatePicker({
+  value,
+  onChange
+}: {
+  value: string;
+  onChange: (isoDate: string) => void;
+}) {
+  const { dateFormat } = useDetailsSlice();
+  const [open, setOpen] = useState(false);
+  const parsed = parseISO(value);
+  const selected = isValid(parsed) ? parsed : undefined;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        id="inspector-issue-date"
+        className={cn(
+          inspectorFieldClassName,
+          "flex items-center justify-between gap-2 text-left tabular-nums"
+        )}
+      >
+        <span className="truncate">
+          {value ? formatInvoiceDate(value, dateFormat) : "Pick a date"}
+        </span>
+        <IconCalendar
+          aria-hidden="true"
+          className="text-muted-foreground size-3.5 shrink-0"
+        />
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={selected}
+          defaultMonth={selected}
+          onSelect={date => {
+            if (!date) return;
+
+            onChange(format(date, "yyyy-MM-dd"));
+            setOpen(false);
+          }}
+          autoFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function DatesRows() {
   const { invoiceDate, dueDate, setInvoiceDate, setDueDate } =
     useDetailsSlice();
@@ -147,12 +204,9 @@ function DatesRows() {
   return (
     <>
       <InspectorRow label="Issue date" htmlFor="inspector-issue-date">
-        <input
-          id="inspector-issue-date"
-          type="date"
+        <IssueDatePicker
           value={invoiceDate}
-          onChange={event => handleInvoiceDateChange(event.target.value)}
-          className={cn(inspectorFieldClassName, "tabular-nums")}
+          onChange={handleInvoiceDateChange}
         />
       </InspectorRow>
       <InspectorRow label="Payment terms" htmlFor="inspector-terms">
