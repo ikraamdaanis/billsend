@@ -74,13 +74,27 @@ function run(command: "undo" | "redo") {
 // modal dialog keeps native undo in its own fields.
 export function HistoryShortcuts() {
   useEffect(() => {
+    // An undo key pressed in a field with its own undo (a search box). WebKit
+    // keeps one undo stack for the whole page, so its undo can run on past the
+    // field into the invoice's fields; that stray undo is dropped.
+    let ownUndoKey = false;
+
     function onKeyDown(event: KeyboardEvent) {
       if (event.isComposing || event.keyCode === 229) return;
 
       const command = historyCommand(event);
 
       if (!command) return;
-      if (hasOpenModal() || isOwnEditable(event.target)) return;
+      if (hasOpenModal()) return;
+
+      if (isOwnEditable(event.target)) {
+        ownUndoKey = true;
+        window.setTimeout(() => {
+          ownUndoKey = false;
+        }, 0);
+
+        return;
+      }
 
       event.preventDefault();
       event.stopPropagation();
@@ -106,6 +120,9 @@ export function HistoryShortcuts() {
       if (hasOpenModal() || isOwnEditable(target)) return;
 
       event.preventDefault();
+
+      if (ownUndoKey) return;
+
       run(event.inputType === "historyUndo" ? "undo" : "redo");
     }
 
