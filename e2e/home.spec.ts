@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { draftContains, gotoEditorSettled, saveInvoiceAs } from "./helpers";
+import { gotoEditorSettled, nameInvoice, savedContains } from "./helpers";
 
 // Group A: home / landing page.
 
@@ -77,7 +77,7 @@ test("the open=invoices hand-off opens the saved-invoice list", async ({
   page
 }) => {
   await gotoEditorSettled(page);
-  await saveInvoiceAs(page, "Returning client");
+  await nameInvoice(page, "Returning client");
 
   await page.goto("/create?open=invoices");
 
@@ -91,7 +91,7 @@ test("a font hand-off never restyles work in progress", async ({ page }) => {
   await gotoEditorSettled(page);
   await page.getByLabel("Invoice title").fill("Half-finished invoice");
   await expect
-    .poll(() => draftContains(page, "Half-finished invoice"))
+    .poll(() => savedContains(page, "Half-finished invoice"))
     .toBe(true);
 
   await page.goto("/create?font=lora");
