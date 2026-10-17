@@ -187,33 +187,40 @@ function publish(session: Session) {
   );
 }
 
-function readSessionStorage(key: string): string | null {
+function readStorage(
+  area: "sessionStorage" | "localStorage",
+  key: string
+): string | null {
   try {
-    return typeof sessionStorage === "undefined"
-      ? null
-      : sessionStorage.getItem(key);
+    return typeof window === "undefined" ? null : window[area].getItem(key);
   } catch {
     return null;
   }
 }
 
-function writeSessionStorage(key: string, value: string | null) {
+function writeStorage(
+  area: "sessionStorage" | "localStorage",
+  key: string,
+  value: string | null
+) {
   try {
-    if (typeof sessionStorage === "undefined") return;
+    if (typeof window === "undefined") return;
 
     if (value === null) {
-      sessionStorage.removeItem(key);
+      window[area].removeItem(key);
     } else {
-      sessionStorage.setItem(key, value);
+      window[area].setItem(key, value);
     }
   } catch {
     // Storage full or blocked: the in-memory copy is still there.
   }
 }
 
-// Edits that might not have reached the database when the page went away,
-// kept in this tab's session storage (synchronous, so it always lands) and
-// picked up when the tab reloads.
+// Edits that might not have reached the database when the page went away. A
+// write started as a page closes isn't guaranteed to land (and while the
+// browser asks "Leave site?", the page can't run at all), so they're also put
+// in local storage, which is synchronous and always lands. The next tab to
+// edit the invoice picks them up.
 type UnsavedStash = {
   rev: number;
   isRecord: boolean;
@@ -237,16 +244,15 @@ function stashUnsaved(session: Session) {
     invoiceData: liveContent()
   };
 
-  writeSessionStorage(
+  writeStorage(
+    "localStorage",
     `${UNSAVED_KEY_PREFIX}${session.id}`,
     JSON.stringify(stash)
   );
 }
 
-function takeStash(id: string): UnsavedStash | null {
-  const raw = readSessionStorage(`${UNSAVED_KEY_PREFIX}${id}`);
-
-  writeSessionStorage(`${UNSAVED_KEY_PREFIX}${id}`, null);
+function readStash(id: string): UnsavedStash | null {
+  const raw = readStorage("localStorage", `${UNSAVED_KEY_PREFIX}${id}`);
 
   if (!raw) return null;
 
@@ -257,8 +263,29 @@ function takeStash(id: string): UnsavedStash | null {
   }
 }
 
+function takeStash(id: string): UnsavedStash | null {
+  const stash = readStash(id);
+
+  clearStash(id);
+
+  return stash;
+}
+
 function clearStash(id: string) {
-  writeSessionStorage(`${UNSAVED_KEY_PREFIX}${id}`, null);
+  writeStorage("localStorage", `${UNSAVED_KEY_PREFIX}${id}`, null);
+}
+
+// The invoices with edits stashed by a page that went away.
+function stashedIds(): string[] {
+  try {
+    if (typeof window === "undefined") return [];
+
+    return Object.keys(window.localStorage)
+      .filter(key => key.startsWith(UNSAVED_KEY_PREFIX))
+      .map(key => key.slice(UNSAVED_KEY_PREFIX.length));
+  } catch {
+    return [];
+  }
 }
 
 // Whether the content has anything in it worth keeping.
@@ -584,6 +611,12 @@ async function startEditing(session: Session) {
   publish(session);
 
   if (session.isRecord) keepVersionQuietly(session, liveContent(), "opened");
+
+  try {
+    await recoverUnsaved(session);
+  } catch (error) {
+    console.error("[DocumentSession] Failed to recover unsaved edits", error);
+  }
 }
 
 async function attach(session: Session) {
@@ -720,7 +753,7 @@ function show(session: Session, content: Invoice) {
   if (session.pristine) session.pristine = normalized;
 
   clearInvoiceHistory();
-  writeSessionStorage(OPEN_INVOICE_KEY, session.id);
+  writeStorage("sessionStorage", OPEN_INVOICE_KEY, session.id);
   publish(session);
 }
 
@@ -1264,15 +1297,21 @@ async function sweepBlankInvoices(openId: string) {
   }
 }
 
-// Brings back edits the page didn't get to write before it went away.
-async function recoverStash(session: Session, stash: UnsavedStash) {
+// Brings back edits a page didn't get to write before it went away (a tab
+// closed or reloaded inside the save delay), once this tab edits the invoice.
+// They go in as an edit when nobody has written the invoice since; otherwise
+// they're kept as a version, never written over someone else's work.
+async function recoverUnsaved(session: Session) {
+  const stash = takeStash(session.id);
+
+  if (!stash || isEqual(liveContent(), stash.invoiceData)) return;
+
   const stored = session.isRecord ? await getInvoice(session.id) : undefined;
 
   if (stored && isEqual(stored.invoiceData, stash.invoiceData)) return;
 
-  if (session.status !== "editing" || (stored && stored.rev !== stash.rev)) {
-    if (session.isRecord)
-      keepVersionQuietly(session, stash.invoiceData, "conflict");
+  if (stored && stored.rev !== stash.rev) {
+    keepVersionQuietly(session, stash.invoiceData, "conflict");
 
     return;
   }
@@ -1285,6 +1324,73 @@ async function recoverStash(session: Session, stash: UnsavedStash) {
   session.controller.schedule(liveContent());
 }
 
+// Brings back stashed edits for invoices no tab has open, such as one whose
+// tab closed inside the save delay while this tab opens another.
+async function recoverOtherStashes(openId: string) {
+  if (!locksSupported()) return;
+
+  for (const id of stashedIds()) {
+    if (id === openId) continue;
+
+    await navigator.locks.request(
+      `${LOCK_PREFIX}${id}`,
+      { ifAvailable: true },
+      async lock => {
+        if (!lock) return;
+
+        const stash = takeStash(id);
+
+        if (!stash) return;
+
+        const stored = await getInvoice(id);
+
+        if (stored) {
+          if (isEqual(stored.invoiceData, stash.invoiceData)) return;
+
+          const written =
+            stored.rev === stash.rev
+              ? await writeInvoiceContent({
+                  id,
+                  expectedRev: stash.rev,
+                  invoiceData: stash.invoiceData
+                })
+              : null;
+
+          if (written?.outcome !== "saved") {
+            await addInvoiceVersion({
+              invoiceId: id,
+              name: stored.name,
+              invoiceData: stash.invoiceData,
+              reason: "conflict"
+            });
+          }
+
+          return;
+        }
+
+        if (isBlankInvoice(stash.invoiceData)) return;
+
+        const now = new Date();
+
+        // One deleted elsewhere comes back as a new invoice.
+        await createInvoice({
+          id: stash.isRecord ? crypto.randomUUID() : id,
+          name:
+            stash.nameSource === "user"
+              ? stash.name
+              : deriveInvoiceName(stash.invoiceData),
+          nameSource: stash.nameSource,
+          invoiceData: stash.invoiceData,
+          templateId: stash.templateId,
+          rev: 1,
+          createdAt: now,
+          updatedAt: now
+        });
+      }
+    );
+  }
+}
+
 async function runHydration(): Promise<void> {
   startListeners();
 
@@ -1295,7 +1401,7 @@ async function runHydration(): Promise<void> {
     storageUnavailable = true;
   }
 
-  const pointer = readSessionStorage(OPEN_INVOICE_KEY);
+  const pointer = readStorage("sessionStorage", OPEN_INVOICE_KEY);
   let openId = pointer;
   let document: InvoiceDocument | undefined;
 
@@ -1308,7 +1414,8 @@ async function runHydration(): Promise<void> {
     }
   }
 
-  const stash = pointer ? takeStash(pointer) : null;
+  // A new invoice this tab had open whose first edit never got written.
+  const stash = pointer && !document ? takeStash(pointer) : null;
   let session: Session;
   let content: Invoice;
 
@@ -1316,9 +1423,8 @@ async function runHydration(): Promise<void> {
     session = sessionFromDocument(document);
     content = document.invoiceData;
   } else if (stash) {
-    // A new invoice whose first edit didn't get written, or one deleted
-    // elsewhere while this tab still had edits on the way: either way, a new
-    // invoice with those edits.
+    // Its edits start a new invoice (as do edits to one deleted elsewhere
+    // since), written once hydration is done.
     session = newSession(stash.invoiceData, {
       templateId: stash.templateId,
       pristine: false
@@ -1342,19 +1448,16 @@ async function runHydration(): Promise<void> {
 
   hydrated = true;
 
-  if (stash) pendingRecovery = { session, stash: document ? stash : null };
+  if (stash) session.controller.schedule(liveContent());
 
   if (!storageUnavailable) {
-    sweepBlankInvoices(session.id).catch((error: unknown) =>
-      console.error("[DocumentSession] Failed to sweep blank invoices", error)
-    );
+    recoverOtherStashes(session.id)
+      .then(() => sweepBlankInvoices(session.id))
+      .catch((error: unknown) =>
+        console.error("[DocumentSession] Failed to tidy up storage", error)
+      );
   }
 }
-
-// Edits recovered at hydration are applied once the editor attaches and this
-// tab knows whether it edits the invoice.
-let pendingRecovery: { session: Session; stash: UnsavedStash | null } | null =
-  null;
 
 export function hydrateDocument(): Promise<void> {
   hydrationPromise ??= runHydration();
@@ -1386,18 +1489,6 @@ export function attachEditor(): Promise<void> {
       const document = await getInvoice(session.id).catch(() => undefined);
 
       if (document && document.rev > session.rev) adopt(session, document);
-    }
-
-    const recovery = pendingRecovery;
-
-    pendingRecovery = null;
-
-    if (recovery?.session === session) {
-      if (recovery.stash) {
-        await recoverStash(session, recovery.stash);
-      } else if (session.status === "editing") {
-        session.controller.schedule(liveContent());
-      }
     }
   });
 }
