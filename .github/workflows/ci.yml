@@ -17,6 +17,13 @@ jobs:
         with:
           bun-version: latest
 
+      # The session tests run two pages against Node's Web Locks
+      # (navigator.locks), which older Node versions don't have.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+
       - name: Cache dependencies
         uses: actions/cache@v4
         with:
@@ -75,10 +82,11 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          key: ${{ runner.os }}-playwright-chromium-webkit-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium
+        # WebKit runs the autosave, multi-tab and undo specs.
+        run: bunx playwright install --with-deps chromium webkit
 
       - name: Run E2E tests
         run: bunx playwright test
