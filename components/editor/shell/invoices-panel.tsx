@@ -1,44 +1,97 @@
-import { IconLock, IconPlus, IconSearch } from "@tabler/icons-react";
+import {
+  IconAdjustmentsHorizontal,
+  IconCopy,
+  IconDots,
+  IconFolderOpen,
+  IconLock,
+  IconPencil,
+  IconPlus,
+  IconSearch,
+  IconSortAscending,
+  IconSortDescending,
+  IconTrash,
+  IconX
+} from "@tabler/icons-react";
 import { format, isValid, parseISO } from "date-fns";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { SegmentedControl } from "~/components/editor/shell/inspector/inspector-controls";
 import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "~/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "~/components/ui/popover";
+import { NativeSelect } from "~/components/ui/select";
 import { formatCurrency } from "~/consts/currencies";
 import { useFileActions } from "~/context/file-actions-context";
 import { useInvoiceDocument } from "~/context/invoice-document-context";
 import { watchInvoices, watchTemplates } from "~/db";
 import { usePersistentState } from "~/hooks/use-persistent-state";
-import type { InvoiceDocument, InvoiceTemplate } from "~/types";
-import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
+import { cn } from "~/lib/utils";
+import type {
+  InvoiceDocument,
+  InvoiceLibraryView,
+  InvoiceTemplate
+} from "~/types";
+import {
+  countActiveFilters,
+  DEFAULT_LIBRARY_VIEW,
+  filterInvoices,
+  getInvoiceDate,
+  getInvoiceTotal,
+  groupInvoices,
+  LIBRARY_DATE_RANGES,
+  LIBRARY_GROUPS,
+  LIBRARY_SORTS,
+  listClients,
+  listCurrencies,
+  parseLibraryView,
+  sortInvoices
+} from "~/utils/invoice-library";
 
 type LibraryTab = "invoices" | "templates";
 
-// The client an invoice is grouped under: the first line of its "To" block.
-function clientName(document: InvoiceDocument) {
-  const firstLine = document.invoiceData.client.content
-    .split("\n")
-    .map(line => line.trim())
-    .find(Boolean);
+const fieldClassName =
+  "bg-muted dark:bg-muted dark:hover:bg-muted hover:border-input focus-visible:border-ring text-foreground h-8 w-full min-w-0 rounded-md border border-transparent pr-7 pl-2 text-[13px] outline-none";
 
-  return firstLine ?? "No client yet";
-}
+// Keeps a list in step with a Dexie table while the panel is open.
+function useWatchedList<TRow>(
+  watch: (
+    onChange: (rows: TRow[]) => void,
+    onError: (error: Error) => void
+  ) => () => void
+) {
+  const [rows, setRows] = useState<TRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-function invoiceDateLabel(document: InvoiceDocument) {
-  const date = parseISO(document.invoiceData.invoiceDate);
-  const fallback = new Date(document.updatedAt);
+  useEffect(
+    () =>
+      watch(
+        next => {
+          setRows(next);
+          setError(null);
+        },
+        failure => setError(failure.message)
+      ),
+    [watch]
+  );
 
-  if (isValid(date)) return format(date, "d MMM yyyy");
-
-  return isValid(fallback) ? format(fallback, "d MMM yyyy") : "";
-}
-
-function matchesQuery(text: string, query: string) {
-  return text.toLowerCase().includes(query.trim().toLowerCase());
+  return { rows, error };
 }
 
 // The saved invoices and templates in this browser, one click away, like the
-// pages list in Framer. Opening one goes through the same unsaved-changes
-// check as the project menu.
+// pages list in Framer: searchable, sortable, filterable and grouped, with a
+// menu on each row for the rest. Opening one goes through the same
+// unsaved-changes check as the project menu. The tab, sort, grouping and
+// filters are remembered across reloads; the search is not.
 export function InvoicesPanel() {
   const [tab, setTab] = usePersistentState<LibraryTab>(
     "billsend-editor-library-tab",
@@ -46,7 +99,14 @@ export function InvoicesPanel() {
     stored =>
       stored === "invoices" || stored === "templates" ? stored : undefined
   );
+  const [view, setView] = usePersistentState<InvoiceLibraryView>(
+    "billsend-editor-library-view",
+    DEFAULT_LIBRARY_VIEW,
+    parseLibraryView
+  );
   const [query, setQuery] = useState("");
+  const invoices = useWatchedList(watchInvoices);
+  const templates = useWatchedList(watchTemplates);
   const { newInvoice } = useFileActions();
 
   return (
@@ -61,29 +121,43 @@ export function InvoicesPanel() {
           ]}
           onChange={setTab}
         />
-        <label className="bg-muted text-muted-foreground focus-within:border-ring flex h-8 items-center gap-1.5 rounded-md border border-transparent px-2">
-          <IconSearch aria-hidden="true" className="size-3.5 shrink-0" />
-          <span className="sr-only">
-            {tab === "invoices" ? "Search invoices" : "Search templates"}
-          </span>
-          <input
-            type="search"
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            placeholder={
-              tab === "invoices" ? "Search invoices" : "Search templates"
-            }
-            className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-[13px] outline-none"
-          />
-        </label>
+        <SearchField
+          label={tab === "invoices" ? "Search invoices" : "Search templates"}
+          value={query}
+          onChange={setQuery}
+        >
+          {tab === "invoices" && (
+            <ViewOptions
+              view={view}
+              onViewChange={setView}
+              invoices={invoices.rows ?? []}
+            />
+          )}
+        </SearchField>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-1.5 pb-2">
-        {tab === "invoices" ? (
-          <InvoiceList query={query} />
-        ) : (
-          <TemplateList query={query} />
-        )}
-      </div>
+      {tab === "invoices" ? (
+        <InvoiceList
+          invoices={invoices.rows}
+          error={invoices.error}
+          query={query}
+          view={view}
+          onClearFilters={() => {
+            setQuery("");
+            setView({
+              ...view,
+              dateRange: "all",
+              client: null,
+              currency: null
+            });
+          }}
+        />
+      ) : (
+        <TemplateList
+          templates={templates.rows}
+          error={templates.error}
+          query={query}
+        />
+      )}
       <div className="border-border flex shrink-0 flex-col gap-2 border-t p-3">
         <Button variant="secondary" onClick={newInvoice} className="w-full">
           <IconPlus aria-hidden="true" />
@@ -98,197 +172,534 @@ export function InvoicesPanel() {
   );
 }
 
-function InvoiceList({ query }: { query: string }) {
-  const [invoices, setInvoices] = useState<InvoiceDocument[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { currentDocumentId } = useInvoiceDocument();
-  const { openInvoice, showOpenInvoice } = useFileActions();
-
-  useEffect(
-    () =>
-      watchInvoices(
-        next => {
-          setInvoices(next);
-          setError(null);
-        },
-        failure => setError(failure.message)
-      ),
-    []
+function SearchField({
+  label,
+  value,
+  onChange,
+  children
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <label className="bg-muted text-muted-foreground focus-within:border-ring flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-transparent px-2">
+        <IconSearch aria-hidden="true" className="size-3.5 shrink-0" />
+        <span className="sr-only">{label}</span>
+        <input
+          type="search"
+          value={value}
+          onChange={event => onChange(event.target.value)}
+          placeholder={label}
+          className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-[13px] outline-none [&::-webkit-search-cancel-button]:hidden"
+        />
+        {value && (
+          <button
+            type="button"
+            aria-label="Clear search"
+            onClick={() => onChange("")}
+            className="hover:text-foreground -mr-0.5 rounded-sm"
+          >
+            <IconX aria-hidden="true" className="size-3.5" />
+          </button>
+        )}
+      </label>
+      {children}
+    </div>
   );
+}
 
-  if (error) return <ListMessage>{error}</ListMessage>;
-  if (!invoices) return null;
+function ViewOptions({
+  view,
+  onViewChange,
+  invoices
+}: {
+  view: InvoiceLibraryView;
+  onViewChange: (view: InvoiceLibraryView) => void;
+  invoices: InvoiceDocument[];
+}) {
+  const activeFilters = countActiveFilters(view);
+  const clients = listClients(invoices);
+  const currencies = listCurrencies(invoices);
+  const isDefault =
+    JSON.stringify(view) === JSON.stringify(DEFAULT_LIBRARY_VIEW);
+
+  function update(changes: Partial<InvoiceLibraryView>) {
+    onViewChange({ ...view, ...changes });
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        aria-label={
+          activeFilters > 0
+            ? `View options, ${activeFilters} filter${activeFilters === 1 ? "" : "s"} on`
+            : "View options"
+        }
+        title="Sort, group and filter"
+        className="bg-muted text-muted-foreground hover:text-foreground aria-expanded:text-foreground focus-visible:ring-ring relative flex size-8 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-1"
+      >
+        <IconAdjustmentsHorizontal aria-hidden="true" className="size-4" />
+        {activeFilters > 0 && (
+          <span
+            aria-hidden="true"
+            className="bg-ring absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold text-white tabular-nums"
+          >
+            {activeFilters}
+          </span>
+        )}
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-64 gap-3 p-3">
+        <OptionGroup label="Sort by" htmlFor="library-sort">
+          <div className="flex items-center gap-1.5">
+            <NativeSelect
+              id="library-sort"
+              value={view.sort}
+              onChange={event => {
+                const sort = LIBRARY_SORTS.find(
+                  option => option.value === event.target.value
+                );
+
+                if (sort) {
+                  update({
+                    sort: sort.value,
+                    direction: sort.defaultDirection
+                  });
+                }
+              }}
+              className={fieldClassName}
+            >
+              {LIBRARY_SORTS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </NativeSelect>
+            <button
+              type="button"
+              aria-label={
+                view.direction === "asc"
+                  ? "Ascending, switch to descending"
+                  : "Descending, switch to ascending"
+              }
+              title={view.direction === "asc" ? "Ascending" : "Descending"}
+              onClick={() =>
+                update({ direction: view.direction === "asc" ? "desc" : "asc" })
+              }
+              className="bg-muted text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-1"
+            >
+              {view.direction === "asc" ? (
+                <IconSortAscending aria-hidden="true" className="size-4" />
+              ) : (
+                <IconSortDescending aria-hidden="true" className="size-4" />
+              )}
+            </button>
+          </div>
+        </OptionGroup>
+        <OptionGroup label="Group by">
+          <SegmentedControl
+            label="Group by"
+            value={view.group}
+            options={LIBRARY_GROUPS}
+            onChange={group => update({ group })}
+          />
+        </OptionGroup>
+        <div className="border-border -mx-3 border-t" />
+        <OptionGroup label="Invoice date" htmlFor="library-date">
+          <NativeSelect
+            id="library-date"
+            value={view.dateRange}
+            onChange={event => {
+              const range = LIBRARY_DATE_RANGES.find(
+                option => option.value === event.target.value
+              );
+
+              if (range) update({ dateRange: range.value });
+            }}
+            className={fieldClassName}
+          >
+            {LIBRARY_DATE_RANGES.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </OptionGroup>
+        <OptionGroup label="Client" htmlFor="library-client">
+          <NativeSelect
+            id="library-client"
+            value={view.client ?? ""}
+            onChange={event => update({ client: event.target.value || null })}
+            className={fieldClassName}
+          >
+            <option value="">Any client</option>
+            {clients.map(client => (
+              <option key={client} value={client}>
+                {client}
+              </option>
+            ))}
+          </NativeSelect>
+        </OptionGroup>
+        {(currencies.length > 1 || view.currency !== null) && (
+          <OptionGroup label="Currency" htmlFor="library-currency">
+            <NativeSelect
+              id="library-currency"
+              value={view.currency ?? ""}
+              onChange={event =>
+                update({ currency: event.target.value || null })
+              }
+              className={fieldClassName}
+            >
+              <option value="">Any currency</option>
+              {currencies.map(currency => (
+                <option key={currency} value={currency}>
+                  {currency}
+                </option>
+              ))}
+            </NativeSelect>
+          </OptionGroup>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={isDefault}
+          onClick={() => onViewChange(DEFAULT_LIBRARY_VIEW)}
+          className="text-muted-foreground -mx-1 w-fit"
+        >
+          Reset to default
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function OptionGroup({
+  label,
+  htmlFor,
+  children
+}: {
+  label: string;
+  htmlFor?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={htmlFor}
+        className="text-muted-foreground text-xs font-medium"
+      >
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function InvoiceList({
+  invoices,
+  error,
+  query,
+  view,
+  onClearFilters
+}: {
+  invoices: InvoiceDocument[] | null;
+  error: string | null;
+  query: string;
+  view: InvoiceLibraryView;
+  onClearFilters: () => void;
+}) {
+  const { currentDocumentId } = useInvoiceDocument();
+  const actions = useFileActions();
+
+  if (error)
+    return (
+      <ListScroller>
+        <ListMessage>{error}</ListMessage>
+      </ListScroller>
+    );
+  if (!invoices) return <ListScroller />;
 
   if (invoices.length === 0) {
     return (
-      <ListMessage>
-        No saved invoices yet. Save this one with ⌘S and it will show here.
-      </ListMessage>
+      <ListScroller>
+        <ListMessage>
+          No saved invoices yet. Save this one with ⌘S and it will show here.
+        </ListMessage>
+      </ListScroller>
     );
   }
 
-  const matches = invoices
-    .filter(document =>
-      matchesQuery(
-        `${document.name} ${clientName(document)} ${document.invoiceData.number}`,
-        query
+  const matches = filterInvoices(invoices, { query, view, now: new Date() });
+  const groups = groupInvoices(
+    sortInvoices(matches, view.sort, view.direction),
+    view.group
+  );
+
+  return (
+    <>
+      {matches.length < invoices.length && (
+        <div className="text-muted-foreground flex shrink-0 items-center justify-between gap-2 px-4 pb-1.5 text-xs">
+          <span className="tabular-nums">
+            {matches.length} of {invoices.length} invoices
+          </span>
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="hover:text-foreground focus-visible:ring-ring rounded-sm font-medium outline-none focus-visible:ring-1"
+          >
+            Clear filters
+          </button>
+        </div>
+      )}
+      <ListScroller>
+        {matches.length === 0 && (
+          <ListMessage>
+            Nothing matches. Try another search or filter.
+          </ListMessage>
+        )}
+        {groups.map(group => (
+          <section key={group.key} className="flex flex-col gap-px">
+            {group.label && (
+              <h3 className="text-muted-foreground flex items-center justify-between gap-2 px-2 pt-1 pb-0.5 text-[11px] font-medium">
+                <span className="truncate">{group.label}</span>
+                <span className="tabular-nums">{group.documents.length}</span>
+              </h3>
+            )}
+            {group.documents.map(document => (
+              <LibraryItem
+                key={document.id}
+                current={document.id === currentDocumentId}
+                title={document.name}
+                aside={formatCurrency(
+                  getInvoiceTotal(document),
+                  document.invoiceData.currency
+                )}
+                meta={invoiceMeta(document, view)}
+                onSelect={() => actions.openInvoice(document.id)}
+                menu={
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => actions.openInvoice(document.id)}
+                    >
+                      <IconFolderOpen aria-hidden="true" />
+                      Open
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => actions.renameInvoice(document)}
+                    >
+                      <IconPencil aria-hidden="true" />
+                      Rename…
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => actions.duplicateInvoice(document)}
+                    >
+                      <IconCopy aria-hidden="true" />
+                      Duplicate
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => actions.deleteInvoice(document)}
+                    >
+                      <IconTrash aria-hidden="true" />
+                      Delete…
+                    </DropdownMenuItem>
+                  </>
+                }
+              />
+            ))}
+          </section>
+        ))}
+      </ListScroller>
+    </>
+  );
+}
+
+// The second line of a row: its number, then the date the sort is about (when
+// it's due for a due-date sort, when it was edited for the default sort).
+function invoiceMeta(document: InvoiceDocument, view: InvoiceLibraryView) {
+  const { number, dueDate } = document.invoiceData;
+  const due = parseISO(dueDate);
+  const date =
+    view.sort === "dueDate" && isValid(due)
+      ? `Due ${format(due, "d MMM yyyy")}`
+      : view.sort === "updated"
+        ? `Edited ${format(new Date(document.updatedAt), "d MMM yyyy")}`
+        : format(getInvoiceDate(document), "d MMM yyyy");
+
+  return [number && `No. ${number}`, date].filter(Boolean).join(" · ");
+}
+
+function TemplateList({
+  templates,
+  error,
+  query
+}: {
+  templates: InvoiceTemplate[] | null;
+  error: string | null;
+  query: string;
+}) {
+  const actions = useFileActions();
+
+  if (error)
+    return (
+      <ListScroller>
+        <ListMessage>{error}</ListMessage>
+      </ListScroller>
+    );
+  if (!templates) return <ListScroller />;
+
+  if (templates.length === 0) {
+    return (
+      <ListScroller>
+        <ListMessage>
+          No templates yet. Save this invoice as one to start the next from it.
+        </ListMessage>
+        <button
+          type="button"
+          onClick={actions.saveAsTemplate}
+          className="text-foreground hover:bg-muted focus-visible:ring-ring mx-2 w-fit rounded-md px-2 py-1 text-xs font-medium outline-none focus-visible:ring-1"
+        >
+          Save as template
+        </button>
+      </ListScroller>
+    );
+  }
+
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = templates
+    .filter(template =>
+      words.every(word =>
+        `${template.name} ${template.description ?? ""}`
+          .toLowerCase()
+          .includes(word)
       )
     )
     .sort(
       (a, b) =>
         new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
-  // Clients in order of their latest invoice, each with its invoices newest
-  // first (the sort above already put them in that order).
-  const groups = new Map<string, InvoiceDocument[]>();
-
-  matches.forEach(document => {
-    const client = clientName(document);
-    groups.set(client, [...(groups.get(client) ?? []), document]);
-  });
 
   return (
-    <div className="flex flex-col gap-2">
-      {matches.length === 0 && (
-        <ListMessage>No invoices match “{query.trim()}”.</ListMessage>
-      )}
-      {[...groups.entries()].map(([client, documents]) => (
-        <section key={client} className="flex flex-col gap-px">
-          <h3 className="text-muted-foreground truncate px-2 pt-1 pb-0.5 text-[11px] font-medium">
-            {client}
-          </h3>
-          {documents.map(document => (
-            <LibraryItem
-              key={document.id}
-              current={document.id === currentDocumentId}
-              title={document.name}
-              aside={formatCurrency(
-                calculateInvoiceTotals(document.invoiceData).total,
-                document.invoiceData.currency
-              )}
-              meta={[
-                document.invoiceData.number &&
-                  `No. ${document.invoiceData.number}`,
-                invoiceDateLabel(document)
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-              onSelect={() => openInvoice(document.id)}
-            />
-          ))}
-        </section>
-      ))}
-      <button
-        type="button"
-        onClick={showOpenInvoice}
-        className="text-muted-foreground hover:text-foreground focus-visible:ring-ring mx-2 mt-1 w-fit rounded-sm text-xs underline-offset-2 outline-none hover:underline focus-visible:ring-1"
-      >
-        Rename or delete invoices…
-      </button>
+    <ListScroller>
+      <section className="flex flex-col gap-px">
+        <h3 className="text-muted-foreground px-2 pt-1 pb-0.5 text-[11px] font-medium">
+          Start a new invoice from
+        </h3>
+        {matches.length === 0 && (
+          <ListMessage>No templates match “{query.trim()}”.</ListMessage>
+        )}
+        {matches.map(template => (
+          <LibraryItem
+            key={template.id}
+            current={false}
+            title={template.name}
+            meta={
+              template.description ||
+              `Edited ${format(new Date(template.updatedAt), "d MMM yyyy")}`
+            }
+            onSelect={() => actions.applyTemplate(template)}
+            menu={
+              <>
+                <DropdownMenuItem
+                  onClick={() => actions.applyTemplate(template)}
+                >
+                  <IconFolderOpen aria-hidden="true" />
+                  Use template
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => actions.renameTemplate(template)}
+                >
+                  <IconPencil aria-hidden="true" />
+                  Rename…
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => actions.deleteTemplate(template)}
+                >
+                  <IconTrash aria-hidden="true" />
+                  Delete…
+                </DropdownMenuItem>
+              </>
+            }
+          />
+        ))}
+      </section>
+    </ListScroller>
+  );
+}
+
+function ListScroller({ children }: { children?: ReactNode }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-1.5 pb-2">
+      {children}
     </div>
   );
 }
 
-function TemplateList({ query }: { query: string }) {
-  const [templates, setTemplates] = useState<InvoiceTemplate[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const { applyTemplate, saveAsTemplate } = useFileActions();
-
-  useEffect(
-    () =>
-      watchTemplates(
-        next => {
-          setTemplates(next);
-          setError(null);
-        },
-        failure => setError(failure.message)
-      ),
-    []
-  );
-
-  if (error) return <ListMessage>{error}</ListMessage>;
-  if (!templates) return null;
-
-  if (templates.length === 0) {
-    return (
-      <div className="flex flex-col gap-2">
-        <ListMessage>
-          No templates yet. Save this invoice as one to start the next from it.
-        </ListMessage>
-        <button
-          type="button"
-          onClick={saveAsTemplate}
-          className="text-foreground hover:bg-muted focus-visible:ring-ring mx-2 w-fit rounded-md px-2 py-1 text-xs font-medium outline-none focus-visible:ring-1"
-        >
-          Save as template
-        </button>
-      </div>
-    );
-  }
-
-  const matches = templates.filter(template =>
-    matchesQuery(`${template.name} ${template.description ?? ""}`, query)
-  );
-
-  return (
-    <div className="flex flex-col gap-px">
-      <h3 className="text-muted-foreground px-2 pt-1 pb-0.5 text-[11px] font-medium">
-        Start a new invoice from
-      </h3>
-      {matches.length === 0 && (
-        <ListMessage>No templates match “{query.trim()}”.</ListMessage>
-      )}
-      {matches.map(template => (
-        <LibraryItem
-          key={template.id}
-          current={false}
-          title={template.name}
-          meta={template.description ?? ""}
-          onSelect={() => applyTemplate(template)}
-        />
-      ))}
-    </div>
-  );
-}
-
+// A row: the row itself opens the item, and the ⋯ button on it (shown on
+// hover, on focus and while its menu is open; always on touch) holds the rest.
 function LibraryItem({
   current,
   title,
   aside,
   meta,
-  onSelect
+  onSelect,
+  menu
 }: {
   current: boolean;
   title: string;
   aside?: string;
   meta: string;
   onSelect: () => void;
+  menu: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-current={current ? "true" : undefined}
-      onClick={onSelect}
-      className="hover:bg-muted aria-[current=true]:bg-accent focus-visible:ring-ring grid w-full grid-cols-[minmax(0,1fr)_auto] gap-x-2 rounded-md px-2 py-1.5 text-left outline-none focus-visible:ring-1 pointer-coarse:py-2.5"
+    <div
+      className={cn(
+        "group/item hover:bg-muted has-aria-expanded:bg-muted relative flex rounded-md",
+        current && "bg-accent hover:bg-accent has-aria-expanded:bg-accent"
+      )}
     >
-      <span className="text-foreground truncate text-[13px] font-medium">
-        {title || "Untitled invoice"}
-      </span>
-      {aside && (
-        <span className="text-muted-foreground text-xs tabular-nums">
-          {aside}
+      <button
+        type="button"
+        aria-current={current ? "true" : undefined}
+        onClick={onSelect}
+        className="focus-visible:ring-ring grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-2 rounded-md py-1.5 pr-9 pl-2 text-left outline-none focus-visible:ring-1 pointer-coarse:py-2.5 pointer-coarse:pr-11"
+      >
+        <span className="text-foreground truncate text-[13px] font-medium">
+          {title || "Untitled invoice"}
         </span>
-      )}
-      {meta && (
-        <span className="text-muted-foreground col-span-2 truncate text-xs">
-          {meta}
-        </span>
-      )}
-    </button>
+        {aside && (
+          <span className="text-muted-foreground text-xs leading-5 tabular-nums">
+            {aside}
+          </span>
+        )}
+        {meta && (
+          <span className="text-muted-foreground col-span-2 truncate text-xs">
+            {meta}
+          </span>
+        )}
+      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label={`Actions for ${title || "Untitled invoice"}`}
+          className="text-muted-foreground hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground focus-visible:ring-ring absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-md opacity-0 outline-none group-focus-within/item:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 aria-expanded:opacity-100 pointer-coarse:size-9 pointer-coarse:opacity-100"
+        >
+          <IconDots aria-hidden="true" className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          {menu}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
-function ListMessage({ children }: { children: string | string[] }) {
+function ListMessage({ children }: { children: ReactNode }) {
   return (
     <p className="text-muted-foreground px-2 py-3 text-xs text-pretty">
       {children}
