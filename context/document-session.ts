@@ -9,7 +9,11 @@ import {
 } from "~/db";
 import { useDocumentStore } from "~/stores/document-store";
 import { selectInvoiceData } from "~/stores/invoice-selectors";
-import { invoiceDefault, useInvoiceStore } from "~/stores/invoice-store";
+import {
+  createBlankInvoice,
+  invoiceDefault,
+  useInvoiceStore
+} from "~/stores/invoice-store";
 import type { InvoiceDocument, InvoiceFont } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
 
@@ -92,20 +96,24 @@ async function update(options?: {
   documentId?: string;
   name?: string;
 }): Promise<void> {
-  const targetId =
-    options?.documentId ?? useDocumentStore.getState().documentId;
+  const startedFor = useDocumentStore.getState().documentId;
+  const targetId = options?.documentId ?? startedFor;
 
   if (!targetId) {
     throw new DocumentNotFoundError();
   }
 
+  // Snapshot the content before awaiting, so an invoice opened while the
+  // record is being read can't be written into this one.
+  const invoice = structuredClone(
+    selectInvoiceData(useInvoiceStore.getState())
+  );
   const existingDocument = await getInvoice(targetId);
 
   if (!existingDocument) {
     throw new DocumentNotFoundError();
   }
 
-  const invoice = selectInvoiceData(useInvoiceStore.getState());
   const trimmedName = options?.name?.trim();
   const updatedDocument: InvoiceDocument = {
     ...existingDocument,
@@ -113,11 +121,15 @@ async function update(options?: {
     // keep the existing name. Without this a Save As over an existing document
     // with a renamed field updated only the header, never the stored record.
     name: trimmedName ?? existingDocument.name,
-    invoiceData: structuredClone(invoice),
+    invoiceData: invoice,
     updatedAt: new Date()
   };
 
   await saveInvoice(updatedDocument);
+
+  // Another invoice was opened while this one saved: it stays the current one.
+  if (useDocumentStore.getState().documentId !== startedFor) return;
+
   useDocumentStore.getState().setDocument({
     documentId: targetId,
     documentName: updatedDocument.name,
@@ -271,6 +283,19 @@ async function runHydration(): Promise<void> {
 
   if (draft) {
     const invoice = ensureItemIds(structuredClone(draft.invoiceData));
+    const untouchedBlank =
+      draft.documentId === null &&
+      draft.lastSavedInvoice !== null &&
+      isEqual(draft.invoiceData, draft.lastSavedInvoice);
+
+    // A blank nobody has typed into is dated today, as a new one would be,
+    // rather than the day the editor was last open.
+    if (untouchedBlank) {
+      const { invoiceDate, dueDate } = createBlankInvoice();
+      invoice.invoiceDate = invoiceDate;
+      invoice.dueDate = dueDate;
+    }
+
     useInvoiceStore.getState().setInvoice(invoice);
     const normalized = selectInvoiceData(useInvoiceStore.getState());
     useDocumentStore.getState().setDocument({
@@ -279,9 +304,11 @@ async function runHydration(): Promise<void> {
       // A null baseline is deliberate (an applied template or a detached
       // document): it keeps the content dirty. Restore it as-is rather than
       // promoting the unsaved content to its own baseline.
-      lastSavedInvoice: draft.lastSavedInvoice
-        ? structuredClone(draft.lastSavedInvoice)
-        : null
+      lastSavedInvoice: untouchedBlank
+        ? structuredClone(normalized)
+        : draft.lastSavedInvoice
+          ? structuredClone(draft.lastSavedInvoice)
+          : null
     });
     void cleanupOrphanedImages([normalized.image]);
   } else {
