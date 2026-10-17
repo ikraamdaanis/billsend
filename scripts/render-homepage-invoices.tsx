@@ -48,7 +48,7 @@ function items(rows: [string, number, string, number][]): InvoiceItem[] {
 function sampleInvoice(
   overrides: Partial<Invoice> & Pick<Invoice, "seller" | "client" | "items">
 ): Invoice {
-  return {
+  const invoice: Invoice = {
     ...structuredClone(invoiceDefault),
     ...overrides,
     seller: { ...invoiceDefault.seller, ...overrides.seller },
@@ -57,6 +57,19 @@ function sampleInvoice(
     paymentDetails: {
       ...invoiceDefault.paymentDetails,
       ...overrides.paymentDetails
+    }
+  };
+
+  // The optional text sections start switched off on a new invoice; a sample
+  // that fills one in has it switched on, as the editor would.
+  return {
+    ...invoice,
+    sections: {
+      ...invoice.sections,
+      shipping: invoice.shipping.content.trim() !== "",
+      notes: invoice.notes.content.trim() !== "",
+      terms: invoice.terms.content.trim() !== "",
+      latePayment: invoice.latePayment.content.trim() !== ""
     }
   };
 }
