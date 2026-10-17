@@ -3,6 +3,7 @@ import {
   IconSortAscending,
   IconSortDescending
 } from "@tabler/icons-react";
+import { isEqual } from "lodash-es";
 import type { ReactNode } from "react";
 import { SegmentedControl } from "~/components/editor/shell/inspector/inspector-controls";
 import { Button } from "~/components/ui/button";
@@ -12,6 +13,7 @@ import {
   PopoverTrigger
 } from "~/components/ui/popover";
 import { NativeSelect } from "~/components/ui/select";
+import { getCurrencyMarker } from "~/consts/currencies";
 import type { InvoiceDocument, InvoiceLibraryView } from "~/types";
 import {
   countActiveFilters,
@@ -43,12 +45,14 @@ export function LibraryViewOptions({
   align?: "start" | "end";
 }) {
   const activeFilters = countActiveFilters(view);
-  const clients = listClients(invoices);
-  const currencies = listCurrencies(invoices);
+  // A filter stays listed after its last invoice changes, so it still shows
+  // what it is set to and can be cleared.
+  const clients = withChosen(listClients(invoices), view.client);
+  const currencies = withChosen(listCurrencies(invoices), view.currency);
   const defaultView = showGroup
     ? DEFAULT_LIBRARY_VIEW
     : { ...DEFAULT_LIBRARY_VIEW, group: view.group };
-  const isDefault = JSON.stringify(view) === JSON.stringify(defaultView);
+  const isDefault = isEqual(view, defaultView);
 
   function update(changes: Partial<InvoiceLibraryView>) {
     onViewChange({ ...view, ...changes });
@@ -181,7 +185,7 @@ export function LibraryViewOptions({
               <option value="">Any currency</option>
               {currencies.map(currency => (
                 <option key={currency} value={currency}>
-                  {currency}
+                  {getCurrencyMarker(currency)}
                 </option>
               ))}
             </NativeSelect>
@@ -221,4 +225,10 @@ function OptionGroup({
       {children}
     </div>
   );
+}
+
+function withChosen(options: string[], chosen: string | null) {
+  return chosen !== null && !options.includes(chosen)
+    ? [chosen, ...options]
+    : options;
 }

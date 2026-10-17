@@ -1,13 +1,17 @@
 import {
   differenceInCalendarDays,
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
   format,
   isValid,
-  parseISO,
+  isWithinInterval,
   startOfMonth,
   startOfQuarter,
   startOfYear,
   subYears
 } from "date-fns";
+import { normalizeCurrency } from "~/consts/currencies";
 import type {
   InvoiceDocument,
   InvoiceLibraryDateRange,
@@ -17,6 +21,7 @@ import type {
   SortDirection
 } from "~/types";
 import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
+import { parseIsoDate } from "~/utils/parse-iso-date";
 
 // Sorting, filtering and grouping for the saved-invoice lists (the invoices
 // panel and the Open Invoice dialog), kept pure so both lists agree and the
@@ -81,40 +86,77 @@ export function getInvoiceTotal(document: InvoiceDocument): number {
 }
 
 // The invoice's own date, falling back to when it was last edited for an
-// invoice whose date was cleared or mistyped.
-export function getInvoiceDate(document: InvoiceDocument): Date {
-  const date = parseISO(document.invoiceData.invoiceDate);
+// invoice whose date was cleared or mistyped. Null only for a damaged record
+// with neither.
+export function getInvoiceDate(document: InvoiceDocument): Date | null {
+  const fallback = new Date(document.updatedAt);
 
-  return isValid(date) ? date : new Date(document.updatedAt);
+  return (
+    parseIsoDate(document.invoiceData.invoiceDate) ??
+    (isValid(fallback) ? fallback : null)
+  );
 }
 
 function getDueDate(document: InvoiceDocument): Date | null {
-  const date = parseISO(document.invoiceData.dueDate);
-
-  return isValid(date) ? date : null;
+  return parseIsoDate(document.invoiceData.dueDate);
 }
 
+// A stored timestamp, or null when it isn't a real date.
+function toTime(value: Date | string | number): number | null {
+  const time = new Date(value).getTime();
+
+  return Number.isNaN(time) ? null : time;
+}
+
+// Writes a list date, or null for one that can't be read, so a single damaged
+// record never throws while the list renders.
+export function formatLibraryDate(
+  value: Date | string | number | null
+): string | null {
+  const time = value === null ? null : toTime(value);
+
+  return time === null ? null : format(time, "d MMM yyyy");
+}
+
+// The calendar ranges take in the whole month, quarter or year, so an invoice
+// dated later this month still counts as this month's.
 function inDateRange(
-  date: Date,
+  date: Date | null,
   range: InvoiceLibraryDateRange,
   now: Date
 ): boolean {
+  if (range === "all") return true;
+  if (!date) return false;
+
   switch (range) {
-    case "all":
-      return true;
     case "thisMonth":
-      return date >= startOfMonth(now) && date <= now;
+      return isWithinInterval(date, {
+        start: startOfMonth(now),
+        end: endOfMonth(now)
+      });
     case "last30":
       return (
         differenceInCalendarDays(now, date) <= 30 &&
         differenceInCalendarDays(now, date) >= 0
       );
     case "thisQuarter":
-      return date >= startOfQuarter(now) && date <= now;
+      return isWithinInterval(date, {
+        start: startOfQuarter(now),
+        end: endOfQuarter(now)
+      });
     case "thisYear":
-      return date >= startOfYear(now) && date <= now;
-    case "lastYear":
-      return date >= startOfYear(subYears(now, 1)) && date < startOfYear(now);
+      return isWithinInterval(date, {
+        start: startOfYear(now),
+        end: endOfYear(now)
+      });
+    case "lastYear": {
+      const lastYear = subYears(now, 1);
+
+      return isWithinInterval(date, {
+        start: startOfYear(lastYear),
+        end: endOfYear(lastYear)
+      });
+    }
   }
 }
 
@@ -149,7 +191,7 @@ export function filterInvoices(
       inDateRange(getInvoiceDate(document), view.dateRange, now) &&
       (view.client === null || getClientName(document) === view.client) &&
       (view.currency === null ||
-        document.invoiceData.currency === view.currency)
+        normalizeCurrency(document.invoiceData.currency) === view.currency)
   );
 }
 
@@ -158,34 +200,49 @@ const textCollator = new Intl.Collator(undefined, {
   sensitivity: "base"
 });
 
-function compareBy(
-  a: InvoiceDocument,
-  b: InvoiceDocument,
+// What an invoice is sorted on; null when it has nothing to sort by (no due
+// date, no client), which always sorts last, whichever way the list runs.
+function sortValue(
+  document: InvoiceDocument,
   sort: InvoiceLibrarySort
-): number {
+): string | number | null {
   switch (sort) {
     case "updated":
-      return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+      return toTime(document.updatedAt);
     case "invoiceDate":
-      return getInvoiceDate(a).getTime() - getInvoiceDate(b).getTime();
-    case "dueDate": {
-      // Invoices without a due date sort after every dated one.
-      const aDue = getDueDate(a)?.getTime() ?? Number.POSITIVE_INFINITY;
-      const bDue = getDueDate(b)?.getTime() ?? Number.POSITIVE_INFINITY;
-
-      return aDue === bDue ? 0 : aDue < bDue ? -1 : 1;
-    }
+      return getInvoiceDate(document)?.getTime() ?? null;
+    case "dueDate":
+      return getDueDate(document)?.getTime() ?? null;
     case "name":
-      return textCollator.compare(a.name, b.name);
-    case "client":
-      return textCollator.compare(getClientName(a), getClientName(b));
+      return document.name;
+    case "client": {
+      const client = getClientName(document);
+
+      return client === NO_CLIENT ? null : client;
+    }
     case "amount":
-      return getInvoiceTotal(a) - getInvoiceTotal(b);
+      return getInvoiceTotal(document);
     case "number":
-      return textCollator.compare(a.invoiceData.number, b.invoiceData.number);
+      return document.invoiceData.number;
   }
 }
 
+function compareValues(
+  first: string | number | null,
+  second: string | number | null
+): number {
+  if (typeof first === "string" && typeof second === "string") {
+    return textCollator.compare(first, second);
+  }
+
+  if (typeof first === "number" && typeof second === "number") {
+    return first - second;
+  }
+
+  return 0;
+}
+
+// Each invoice's sort value is worked out once, not on every comparison.
 // Ties fall back to the most recently edited first, so the order is stable.
 export function sortInvoices(
   documents: InvoiceDocument[],
@@ -193,10 +250,24 @@ export function sortInvoices(
   direction: SortDirection
 ): InvoiceDocument[] {
   const sign = direction === "asc" ? 1 : -1;
+  const rows = documents.map(document => ({
+    document,
+    value: sortValue(document, sort),
+    updated: toTime(document.updatedAt) ?? 0
+  }));
 
-  return [...documents].sort(
-    (a, b) => compareBy(a, b, sort) * sign || compareBy(b, a, "updated")
-  );
+  return rows
+    .sort((a, b) => {
+      if (a.value === null || b.value === null) {
+        return (
+          Number(a.value === null) - Number(b.value === null) ||
+          b.updated - a.updated
+        );
+      }
+
+      return compareValues(a.value, b.value) * sign || b.updated - a.updated;
+    })
+    .map(row => row.document);
 }
 
 // Groups keep the sorted order: a group appears where its first invoice falls.
@@ -216,8 +287,13 @@ export function groupInvoices(
   documents.forEach(document => {
     const date = getInvoiceDate(document);
     const key =
-      group === "client" ? getClientName(document) : format(date, "yyyy-MM");
-    const label = group === "client" ? key : format(date, "MMMM yyyy");
+      group === "client"
+        ? getClientName(document)
+        : date
+          ? format(date, "yyyy-MM")
+          : "no-date";
+    const label =
+      group === "client" ? key : date ? format(date, "MMMM yyyy") : "No date";
     const existing = groups.get(key);
 
     if (existing) existing.documents.push(document);
@@ -227,15 +303,22 @@ export function groupInvoices(
   return [...groups.values()];
 }
 
+// "No client yet" comes last, after every named client.
 export function listClients(documents: InvoiceDocument[]): string[] {
-  return [...new Set(documents.map(getClientName))].sort((a, b) =>
-    textCollator.compare(a, b)
+  return [...new Set(documents.map(getClientName))].sort(
+    (a, b) =>
+      Number(a === NO_CLIENT) - Number(b === NO_CLIENT) ||
+      textCollator.compare(a, b)
   );
 }
 
 export function listCurrencies(documents: InvoiceDocument[]): string[] {
   return [
-    ...new Set(documents.map(document => document.invoiceData.currency))
+    ...new Set(
+      documents.map(document =>
+        normalizeCurrency(document.invoiceData.currency)
+      )
+    )
   ].sort((a, b) => textCollator.compare(a, b));
 }
 

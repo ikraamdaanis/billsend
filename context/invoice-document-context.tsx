@@ -7,7 +7,6 @@ import {
   isDocumentHydrated,
   startDraftPersistence
 } from "~/context/document-session";
-import { getAllInvoices } from "~/db";
 import { useDocumentStore } from "~/stores/document-store";
 import { useInvoiceData } from "~/stores/invoice-selectors";
 import type { InvoiceDocument } from "~/types";
@@ -116,4 +115,3 @@ export function generateDefaultInvoiceName(
 }
 
 export { DocumentNotFoundError } from "~/context/document-session";
-export { getAllInvoices };
