@@ -13,9 +13,9 @@ type CanvasGestureState = {
   commit: (view: "fit" | number, origin: Point) => void;
 };
 
-// A zoom in progress. The page is not re-rendered while it runs: the wrapper
-// around it is moved and scaled with a GPU transform, and the real zoom is
-// committed once, when the gesture ends.
+// A zoom in progress. React doesn't re-render the page while it runs: the
+// wrapper around it is moved and scaled with a plain 2D transform, and the
+// real zoom is committed once, when the gesture ends.
 type LiveZoom = {
   startZoom: number;
   scale: number;
@@ -26,6 +26,8 @@ type LiveZoom = {
   size: { width: number; height: number };
   bounds: { left: number; top: number; right: number; bottom: number };
   frame: number | null;
+  // The desk's overflow before scrolling was locked for a touch pinch.
+  overflow: string | null;
 };
 
 const DOUBLE_TAP_MS = 350;
@@ -36,8 +38,21 @@ const DOUBLE_TAP_ANIMATION_MS = 240;
 // pinch would scale the whole editor, top bar and all, so it is cancelled
 // (Safari's gesture events here, `touch-action` in globals.css). Pinching the
 // desk, a trackpad pinch (a wheel event with Ctrl held) and double-tapping
-// bare paper zoom the page instead. Each frame of a gesture only changes a
-// transform, so it runs on the compositor at the display's refresh rate.
+// bare paper zoom the page instead.
+//
+// Each frame only changes a 2D transform, and the page is never given its own
+// compositing layer (no `will-change`, no 3D transform). A layer is drawn
+// once at the scale it starts at and then stretched, which is what made the
+// page blurry until the fingers lifted: Chrome doesn't redraw a
+// `will-change: transform` layer as its scale changes, and WebKit doesn't
+// redraw a composited layer scaled up at all. Left in its scroller's layer,
+// the page is redrawn sharp at every step, and the invoice is light enough
+// to redraw each frame.
+//
+// A touch pinch also locks the desk's scrolling: a finger that was already
+// scrolling makes iOS keep scrolling natively under the pinch (its touch
+// moves can no longer be cancelled), which fought the transform and made the
+// page wobble.
 export function useCanvasGestures({
   sectionRef,
   sizerRef,
@@ -69,8 +84,6 @@ export function useCanvasGestures({
       const styles = getComputedStyle(section);
       const zoom = stateRef.current.zoom;
 
-      sizer.style.willChange = "transform";
-
       return {
         startZoom: zoom,
         scale: 1,
@@ -91,8 +104,22 @@ export function useCanvasGestures({
             section.clientHeight -
             parseFloat(styles.paddingBottom)
         },
-        frame: null
+        frame: null,
+        overflow: null
       };
+    }
+
+    // Stops the desk scrolling for the rest of a touch pinch, where it is,
+    // momentum included.
+    function lockScrolling(zoom: LiveZoom) {
+      if (!section) return;
+
+      const { scrollLeft, scrollTop } = section;
+
+      zoom.overflow = section.style.overflow;
+      section.style.overflow = "hidden";
+      section.scrollLeft = scrollLeft;
+      section.scrollTop = scrollTop;
     }
 
     function update(zoom: LiveZoom, scale: number, focus: Point) {
@@ -110,12 +137,13 @@ export function useCanvasGestures({
       if (!section || !sizer) return;
 
       const origin = originFor(zoom);
-      // Where the untransformed wrapper sits now, allowing for any scrolling
-      // since the gesture began.
+      // Where the untransformed wrapper sits now. A touch pinch locks
+      // scrolling, but a trackpad's momentum from an earlier swipe can still
+      // scroll the desk under a trackpad pinch.
       const baseX = zoom.base.x - (section.scrollLeft - zoom.scroll.x);
       const baseY = zoom.base.y - (section.scrollTop - zoom.scroll.y);
 
-      sizer.style.transform = `translate3d(${origin.x - baseX}px, ${origin.y - baseY}px, 0) scale(${zoom.scale})`;
+      sizer.style.transform = `translate(${origin.x - baseX}px, ${origin.y - baseY}px) scale(${zoom.scale})`;
     }
 
     function end(view?: "fit") {
@@ -125,6 +153,10 @@ export function useCanvasGestures({
       live = null;
 
       if (zoom.frame !== null) cancelAnimationFrame(zoom.frame);
+      if (section && zoom.overflow !== null) {
+        section.style.overflow = zoom.overflow;
+      }
+
       stateRef.current.commit(
         view ?? zoom.startZoom * zoom.scale,
         originFor(zoom)
@@ -189,6 +221,8 @@ export function useCanvasGestures({
         pinchTouches = [first.identifier, second.identifier];
         pinchDistance = touchDistance(first, second);
         live = begin(touchMidpoint(first, second));
+
+        if (live) lockScrolling(live);
 
         return;
       }
@@ -338,6 +372,8 @@ export function useCanvasGestures({
 
       if (animation !== null) cancelAnimationFrame(animation);
       if (live?.frame) cancelAnimationFrame(live.frame);
+      if (live && live.overflow !== null)
+        section.style.overflow = live.overflow;
       section.removeEventListener("touchstart", handleTouchStart);
       section.removeEventListener("touchmove", handleTouchMove);
       section.removeEventListener("touchend", handleTouchEnd);
@@ -355,7 +391,6 @@ export function settleGesture(
   origin: Point
 ) {
   sizer.style.transform = "";
-  sizer.style.willChange = "";
   const sizerRect = sizer.getBoundingClientRect();
 
   section.scrollLeft += sizerRect.left - origin.x;
