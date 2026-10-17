@@ -45,7 +45,7 @@ export function SaveStatusChip() {
         delay={200}
         render={canSave ? <button type="button" onClick={save} /> : <span />}
         className={cn(
-          "focus-visible:ring-ring flex size-6 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-1 max-sm:order-first",
+          "focus-visible:ring-ring flex size-6 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-1 max-md:order-first",
           canSave && "hover:bg-muted"
         )}
       >

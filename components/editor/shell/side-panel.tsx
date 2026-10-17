@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 
 // A panel beside the canvas that slides closed to nothing. Its content keeps a
 // fixed width while the panel animates, so nothing reflows mid-slide. On a
-// phone it opens over the canvas instead of pushing it aside.
+// phone it is a sheet that slides up over the canvas from the tab bar.
 export function SidePanel({
   side,
   label,
@@ -25,15 +25,9 @@ export function SidePanel({
       inert={!open}
       className={cn(
         "bg-background border-border relative shrink-0 overflow-hidden transition-[width,translate] duration-200 ease-out motion-reduce:transition-none",
-        "max-md:shadow-floating max-md:absolute max-md:inset-y-0 max-md:z-30 max-md:w-[min(19rem,88vw)]",
-        side === "left"
-          ? "w-64 border-r max-md:left-0"
-          : "w-72 border-l max-md:right-0",
-        !open && "w-0 border-0 max-md:shadow-none",
-        !open &&
-          (side === "left"
-            ? "max-md:-translate-x-full"
-            : "max-md:translate-x-full")
+        "max-md:shadow-floating max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:h-[min(70dvh,34rem)] max-md:w-full max-md:rounded-t-2xl max-md:border-x-0 max-md:border-t",
+        side === "left" ? "w-64 border-r" : "w-72 border-l",
+        !open && "w-0 border-0 max-md:translate-y-full max-md:shadow-none"
       )}
     >
       <div

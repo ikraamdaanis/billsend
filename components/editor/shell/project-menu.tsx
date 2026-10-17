@@ -8,6 +8,8 @@ import {
   IconFile,
   IconFilePlus,
   IconFolderOpen,
+  IconMoon,
+  IconSun,
   IconUpload
 } from "@tabler/icons-react";
 import {
@@ -20,13 +22,17 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { useFileActions } from "~/context/file-actions-context";
+import { useEditorTheme } from "~/hooks/use-editor-theme";
 import { shortcutLabel } from "~/utils/shortcut-label";
 
 // The logo opens one menu with everything the old File menu had, plus the way
-// back to the homepage, like the project menu in Framer.
+// back to the homepage, like the project menu in Framer. It also carries the
+// light/dark switch, which phones have no canvas pill for.
 export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
   const actions = useFileActions();
   const { setPaletteOpen } = useEditorUi();
+  const { theme, toggleTheme } = useEditorTheme();
+  const isDark = theme === "dark";
 
   return (
     <DropdownMenu>
@@ -99,6 +105,14 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
           Import Data
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={toggleTheme}>
+          {isDark ? (
+            <IconSun aria-hidden="true" />
+          ) : (
+            <IconMoon aria-hidden="true" />
+          )}
+          {isDark ? "Light mode" : "Dark mode"}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setPaletteOpen(true)}>
           <IconCommand aria-hidden="true" />
           Quick actions

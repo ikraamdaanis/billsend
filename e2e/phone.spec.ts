@@ -37,3 +37,26 @@ test("tapping a field zooms in to it and Done fits the page", async ({
   await expect(toDetails).not.toBeFocused();
   await expect(page.getByRole("button", { name: "Done" })).toHaveCount(0);
 });
+
+test("phones get a tab bar instead of the canvas pill and panel toggles", async ({
+  page
+}) => {
+  await page.goto("/create");
+  const tabBar = page.getByRole("navigation", { name: "Editor" });
+  await expect(tabBar).toBeVisible();
+  await expect(page.getByRole("toolbar", { name: "Canvas" })).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Show invoices panel" })
+  ).toBeHidden();
+
+  await tabBar.getByRole("button", { name: "Style" }).tap();
+
+  await expect(
+    page.getByRole("complementary", { name: "Inspector" })
+  ).toBeInViewport();
+
+  await tabBar.getByRole("button", { name: "Preview" }).tap();
+
+  await expect(tabBar.getByRole("button", { name: "Edit" })).toBeVisible();
+  await expect(page.getByLabel("To details")).toHaveAttribute("readonly", "");
+});
