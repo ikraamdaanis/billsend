@@ -12,7 +12,7 @@ const CANVAS_STATIC_STYLES: CSSProperties = {
 
 const MIN_PINCH_ZOOM = 0.25;
 
-const MAX_PINCH_ZOOM = 2;
+const MAX_PINCH_ZOOM = 3;
 
 export function InvoiceCanvas({ children }: { children: ReactNode }) {
   const { view, setView, setZoom, zoomToField } = useCanvasView();
@@ -57,10 +57,11 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
 
   const zoom = resolveZoom(view, pageSize, containerSize);
 
-  // The field a phone zoomed in on, and the point a pinch is zooming around;
-  // each is brought back under the finger or into view once the zoom applies.
+  // The field a phone zoomed in on, and the point a pinch, trackpad pinch or
+  // double-tap is zooming around; each is brought into view, or back under
+  // the fingers, once the new zoom applies.
   const fieldToRevealRef = useRef<HTMLElement | null>(null);
-  const pinchAnchorRef = useRef<PinchAnchor | null>(null);
+  const zoomAnchorRef = useRef<ZoomAnchor | null>(null);
   const zoomRef = useRef(zoom);
   const setViewRef = useRef(setView);
 
@@ -72,7 +73,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     const section = sectionRef.current;
     const page = pageRef.current;
     const field = fieldToRevealRef.current;
-    const anchor = pinchAnchorRef.current;
+    const anchor = zoomAnchorRef.current;
 
     if (!section || !page) return;
 
@@ -81,65 +82,177 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
       revealField(section, field);
     }
 
-    if (anchor) keepAnchorUnderFingers(section, page, anchor, zoom);
+    if (anchor) {
+      zoomAnchorRef.current = null;
+      keepAnchorInPlace(section, page, anchor, zoom);
+    }
   });
 
-  // Pinching the canvas zooms the page rather than the whole editor.
+  // The browser's own pinch zoom would scale the whole editor, top bar and
+  // all, so it is turned off (here for Safari, and with touch-action in
+  // globals.css) and pinching the desk zooms the page instead, as in Figma
+  // and tldraw. A trackpad pinch (a wheel event with Ctrl held) does the same
+  // on a laptop, and double-tapping the desk flips between the whole page and
+  // full size.
   useEffect(() => {
     const section = sectionRef.current;
     const page = pageRef.current;
 
     if (!section || !page) return;
 
-    let pinch: { distance: number; zoom: number } | null = null;
+    let pinch: { distance: number; zoom: number; pagePoint: Point } | null =
+      null;
+    let lastTap: { time: number; point: Point } | null = null;
+    let tapStart: { time: number; point: Point } | null = null;
+
+    // Zooms to `nextZoom`, keeping the page point under `screenPoint` there.
+    function zoomAround(
+      nextZoom: number,
+      pagePoint: Point,
+      screenPoint: Point
+    ) {
+      const clamped = Math.min(
+        MAX_PINCH_ZOOM,
+        Math.max(MIN_PINCH_ZOOM, nextZoom)
+      );
+
+      if (Math.abs(clamped - zoomRef.current) < 0.001) return;
+
+      zoomAnchorRef.current = { pagePoint, screenPoint };
+      setViewRef.current(clamped);
+    }
+
+    function pagePointAt(screenPoint: Point) {
+      const pageRect = page?.getBoundingClientRect();
+
+      return {
+        x: (screenPoint.x - (pageRect?.left ?? 0)) / zoomRef.current,
+        y: (screenPoint.y - (pageRect?.top ?? 0)) / zoomRef.current
+      };
+    }
+
+    function preventBrowserZoom(event: Event) {
+      event.preventDefault();
+    }
 
     function handleTouchStart(event: TouchEvent) {
-      if (event.touches.length !== 2 || !page) return;
+      if (event.touches.length === 2) {
+        tapStart = null;
+        pinch = {
+          distance: touchDistance(event.touches),
+          zoom: zoomRef.current,
+          pagePoint: pagePointAt(touchMidpoint(event.touches))
+        };
 
-      pinch = { distance: touchDistance(event.touches), zoom: zoomRef.current };
-      pinchAnchorRef.current = pinchAnchor(
-        page,
-        event.touches,
-        zoomRef.current
-      );
+        return;
+      }
+
+      const touch = event.touches[0];
+
+      tapStart =
+        event.touches.length === 1
+          ? {
+              time: event.timeStamp,
+              point: { x: touch.clientX, y: touch.clientY }
+            }
+          : null;
     }
 
     function handleTouchMove(event: TouchEvent) {
-      if (!pinch || event.touches.length !== 2 || !page) return;
+      const touch = event.touches[0];
+
+      if (
+        tapStart &&
+        Math.hypot(
+          touch.clientX - tapStart.point.x,
+          touch.clientY - tapStart.point.y
+        ) > 10
+      ) {
+        tapStart = null;
+      }
+
+      if (!pinch || event.touches.length !== 2) return;
 
       event.preventDefault();
-      const nextZoom =
-        (pinch.zoom * touchDistance(event.touches)) / pinch.distance;
-      const anchor = pinchAnchorRef.current;
-
-      if (anchor) anchor.screenPoint = touchMidpoint(event.touches);
-      setViewRef.current(
-        Math.min(MAX_PINCH_ZOOM, Math.max(MIN_PINCH_ZOOM, nextZoom))
+      zoomAround(
+        (pinch.zoom * touchDistance(event.touches)) / pinch.distance,
+        pinch.pagePoint,
+        touchMidpoint(event.touches)
       );
     }
 
     function handleTouchEnd(event: TouchEvent) {
-      if (event.touches.length >= 2) return;
+      if (event.touches.length < 2) pinch = null;
+      if (!tapStart || event.touches.length > 0) return;
 
-      pinch = null;
-      pinchAnchorRef.current = null;
+      const tap = tapStart;
+      tapStart = null;
+
+      if (event.timeStamp - tap.time > 300 || isInteractive(event.target)) {
+        lastTap = null;
+
+        return;
+      }
+
+      const isDoubleTap =
+        lastTap !== null &&
+        tap.time - lastTap.time < 350 &&
+        Math.hypot(
+          tap.point.x - lastTap.point.x,
+          tap.point.y - lastTap.point.y
+        ) < 30;
+
+      lastTap = isDoubleTap ? null : tap;
+
+      if (!isDoubleTap) return;
+
+      event.preventDefault();
+
+      if (zoomRef.current < FIELD_ZOOM - 0.01) {
+        zoomAround(FIELD_ZOOM, pagePointAt(tap.point), tap.point);
+      } else {
+        setViewRef.current("fit");
+      }
+    }
+
+    function handleWheel(event: WheelEvent) {
+      if (!event.ctrlKey && !event.metaKey) return;
+
+      event.preventDefault();
+      const screenPoint = { x: event.clientX, y: event.clientY };
+
+      zoomAround(
+        zoomRef.current * Math.exp(-event.deltaY * 0.01),
+        pagePointAt(screenPoint),
+        screenPoint
+      );
+    }
+
+    for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+      document.addEventListener(type, preventBrowserZoom);
     }
 
     section.addEventListener("touchstart", handleTouchStart, { passive: true });
     section.addEventListener("touchmove", handleTouchMove, { passive: false });
-    section.addEventListener("touchend", handleTouchEnd);
+    section.addEventListener("touchend", handleTouchEnd, { passive: false });
     section.addEventListener("touchcancel", handleTouchEnd);
+    section.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
+      for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+        document.removeEventListener(type, preventBrowserZoom);
+      }
+
       section.removeEventListener("touchstart", handleTouchStart);
       section.removeEventListener("touchmove", handleTouchMove);
       section.removeEventListener("touchend", handleTouchEnd);
       section.removeEventListener("touchcancel", handleTouchEnd);
+      section.removeEventListener("wheel", handleWheel);
     };
   }, []);
 
   // On a phone the fitted page is too small to type into, so tapping a field
-  // zooms in to full size around it; Done in the canvas pill fits it again.
+  // zooms in to full size around it; Done in the phone tab bar fits it again.
   function handleFocus(event: FocusEvent<HTMLElement>) {
     const field = event.target;
     const isTextField =
@@ -156,7 +269,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     <section
       ref={sectionRef}
       onFocus={handleFocus}
-      className="relative flex h-full touch-pan-x touch-pan-y flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 pb-20 md:p-8 md:pb-20"
+      className="relative flex h-full touch-pan-x touch-pan-y flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8 md:pb-20"
     >
       <div
         className="shrink-0"
@@ -200,10 +313,9 @@ function resolveZoom(
   );
 }
 
-type PinchAnchor = {
-  pagePoint: { x: number; y: number };
-  screenPoint: { x: number; y: number };
-};
+type Point = { x: number; y: number };
+
+type ZoomAnchor = { pagePoint: Point; screenPoint: Point };
 
 function touchDistance(touches: TouchList) {
   const [first, second] = [touches[0], touches[1]];
@@ -223,29 +335,21 @@ function touchMidpoint(touches: TouchList) {
   };
 }
 
-// The spot on the unscaled page under the middle of the two fingers.
-function pinchAnchor(
-  page: HTMLElement,
-  touches: TouchList,
-  zoom: number
-): PinchAnchor {
-  const pageRect = page.getBoundingClientRect();
-  const screenPoint = touchMidpoint(touches);
-
-  return {
-    pagePoint: {
-      x: (screenPoint.x - pageRect.left) / zoom,
-      y: (screenPoint.y - pageRect.top) / zoom
-    },
-    screenPoint
-  };
+// Taps on fields and buttons keep their own meaning; only taps on the page's
+// bare paper or the desk count towards a double-tap zoom.
+function isInteractive(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    target.closest("input, textarea, button, a, label, [role=button]") !== null
+  );
 }
 
-// Scrolls so the pinched spot stays between the fingers as the page scales.
-function keepAnchorUnderFingers(
+// Scrolls so the anchored spot on the page sits at its screen point after the
+// page has been scaled.
+function keepAnchorInPlace(
   section: HTMLElement,
   page: HTMLElement,
-  anchor: PinchAnchor,
+  anchor: ZoomAnchor,
   zoom: number
 ) {
   const pageRect = page.getBoundingClientRect();
