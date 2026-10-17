@@ -202,6 +202,25 @@ describe("the save controller", () => {
     expect(write).toHaveBeenCalledTimes(2);
   });
 
+  it("hands back queued content without writing it", async () => {
+    const write = vi.fn(async (_content: string) => {});
+    const controller = createSaveController({ write });
+
+    controller.schedule("queued");
+
+    expect(controller.takeUnsaved()).toBe("queued");
+
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(write).not.toHaveBeenCalled();
+    expect(controller.isPending()).toBe(false);
+
+    controller.schedule("next");
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(write).toHaveBeenCalledExactlyOnceWith("next");
+  });
+
   it("drops unwritten content when stopped", async () => {
     const write = vi.fn(async (_content: string) => {});
     const controller = createSaveController({ write });
