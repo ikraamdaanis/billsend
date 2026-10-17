@@ -40,8 +40,35 @@ export function CanvasPill({ children }: { children?: ReactNode }) {
       <PillDivider />
       <EditorThemeToggle size="icon-sm" className="pointer-coarse:size-11" />
       <QuickActionsButton />
+      <DoneEditingButton />
       {children}
     </div>
+  );
+}
+
+// Shown on a phone after tapping a field zoomed the page in: puts the keyboard
+// away and fits the whole page again.
+function DoneEditingButton() {
+  const { isZoomedToField, setView } = useCanvasView();
+  const { isNarrow } = useEditorUi();
+
+  if (!isNarrow || !isZoomedToField) return null;
+
+  return (
+    <Button
+      variant="primary"
+      size="sm"
+      onClick={() => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+
+        setView("fit");
+      }}
+      className="ml-1 rounded-lg px-3 pointer-coarse:h-10"
+    >
+      Done
+    </Button>
   );
 }
 
@@ -117,7 +144,7 @@ function ZoomControls() {
         onClick={() => {
           if (zoomOutStep !== undefined) setView(zoomOutStep);
         }}
-        className="pointer-coarse:size-11"
+        className="max-sm:hidden pointer-coarse:size-11"
       >
         <IconMinus aria-hidden="true" />
       </Button>
@@ -166,7 +193,7 @@ function ZoomControls() {
         onClick={() => {
           if (zoomInStep !== undefined) setView(zoomInStep);
         }}
-        className="pointer-coarse:size-11"
+        className="max-sm:hidden pointer-coarse:size-11"
       >
         <IconPlus aria-hidden="true" />
       </Button>
