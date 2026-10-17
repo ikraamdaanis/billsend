@@ -1,5 +1,11 @@
 import { expect, test } from "./fixtures";
-import { clickFileMenuItem, gotoEditorReady, saveInvoiceAs } from "./helpers";
+import {
+  clickFileMenuItem,
+  countSavedInvoices,
+  gotoEditorReady,
+  nameInvoice,
+  savedContains
+} from "./helpers";
 
 // Group I: templates.
 
@@ -8,7 +14,7 @@ test("saves the current invoice as a template", async ({
   seedTemplate
 }) => {
   await gotoEditorReady(page, "Templatable");
-  await saveInvoiceAs(page, "Templatable doc");
+  await nameInvoice(page, "Templatable doc");
   await seedTemplate({ name: "My template" });
 
   await clickFileMenuItem(page, "Open Template");
@@ -18,14 +24,13 @@ test("saves the current invoice as a template", async ({
   await expect(dialog.getByRole("row", { name: /My template/ })).toBeVisible();
 });
 
-test("opening a template applies its data and detaches from the current document [R]", async ({
+test("opening a template starts a new invoice from it [R]", async ({
   page,
   seedTemplate
 }) => {
   await gotoEditorReady(page, "Base title");
   await page.getByLabel("From details").fill("Template seller");
-  // Save so the editor is clean, then capture the current content as a template.
-  await saveInvoiceAs(page, "Base doc");
+  await nameInvoice(page, "Base doc");
   await seedTemplate({ name: "Reusable" });
 
   await clickFileMenuItem(page, "Open Template");
@@ -35,12 +40,16 @@ test("opening a template applies its data and detaches from the current document
   await dialog.getByRole("row", { name: /Reusable/ }).dblclick();
   await expect(dialog).toBeHidden();
 
-  // The template's content is applied and the editor is no longer tied to the
-  // saved "Base doc": the toolbar shows an untitled, unattached document.
+  // The template's content starts a new invoice with an automatic name; "Base
+  // doc" stays as it was, and the new one joins the library once it's edited.
   await expect(page.getByLabel("From details")).toHaveValue("Template seller");
-  await expect(
-    page.getByRole("heading", { name: "Untitled invoice" })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "INV-0001" })).toBeVisible();
+  expect(await countSavedInvoices(page)).toBe(1);
+
+  await page.getByLabel("Invoice title").fill("From the template");
+
+  await expect.poll(() => countSavedInvoices(page)).toBe(2);
+  expect(await savedContains(page, "Base title")).toBe(true);
 });
 
 test("templates can be renamed and deleted from the dialog", async ({
@@ -48,7 +57,7 @@ test("templates can be renamed and deleted from the dialog", async ({
   seedTemplate
 }) => {
   await gotoEditorReady(page, "For templating");
-  await saveInvoiceAs(page, "Templating doc");
+  await nameInvoice(page, "Templating doc");
   await seedTemplate({ name: "First template" });
 
   await clickFileMenuItem(page, "Open Template");

@@ -6,9 +6,8 @@ import { expect } from "@playwright/test";
 export const DB_NAME = "InvoiceDatabase";
 
 // Whether the serialized rows of an IndexedDB object store contain the given
-// text. Used to wait for a specific edit to reach the draft (before reloading,
-// so restore assertions test hydration rather than autosave-flush timing) or to
-// confirm a save landed in the invoices store.
+// text. Used to wait for an edit to be saved (before reloading, so restore
+// assertions test reopening rather than autosave timing).
 export async function storeContains(
   page: Page,
   storeName: string,
@@ -51,12 +50,50 @@ export async function storeContains(
   );
 }
 
-// Whether the working draft currently contains the given text.
-export async function draftContains(
+// Whether a saved invoice contains the given text.
+export async function savedContains(
   page: Page,
   needle: string
 ): Promise<boolean> {
-  return await storeContains(page, "drafts", needle);
+  return await storeContains(page, "invoices", needle);
+}
+
+// How many invoices are in the library.
+export async function countSavedInvoices(page: Page): Promise<number> {
+  return await page.evaluate(
+    async databaseName =>
+      await new Promise<number>(resolve => {
+        const request = indexedDB.open(databaseName);
+
+        request.onsuccess = () => {
+          const db = request.result;
+
+          if (!db.objectStoreNames.contains("invoices")) {
+            db.close();
+            resolve(0);
+
+            return;
+          }
+
+          const count = db
+            .transaction("invoices", "readonly")
+            .objectStore("invoices")
+            .count();
+
+          count.onsuccess = () => {
+            db.close();
+            resolve(count.result);
+          };
+          count.onerror = () => {
+            db.close();
+            resolve(0);
+          };
+        };
+
+        request.onerror = () => resolve(0);
+      }),
+    DB_NAME
+  );
 }
 
 // Clears an IndexedDB object store from the page's origin. Used to simulate a
@@ -101,7 +138,8 @@ export async function clearObjectStore(page: Page, storeName: string) {
 // Opens the editor and sets the invoice title. The editor is gated on hydration
 // (its inputs don't mount until the invoice store is hydrated), so the moment
 // the title field is fillable the value is durable: no store reset can land
-// afterwards to wipe it. Returns once the editor is ready for further edits.
+// afterwards to wipe it. Waits until the edit is saved, so the invoice is in
+// the library before the test goes on.
 export async function gotoEditorReady(page: Page, title = "Test invoice") {
   await page.goto("/create");
 
@@ -109,6 +147,7 @@ export async function gotoEditorReady(page: Page, title = "Test invoice") {
 
   await invoiceTitle.fill(title);
   await expect(invoiceTitle).toHaveValue(title);
+  await expect.poll(() => savedContains(page, title)).toBe(true);
 }
 
 // Opens the editor and waits for it to be ready without editing anything, by
@@ -135,11 +174,6 @@ export async function openFileMenu(page: Page) {
   }).toPass({ timeout: 10_000 });
 }
 
-// Opens the "Leave this page?" dialog through the project menu's way home.
-export async function openLeaveDialog(page: Page) {
-  await clickFileMenuItem(page, "Back to homepage");
-}
-
 export async function clickFileMenuItem(page: Page, name: string | RegExp) {
   await openFileMenu(page);
   await page
@@ -147,15 +181,35 @@ export async function clickFileMenuItem(page: Page, name: string | RegExp) {
     .click();
 }
 
-// Saves the current invoice through the Save As dialog under the given name.
-export async function saveInvoiceAs(page: Page, name: string) {
-  await clickFileMenuItem(page, "Save As...");
+// The open invoice's name in the top bar, which renames it.
+export function invoiceNameButton(page: Page) {
+  return page.getByRole("heading", { level: 1 }).getByRole("button");
+}
 
-  const dialog = page.getByRole("dialog", { name: "Save Invoice" });
+// Names the open invoice from the top bar (a new one joins the library under
+// that name) and waits until the name is saved.
+export async function nameInvoice(page: Page, name: string) {
+  await invoiceNameButton(page).click();
+
+  const dialog = page.getByRole("dialog", { name: "Rename Invoice" });
 
   await dialog.getByRole("textbox").fill(name);
-  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await dialog.getByRole("button", { name: /Rename|Save/ }).click();
   await expect(dialog).toBeHidden();
+  await expect(page.getByRole("heading", { name })).toBeVisible();
+  await expect.poll(() => savedContains(page, name)).toBe(true);
+}
+
+// Makes the page believe it was hidden (backgrounded, or the app switched
+// away from), firing visibilitychange as the browser would.
+export async function hidePage(page: Page) {
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden"
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
 }
 
 export async function addLineItem(page: Page) {

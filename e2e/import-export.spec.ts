@@ -3,7 +3,7 @@ import {
   clickFileMenuItem,
   exportData,
   gotoEditorReady,
-  saveInvoiceAs,
+  nameInvoice,
   selectImportFile,
   storeContains
 } from "./helpers";
@@ -13,7 +13,7 @@ import {
 
 test("Export Data downloads a dated billsend export file", async ({ page }) => {
   await gotoEditorReady(page, "Exportable");
-  await saveInvoiceAs(page, "Exportable doc");
+  await nameInvoice(page, "Exportable doc");
 
   const { filename } = await exportData(page);
 
@@ -25,7 +25,7 @@ test("a full export/import round-trip restores the data", async ({
   resetDb
 }) => {
   await gotoEditorReady(page, "Roundtrip title");
-  await saveInvoiceAs(page, "Roundtrip doc");
+  await nameInvoice(page, "Roundtrip doc");
 
   const { json } = await exportData(page);
 
@@ -54,7 +54,7 @@ test("importing the same file again conflict-renames duplicates", async ({
   page
 }) => {
   await gotoEditorReady(page, "Dup title");
-  await saveInvoiceAs(page, "Dup doc");
+  await nameInvoice(page, "Dup doc");
 
   const { json } = await exportData(page);
 
@@ -76,7 +76,7 @@ test("importing a newer-version file shows the please-update message [R]", async
   page
 }) => {
   await gotoEditorReady(page, "Version title");
-  await saveInvoiceAs(page, "Version doc");
+  await nameInvoice(page, "Version doc");
 
   const { json } = await exportData(page);
 
@@ -95,7 +95,7 @@ test("importing a record with an unparseable date does not crash [R]", async ({
   page.on("pageerror", error => pageErrors.push(error.message));
 
   await gotoEditorReady(page, "Datey title");
-  await saveInvoiceAs(page, "Datey doc");
+  await nameInvoice(page, "Datey doc");
 
   const { json } = await exportData(page);
 
@@ -124,7 +124,7 @@ test("importing an invoice with a null line item drops only that item [R]", asyn
 }) => {
   await gotoEditorReady(page, "Nullitem title");
   await page.getByLabel("Item, item 1").fill("Kept item");
-  await saveInvoiceAs(page, "Nullitem doc");
+  await nameInvoice(page, "Nullitem doc");
 
   const { json } = await exportData(page);
 
@@ -140,7 +140,7 @@ test("importing an invoice with a null line item drops only that item [R]", asyn
 
 test("a corrupt import leaves the database untouched", async ({ page }) => {
   await gotoEditorReady(page, "Safe title");
-  await saveInvoiceAs(page, "Safe doc");
+  await nameInvoice(page, "Safe doc");
 
   await clickFileMenuItem(page, "Import Data");
 
