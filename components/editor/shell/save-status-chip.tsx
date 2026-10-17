@@ -5,6 +5,7 @@ import {
   useInvoiceDocument
 } from "~/context/invoice-document-context";
 import { cn } from "~/lib/utils";
+import { shortcutLabel } from "~/utils/shortcut-label";
 
 const chipClassName =
   "bg-muted text-muted-foreground flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap";
@@ -32,7 +33,7 @@ export function SaveStatusChip() {
       <button
         type="button"
         onClick={save}
-        title="Save (⌘S)"
+        title={`Save (${shortcutLabel("⌘S")})`}
         className={cn(
           chipClassName,
           "hover:text-foreground focus-visible:ring-ring outline-none focus-visible:ring-1"
