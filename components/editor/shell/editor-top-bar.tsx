@@ -14,7 +14,8 @@ import { getInvoice, saveInvoice } from "~/db";
 
 // Framer's three-part bar: the project menu on the left, the invoice's name and
 // save state in the middle, and the panel toggles, Preview and Download on the
-// right. `start` and `end` take the panel toggles.
+// right. `start` and `end` take the panel toggles. Phones leave Preview to the
+// canvas pill, to give the name room.
 export function EditorTopBar({
   onLeave,
   start,
@@ -42,7 +43,7 @@ export function EditorTopBar({
           aria-pressed={mode === "preview"}
           title="Preview (P)"
           onClick={toggleMode}
-          className="text-muted-foreground aria-pressed:bg-accent aria-pressed:text-foreground mr-1 pointer-coarse:size-11"
+          className="text-muted-foreground aria-pressed:bg-accent aria-pressed:text-foreground mr-1 max-sm:hidden pointer-coarse:size-11"
         >
           <IconPlayerPlay aria-hidden="true" />
         </Button>

@@ -573,7 +573,14 @@ homepage route and appears only there. The editor and dialogs never use it.
   breakpoints, so what you see on screen matches the PDF. Small screens scale
   the whole sheet with zoom; they never reflow it.
 - **Zoom.** Presets run 50% to 200%, plus Fit. Below 768px the editor opens at
-  Fit so the whole invoice is visible; wider screens open at 100%.
+  Fit so the whole invoice is visible; wider screens open at 100%. On a phone,
+  tapping a field on the fitted page zooms to 100% with the field high on the
+  screen (clear of the keyboard), and a Done button in the canvas pill fits the
+  page again. Pinching the desk zooms the page (25% to 200%) around the
+  fingers; the editor's viewport sets `maximum-scale=1` so iOS never zooms the
+  whole editor into a focused field. Phones drop the pill's zoom −/+ (the
+  percentage menu stays) and the top bar's Preview button (the pill has Edit
+  and Preview).
 - **Homepage.** Content sits in a `max-w-6xl` (72rem) column. Order: header,
   hero document, privacy band, tour (`#features`), questions, closing
   counterfoil, footer. Sections breathe at 80px vertical padding (96px from
