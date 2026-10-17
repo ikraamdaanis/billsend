@@ -31,7 +31,10 @@ test("a full export/import round-trip restores the data", async ({
 
   await resetDb();
   await page.reload();
-  await expect(page.getByLabel("Date", { exact: true })).not.toHaveValue("");
+  await expect(page.getByLabel("Date", { exact: true })).toHaveAttribute(
+    "data-date",
+    /\d{4}-\d{2}-\d{2}/
+  );
 
   const dialog = await selectImportFile(page, json);
 

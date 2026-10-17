@@ -36,7 +36,8 @@ const INVOICE_DATA_KEYS = [
   "currency",
   "currencyCode",
   "theme",
-  "sections"
+  "sections",
+  "dateFormat"
 ] as const satisfies ReadonlyArray<keyof Invoice>;
 
 type MissingInvoiceKey = Exclude<
@@ -123,12 +124,14 @@ export function useDetailsSlice() {
       invoiceDate: state.invoiceDate,
       dueDate: state.dueDate,
       servicePeriod: state.servicePeriod,
+      dateFormat: state.dateFormat,
       labels: state.labels,
       setNumber: state.setNumber,
       setPoNumber: state.setPoNumber,
       setInvoiceDate: state.setInvoiceDate,
       setDueDate: state.setDueDate,
       setServicePeriod: state.setServicePeriod,
+      setDateFormat: state.setDateFormat,
       setLabels: state.setLabels
     }))
   );

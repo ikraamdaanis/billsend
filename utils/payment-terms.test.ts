@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { addDaysToIsoDate, getPaymentTermsDays } from "~/utils/payment-terms";
+import {
+  addDaysToIsoDate,
+  dueDateForNewInvoiceDate,
+  getPaymentTermsDays
+} from "~/utils/payment-terms";
 
 describe("payment terms", () => {
   it("reads a preset from the gap between the dates", () => {
@@ -22,5 +26,27 @@ describe("payment terms", () => {
 
   it("returns null for a date it can't read", () => {
     expect(addDaysToIsoDate("", 7)).toBeNull();
+  });
+});
+
+describe("moving the invoice date", () => {
+  it("carries a preset due date along", () => {
+    expect(
+      dueDateForNewInvoiceDate({
+        invoiceDate: "2026-10-17",
+        dueDate: "2026-11-16",
+        nextInvoiceDate: "2026-10-20"
+      })
+    ).toBe("2026-11-19");
+  });
+
+  it("leaves a custom due date where it is", () => {
+    expect(
+      dueDateForNewInvoiceDate({
+        invoiceDate: "2026-10-17",
+        dueDate: "2026-10-25",
+        nextInvoiceDate: "2026-10-20"
+      })
+    ).toBeNull();
   });
 });

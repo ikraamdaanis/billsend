@@ -9,10 +9,14 @@ test("blank invoice is dated today and due 30 days out", async ({ page }) => {
 
   // Dates are stamped client-side on first mount, so assert with retry rather
   // than requiring an edit first.
-  await expect(page.getByLabel("Date", { exact: true })).toHaveValue(
+  // The page shows dates in the invoice's format and keeps the stored
+  // yyyy-MM-dd value on the picker as data-date.
+  await expect(page.getByLabel("Date", { exact: true })).toHaveAttribute(
+    "data-date",
     isoToday()
   );
-  await expect(page.getByLabel("Due date", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Due date", { exact: true })).toHaveAttribute(
+    "data-date",
     isoToday(30)
   );
 });

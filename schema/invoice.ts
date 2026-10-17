@@ -49,6 +49,18 @@ const DEFAULT_LABELS = {
   balanceDue: "Balance due"
 } as const;
 
+// How the invoice and due dates are written on the invoice (date-fns
+// patterns). Dates are stored as yyyy-MM-dd whatever the display.
+export const INVOICE_DATE_FORMATS = [
+  "d MMM yyyy",
+  "MMMM d, yyyy",
+  "dd/MM/yyyy",
+  "MM/dd/yyyy",
+  "yyyy-MM-dd"
+] as const;
+
+export const DEFAULT_INVOICE_DATE_FORMAT = "d MMM yyyy";
+
 // Which optional parts of the invoice are switched on. Switching one off hides
 // it in the editor and the PDF, and leaves out its money from the totals, but
 // keeps what was typed, so switching it back on restores it. An on section
@@ -284,7 +296,8 @@ export const invoiceSchema = z.object({
   currency: z.string().catch("$"),
   currencyCode: z.string().catch(""),
   theme: invoiceThemeSchema,
-  sections: invoiceSectionsSchema
+  sections: invoiceSectionsSchema,
+  dateFormat: z.enum(INVOICE_DATE_FORMATS).catch(DEFAULT_INVOICE_DATE_FORMAT)
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;
