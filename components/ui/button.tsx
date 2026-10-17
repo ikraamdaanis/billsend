@@ -8,7 +8,10 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-brand-600 text-primary-foreground hover:bg-brand-700",
+        // Brand blue on the site; inside the editor, the editor's neutral
+        // primary (near-black, or near-white in dark), like its other actions.
+        default:
+          "bg-brand-600 text-primary-foreground hover:bg-brand-700 [[data-editor-theme]_&]:bg-primary [[data-editor-theme]_&]:hover:bg-primary/85",
         primary: "bg-primary text-primary-foreground hover:bg-primary/85",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",

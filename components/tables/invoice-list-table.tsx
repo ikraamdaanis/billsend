@@ -399,7 +399,7 @@ export function InvoiceListTable({
           const secondaryTextClass = isDeleting
             ? "text-destructive/70"
             : isSelected
-              ? "text-primary-foreground/80"
+              ? "text-white/80"
               : "text-muted-foreground";
 
           return (
@@ -429,9 +429,7 @@ export function InvoiceListTable({
                       "group/row cursor-pointer scroll-mt-9 outline-none select-none",
                       !isSelected && !isDeleting && isStriped && "bg-muted/50",
                       !isSelected && !isDeleting && "hover:bg-accent",
-                      isSelected &&
-                        !isDeleting &&
-                        "bg-brand-600 text-primary-foreground",
+                      isSelected && !isDeleting && "bg-brand-600 text-white",
                       isDeleting && "bg-destructive/10 text-destructive",
                       isContextFocused &&
                         !isDeleting &&
@@ -458,7 +456,7 @@ export function InvoiceListTable({
                         isDeleting
                           ? "text-destructive"
                           : isSelected
-                            ? "text-primary-foreground"
+                            ? "text-white"
                             : "text-muted-foreground"
                       )}
                     />
@@ -486,7 +484,7 @@ export function InvoiceListTable({
                               isDeleting
                                 ? "text-destructive/70"
                                 : isSelected
-                                  ? "text-primary-foreground/80"
+                                  ? "text-white/80"
                                   : "text-muted-foreground"
                             )}
                           >
