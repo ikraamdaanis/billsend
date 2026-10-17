@@ -1,4 +1,9 @@
-import { IconFolderOpen, IconLoader2 } from "@tabler/icons-react";
+import {
+  IconFolderOpen,
+  IconLoader2,
+  IconSearch,
+  IconX
+} from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -13,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "~/components/ui/dialog";
-import { deleteTemplate, getAllTemplates, saveTemplate } from "~/db";
+import { deleteTemplate, saveTemplate, watchTemplates } from "~/db";
 import type { InvoiceTemplate } from "~/types";
 
 function truncate(value: string, max: number): string {
@@ -30,6 +35,7 @@ export function OpenTemplateDialog({
   onSelectTemplate: (template: InvoiceTemplate) => void;
 }) {
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -38,12 +44,34 @@ export function OpenTemplateDialog({
   >(null);
 
   useEffect(() => {
-    if (open) {
-      setSelectedIds([]);
-      setDeleteTarget(null);
-      loadTemplates();
-    }
+    if (!open) return;
+
+    setSelectedIds([]);
+    setDeleteTarget(null);
+    setQuery("");
+    setLoading(true);
+
+    // Live while open, so changes made elsewhere show straight away.
+    return watchTemplates(
+      next => {
+        setTemplates(next);
+        setLoading(false);
+      },
+      error => {
+        toast.error(error.message);
+        setLoading(false);
+      }
+    );
   }, [open]);
+
+  const searchWords = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const visibleTemplates = templates.filter(template =>
+    searchWords.every(word =>
+      `${template.name} ${template.description ?? ""}`
+        .toLowerCase()
+        .includes(word)
+    )
+  );
 
   useEffect(() => {
     if (deleteTarget?.mode === "selection" && selectedIds.length === 0) {
@@ -67,22 +95,6 @@ export function OpenTemplateDialog({
     pendingDeleteTemplates.length > 0 || selectedIds.length === 0
       ? `${templates.length} template${templates.length !== 1 ? "s" : ""} available`
       : `${selectedIds.length} selected`;
-
-  async function loadTemplates() {
-    try {
-      setLoading(true);
-      const loadedTemplates = await getAllTemplates();
-      setTemplates(loadedTemplates);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to load templates from storage."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function handleOpenTemplate(template: InvoiceTemplate) {
     onSelectTemplate(template);
@@ -166,7 +178,6 @@ export function OpenTemplateDialog({
     startTransition(async () => {
       try {
         await Promise.all(targets.map(template => deleteTemplate(template.id)));
-        await loadTemplates();
 
         setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
         setDeleteTarget(null);
@@ -189,7 +200,6 @@ export function OpenTemplateDialog({
   ) {
     try {
       await saveTemplate({ ...template, name: newName, updatedAt: new Date() });
-      await loadTemplates();
 
       toast.success("Template renamed successfully");
     } catch (error) {
@@ -209,10 +219,35 @@ export function OpenTemplateDialog({
         <DialogHeader className="border-border border-b">
           <DialogTitle>Open Template</DialogTitle>
           <DialogDescription>
-            Select a template to open. You can also rename or delete templates
-            from here.
+            Select a template to start from, or use its ⋯ menu to rename or
+            delete it.
           </DialogDescription>
         </DialogHeader>
+        {templates.length > 0 && (
+          <div className="border-border flex items-center gap-2 border-b px-4 py-2.5">
+            <label className="bg-muted text-muted-foreground focus-within:border-ring flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-transparent px-2">
+              <IconSearch aria-hidden="true" className="size-3.5 shrink-0" />
+              <span className="sr-only">Search templates</span>
+              <input
+                type="search"
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Search templates"
+                className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none [&::-webkit-search-cancel-button]:hidden"
+              />
+              {query && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => setQuery("")}
+                  className="hover:text-foreground rounded-sm"
+                >
+                  <IconX aria-hidden="true" className="size-3.5" />
+                </button>
+              )}
+            </label>
+          </div>
+        )}
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             {loading ? (
@@ -236,7 +271,7 @@ export function OpenTemplateDialog({
             ) : (
               <>
                 <TemplateListTable
-                  templates={templates}
+                  templates={visibleTemplates}
                   selectedIds={selectedIds}
                   deletingIds={pendingDeleteTemplates.map(
                     template => template.id
@@ -246,7 +281,12 @@ export function OpenTemplateDialog({
                   onRenameTemplate={handleRenameTemplate}
                   onDeleteTemplates={handleRequestDelete}
                 />
-                <InvoiceListStripeFiller rowCount={templates.length} />
+                {visibleTemplates.length === 0 && (
+                  <p className="text-muted-foreground px-4 py-6 text-center text-sm">
+                    No templates match “{query.trim()}”.
+                  </p>
+                )}
+                <InvoiceListStripeFiller rowCount={visibleTemplates.length} />
               </>
             )}
           </div>

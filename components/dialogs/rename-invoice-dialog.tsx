@@ -23,31 +23,36 @@ import {
 import { Input } from "~/components/ui/input";
 import "~/lib/configure-zod";
 
-const renameInvoiceSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Invoice name is required")
-    .max(100, "Invoice name must be less than 100 characters")
-});
+function renameSchema(subject: string) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, `${subject} name is required`)
+      .max(100, `${subject} name must be less than 100 characters`)
+  });
+}
 
-type RenameInvoiceFormData = z.infer<typeof renameInvoiceSchema>;
+type RenameInvoiceFormData = z.infer<ReturnType<typeof renameSchema>>;
 
+// Renames a saved invoice, or a template when `subject` says so.
 export function RenameInvoiceDialog({
   open,
   onOpenChange,
   currentName,
-  onRename
+  onRename,
+  subject = "Invoice"
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   currentName: string;
   onRename: (newName: string) => Promise<void>;
+  subject?: "Invoice" | "Template";
 }) {
   const [pending, setPending] = useState(false);
 
   const form = useForm<RenameInvoiceFormData>({
-    resolver: zodResolver(renameInvoiceSchema),
+    resolver: zodResolver(renameSchema(subject)),
     defaultValues: { name: currentName },
     values: { name: currentName }
   });
@@ -67,7 +72,9 @@ export function RenameInvoiceDialog({
     } catch (error) {
       setPending(false);
       toast.error(
-        error instanceof Error ? error.message : "Failed to rename invoice"
+        error instanceof Error
+          ? error.message
+          : `Failed to rename ${subject.toLowerCase()}`
       );
     }
   }
@@ -84,9 +91,9 @@ export function RenameInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-lg">
         <DialogHeader>
-          <DialogTitle>Rename Invoice</DialogTitle>
+          <DialogTitle>Rename {subject}</DialogTitle>
           <DialogDescription>
-            Enter a new name for this invoice.
+            Enter a new name for this {subject.toLowerCase()}.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -98,11 +105,11 @@ export function RenameInvoiceDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Invoice Name <span className="text-destructive">*</span>
+                      {subject} Name <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter invoice name"
+                        placeholder={`Enter ${subject.toLowerCase()} name`}
                         autoFocus
                         data-1p-ignore
                         {...field}

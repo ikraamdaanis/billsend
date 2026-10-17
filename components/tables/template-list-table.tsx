@@ -1,18 +1,24 @@
 import {
   IconArrowDown,
   IconArrowUp,
+  IconFilePlus,
   IconPencil,
   IconTemplate,
   IconTrash
 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { RowActionsCell } from "~/components/tables/row-actions-cell";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger
 } from "~/components/ui/context-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
 import type { InvoiceTemplate } from "~/types";
 import { formatListDate } from "~/utils/format-list-date";
@@ -193,6 +199,9 @@ export function TemplateListTable({
 
   function handleListKeyDown(event: KeyboardEvent<HTMLTableSectionElement>) {
     if (editingId) return;
+    // The row's ⋯ menu handles its own keys.
+    if ((event.target as HTMLElement).closest("[data-slot='row-actions']"))
+      return;
 
     const rowElement = (event.target as HTMLElement).closest<HTMLElement>(
       "tr[data-index]"
@@ -296,6 +305,7 @@ export function TemplateListTable({
       <colgroup>
         <col />
         <col className="w-43" />
+        <col className="w-11" />
       </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-sm">
@@ -314,6 +324,9 @@ export function TemplateListTable({
               direction={sortDirection}
               onClick={() => toggleSort("updatedAt")}
             />
+          </th>
+          <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)]">
+            <span className="sr-only">Actions</span>
           </th>
         </tr>
       </thead>
@@ -420,6 +433,41 @@ export function TemplateListTable({
                 >
                   {formatListDate(template.updatedAt)}
                 </td>
+                <RowActionsCell
+                  label={`Actions for ${template.name}`}
+                  selected={isSelected && !isDeleting}
+                >
+                  {showBulkDelete ? (
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => onDeleteTemplates(selectedTemplates)}
+                    >
+                      <IconTrash aria-hidden="true" />
+                      Delete {selectedIds.length} templates
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => onOpenTemplate(template)}
+                      >
+                        <IconFilePlus aria-hidden="true" />
+                        Use template
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => startRename(template)}>
+                        <IconPencil aria-hidden="true" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onDeleteTemplates([template])}
+                      >
+                        <IconTrash aria-hidden="true" />
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </RowActionsCell>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 {showBulkDelete ? (
@@ -432,6 +480,10 @@ export function TemplateListTable({
                   </ContextMenuItem>
                 ) : (
                   <>
+                    <ContextMenuItem onClick={() => onOpenTemplate(template)}>
+                      <IconFilePlus className="size-3 shrink-0" />
+                      Use template
+                    </ContextMenuItem>
                     <ContextMenuItem onClick={() => startRename(template)}>
                       <IconPencil className="size-3 shrink-0" />
                       Rename
