@@ -20,6 +20,10 @@ const ALL_CLOSED: PanelState = { left: false, right: false };
 // so they start closed there.
 export const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 
+// Below this width the canvas can't fit the page and its toolbar between both
+// panels, so opening one side panel closes the other.
+export const COMPACT_VIEWPORT_QUERY = "(max-width: 1023px)";
+
 function isNarrowViewport() {
   return window.matchMedia(NARROW_VIEWPORT_QUERY).matches;
 }
@@ -92,6 +96,11 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
     useState<PanelState | null>(initialLayout.panelsBeforePreview);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const isNarrow = useMediaQuery(NARROW_VIEWPORT_QUERY);
+  const isCompact = useMediaQuery(COMPACT_VIEWPORT_QUERY);
+  // Both panels can be remembered open from a wider window; a compact one
+  // shows only the inspector, and both come back when there is room again.
+  const leftPanelOpen = panels.left && !(isCompact && panels.right);
+  const rightPanelOpen = panels.right;
 
   function setModeState(next: EditorMode) {
     setModeValue(next);
@@ -118,12 +127,15 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
   }
 
   // Opening a panel while previewing goes back to editing first; on a phone
-  // only one panel is open at a time, since each covers most of the screen.
+  // or a compact window only one panel is open at a time.
   function setPanelOpen(side: keyof PanelState, open: boolean) {
-    const base = mode === "preview" ? (panelsBeforePreview ?? panels) : panels;
+    const base =
+      mode === "preview"
+        ? (panelsBeforePreview ?? panels)
+        : { left: leftPanelOpen, right: rightPanelOpen };
     const next = { ...base, [side]: open };
 
-    if (isNarrow && open) next[side === "left" ? "right" : "left"] = false;
+    if (isCompact && open) next[side === "left" ? "right" : "left"] = false;
 
     if (mode === "preview") {
       setModeState("edit");
@@ -133,9 +145,6 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
     applyPanels(next);
   }
 
-  const leftPanelOpen = panels.left;
-  const rightPanelOpen = panels.right;
-
   const value = {
     mode,
     setMode,
@@ -144,13 +153,14 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
     leftPanelOpen,
     rightPanelOpen,
     setPanelOpen,
-    togglePanel: (side: keyof PanelState) => setPanelOpen(side, !panels[side]),
+    togglePanel: (side: keyof PanelState) =>
+      setPanelOpen(side, side === "left" ? !leftPanelOpen : !rightPanelOpen),
     toggleAllPanels: () => {
       const anyOpen = leftPanelOpen || rightPanelOpen;
 
       if (mode === "preview") setModeState("edit");
       setPanelsBeforePreview(null);
-      applyPanels({ left: !anyOpen, right: !anyOpen && !isNarrow });
+      applyPanels({ left: !anyOpen, right: !anyOpen && !isCompact });
     },
     closePanels: () => applyPanels({ left: false, right: false }),
     paletteOpen,

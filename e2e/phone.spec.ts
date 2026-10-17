@@ -51,9 +51,20 @@ test("phones get a tab bar instead of the canvas pill and panel toggles", async 
 
   await tabBar.getByRole("button", { name: "Style" }).tap();
 
-  await expect(
-    page.getByRole("complementary", { name: "Inspector" })
-  ).toBeInViewport();
+  // On a phone the panel is a modal sheet: it takes focus, and Escape
+  // closes it.
+  const inspector = page.getByRole("dialog", { name: "Inspector" });
+
+  await expect(inspector).toBeInViewport();
+  await expect(inspector).toBeFocused();
+
+  await page.keyboard.press("Escape");
+
+  await expect(inspector).toHaveCount(0);
+  await expect(tabBar.getByRole("button", { name: "Style" })).toHaveAttribute(
+    "aria-pressed",
+    "false"
+  );
 
   await tabBar.getByRole("button", { name: "Preview" }).tap();
 

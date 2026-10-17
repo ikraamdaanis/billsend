@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 import { useEffect } from "react";
-import { FIELD_ZOOM } from "~/context/canvas-view-context";
+import { FIELD_ZOOM, MAX_ZOOM, MIN_ZOOM } from "~/context/canvas-view-context";
 
 type Point = { x: number; y: number };
 
@@ -9,6 +9,7 @@ type Point = { x: number; y: number };
 type CanvasGestureState = {
   zoom: number;
   fitZoom: number;
+  isFit: boolean;
   commit: (view: "fit" | number, origin: Point) => void;
 };
 
@@ -26,10 +27,6 @@ type LiveZoom = {
   bounds: { left: number; top: number; right: number; bottom: number };
   frame: number | null;
 };
-
-const MIN_ZOOM = 0.25;
-
-const MAX_ZOOM = 3;
 
 const DOUBLE_TAP_MS = 350;
 
@@ -58,6 +55,7 @@ export function useCanvasGestures({
 
     let live: LiveZoom | null = null;
     let pinchDistance = 0;
+    let pinchTouches: [number, number] | null = null;
     let wheelTimer: ReturnType<typeof setTimeout> | undefined;
     let animation: number | null = null;
     let tapStart: { time: number; point: Point } | null = null;
@@ -143,6 +141,14 @@ export function useCanvasGestures({
       const zoom: LiveZoom = started;
       live = zoom;
       const targetScale = targetZoom / zoom.startZoom;
+
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        zoom.scale = targetScale;
+        end(view);
+
+        return;
+      }
+
       const startTime = performance.now();
 
       function step(now: number) {
@@ -176,11 +182,13 @@ export function useCanvasGestures({
       if (animation !== null) return;
 
       if (event.touches.length === 2) {
+        const [first, second] = [event.touches[0], event.touches[1]];
         tapStart = null;
         clearTimeout(wheelTimer);
         end();
-        pinchDistance = touchDistance(event.touches);
-        live = begin(touchMidpoint(event.touches));
+        pinchTouches = [first.identifier, second.identifier];
+        pinchDistance = touchDistance(first, second);
+        live = begin(touchMidpoint(first, second));
 
         return;
       }
@@ -197,12 +205,19 @@ export function useCanvasGestures({
     }
 
     function handleTouchMove(event: TouchEvent) {
-      if (event.touches.length === 2 && live) {
+      if (event.touches.length >= 2 && live && animation === null) {
         event.preventDefault();
+        // The pinch follows the two fingers it started with, so a third
+        // finger landing, or one of the pair lifting, can't make it jump.
+        const first = findTouch(event.touches, pinchTouches?.[0]);
+        const second = findTouch(event.touches, pinchTouches?.[1]);
+
+        if (!first || !second) return;
+
         update(
           live,
-          touchDistance(event.touches) / pinchDistance,
-          touchMidpoint(event.touches)
+          touchDistance(first, second) / pinchDistance,
+          touchMidpoint(first, second)
         );
 
         return;
@@ -222,7 +237,7 @@ export function useCanvasGestures({
     }
 
     function handleTouchEnd(event: TouchEvent) {
-      if (live && event.touches.length < 2 && animation === null) end();
+      if (live && !pinchStillDown(event.touches) && animation === null) end();
       if (!tapStart || event.touches.length > 0) return;
 
       const tap = tapStart;
@@ -247,13 +262,32 @@ export function useCanvasGestures({
       if (!isDoubleTap || animation !== null) return;
 
       event.preventDefault();
-      const { zoom, fitZoom } = stateRef.current;
+      const { zoom, fitZoom, isFit } = stateRef.current;
 
-      if (zoom < FIELD_ZOOM - 0.01) {
-        animateTo(FIELD_ZOOM, tap.point);
+      // From the fitted page a double-tap zooms in, to full size or, where
+      // the fitted page is already that big, to twice the fit; from any other
+      // zoom it fits the page again.
+      if (isFit || Math.abs(zoom - fitZoom) < 0.01) {
+        animateTo(Math.max(FIELD_ZOOM, fitZoom * 2), tap.point);
       } else {
         animateTo(fitZoom, tap.point, "fit");
       }
+    }
+
+    // A cancelled touch (the system taking over for a notification or an
+    // edge swipe) is never a tap.
+    function handleTouchCancel() {
+      tapStart = null;
+      lastTap = null;
+
+      if (live && animation === null) end();
+    }
+
+    function pinchStillDown(touches: TouchList) {
+      return (
+        findTouch(touches, pinchTouches?.[0]) !== undefined &&
+        findTouch(touches, pinchTouches?.[1]) !== undefined
+      );
     }
 
     function handleWheel(event: WheelEvent) {
@@ -269,7 +303,16 @@ export function useCanvasGestures({
 
       if (!live) return;
 
-      update(live, live.scale * Math.exp(-event.deltaY * 0.01), focus);
+      // A trackpad pinch sends many small deltas; a mouse wheel notch with
+      // Ctrl held sends one large one (about 100px in Chrome on Windows),
+      // which is capped so a notch is a step rather than a leap.
+      const pixels =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE
+          ? event.deltaY * 16
+          : event.deltaY;
+      const delta = Math.max(-10, Math.min(10, pixels));
+
+      update(live, live.scale * Math.exp(-delta * 0.01), focus);
       clearTimeout(wheelTimer);
       wheelTimer = setTimeout(() => end(), 150);
     }
@@ -283,7 +326,7 @@ export function useCanvasGestures({
     section.addEventListener("touchstart", handleTouchStart, { passive: true });
     section.addEventListener("touchmove", handleTouchMove, { passive: false });
     section.addEventListener("touchend", handleTouchEnd, { passive: false });
-    section.addEventListener("touchcancel", handleTouchEnd);
+    section.addEventListener("touchcancel", handleTouchCancel);
     section.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
@@ -298,7 +341,7 @@ export function useCanvasGestures({
       section.removeEventListener("touchstart", handleTouchStart);
       section.removeEventListener("touchmove", handleTouchMove);
       section.removeEventListener("touchend", handleTouchEnd);
-      section.removeEventListener("touchcancel", handleTouchEnd);
+      section.removeEventListener("touchcancel", handleTouchCancel);
       section.removeEventListener("wheel", handleWheel);
     };
   }, [sectionRef, sizerRef, stateRef]);
@@ -351,18 +394,18 @@ function axisOrigin(wanted: number, size: number, start: number, end: number) {
   return Math.min(start, Math.max(end - size, wanted));
 }
 
-function touchDistance(touches: TouchList) {
-  const [first, second] = [touches[0], touches[1]];
+function findTouch(touches: TouchList, identifier: number | undefined) {
+  return Array.from(touches).find(touch => touch.identifier === identifier);
+}
 
+function touchDistance(first: Touch, second: Touch) {
   return Math.hypot(
     first.clientX - second.clientX,
     first.clientY - second.clientY
   );
 }
 
-function touchMidpoint(touches: TouchList) {
-  const [first, second] = [touches[0], touches[1]];
-
+function touchMidpoint(first: Touch, second: Touch) {
   return {
     x: (first.clientX + second.clientX) / 2,
     y: (first.clientY + second.clientY) / 2
@@ -370,10 +413,13 @@ function touchMidpoint(touches: TouchList) {
 }
 
 // Taps on fields and buttons keep their own meaning; only taps on the page's
-// bare paper or the desk count towards a double-tap zoom.
+// bare paper, the desk, or a read-only field in Preview count towards a
+// double-tap zoom.
 function isInteractive(target: EventTarget | null) {
   return (
     target instanceof Element &&
-    target.closest("input, textarea, button, a, label, [role=button]") !== null
+    target.closest(
+      "input:not([readonly]), textarea:not([readonly]), button, a, label, [role=button]"
+    ) !== null
   );
 }

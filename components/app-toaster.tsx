@@ -14,18 +14,34 @@ function subscribe(onChange: () => void) {
   return () => observer.disconnect();
 }
 
-function getTheme(): EditorTheme {
-  return document.documentElement.dataset.editorTheme === "dark"
-    ? "dark"
-    : "light";
+function getEditorTheme(): EditorTheme | null {
+  const theme = document.documentElement.dataset.editorTheme;
+
+  return theme === "dark" || theme === "light" ? theme : null;
 }
 
-function getServerTheme(): EditorTheme {
-  return "light";
+function getServerEditorTheme(): EditorTheme | null {
+  return null;
 }
+
+// On a phone the editor's tab bar runs along the bottom, so toasts sit above
+// it there.
+const EDITOR_MOBILE_OFFSET = {
+  bottom: "calc(4.5rem + env(safe-area-inset-bottom))"
+};
 
 export function AppToaster() {
-  const theme = useSyncExternalStore(subscribe, getTheme, getServerTheme);
+  const editorTheme = useSyncExternalStore(
+    subscribe,
+    getEditorTheme,
+    getServerEditorTheme
+  );
 
-  return <Toaster richColors theme={theme} />;
+  return (
+    <Toaster
+      richColors
+      theme={editorTheme ?? "light"}
+      mobileOffset={editorTheme ? EDITOR_MOBILE_OFFSET : undefined}
+    />
+  );
 }

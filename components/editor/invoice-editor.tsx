@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { InvoiceCanvas } from "~/components/editor/invoice-canvas";
 import { InvoiceClientDetails } from "~/components/editor/invoice-client-details";
@@ -33,11 +34,29 @@ import {
   DialogTitle
 } from "~/components/ui/dialog";
 import { CanvasViewProvider } from "~/context/canvas-view-context";
-import { EditorUiProvider } from "~/context/editor-ui-context";
+import { EditorUiProvider, useEditorUi } from "~/context/editor-ui-context";
 import { FileActionsProvider } from "~/context/file-actions-context";
+import { useDocumentStore } from "~/stores/document-store";
+import { selectInvoiceData } from "~/stores/invoice-selectors";
+import { useInvoiceStore } from "~/stores/invoice-store";
+import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 
 export function InvoiceEditor() {
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Leaving only asks when there is something unsaved; read at click time so
+  // the whole editor doesn't re-render on every keystroke to know.
+  function handleLeave() {
+    const { documentId, lastSavedInvoice } = useDocumentStore.getState();
+    const invoice = selectInvoiceData(useInvoiceStore.getState());
+
+    if (deriveHasUnsavedChanges(invoice, documentId, lastSavedInvoice)) {
+      setIsLeaveDialogOpen(true);
+    } else {
+      void navigate({ to: "/" });
+    }
+  }
 
   return (
     <CanvasViewProvider>
@@ -47,7 +66,7 @@ export function InvoiceEditor() {
           <CommandPalette />
           <div className="flex h-dvh w-full flex-col">
             <EditorTopBar
-              onLeave={() => setIsLeaveDialogOpen(true)}
+              onLeave={handleLeave}
               start={<PanelToggle side="left" />}
               end={<PanelToggle side="right" />}
             />
@@ -55,10 +74,10 @@ export function InvoiceEditor() {
               <SidePanel side="left" label="Invoices">
                 <InvoicesPanel />
               </SidePanel>
-              <main className="bg-desk relative flex min-w-0 flex-1 flex-col">
+              <Desk>
                 <CanvasArea />
                 <CanvasPill />
-              </main>
+              </Desk>
               <PanelBackdrop />
               <SidePanel side="right" label="Inspector">
                 <InspectorPanel />
@@ -73,6 +92,21 @@ export function InvoiceEditor() {
         </FileActionsProvider>
       </EditorUiProvider>
     </CanvasViewProvider>
+  );
+}
+
+// The canvas between the panels. Behind a phone's panel sheet it is out of
+// reach, so focus and screen readers stay in the sheet.
+function Desk({ children }: { children: ReactNode }) {
+  const { isNarrow, leftPanelOpen, rightPanelOpen } = useEditorUi();
+
+  return (
+    <main
+      inert={isNarrow && (leftPanelOpen || rightPanelOpen)}
+      className="bg-desk relative flex min-w-0 flex-1 flex-col"
+    >
+      {children}
+    </main>
   );
 }
 
@@ -99,15 +133,15 @@ function LeavePageDialog({
         <DialogHeader>
           <DialogTitle>Leave this page?</DialogTitle>
           <DialogDescription>
-            Are you sure you want to leave this page and go back to the home
-            page?
+            This invoice has unsaved changes. They stay in this browser as a
+            draft, so the editor picks up where you left off.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsModalOpen(false)}>
             Cancel
           </Button>
-          <Link to="/" className={buttonVariants({ variant: "destructive" })}>
+          <Link to="/" className={buttonVariants()}>
             Leave
           </Link>
         </DialogFooter>

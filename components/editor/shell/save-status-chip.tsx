@@ -53,7 +53,9 @@ export function SaveStatusChip() {
           aria-hidden="true"
           className={cn("size-2 rounded-full", status.dotClassName)}
         />
-        <span className="sr-only">{status.label}</span>
+        <span className="sr-only">
+          {canSave ? `${status.label}. Save now` : status.label}
+        </span>
       </TooltipTrigger>
       <TooltipContent side="bottom">
         {status.label}

@@ -1,5 +1,6 @@
 import type { CSSProperties, FocusEvent, ReactNode } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { getInvoiceFontDefinition } from "~/consts/invoice-fonts";
 import { FIELD_ZOOM, useCanvasView } from "~/context/canvas-view-context";
 import { useEditorUi } from "~/context/editor-ui-context";
@@ -59,10 +60,12 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
   // and where a finished zoom gesture left the page's top-left corner.
   const fieldToRevealRef = useRef<HTMLElement | null>(null);
   const gestureOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const previousZoomRef = useRef(zoom);
   // Filled in by the layout effect below before any gesture can start.
   const gestureStateRef = useRef({
     zoom,
     fitZoom,
+    isFit: view === "fit",
     commit: (_view: "fit" | number, _origin: { x: number; y: number }) => {}
   });
 
@@ -85,19 +88,29 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     }
 
     gestureOriginRef.current = origin;
-    setView(nextView);
+    // Rendered at once, so a gesture that starts straight after this one
+    // measures the page at its committed zoom, not under the old transform.
+    flushSync(() => setView(nextView));
   }
 
   useCanvasGestures({ sectionRef, sizerRef, stateRef: gestureStateRef });
 
   useLayoutEffect(() => {
     setZoom(zoom);
-    gestureStateRef.current = { zoom, fitZoom, commit: commitGesture };
+    gestureStateRef.current = {
+      zoom,
+      fitZoom,
+      isFit: view === "fit",
+      commit: commitGesture
+    };
 
     const section = sectionRef.current;
     const sizer = sizerRef.current;
     const field = fieldToRevealRef.current;
     const origin = gestureOriginRef.current;
+
+    const previousZoom = previousZoomRef.current;
+    previousZoomRef.current = zoom;
 
     if (!section || !sizer) return;
 
@@ -109,6 +122,12 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     if (field) {
       fieldToRevealRef.current = null;
       revealField(section, field);
+    }
+
+    // A zoom from the buttons, the menu or a shortcut keeps the middle of
+    // what was in view in the middle.
+    if (!origin && !field && previousZoom !== zoom) {
+      keepCentre(section, zoom / previousZoom);
     }
   });
 
@@ -169,10 +188,23 @@ function resolveZoom(
 
   if (!pageSize.width || !pageSize.height || !containerSize.width) return 1;
 
-  return Math.min(
-    containerSize.width / pageSize.width,
-    containerSize.height / pageSize.height
-  );
+  const widthFit = containerSize.width / pageSize.width;
+
+  // On a short canvas (a phone on its side) the whole page would be too small
+  // to read, so the page fits the width and scrolls instead.
+  if (containerSize.height < SHORT_CANVAS_HEIGHT) return Math.min(widthFit, 1);
+
+  return Math.min(widthFit, containerSize.height / pageSize.height);
+}
+
+const SHORT_CANVAS_HEIGHT = 360;
+
+function keepCentre(section: HTMLElement, ratio: number) {
+  const centreX = section.scrollLeft + section.clientWidth / 2;
+  const centreY = section.scrollTop + section.clientHeight / 2;
+
+  section.scrollLeft = centreX * ratio - section.clientWidth / 2;
+  section.scrollTop = centreY * ratio - section.clientHeight / 2;
 }
 
 // Brings a field into view high on the canvas, clear of the keyboard that is
