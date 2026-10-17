@@ -762,10 +762,17 @@ the page and in the inspector, and written in the invoice's date format. Rows ar
 - **Editor top bar:** 48px, `background` with a bottom `border` hairline, in
   three parts. Left: the logo opens the project menu (the file commands, quick
   actions, back to the homepage), then the invoices panel toggle. Centre: the
-  document name (a heading button that renames or saves) and a save-status
-  dot (green saved or draft, amber unsaved, blue previewing) whose words show
-  in a tooltip; the amber dot saves when clicked. Right: the inspector toggle, Preview, and Download, which opens a
-  popover with the file name, total and last-saved time.
+  document name (a heading button that renames it; a new invoice is named
+  from its number and client until then). Every edit saves itself, so there's
+  no save state shown while saving works. Right: the inspector toggle,
+  Preview, and Download, which opens a popover with the file name, total and
+  last-saved time. Phones add undo and redo ghost icon buttons beside
+  Download while editing.
+- **Editor status banner:** under the top bar, only when something needs
+  saying: a failed save (`destructive` 8% fill, `role="alert"` once per run of
+  failures, Retry and Download backup), the invoice open in another tab
+  (`muted`, Edit here), deleted elsewhere, storage unavailable or a reload
+  needed (`warning` 12%). 13px text, `xs` buttons.
 - **Homepage skip link:** the first focusable element, "Skip to content", a
   white `rounded-control` tab with `shadow-menu` fixed 12px from the top-left,
   held 64px above the viewport and slid into place on focus (transform
@@ -797,8 +804,7 @@ the page and in the inspector, and written in the invoice's date format. Rows ar
   `transition-colors`, so the focus outline never fades in.
 - **Editor entry points:** `/create` accepts two optional search params.
   `font` (any invoice font id) styles a fresh, untouched blank invoice and is
-  then cleared; `open=invoices` opens the Open Invoice dialog through the
-  unsaved-changes guard.
+  then cleared; `open=invoices` opens the Open Invoice dialog.
 
 ### Menus, Popovers, Dialogs
 
