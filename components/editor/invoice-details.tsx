@@ -58,7 +58,7 @@ export function InvoiceDetails() {
   });
 
   return (
-    <div className="flex flex-col">
+    <div data-field-area="details" className="flex flex-col">
       {rows.map(row => (
         <DetailRow key={row.id} row={row} placeholders={placeholders[row.id]} />
       ))}
@@ -106,6 +106,7 @@ function DetailRow({
       <div className="flex min-w-32 items-center" style={labelStyle}>
         <InvoiceInput
           aria-label={`${placeholders.label} field label`}
+          data-field={`labels.${row.labelKey}`}
           value={row.label}
           onChange={handleLabelChange}
           className="leading-paper-row field-sizing-content h-[unset]! w-auto min-w-fit py-0"
@@ -124,6 +125,7 @@ function DetailRow({
         <InvoiceInput
           id={row.id === "number" ? "invoice-field-details" : undefined}
           aria-label={row.label || placeholders.label}
+          data-field={row.id}
           value={row.value}
           onChange={setValue}
           className="leading-paper-row h-[unset]! w-full py-0"

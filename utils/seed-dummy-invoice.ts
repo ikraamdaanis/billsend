@@ -9,6 +9,7 @@ import type {
   InvoiceSize,
   TableSettings
 } from "~/types";
+import { deriveInvoiceName } from "~/utils/invoice-name";
 
 const COMPANY_NAMES = [
   "Acme Studio",
@@ -300,9 +301,11 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
 
   const invoiceDocument: InvoiceDocument = {
     id: crypto.randomUUID(),
-    name: `${invoiceNumber} · ${clientName}`,
+    name: deriveInvoiceName(invoiceData),
+    nameSource: "auto",
     invoiceData,
     templateId: null,
+    rev: 1,
     createdAt,
     updatedAt
   };

@@ -1,4 +1,7 @@
 import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconCopy,
   IconCurrencyDollar,
   IconDeviceFloppy,
   IconDownload,
@@ -6,6 +9,7 @@ import {
   IconFile,
   IconFilePlus,
   IconFolderOpen,
+  IconHistory,
   IconLayoutSidebar,
   IconLayoutSidebarRight,
   IconMoon,
@@ -16,6 +20,10 @@ import {
 } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import {
+  redoLabel,
+  undoLabel
+} from "~/components/editor/shell/history-buttons";
 import {
   Command,
   CommandDialog,
@@ -40,6 +48,11 @@ import { useInvoiceDocument } from "~/context/invoice-document-context";
 import { watchInvoices } from "~/db";
 import { useEditorTheme } from "~/hooks/use-editor-theme";
 import { useInvoicePdf } from "~/hooks/use-invoice-pdf";
+import {
+  redoInvoiceChange,
+  undoInvoiceChange,
+  useInvoiceHistory
+} from "~/stores/invoice-history";
 import {
   useCurrencySlice,
   useSectionsSlice,
@@ -101,7 +114,9 @@ function PaletteCommands() {
   const { theme, setTheme } = useThemeSlice();
   const { currency, setCurrency, setCurrencyCode } = useCurrencySlice();
   const { sections, setSection } = useSectionsSlice();
-  const { currentDocumentId } = useInvoiceDocument();
+  const { libraryDocumentId, isRecord, status } = useInvoiceDocument();
+  const history = useInvoiceHistory();
+  const canEdit = status === "editing" || status === "unavailable";
   const [invoices, setInvoices] = useState<InvoiceDocument[]>([]);
   const selectedCurrency = normalizeCurrency(currency);
 
@@ -135,20 +150,25 @@ function PaletteCommands() {
         >
           Open invoice…
         </PaletteItem>
-        <PaletteItem
-          icon={<IconDeviceFloppy />}
-          onSelect={run(actions.save)}
-          shortcut="⌘S"
-        >
-          Save
-        </PaletteItem>
-        <PaletteItem
-          icon={<IconFile />}
-          onSelect={run(actions.saveAs)}
-          shortcut="⇧⌘S"
-        >
-          Save as…
-        </PaletteItem>
+        {isRecord && status === "editing" && (
+          <PaletteItem
+            icon={<IconCopy />}
+            onSelect={run(actions.duplicateCurrent)}
+            shortcut="⇧⌘S"
+            keywords={["copy", "save as"]}
+          >
+            Duplicate invoice
+          </PaletteItem>
+        )}
+        {isRecord && (
+          <PaletteItem
+            icon={<IconHistory />}
+            onSelect={run(actions.showVersionHistory)}
+            keywords={["versions", "restore", "revert"]}
+          >
+            Version history…
+          </PaletteItem>
+        )}
         <PaletteItem
           icon={<IconFile />}
           onSelect={run(actions.showOpenTemplate)}
@@ -176,6 +196,28 @@ function PaletteCommands() {
           Import data…
         </PaletteItem>
       </CommandGroup>
+      {(history.canUndo || history.canRedo) && (
+        <CommandGroup heading="Edit">
+          {history.canUndo && (
+            <PaletteItem
+              icon={<IconArrowBackUp />}
+              onSelect={run(() => undoInvoiceChange())}
+              shortcut="⌘Z"
+            >
+              {undoLabel(history.undoLabel)}
+            </PaletteItem>
+          )}
+          {history.canRedo && (
+            <PaletteItem
+              icon={<IconArrowForwardUp />}
+              onSelect={run(() => redoInvoiceChange())}
+              shortcut="⇧⌘Z"
+            >
+              {redoLabel(history.redoLabel)}
+            </PaletteItem>
+          )}
+        </CommandGroup>
+      )}
       <CommandGroup heading="View">
         <PaletteItem icon={<IconEye />} onSelect={run(toggleMode)} shortcut="P">
           {mode === "preview" ? "Back to editing" : "Preview the PDF"}
@@ -223,65 +265,73 @@ function PaletteCommands() {
             : "Switch to dark mode"}
         </PaletteItem>
       </CommandGroup>
-      <CommandGroup heading="Sections">
-        {(Object.keys(SECTION_LABELS) as InvoiceSectionKey[]).map(section => (
-          <PaletteItem
-            key={section}
-            onSelect={run(() => setSection(section, !sections[section]))}
-          >
-            {`${sections[section] ? "Hide" : "Show"} ${SECTION_LABELS[section]}`}
-          </PaletteItem>
-        ))}
-      </CommandGroup>
-      <CommandGroup heading="Font">
-        {INVOICE_FONTS.map(font => (
-          <PaletteItem
-            key={font.id}
-            icon={<IconTypography />}
-            checked={theme.font === font.id}
-            onSelect={run(() =>
-              setTheme(previous => ({
-                ...previous,
-                font: font.id,
-                fontWeight: font.weights.includes(previous.fontWeight)
-                  ? previous.fontWeight
-                  : "Normal"
-              }))
-            )}
-          >
-            {`Font: ${font.name}`}
-          </PaletteItem>
-        ))}
-        {(Object.keys(SIZE_LABELS) as InvoiceSize[]).map(size => (
-          <PaletteItem
-            key={size}
-            icon={<IconTypography />}
-            checked={theme.size === size}
-            onSelect={run(() => setTheme(previous => ({ ...previous, size })))}
-          >
-            {`Text size: ${SIZE_LABELS[size]}`}
-          </PaletteItem>
-        ))}
-      </CommandGroup>
-      <CommandGroup heading="Currency">
-        {currencyOptions.map(option => (
-          <PaletteItem
-            key={option.symbol}
-            icon={<IconCurrencyDollar />}
-            checked={selectedCurrency === option.symbol}
-            onSelect={run(() => {
-              setCurrency(option.symbol);
-              setCurrencyCode(getCurrencyCodeForSymbol(option.symbol));
-            })}
-          >
-            {`Currency: ${getCurrencyMarker(option.symbol)} ${option.label} (${option.code})`}
-          </PaletteItem>
-        ))}
-      </CommandGroup>
+      {canEdit && (
+        <CommandGroup heading="Sections">
+          {(Object.keys(SECTION_LABELS) as InvoiceSectionKey[]).map(section => (
+            <PaletteItem
+              key={section}
+              onSelect={run(() => setSection(section, !sections[section]))}
+            >
+              {`${sections[section] ? "Hide" : "Show"} ${SECTION_LABELS[section]}`}
+            </PaletteItem>
+          ))}
+        </CommandGroup>
+      )}
+      {canEdit && (
+        <CommandGroup heading="Font">
+          {INVOICE_FONTS.map(font => (
+            <PaletteItem
+              key={font.id}
+              icon={<IconTypography />}
+              checked={theme.font === font.id}
+              onSelect={run(() =>
+                setTheme(previous => ({
+                  ...previous,
+                  font: font.id,
+                  fontWeight: font.weights.includes(previous.fontWeight)
+                    ? previous.fontWeight
+                    : "Normal"
+                }))
+              )}
+            >
+              {`Font: ${font.name}`}
+            </PaletteItem>
+          ))}
+          {(Object.keys(SIZE_LABELS) as InvoiceSize[]).map(size => (
+            <PaletteItem
+              key={size}
+              icon={<IconTypography />}
+              checked={theme.size === size}
+              onSelect={run(() =>
+                setTheme(previous => ({ ...previous, size }))
+              )}
+            >
+              {`Text size: ${SIZE_LABELS[size]}`}
+            </PaletteItem>
+          ))}
+        </CommandGroup>
+      )}
+      {canEdit && (
+        <CommandGroup heading="Currency">
+          {currencyOptions.map(option => (
+            <PaletteItem
+              key={option.symbol}
+              icon={<IconCurrencyDollar />}
+              checked={selectedCurrency === option.symbol}
+              onSelect={run(() => {
+                setCurrency(option.symbol);
+                setCurrencyCode(getCurrencyCodeForSymbol(option.symbol));
+              })}
+            >
+              {`Currency: ${getCurrencyMarker(option.symbol)} ${option.label} (${option.code})`}
+            </PaletteItem>
+          ))}
+        </CommandGroup>
+      )}
       {invoices.length > 0 && (
         <CommandGroup heading="Saved invoices">
           {invoices
-            .filter(document => document.id !== currentDocumentId)
+            .filter(document => document.id !== libraryDocumentId)
             .map(document => (
               <PaletteItem
                 key={document.id}

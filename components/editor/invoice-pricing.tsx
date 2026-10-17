@@ -89,6 +89,7 @@ function PricingRowToggle({
 // typed, so thousands separators and padded decimals never get in the way.
 function MoneyInput({
   label,
+  field,
   input,
   amount,
   display,
@@ -99,6 +100,8 @@ function MoneyInput({
   onCommit
 }: {
   label: string;
+  // The data-field path, for undo to find the field again.
+  field: string;
   input: string;
   amount: number;
   display?: string;
@@ -113,6 +116,7 @@ function MoneyInput({
   return (
     <InvoiceInput
       aria-label={label}
+      data-field={field}
       value={
         focused
           ? `${currencySymbol}${input}`
@@ -138,7 +142,7 @@ export function InvoicePricing() {
   const sections = useShownSections();
 
   return (
-    <div className="flex flex-col gap-1 text-right">
+    <div data-field-area="pricing" className="flex flex-col gap-1 text-right">
       <SubtotalRow />
       {sections.discounts && <DiscountsRow />}
       {sections.tax && <TaxRow />}
@@ -161,6 +165,7 @@ function SubtotalRow() {
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
         aria-label="Subtotal label"
+        data-field="labels.subtotal"
         value={labels.subtotal}
         onChange={value => setLabels(prev => ({ ...prev, subtotal: value }))}
         className="w-full min-w-fit"
@@ -203,6 +208,7 @@ function TaxRow() {
       >
         <InvoiceInput
           aria-label="Tax label"
+          data-field="labels.tax"
           value={labels.tax}
           onChange={value => setLabels(prev => ({ ...prev, tax: value }))}
           className="field-sizing-content w-auto min-w-fit pr-0.5"
@@ -214,6 +220,7 @@ function TaxRow() {
             <InvoiceInput
               id="invoice-field-totals"
               aria-label="Tax percentage"
+              data-field="tax.percentage"
               value={taxInput}
               onChange={value => {
                 const numericValue = handlePercentageInput(value);
@@ -238,6 +245,7 @@ function TaxRow() {
       {tax.exempt ? (
         <InvoiceInput
           aria-label="Tax exempt note"
+          data-field="tax.note"
           value={isPreview ? tax.note.trim() || "Exempt" : tax.note}
           onChange={value => setTax(prev => ({ ...prev, note: value }))}
           className="ml-auto min-w-40 text-right"
@@ -270,6 +278,7 @@ function FeesRow() {
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
         aria-label="Fees label"
+        data-field="labels.fees"
         value={labels.fees}
         onChange={value => setLabels(prev => ({ ...prev, fees: value }))}
         className="w-full min-w-fit"
@@ -282,6 +291,7 @@ function FeesRow() {
       >
         <MoneyInput
           label="Fees amount"
+          field="fees"
           input={feesInput}
           amount={fees}
           currency={currency}
@@ -332,6 +342,7 @@ function DiscountsRow() {
       >
         <InvoiceInput
           aria-label="Discounts label"
+          data-field="labels.discounts"
           value={labels.discounts}
           onChange={value => setLabels(prev => ({ ...prev, discounts: value }))}
           className="field-sizing-content w-auto min-w-fit pr-0.5"
@@ -342,6 +353,7 @@ function DiscountsRow() {
           <span className="flex items-center">
             <InvoiceInput
               aria-label="Discount percentage"
+              data-field="discounts"
               value={discountsInput}
               onChange={value => {
                 const numericValue = handlePercentageInput(value);
@@ -375,6 +387,7 @@ function DiscountsRow() {
         >
           <MoneyInput
             label="Discounts amount"
+            field="discounts"
             input={discountsInput}
             amount={discounts}
             display={
@@ -420,6 +433,7 @@ function TotalRow() {
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
         aria-label="Total label"
+        data-field="labels.total"
         value={labels.total}
         onChange={value => setLabels(prev => ({ ...prev, total: value }))}
         className="w-full min-w-fit"
@@ -454,6 +468,7 @@ function AmountPaidRow() {
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
         aria-label="Amount paid label"
+        data-field="labels.amountPaid"
         value={labels.amountPaid}
         onChange={value => setLabels(prev => ({ ...prev, amountPaid: value }))}
         className="w-full min-w-fit"
@@ -466,6 +481,7 @@ function AmountPaidRow() {
       >
         <MoneyInput
           label="Amount paid"
+          field="amountPaid"
           input={amountPaidInput}
           amount={amountPaid}
           display={
@@ -505,6 +521,7 @@ function BalanceDueRow() {
     <div className="ml-auto flex w-1/3 items-center justify-end gap-1 text-sm">
       <InvoiceInput
         aria-label="Balance due label"
+        data-field="labels.balanceDue"
         value={labels.balanceDue}
         onChange={value => setLabels(prev => ({ ...prev, balanceDue: value }))}
         className="w-full min-w-fit"

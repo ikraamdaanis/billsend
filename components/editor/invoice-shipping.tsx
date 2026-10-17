@@ -21,7 +21,7 @@ export function InvoiceShipping() {
   if (!sections.shipping) return null;
 
   return (
-    <OptionalSection className="gap-1">
+    <OptionalSection data-field-area="shipping" className="gap-1">
       <div className="flex items-center gap-1">
         <ShippingLabel />
         <RemoveSectionButton
@@ -41,6 +41,7 @@ function ShippingLabel() {
   return (
     <InvoiceInput
       aria-label="Shipping section label"
+      data-field="shipping.label"
       value={shipping.label}
       className="font-medium"
       onChange={value => setShipping(prev => ({ ...prev, label: value }))}
@@ -60,6 +61,7 @@ function ShippingContent() {
     <InvoiceTextArea
       id="invoice-field-shipping"
       aria-label={`${shipping.label || "Shipping"} address`}
+      data-field="shipping.content"
       value={shipping.content}
       onChange={value => setShipping(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full max-w-[500px]"

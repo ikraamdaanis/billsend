@@ -1,45 +1,49 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import type { Invoice } from "~/types";
+import type { InvoiceNameSource } from "~/types";
 
-// The identity of the document currently being edited: which saved record it
-// maps to (if any), its name, and the snapshot it was last persisted at (the
-// baseline for the dirty check). This lives in its own module-global store,
-// deliberately separate from the invoice-content store, for two reasons:
-//
-//   1. Content and identity now share the same lifetime. Previously identity
-//      lived in per-route React state while content lived in a module-global
-//      store, so navigating away from the editor and back dropped the identity
-//      while the content survived, silently detaching the invoice from its
-//      saved document. One store per concern, both module-global, cannot desync.
-//   2. `setInvoice` replaces the entire invoice-store state (migrate returns a
-//      fresh Invoice), so identity kept in that store would be wiped on every
-//      load. A separate store is immune.
+// Where the open invoice stands, for the editor to show:
+// - editing: this tab edits it and every change saves itself
+// - readOnly: another tab is editing it; this one follows along
+// - deleted: it was deleted elsewhere, so nothing more is written to it
+// - reloadRequired: a newer billsend upgraded storage in another tab
+// - unavailable: this browser won't give billsend any storage
+type DocumentStatus =
+  "editing" | "readOnly" | "deleted" | "reloadRequired" | "unavailable";
+
+// The open invoice's identity and save state, mirrored from the document
+// session (context/document-session.ts) for the editor to render. It lives in
+// its own store, apart from the invoice content: `setInvoice` replaces the
+// whole content store, and identity must survive that.
 type DocumentState = {
+  // Set for every invoice, including a new one that isn't in the library yet.
   documentId: string | null;
-  documentName: string | null;
-  lastSavedInvoice: Invoice | null;
-};
-
-type DocumentActions = {
-  setDocumentId: (id: string | null) => void;
-  setDocumentName: (name: string | null) => void;
-  setLastSavedInvoice: (invoice: Invoice | null) => void;
-  setDocument: (document: DocumentState) => void;
+  // Whether the invoice is in the library. A new invoice joins it on its
+  // first edit.
+  isRecord: boolean;
+  // The name someone gave it; an automatic name is worked out from the
+  // content as it's shown (see useDocumentName).
+  documentName: string;
+  nameSource: InvoiceNameSource;
+  status: DocumentStatus;
+  // The current save failure, if a save failed. `episode` changes only when a
+  // new run of failures starts, not on every retry, so it's announced once.
+  saveFailure: {
+    message: string;
+    storageFull: boolean;
+    episode: number;
+  } | null;
 };
 
 export const documentDefault: DocumentState = {
   documentId: null,
-  documentName: null,
-  lastSavedInvoice: null
+  isRecord: false,
+  documentName: "",
+  nameSource: "auto",
+  status: "editing",
+  saveFailure: null
 };
 
-export const useDocumentStore = create<DocumentState & DocumentActions>()(
-  subscribeWithSelector(set => ({
-    ...documentDefault,
-    setDocumentId: documentId => set({ documentId }),
-    setDocumentName: documentName => set({ documentName }),
-    setLastSavedInvoice: lastSavedInvoice => set({ lastSavedInvoice }),
-    setDocument: document => set({ ...document })
-  }))
+export const useDocumentStore = create<DocumentState>()(
+  subscribeWithSelector(() => ({ ...documentDefault }))
 );

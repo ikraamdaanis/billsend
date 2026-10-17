@@ -1,7 +1,8 @@
 import { format } from "date-fns";
 import { CURRENT_EXPORT_VERSION } from "~/consts/export";
 import { getAllImages, getAllInvoices, getAllTemplates } from "~/db";
-import type { BillsendExportFile } from "~/types";
+import { CURRENT_INVOICE_SCHEMA_VERSION } from "~/schema/migrations";
+import type { BillsendExportFile, Invoice, InvoiceNameSource } from "~/types";
 
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
   const bytes = new Uint8Array(buffer);
@@ -47,20 +48,80 @@ export async function buildExportData(): Promise<BillsendExportFile> {
   };
 }
 
-export async function exportAllData(): Promise<void> {
-  const exportData = await buildExportData();
-
-  const json = JSON.stringify(exportData, null, 2);
+function saveJsonFile(data: BillsendExportFile, fileName: string) {
+  const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = `billsend-export-${format(new Date(), "yyyy-MM-dd")}.json`;
+  a.download = fileName;
   a.click();
 
   // Defer the revoke: Safari has historically aborted the download when the
   // object URL is revoked synchronously in the same tick as the click, so let
   // the download start before releasing the blob.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export async function exportAllData(): Promise<void> {
+  saveJsonFile(
+    await buildExportData(),
+    `billsend-export-${format(new Date(), "yyyy-MM-dd")}.json`
+  );
+}
+
+// A backup made when saving has failed: everything in this browser's storage,
+// with the open invoice as it is in memory, which may be ahead of storage.
+// When storage can't be read at all, it holds the open invoice alone. Either
+// way it imports like any export.
+export async function downloadBackupFile(
+  open: {
+    id: string;
+    name: string;
+    nameSource: InvoiceNameSource;
+    templateId: string | null;
+    invoiceData: Invoice;
+  } | null
+): Promise<void> {
+  const now = new Date().toISOString();
+  let data: BillsendExportFile;
+
+  try {
+    data = await buildExportData();
+  } catch {
+    data = {
+      meta: {
+        version: CURRENT_EXPORT_VERSION,
+        exportedAt: now,
+        appName: "billsend"
+      },
+      templates: [],
+      invoices: [],
+      images: []
+    };
+  }
+
+  if (open) {
+    const stored = data.invoices.find(invoice => invoice.id === open.id);
+
+    data.invoices = [
+      ...data.invoices.filter(invoice => invoice.id !== open.id),
+      {
+        id: open.id,
+        name: open.name,
+        nameSource: open.nameSource,
+        invoiceData: open.invoiceData,
+        templateId: open.templateId,
+        schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
+        createdAt: stored?.createdAt ?? now,
+        updatedAt: now
+      }
+    ];
+  }
+
+  saveJsonFile(
+    data,
+    `billsend-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`
+  );
 }

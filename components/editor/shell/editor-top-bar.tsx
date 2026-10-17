@@ -4,38 +4,44 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
 import { DownloadPopover } from "~/components/editor/shell/download-popover";
+import { HistoryButtons } from "~/components/editor/shell/history-buttons";
 import { ProjectMenu } from "~/components/editor/shell/project-menu";
-import { SaveStatusChip } from "~/components/editor/shell/save-status-chip";
 import { Button } from "~/components/ui/button";
 import { useEditorUi } from "~/context/editor-ui-context";
-import { useFileActions } from "~/context/file-actions-context";
-import { useInvoiceDocument } from "~/context/invoice-document-context";
-import { getInvoice, saveInvoice } from "~/db";
+import {
+  useDocumentName,
+  useInvoiceDocument
+} from "~/context/invoice-document-context";
 
-// Framer's three-part bar: the project menu on the left, the invoice's name and
-// save state in the middle, and the panel toggles, Preview and Download on the
-// right. `start` and `end` take the panel toggles. Phones keep only the menu,
-// the name and Download; the panel toggles and Preview move to the tab bar.
+// Framer's three-part bar: the project menu on the left, the invoice's name in
+// the middle, and the panel toggles, Preview and Download on the right.
+// `start` and `end` take the panel toggles. Phones keep the menu, the name,
+// undo and redo, and Download; the panel toggles and Preview move to the tab
+// bar. Every edit saves itself, so there's no save state to show here while
+// saving works; problems show in the banner under the bar.
 export function EditorTopBar({
-  onLeave,
   start,
   end
 }: {
-  onLeave: () => void;
   start?: ReactNode;
   end?: ReactNode;
 }) {
   const { mode, toggleMode } = useEditorUi();
+  const { status } = useInvoiceDocument();
+  const canEdit = status === "editing" || status === "unavailable";
 
   return (
     <header className="bg-background border-border relative z-30 grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] max-md:flex max-md:gap-2 pointer-coarse:h-14">
       <div className="flex min-w-0 items-center gap-1 max-md:shrink-0">
-        <ProjectMenu onLeave={onLeave} />
+        <ProjectMenu />
         <div className="contents max-md:hidden">{start}</div>
       </div>
       <InvoiceName />
       <div className="flex min-w-0 items-center justify-end gap-1 max-md:shrink-0">
         <div className="contents max-md:hidden">{end}</div>
+        {mode === "edit" && canEdit && (
+          <HistoryButtons className="flex items-center md:hidden" />
+        )}
         <Button
           variant="ghost"
           size="icon-sm"
@@ -53,34 +59,16 @@ export function EditorTopBar({
   );
 }
 
-// The name stays a heading button: it renames a saved invoice, or saves a new
-// one under a name.
+// The name is a heading button that renames the invoice. Naming a new invoice
+// that isn't in the library yet adds it under that name.
 function InvoiceName() {
-  const { currentDocumentId, currentDocumentName, setCurrentDocumentName } =
-    useInvoiceDocument();
-  const { saveAs } = useFileActions();
+  const { renameCurrent } = useInvoiceDocument();
+  const displayName = useDocumentName();
   const [renameOpen, setRenameOpen] = useState(false);
-  const displayName = currentDocumentName || "Untitled invoice";
 
   async function handleRename(newName: string) {
-    const trimmedName = newName.trim();
-
-    if (currentDocumentId) {
-      const existingDoc = await getInvoice(currentDocumentId);
-
-      if (!existingDoc) {
-        throw new Error("Invoice document not found");
-      }
-
-      await saveInvoice({
-        ...existingDoc,
-        name: trimmedName,
-        updatedAt: new Date()
-      });
-    }
-
-    setCurrentDocumentName(trimmedName);
-    toast.success("Invoice renamed successfully");
+    await renameCurrent(newName);
+    toast.success("Invoice renamed");
   }
 
   return (
@@ -88,11 +76,8 @@ function InvoiceName() {
       <h1 className="flex min-w-0">
         <button
           type="button"
-          title={currentDocumentId ? "Rename" : "Save as an invoice"}
-          onClick={() => {
-            if (currentDocumentId) setRenameOpen(true);
-            else saveAs();
-          }}
+          title="Rename"
+          onClick={() => setRenameOpen(true)}
           className="hover:bg-muted focus-visible:ring-ring flex h-7 min-w-0 items-center rounded-md px-2 outline-none focus-visible:ring-1 pointer-coarse:h-10"
         >
           <span className="text-foreground max-w-[min(18rem,36vw)] truncate text-sm font-medium max-md:max-w-none">
@@ -100,7 +85,6 @@ function InvoiceName() {
           </span>
         </button>
       </h1>
-      <SaveStatusChip />
       <RenameInvoiceDialog
         open={renameOpen}
         onOpenChange={setRenameOpen}

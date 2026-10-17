@@ -9,7 +9,10 @@ import {
 } from "~/components/ui/popover";
 import { formatCurrencyWithCode } from "~/consts/currencies";
 import { useFileActions } from "~/context/file-actions-context";
-import { useInvoiceDocument } from "~/context/invoice-document-context";
+import {
+  useDocumentName,
+  useInvoiceDocument
+} from "~/context/invoice-document-context";
 import { getInvoice } from "~/db";
 import { useInvoicePdf } from "~/hooks/use-invoice-pdf";
 import { useCurrencySlice, useInvoiceTotals } from "~/stores/invoice-selectors";
@@ -21,10 +24,11 @@ export function DownloadPopover() {
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const { pending, openPdf, prefetch } = useInvoicePdf();
   const { exportData } = useFileActions();
-  const { currentDocumentId, currentDocumentName } = useInvoiceDocument();
+  const { libraryDocumentId } = useInvoiceDocument();
+  const documentName = useDocumentName();
   const { total } = useInvoiceTotals();
   const { currency, currencyCode } = useCurrencySlice();
-  const fileName = `${currentDocumentName || "Untitled invoice"}.pdf`;
+  const fileName = `${documentName}.pdf`;
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
@@ -34,8 +38,8 @@ export function DownloadPopover() {
     prefetch();
     setSavedAt(null);
 
-    if (currentDocumentId) {
-      void getInvoice(currentDocumentId)
+    if (libraryDocumentId) {
+      void getInvoice(libraryDocumentId)
         .then(document => setSavedAt(document?.updatedAt ?? null))
         .catch(() => setSavedAt(null));
     }
@@ -80,11 +84,11 @@ export function DownloadPopover() {
           <div className="flex items-center justify-between gap-3">
             <dt className="text-muted-foreground">Last saved</dt>
             <dd className="text-foreground">
-              {currentDocumentId
+              {libraryDocumentId
                 ? savedAt
                   ? formatDistanceToNow(savedAt, { addSuffix: true })
                   : "…"
-                : "Not saved as an invoice yet"}
+                : "Saves once you edit it"}
             </dd>
           </div>
         </dl>

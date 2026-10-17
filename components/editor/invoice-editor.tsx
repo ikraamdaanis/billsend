@@ -1,6 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useState } from "react";
 import { InvoiceCanvas } from "~/components/editor/invoice-canvas";
 import { InvoiceClientDetails } from "~/components/editor/invoice-client-details";
 import { InvoiceDetails } from "~/components/editor/invoice-details";
@@ -14,8 +12,10 @@ import { InvoiceShipping } from "~/components/editor/invoice-shipping";
 import { InvoiceTitle } from "~/components/editor/invoice-title";
 import { CanvasPill } from "~/components/editor/shell/canvas-pill";
 import { CommandPalette } from "~/components/editor/shell/command-palette";
+import { DocumentStatusBanner } from "~/components/editor/shell/document-status-banner";
 import { EditorShortcuts } from "~/components/editor/shell/editor-shortcuts";
 import { EditorTopBar } from "~/components/editor/shell/editor-top-bar";
+import { HistoryShortcuts } from "~/components/editor/shell/history-shortcuts";
 import { InspectorPanel } from "~/components/editor/shell/inspector/inspector-panel";
 import { InvoicesPanel } from "~/components/editor/shell/invoices-panel";
 import { PhoneTabBar } from "~/components/editor/shell/phone-tab-bar";
@@ -24,52 +24,27 @@ import {
   PanelToggle,
   SidePanel
 } from "~/components/editor/shell/side-panel";
-import { Button, buttonVariants } from "~/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from "~/components/ui/dialog";
 import { CanvasViewProvider } from "~/context/canvas-view-context";
 import { EditorUiProvider, useEditorUi } from "~/context/editor-ui-context";
 import { FileActionsProvider } from "~/context/file-actions-context";
-import { useDocumentStore } from "~/stores/document-store";
-import { selectInvoiceData } from "~/stores/invoice-selectors";
-import { useInvoiceStore } from "~/stores/invoice-store";
-import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
+import { useInvoiceDocument } from "~/context/invoice-document-context";
 
+// The editor. Every edit saves itself, so leaving needs no confirmation:
+// whatever is waiting is written as the editor unmounts.
 export function InvoiceEditor() {
-  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
-  const navigate = useNavigate();
-
-  // Leaving only asks when there is something unsaved; read at click time so
-  // the whole editor doesn't re-render on every keystroke to know.
-  function handleLeave() {
-    const { documentId, lastSavedInvoice } = useDocumentStore.getState();
-    const invoice = selectInvoiceData(useInvoiceStore.getState());
-
-    if (deriveHasUnsavedChanges(invoice, documentId, lastSavedInvoice)) {
-      setIsLeaveDialogOpen(true);
-    } else {
-      void navigate({ to: "/" });
-    }
-  }
-
   return (
     <CanvasViewProvider>
       <EditorUiProvider>
         <FileActionsProvider>
           <EditorShortcuts />
+          <HistoryShortcuts />
           <CommandPalette />
           <div className="flex h-dvh w-full flex-col">
             <EditorTopBar
-              onLeave={handleLeave}
               start={<PanelToggle side="left" />}
               end={<PanelToggle side="right" />}
             />
+            <DocumentStatusBanner />
             <div className="relative flex min-h-0 flex-1">
               <SidePanel side="left" label="Invoices">
                 <InvoicesPanel />
@@ -80,15 +55,11 @@ export function InvoiceEditor() {
               </Desk>
               <PanelBackdrop />
               <SidePanel side="right" label="Inspector">
-                <InspectorPanel />
+                <Inspector />
               </SidePanel>
             </div>
             <PhoneTabBar />
           </div>
-          <LeavePageDialog
-            isModalOpen={isLeaveDialogOpen}
-            setIsModalOpen={setIsLeaveDialogOpen}
-          />
         </FileActionsProvider>
       </EditorUiProvider>
     </CanvasViewProvider>
@@ -120,33 +91,16 @@ function CanvasArea() {
   );
 }
 
-function LeavePageDialog({
-  isModalOpen,
-  setIsModalOpen
-}: {
-  isModalOpen: boolean;
-  setIsModalOpen: (open: boolean) => void;
-}) {
+// The inspector changes the invoice, so it's out of reach while this tab can't
+// edit it (another tab is editing it, or it was deleted).
+function Inspector() {
+  const { status } = useInvoiceDocument();
+  const canEdit = status === "editing" || status === "unavailable";
+
   return (
-    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-      <DialogContent className="w-md">
-        <DialogHeader>
-          <DialogTitle>Leave this page?</DialogTitle>
-          <DialogDescription>
-            This invoice has unsaved changes. They stay in this browser as a
-            draft, so the editor picks up where you left off.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-            Cancel
-          </Button>
-          <Link to="/" className={buttonVariants()}>
-            Leave
-          </Link>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <div inert={!canEdit} className="flex min-h-0 flex-1 flex-col">
+      <InspectorPanel />
+    </div>
   );
 }
 
