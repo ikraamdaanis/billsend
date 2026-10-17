@@ -35,7 +35,7 @@ export function RowActionsCell({
           className={cn(
             "focus-visible:ring-ring ml-auto flex size-7 items-center justify-center rounded-md opacity-0 outline-none group-focus-within/row:opacity-100 group-hover/row:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 aria-expanded:opacity-100 pointer-coarse:size-9 pointer-coarse:opacity-100",
             selected
-              ? "text-primary-foreground hover:bg-primary-foreground/15 aria-expanded:bg-primary-foreground/15 opacity-100"
+              ? "text-white opacity-100 hover:bg-white/15 aria-expanded:bg-white/15"
               : "text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground"
           )}
         >
