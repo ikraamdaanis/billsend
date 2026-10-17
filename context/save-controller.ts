@@ -211,6 +211,18 @@ export function createSaveController<TContent>({
     // The newest content that isn't known to be written yet.
     getUnsaved(): TContent | null {
       return unsaved?.content ?? null;
+    },
+    // Takes back the content waiting to be written, so it isn't written,
+    // and carries on taking new edits.
+    takeUnsaved(): TContent | null {
+      const taken = unsaved?.content ?? null;
+
+      unsaved = null;
+      writeWhenDone = false;
+      clearTimers();
+      report();
+
+      return taken;
     }
   };
 }

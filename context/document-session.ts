@@ -79,6 +79,9 @@ const UNSAVED_KEY_PREFIX = "billsend-unsaved:";
 
 const BACKUP_REMINDER_KEY = "billsend-backup-reminder";
 
+// Per browser: invoices a page left blank as it went away, to delete.
+const BLANK_KEY_PREFIX = "billsend-blank:";
+
 // Thrown when an invoice that's being opened no longer exists (it was deleted,
 // perhaps in another tab).
 export class DocumentNotFoundError extends Error {
@@ -223,6 +226,9 @@ function writeStorage(
 // edit the invoice picks them up.
 type UnsavedStash = {
   rev: number;
+  // The revision a write running at the time would have produced. If it
+  // landed, the stash still follows straight on from it.
+  writingRev: number | null;
   isRecord: boolean;
   name: string;
   nameSource: InvoiceNameSource;
@@ -237,6 +243,7 @@ function stashUnsaved(session: Session) {
 
   const stash: UnsavedStash = {
     rev: session.rev,
+    writingRev: session.writingRev,
     isRecord: session.isRecord,
     name: session.name,
     nameSource: session.nameSource,
@@ -275,17 +282,23 @@ function clearStash(id: string) {
   writeStorage("localStorage", `${UNSAVED_KEY_PREFIX}${id}`, null);
 }
 
-// The invoices with edits stashed by a page that went away.
-function stashedIds(): string[] {
+// The invoice ids under a local storage key prefix.
+function storedKeys(prefix: string): string[] {
   try {
     if (typeof window === "undefined") return [];
 
     return Object.keys(window.localStorage)
-      .filter(key => key.startsWith(UNSAVED_KEY_PREFIX))
-      .map(key => key.slice(UNSAVED_KEY_PREFIX.length));
+      .filter(key => key.startsWith(prefix))
+      .map(key => key.slice(prefix.length));
   } catch {
     return [];
   }
+}
+
+// Whether a stash follows straight on from the stored revision: nothing was
+// written since it was taken, or only the write that was running then.
+function followsOn(storedRev: number, stash: UnsavedStash) {
+  return storedRev === stash.rev || storedRev === stash.writingRev;
 }
 
 // Whether the content has anything in it worth keeping.
@@ -416,7 +429,6 @@ async function writeContent(session: Session, content: Invoice): Promise<void> {
 
   if (result.outcome === "saved") {
     session.rev = result.rev;
-    if (!session.controller.isPending()) clearStash(session.id);
 
     return;
   }
@@ -428,9 +440,13 @@ async function writeContent(session: Session, content: Invoice): Promise<void> {
   }
 
   // Someone else wrote the invoice since this tab last read it. Never
-  // overwrite: keep this tab's copy as a version and show theirs.
-  await keepVersion(session, content, "conflict");
+  // overwrite: keep this tab's copy as a version and show theirs. Edits made
+  // while this write ran were made on this tab's copy too, so they go into
+  // that version rather than being written over theirs.
+  const mine = session.controller.takeUnsaved() ?? content;
+
   adopt(session, result.document);
+  await keepVersion(session, mine, "conflict");
   toast.warning("This invoice was changed in another tab", {
     description:
       "Their version is shown now. Yours is kept in the invoice's version history."
@@ -724,7 +740,10 @@ function createSession({
     disposed: false,
     controller: createSaveController<Invoice>({
       write: latest => writeContent(session, latest),
-      onChange: ({ failure }) => {
+      onChange: ({ pending, failure }) => {
+        // Everything is written, so nothing needs recovering after a close.
+        if (!pending && !failure) clearStash(session.id);
+
         if (failure && !session.failure) {
           session.failureEpisode = ++failureEpisodes;
 
@@ -1227,6 +1246,17 @@ function onPageHidden() {
 
   stashUnsaved(session);
   void session.controller.flush();
+
+  // Edited back to blank and now going away: the next page load deletes it,
+  // as leaving it in the editor would have.
+  if (
+    session.isRecord &&
+    session.status === "editing" &&
+    session.nameSource === "auto" &&
+    !hasEdits(session, liveContent())
+  ) {
+    writeStorage("localStorage", `${BLANK_KEY_PREFIX}${session.id}`, "1");
+  }
 }
 
 function onVisibilityChange() {
@@ -1275,26 +1305,34 @@ function startListeners() {
   document.addEventListener("visibilitychange", onVisibilityChange);
 }
 
-// Deletes invoices with an automatic name that were left blank, such as one
-// edited back to blank in a tab that then closed. Only ones no tab has open
-// (their lock is free), so nobody's open invoice disappears.
+// Deletes invoices a page left blank as it went away (edited back to blank,
+// then the tab closed), when they're still blank, still automatically named
+// and no tab has them open. Blank invoices that came any other way (imported,
+// duplicated) are left alone.
 async function sweepBlankInvoices(openId: string) {
   if (!locksSupported()) return;
 
-  const invoices = await getAllInvoices();
-  const blanks = invoices.filter(
-    invoice =>
-      invoice.id !== openId &&
-      invoice.nameSource === "auto" &&
-      isBlankInvoice(invoice.invoiceData)
-  );
+  const markedIds = storedKeys(BLANK_KEY_PREFIX);
 
-  for (const blank of blanks) {
+  for (const id of markedIds) {
+    if (id === openId) continue;
+
     await navigator.locks.request(
-      `${LOCK_PREFIX}${blank.id}`,
+      `${LOCK_PREFIX}${id}`,
       { ifAvailable: true },
       async lock => {
-        if (lock) await deleteInvoices([blank.id]);
+        if (!lock) return;
+
+        writeStorage("localStorage", `${BLANK_KEY_PREFIX}${id}`, null);
+
+        const invoice = await getInvoice(id);
+
+        if (
+          invoice?.nameSource === "auto" &&
+          isBlankInvoice(invoice.invoiceData)
+        ) {
+          await deleteInvoices([id]);
+        }
       }
     );
   }
@@ -1313,7 +1351,7 @@ async function recoverUnsaved(session: Session) {
 
   if (stored && isEqual(stored.invoiceData, stash.invoiceData)) return;
 
-  if (stored && stored.rev !== stash.rev) {
+  if (stored && !followsOn(stored.rev, stash)) {
     keepVersionQuietly(session, stash.invoiceData, "conflict");
 
     return;
@@ -1332,7 +1370,7 @@ async function recoverUnsaved(session: Session) {
 async function recoverOtherStashes(openId: string) {
   if (!locksSupported()) return;
 
-  for (const id of stashedIds()) {
+  for (const id of storedKeys(UNSAVED_KEY_PREFIX)) {
     if (id === openId) continue;
 
     await navigator.locks.request(
@@ -1350,14 +1388,13 @@ async function recoverOtherStashes(openId: string) {
         if (stored) {
           if (isEqual(stored.invoiceData, stash.invoiceData)) return;
 
-          const written =
-            stored.rev === stash.rev
-              ? await writeInvoiceContent({
-                  id,
-                  expectedRev: stash.rev,
-                  invoiceData: stash.invoiceData
-                })
-              : null;
+          const written = followsOn(stored.rev, stash)
+            ? await writeInvoiceContent({
+                id,
+                expectedRev: stored.rev,
+                invoiceData: stash.invoiceData
+              })
+            : null;
 
           if (written?.outcome !== "saved") {
             await addInvoiceVersion({
