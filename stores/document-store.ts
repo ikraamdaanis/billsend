@@ -2,15 +2,6 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import type { InvoiceNameSource } from "~/types";
 
-// Where the open invoice stands, for the editor to show:
-// - editing: this tab edits it and every change saves itself
-// - readOnly: another tab is editing it; this one follows along
-// - deleted: it was deleted elsewhere, so nothing more is written to it
-// - reloadRequired: a newer billsend upgraded storage in another tab
-// - unavailable: this browser won't give billsend any storage
-type DocumentStatus =
-  "editing" | "readOnly" | "deleted" | "reloadRequired" | "unavailable";
-
 // The open invoice's identity and save state, mirrored from the document
 // session (context/document-session.ts) for the editor to render. It lives in
 // its own store, apart from the invoice content: `setInvoice` replaces the
@@ -25,7 +16,13 @@ type DocumentState = {
   // content as it's shown (see useDocumentName).
   documentName: string;
   nameSource: InvoiceNameSource;
-  status: DocumentStatus;
+  // Where the open invoice stands, for the editor to show:
+  // - editing: this tab edits it and every change saves itself
+  // - readOnly: another tab is editing it; this one follows along
+  // - deleted: it was deleted elsewhere, so nothing more is written to it
+  // - reloadRequired: a newer billsend upgraded storage in another tab
+  // - unavailable: this browser won't give billsend any storage
+  status: "editing" | "readOnly" | "deleted" | "reloadRequired" | "unavailable";
   // The current save failure, if a save failed. `episode` changes only when a
   // new run of failures starts, not on every retry, so it's announced once.
   saveFailure: {
