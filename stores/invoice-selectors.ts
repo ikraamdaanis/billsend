@@ -8,7 +8,7 @@ import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
 // The persisted invoice fields, in one place. `satisfies` rejects typos and
 // keys that aren't on Invoice; the MissingKey assertion below rejects forgetting
 // a key, so adding a field to Invoice forces adding it here (or the build fails).
-const INVOICE_DATA_KEYS = [
+export const INVOICE_DATA_KEYS = [
   "id",
   "title",
   "image",

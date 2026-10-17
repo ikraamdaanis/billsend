@@ -537,3 +537,35 @@ html[data-editor-theme="dark"] {
     box-shadow: none !important;
   }
 }
+
+/* Undo and redo flash the part of the page they changed when there's no field
+   to put the caret back in (a switch, a removed row, a new style). */
+[data-history-flash] {
+  border-radius: 4px;
+  animation: history-flash 900ms ease-out;
+}
+
+@keyframes history-flash {
+  from {
+    box-shadow: 0 0 0 3px
+      color-mix(in oklch, var(--color-brand-500) 45%, transparent);
+    background-color: color-mix(
+      in oklch,
+      var(--color-brand-500) 8%,
+      transparent
+    );
+  }
+
+  to {
+    box-shadow: 0 0 0 3px transparent;
+    background-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-history-flash] {
+    animation: none;
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+}

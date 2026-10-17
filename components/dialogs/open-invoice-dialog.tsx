@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "~/components/ui/dialog";
-import { deleteInvoices, renameInvoice, watchInvoices } from "~/db";
+import { renameInvoice, watchInvoices } from "~/db";
 import { usePersistentState } from "~/hooks/use-persistent-state";
 import type { InvoiceDocument, InvoiceLibraryView } from "~/types";
 import {
@@ -40,16 +40,16 @@ export function OpenInvoiceDialog({
   onOpenChange,
   onSelectInvoice,
   currentInvoiceId,
-  onCurrentInvoiceDeleted,
-  onCurrentInvoiceRenamed,
+  onDeleteInvoices,
   onDuplicateInvoice
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectInvoice: (invoice: InvoiceDocument) => void;
   currentInvoiceId: string | null;
-  onCurrentInvoiceDeleted: () => void;
-  onCurrentInvoiceRenamed: (newName: string) => void;
+  // Deleting goes through the editor, which replaces the open invoice when
+  // it's one of them.
+  onDeleteInvoices: (ids: string[]) => Promise<void>;
   onDuplicateInvoice: (invoice: InvoiceDocument) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -234,12 +234,7 @@ export function OpenInvoiceDialog({
 
     startTransition(async () => {
       try {
-        await deleteInvoices([...targetIds]);
-
-        if (currentInvoiceId !== null && targetIds.has(currentInvoiceId)) {
-          onCurrentInvoiceDeleted();
-        }
-
+        await onDeleteInvoices([...targetIds]);
         setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
         setDeleteTarget(null);
         toast.success(
@@ -261,11 +256,6 @@ export function OpenInvoiceDialog({
   ) {
     try {
       await renameInvoice(invoice.id, newName);
-
-      if (invoice.id === currentInvoiceId) {
-        onCurrentInvoiceRenamed(newName);
-      }
-
       toast.success("Invoice renamed successfully");
     } catch (error) {
       toast.error(

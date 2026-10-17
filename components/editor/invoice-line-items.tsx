@@ -1,6 +1,6 @@
 import { IconMinus, IconPlus } from "@tabler/icons-react";
 import type { FocusEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
 import { getCurrencyMarker } from "~/consts/currencies";
@@ -196,7 +196,7 @@ export function InvoiceLineItems() {
   const currencySymbol = getCurrencyMarker(currency);
 
   return (
-    <div className="group/table w-full">
+    <div data-field-area="items" className="group/table w-full">
       <div
         role="table"
         aria-label="Invoice line items"
@@ -294,6 +294,7 @@ function TableHeaderCell({
     >
       <InvoiceInput
         aria-label={`${column.headerPlaceholder} column label`}
+        data-field={`tableSettings.columnLabels.${column.id}`}
         value={label}
         onChange={handleChange}
         className={column.headerInputClassName}
@@ -420,6 +421,24 @@ function TableCell({
 }) {
   const [isEditingNumeric, setIsEditingNumeric] = useState(false);
   const [numericDraft, setNumericDraft] = useState("");
+  const storeNumber =
+    column.cell.kind === "currency"
+      ? item.unitPrice
+      : column.cell.kind === "integer"
+        ? item.quantity
+        : null;
+
+  // While typing, the draft already stands for the stored number ("5." is 5),
+  // so it's left alone. When the number changes from outside (undo, redo, an
+  // invoice from another tab), the draft takes the stored value, so the field
+  // never shows a number the invoice doesn't have.
+  useEffect(() => {
+    if (storeNumber === null) return;
+
+    setNumericDraft(draft =>
+      parseDecimalDraft(draft) === storeNumber ? draft : String(storeNumber)
+    );
+  }, [storeNumber]);
 
   const rowStyle = getTextStyles({
     settings: getRoleSettings(theme, column.rowRole)
@@ -525,6 +544,7 @@ function TableCell({
       <InvoiceInput
         id={focusId}
         aria-label={`${cellLabel}, item ${index + 1}`}
+        data-field={`items.${item.id}.${column.cell.itemField}`}
         value={inputValue}
         placeholder={column.cell.placeholder}
         onChange={handleChange}

@@ -2,19 +2,20 @@ import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
+  attachEditor,
+  detachEditor,
   documentActions,
   hydrateDocument,
-  isDocumentHydrated,
-  startDraftPersistence
+  isDocumentHydrated
 } from "~/context/document-session";
 import { useDocumentStore } from "~/stores/document-store";
-import { useInvoiceData } from "~/stores/invoice-selectors";
-import type { InvoiceDocument } from "~/types";
-import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
+import { useInvoiceStore } from "~/stores/invoice-store";
+import { deriveInvoiceName } from "~/utils/invoice-name";
 
-// Marker context: identity now lives in the document store, so the provider
-// carries no value. Its job is to scope the editor session (start persistence,
-// run hydration) and to let the hook assert it is used inside the editor.
+// Marker context: identity lives in the document store, so the provider
+// carries no value. Its job is to scope the editor session (hydrate, then
+// attach the editor to the open invoice while it's mounted) and to let the
+// hook assert it is used inside the editor.
 const InvoiceDocumentContext = createContext<boolean>(false);
 
 export function InvoiceDocumentProvider({
@@ -24,17 +25,12 @@ export function InvoiceDocumentProvider({
   children: ReactNode;
   fallback?: ReactNode;
 }) {
-  // Gate the editor on hydration completing. The editor's inputs are bound to
-  // the invoice store, which hydration replaces (restoring the working draft, or
-  // stamping a fresh blank invoice). Mounting those inputs before hydration
-  // settles would let a keystroke land on state that hydration is about to
-  // overwrite, silently wiping it. Holding the fallback until hydration resolves
-  // closes that race at the source: there is no input for hydration to clobber.
+  // Gate the editor on hydration. Its inputs are bound to the invoice store,
+  // which hydration replaces with the invoice this tab had open; mounting them
+  // first would let a keystroke land on state that's about to be replaced.
   const [isHydrated, setIsHydrated] = useState(isDocumentHydrated);
 
   useEffect(() => {
-    startDraftPersistence();
-
     let cancelled = false;
 
     void hydrateDocument().finally(() => {
@@ -45,6 +41,19 @@ export function InvoiceDocumentProvider({
       cancelled = true;
     };
   }, []);
+
+  // While the editor is on screen it edits the open invoice (or follows it
+  // read-only). Leaving the editor writes what's pending and lets other tabs
+  // edit it.
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    void attachEditor();
+
+    return () => {
+      void detachEditor();
+    };
+  }, [isHydrated]);
 
   if (!isHydrated) return fallback;
 
@@ -64,54 +73,41 @@ export function useInvoiceDocument() {
     );
   }
 
-  const { documentId, documentName, lastSavedInvoice } = useDocumentStore(
+  const { documentId, isRecord, status, saveFailure } = useDocumentStore(
     useShallow(state => ({
       documentId: state.documentId,
-      documentName: state.documentName,
-      lastSavedInvoice: state.lastSavedInvoice
+      isRecord: state.isRecord,
+      status: state.status,
+      saveFailure: state.saveFailure
     }))
   );
 
   return {
     currentDocumentId: documentId,
-    currentDocumentName: documentName,
-    lastSavedInvoice,
+    // The open invoice's id once it's in the library, for highlighting it in
+    // lists; null while it's a new invoice nobody has edited.
+    libraryDocumentId: isRecord ? documentId : null,
+    isRecord,
+    status,
+    saveFailure,
     ...documentActions
   };
 }
 
-// Derived dirty state: compares the live invoice against its persisted baseline
-// (default for a blank document, last-saved snapshot for a loaded one). Kept as
-// a derivation so it can never desync from the store the way stored state could.
-export function useHasUnsavedChanges(): boolean {
-  const { documentId, lastSavedInvoice } = useDocumentStore(
+// The open invoice's name: the one it was given, or until then, its number
+// and client.
+export function useDocumentName(): string {
+  const { documentName, nameSource } = useDocumentStore(
     useShallow(state => ({
-      documentId: state.documentId,
-      lastSavedInvoice: state.lastSavedInvoice
+      documentName: state.documentName,
+      nameSource: state.nameSource
     }))
   );
-  const invoice = useInvoiceData();
-
-  return deriveHasUnsavedChanges(invoice, documentId, lastSavedInvoice);
-}
-
-export function generateDefaultInvoiceName(
-  existingInvoices: InvoiceDocument[]
-): string {
-  const baseName = "Invoice";
-  const existingNames = new Set(
-    existingInvoices.map(invoice => invoice.name.toLowerCase())
+  const autoName = useInvoiceStore(state =>
+    deriveInvoiceName({ number: state.number, client: state.client })
   );
 
-  let counter = 1;
-  let name = `${baseName} ${String(counter).padStart(3, "0")}`;
-
-  while (existingNames.has(name.toLowerCase())) {
-    counter++;
-    name = `${baseName} ${String(counter).padStart(3, "0")}`;
-  }
-
-  return name;
+  return nameSource === "user" && documentName ? documentName : autoName;
 }
 
 export { DocumentNotFoundError } from "~/context/document-session";

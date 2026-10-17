@@ -1,346 +1,1457 @@
 import { isEqual } from "lodash-es";
+import { toast } from "sonner";
+import { createSaveController } from "~/context/save-controller";
 import {
+  addInvoiceVersion,
   cleanupOrphanedImages,
-  clearDraft,
-  getDraft,
+  createInvoice,
+  deleteInvoices,
+  getAllInvoices,
   getInvoice,
-  saveDraft,
-  saveInvoice
+  getLastOpenedInvoiceId,
+  isStorageFullError,
+  onDatabaseUpgradeElsewhere,
+  openDatabase,
+  registerImageKeeper,
+  renameInvoice,
+  setLastOpenedInvoiceId,
+  watchInvoice,
+  writeInvoiceContent
 } from "~/db";
+import { getChangeOrigin, runWithOrigin } from "~/stores/change-origin";
 import { useDocumentStore } from "~/stores/document-store";
-import { selectInvoiceData } from "~/stores/invoice-selectors";
 import {
-  createBlankInvoice,
-  invoiceDefault,
-  useInvoiceStore
-} from "~/stores/invoice-store";
-import type { InvoiceDocument, InvoiceFont } from "~/types";
+  clearInvoiceHistory,
+  getHistoryImageIds,
+  recordHistoryAction,
+  setInvoiceHistoryEnabled,
+  startInvoiceHistory
+} from "~/stores/invoice-history";
+import {
+  INVOICE_DATA_KEYS,
+  selectInvoiceData
+} from "~/stores/invoice-selectors";
+import type { InvoiceStore } from "~/stores/invoice-store";
+import { createBlankInvoice, useInvoiceStore } from "~/stores/invoice-store";
+import type {
+  Invoice,
+  InvoiceDocument,
+  InvoiceFont,
+  InvoiceNameSource,
+  InvoiceTemplate,
+  InvoiceVersion,
+  InvoiceVersionReason
+} from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
+import { downloadBackupFile } from "~/utils/export-data";
+import { isBlankInvoice, isLargeRemoval } from "~/utils/invoice-content";
+import { deriveInvoiceName } from "~/utils/invoice-name";
 
-// The editor session: the module-level document actions (load / saveAs / update
-// / reset) and the working-draft persistence + hydration controller. This lives
-// outside React on purpose. Identity and content are both module-global stores,
-// so the session outlives any single mounted editor route, which is what makes
-// navigating away and back non-destructive. The React surface (provider, hooks)
-// is a thin wrapper over this in invoice-document-context.tsx.
+// The editor session: which invoice is open, saving it as it's edited, and
+// keeping it in step with other tabs. Every invoice saves itself; there is no
+// Save step. This lives outside React on purpose, so it outlives any one
+// mounted editor: leaving the editor and coming back never drops an edit.
+//
+// - Each open invoice gets its own save controller (context/save-controller),
+//   so a write always lands in the invoice it was made in.
+// - Every content write is a compare-and-swap on the invoice's revision, so
+//   no two writers overwrite each other.
+// - A new invoice joins the library on its first real edit, and an invoice
+//   with an automatic name that's edited back to blank is deleted on leaving.
+// - One tab edits an invoice at a time: it holds the invoice's Web Lock.
+//   Another tab with the same invoice open follows it read-only, and can take
+//   it over with "Edit here".
+// - The invoice keeps a version history: when opened, after a pause in
+//   editing, before a restore and before a change that removes most of it.
 
-// How long to wait after the last edit before writing the working draft. Long
-// enough to coalesce a burst of keystrokes, short enough that little work is at
-// risk between saves.
-const DRAFT_SAVE_DEBOUNCE_MS = 600;
+// A pause this long after an edit keeps a version, at most this often.
+const VERSION_IDLE_MS = 30_000;
 
-// Thrown when a save/load targets a document id that no longer exists in the
-// database (e.g. it was deleted from the Open Invoice dialog). Callers can catch
-// this specifically to recover, such as falling back to the Save As flow.
+const VERSION_MIN_INTERVAL_MS = 10 * 60_000;
+
+const LOCK_PREFIX = "billsend-invoice:";
+
+// Per tab: which invoice this tab has open, so a reload reopens it.
+const OPEN_INVOICE_KEY = "billsend-open-invoice";
+
+// Per tab: edits not yet known to be written when the page went away.
+const UNSAVED_KEY_PREFIX = "billsend-unsaved:";
+
+const BACKUP_REMINDER_KEY = "billsend-backup-reminder";
+
+// Thrown when an invoice that's being opened no longer exists (it was deleted,
+// perhaps in another tab).
 export class DocumentNotFoundError extends Error {
   constructor() {
-    super("Invoice document not found");
+    super("That invoice no longer exists.");
     this.name = "DocumentNotFoundError";
   }
 }
 
-// Loads a saved document into the store and marks it as current, sweeping any
-// image blob the previously-edited invoice abandoned.
-async function load(documentId: string): Promise<void> {
-  const document = await getInvoice(documentId);
+type DocumentStatus = ReturnType<typeof useDocumentStore.getState>["status"];
 
-  if (!document) {
-    throw new DocumentNotFoundError();
-  }
+type Session = {
+  id: string;
+  // Whether the invoice is in the library yet.
+  isRecord: boolean;
+  // The stored revision this tab's content was edited from.
+  rev: number;
+  // The revision a running write will produce, so the live query doesn't
+  // mistake this tab's own write for another tab's.
+  writingRev: number | null;
+  name: string;
+  nameSource: InvoiceNameSource;
+  templateId: string | null;
+  // For a new invoice, what it started as (a blank, or a template). Until the
+  // content differs from it, nothing has been edited.
+  pristine: Invoice | null;
+  status: DocumentStatus;
+  controller: ReturnType<typeof createSaveController<Invoice>>;
+  failure: unknown;
+  failureEpisode: number;
+  // The content the read-only view shows, put back if anything changes it.
+  shownContent: Invoice;
+  attached: boolean;
+  releaseLock: (() => void) | null;
+  stopWaitingForLock: (() => void) | null;
+  stopWatching: (() => void) | null;
+  idleVersionTimer: ReturnType<typeof setTimeout> | null;
+  lastVersionAt: number;
+  // This tab is deleting the invoice, so its disappearance is expected.
+  deleting: boolean;
+  disposed: boolean;
+};
 
-  const invoice = ensureItemIds(structuredClone(document.invoiceData));
-  useInvoiceStore.getState().setInvoice(invoice);
-  // Snapshot the baseline from the store after setInvoice ran it through
-  // normalize + recalculate, so the dirty check compares like-for-like and a
-  // freshly loaded document can't read as dirty.
-  const normalized = selectInvoiceData(useInvoiceStore.getState());
-  useDocumentStore.getState().setDocument({
-    documentId,
-    documentName: document.name,
-    lastSavedInvoice: structuredClone(normalized)
-  });
-  void cleanupOrphanedImages([normalized.image]);
+let current: Session | null = null;
+let failureEpisodes = 0;
+let hydrated = false;
+let hydrationPromise: Promise<void> | null = null;
+let persistenceRequested = false;
+let storageUnavailable = false;
+
+// Session operations (open, new, delete, attach, ...) run one at a time, so
+// two of them can never interleave their awaits.
+let queue: Promise<unknown> = Promise.resolve();
+
+function enqueue<TResult>(operation: () => Promise<TResult>): Promise<TResult> {
+  const result = queue.then(operation);
+
+  queue = result.catch(() => {});
+
+  return result;
 }
 
-// Persists the live invoice as a brand-new document and makes it current.
-async function saveAs(
-  name: string,
-  templateId: string | null = null
-): Promise<string> {
-  const invoice = selectInvoiceData(useInvoiceStore.getState());
-  const now = new Date();
-  const trimmedName = name.trim();
-  const document: InvoiceDocument = {
-    id: crypto.randomUUID(),
-    name: trimmedName,
-    invoiceData: structuredClone(invoice),
+// Whether a session is still the open invoice. A check after an await, when
+// another operation may have moved on.
+function isActive(session: Session) {
+  return session === current && !session.disposed;
+}
+
+function liveContent(): Invoice {
+  return selectInvoiceData(useInvoiceStore.getState());
+}
+
+function displayName(session: Session, content: Invoice = liveContent()) {
+  return session.nameSource === "user"
+    ? session.name
+    : deriveInvoiceName(content);
+}
+
+function failureMessage(failure: unknown): string {
+  if (isStorageFullError(failure)) {
+    return "Browser storage is full, so your latest changes aren't saved. They're kept in this tab while billsend tries again.";
+  }
+
+  return "Your latest changes couldn't be saved. They're kept in this tab while billsend tries again.";
+}
+
+function publish(session: Session) {
+  if (session !== current) return;
+
+  useDocumentStore.setState({
+    documentId: session.id,
+    isRecord: session.isRecord,
+    documentName: session.name,
+    nameSource: session.nameSource,
+    status: session.status,
+    saveFailure: session.failure
+      ? {
+          message: failureMessage(session.failure),
+          storageFull: isStorageFullError(session.failure),
+          episode: session.failureEpisode
+        }
+      : null
+  });
+  setInvoiceHistoryEnabled(
+    session.status === "editing" || session.status === "unavailable"
+  );
+}
+
+function readSessionStorage(key: string): string | null {
+  try {
+    return typeof sessionStorage === "undefined"
+      ? null
+      : sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionStorage(key: string, value: string | null) {
+  try {
+    if (typeof sessionStorage === "undefined") return;
+
+    if (value === null) {
+      sessionStorage.removeItem(key);
+    } else {
+      sessionStorage.setItem(key, value);
+    }
+  } catch {
+    // Storage full or blocked: the in-memory copy is still there.
+  }
+}
+
+// Edits that might not have reached the database when the page went away,
+// kept in this tab's session storage (synchronous, so it always lands) and
+// picked up when the tab reloads.
+type UnsavedStash = {
+  rev: number;
+  isRecord: boolean;
+  name: string;
+  nameSource: InvoiceNameSource;
+  templateId: string | null;
+  invoiceData: Invoice;
+};
+
+function stashUnsaved(session: Session) {
+  if (!session.controller.isPending() && !session.controller.hasFailed()) {
+    return;
+  }
+
+  const stash: UnsavedStash = {
+    rev: session.rev,
+    isRecord: session.isRecord,
+    name: session.name,
+    nameSource: session.nameSource,
+    templateId: session.templateId,
+    invoiceData: liveContent()
+  };
+
+  writeSessionStorage(
+    `${UNSAVED_KEY_PREFIX}${session.id}`,
+    JSON.stringify(stash)
+  );
+}
+
+function takeStash(id: string): UnsavedStash | null {
+  const raw = readSessionStorage(`${UNSAVED_KEY_PREFIX}${id}`);
+
+  writeSessionStorage(`${UNSAVED_KEY_PREFIX}${id}`, null);
+
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as UnsavedStash;
+  } catch {
+    return null;
+  }
+}
+
+function clearStash(id: string) {
+  writeSessionStorage(`${UNSAVED_KEY_PREFIX}${id}`, null);
+}
+
+// Whether the content has anything in it worth keeping.
+function hasEdits(session: Session, content: Invoice) {
+  return session.pristine
+    ? !isEqual(content, session.pristine)
+    : !isBlankInvoice(content);
+}
+
+async function keepVersion(
+  session: Session,
+  content: Invoice,
+  reason: InvoiceVersionReason
+): Promise<void> {
+  if (!session.isRecord) return;
+
+  const added = await addInvoiceVersion({
+    invoiceId: session.id,
+    name: displayName(session, content),
+    invoiceData: structuredClone(content),
+    reason
+  });
+
+  if (added) session.lastVersionAt = Date.now();
+}
+
+function keepVersionQuietly(
+  session: Session,
+  content: Invoice,
+  reason: InvoiceVersionReason
+) {
+  keepVersion(session, content, reason).catch((error: unknown) =>
+    console.error("[DocumentSession] Failed to keep a version", error)
+  );
+}
+
+// Asks the browser to keep billsend's storage when it runs short, once an
+// invoice exists to keep. Chrome decides from how much the site is used,
+// Firefox asks, and Safari mostly says no in a browser tab, where it also
+// clears storage after seven days without a visit. When the answer is no,
+// suggest a backup, once.
+async function requestPersistentStorage() {
+  if (persistenceRequested) return;
+
+  persistenceRequested = true;
+
+  if (typeof navigator === "undefined" || !("storage" in navigator)) return;
+
+  try {
+    if (await navigator.storage.persisted()) return;
+    if (await navigator.storage.persist()) return;
+  } catch {
+    return;
+  }
+
+  try {
+    if (localStorage.getItem(BACKUP_REMINDER_KEY)) return;
+
+    localStorage.setItem(BACKUP_REMINDER_KEY, new Date().toISOString());
+  } catch {
+    return;
+  }
+
+  toast("Your invoices are saved in this browser", {
+    description:
+      "The browser can clear them if it runs short of space or the site goes unused for a while. Download a backup to keep a copy.",
+    duration: 15_000,
+    action: { label: "Download backup", onClick: () => void downloadBackup() }
+  });
+}
+
+// Writes the content to the library: creating the invoice on its first real
+// edit, and after that as a compare-and-swap on its revision.
+async function writeContent(session: Session, content: Invoice): Promise<void> {
+  if (session.status !== "editing" || session.deleting) return;
+
+  if (!session.isRecord) {
+    if (!hasEdits(session, content)) return;
+
+    const now = new Date();
+
+    session.writingRev = 1;
+
+    try {
+      await createInvoice({
+        id: session.id,
+        name:
+          session.nameSource === "user"
+            ? session.name
+            : deriveInvoiceName(content),
+        nameSource: session.nameSource,
+        invoiceData: content,
+        templateId: session.templateId,
+        rev: 1,
+        createdAt: now,
+        updatedAt: now
+      });
+    } finally {
+      session.writingRev = null;
+    }
+
+    session.isRecord = true;
+    session.rev = 1;
+    publish(session);
+    clearStash(session.id);
+    void setLastOpenedInvoiceId(session.id);
+    void requestPersistentStorage();
+
+    return;
+  }
+
+  session.writingRev = session.rev + 1;
+
+  let result: Awaited<ReturnType<typeof writeInvoiceContent>>;
+
+  try {
+    result = await writeInvoiceContent({
+      id: session.id,
+      expectedRev: session.rev,
+      invoiceData: content
+    });
+  } finally {
+    session.writingRev = null;
+  }
+
+  if (result.outcome === "saved") {
+    session.rev = result.rev;
+    if (!session.controller.isPending()) clearStash(session.id);
+
+    return;
+  }
+
+  if (result.outcome === "missing") {
+    if (!isBeingDeleted(session)) markDeleted(session);
+
+    return;
+  }
+
+  // Someone else wrote the invoice since this tab last read it. Never
+  // overwrite: keep this tab's copy as a version and show theirs.
+  await keepVersion(session, content, "conflict");
+  adopt(session, result.document);
+  toast.warning("This invoice was changed in another tab", {
+    description:
+      "Their version is shown now. Yours is kept in the invoice's version history."
+  });
+}
+
+function isBeingDeleted(session: Session) {
+  return session.deleting;
+}
+
+function markDeleted(session: Session) {
+  session.status = "deleted";
+  session.shownContent = liveContent();
+  session.controller.stop();
+  clearInvoiceHistory();
+  publish(session);
+}
+
+// Shows a version of the invoice another tab wrote. Undo can't reach past it,
+// so it can never put back what the other tab replaced.
+function adopt(session: Session, document: InvoiceDocument) {
+  session.rev = document.rev;
+  session.name = document.name;
+  session.nameSource = document.nameSource;
+
+  if (!isEqual(liveContent(), document.invoiceData)) {
+    runWithOrigin("load", () => {
+      useInvoiceStore
+        .getState()
+        .setInvoice(ensureItemIds(structuredClone(document.invoiceData)));
+    });
+    clearInvoiceHistory();
+  }
+
+  session.shownContent = liveContent();
+  publish(session);
+}
+
+function onStoredInvoice(
+  session: Session,
+  document: InvoiceDocument | undefined
+) {
+  if (!isActive(session)) return;
+
+  if (!document) {
+    if (session.isRecord && !session.deleting && session.status !== "deleted") {
+      markDeleted(session);
+    }
+
+    return;
+  }
+
+  if (
+    document.name !== session.name ||
+    document.nameSource !== session.nameSource
+  ) {
+    session.name = document.name;
+    session.nameSource = document.nameSource;
+    publish(session);
+  }
+
+  if (!session.isRecord) return;
+  if (document.rev <= Math.max(session.rev, session.writingRev ?? 0)) return;
+
+  // This tab has edits on the way: the compare-and-swap settles it.
+  if (session.status === "editing" && session.controller.isPending()) return;
+
+  adopt(session, document);
+}
+
+function locksSupported() {
+  return typeof navigator !== "undefined" && "locks" in navigator;
+}
+
+// Requests the invoice's Web Lock. Resolves whether it was granted; when it's
+// later taken by another tab's "Edit here", onLockLost runs.
+function requestLock(
+  session: Session,
+  options: { ifAvailable?: boolean; steal?: boolean; wait?: boolean }
+): Promise<boolean> {
+  return new Promise(resolve => {
+    let granted = false;
+    const abort = options.wait ? new AbortController() : null;
+
+    if (abort) {
+      session.stopWaitingForLock = () => abort.abort();
+    }
+
+    navigator.locks
+      .request(
+        `${LOCK_PREFIX}${session.id}`,
+        options.wait
+          ? { signal: abort?.signal }
+          : options.steal
+            ? { steal: true }
+            : { ifAvailable: true },
+        lock => {
+          if (!lock || session.disposed || !session.attached) {
+            resolve(false);
+
+            return;
+          }
+
+          granted = true;
+
+          return new Promise<void>(release => {
+            session.releaseLock = release;
+            resolve(true);
+          });
+        }
+      )
+      .catch((error: unknown) => {
+        if (granted) {
+          session.releaseLock = null;
+          void onLockLost(session);
+        }
+
+        resolve(false);
+
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error("[DocumentSession] Web Lock failed", error);
+        }
+      });
+  });
+}
+
+// Another tab took the invoice over: write what's pending, then follow it.
+async function onLockLost(session: Session) {
+  if (!isActive(session) || session.status !== "editing") {
+    return;
+  }
+
+  await session.controller.flush();
+
+  if (!isActive(session)) return;
+
+  session.status = "readOnly";
+  session.shownContent = liveContent();
+  clearInvoiceHistory();
+  publish(session);
+  void waitForLock(session);
+}
+
+// While read-only, waits in line for the invoice, so this tab edits again
+// once the tab editing it moves on or closes.
+async function waitForLock(session: Session) {
+  if (!locksSupported()) return;
+
+  const granted = await requestLock(session, { wait: true });
+
+  session.stopWaitingForLock = null;
+
+  if (granted) await startEditing(session);
+}
+
+// This tab now edits the invoice. It reads the stored copy first, in case the
+// tab that edited it last wrote something this one hasn't seen.
+async function startEditing(session: Session) {
+  if (!isActive(session)) return;
+
+  if (session.isRecord) {
+    try {
+      const document = await getInvoice(session.id);
+
+      if (!document) {
+        markDeleted(session);
+
+        return;
+      }
+
+      if (document.rev !== session.rev) adopt(session, document);
+    } catch (error) {
+      console.error("[DocumentSession] Failed to reload the invoice", error);
+    }
+  }
+
+  if (!isActive(session)) return;
+
+  session.status = "editing";
+  clearInvoiceHistory();
+  publish(session);
+
+  if (session.isRecord) keepVersionQuietly(session, liveContent(), "opened");
+}
+
+async function attach(session: Session) {
+  if (session.attached || session.disposed) return;
+
+  session.attached = true;
+  session.stopWatching = watchInvoice(
+    session.id,
+    document => onStoredInvoice(session, document),
+    error =>
+      console.error("[DocumentSession] Failed to follow the invoice", error)
+  );
+
+  if (session.status === "unavailable" || session.status === "deleted") return;
+
+  if (!locksSupported()) {
+    await startEditing(session);
+
+    return;
+  }
+
+  const granted = await requestLock(session, { ifAvailable: true });
+
+  if (granted) {
+    await startEditing(session);
+
+    return;
+  }
+
+  if (!isActive(session)) return;
+
+  session.status = "readOnly";
+  session.shownContent = liveContent();
+  clearInvoiceHistory();
+  publish(session);
+  void waitForLock(session);
+}
+
+// Stops following the invoice and lets another tab edit it. Pending edits
+// keep saving in the background.
+function detach(session: Session) {
+  session.attached = false;
+  session.stopWatching?.();
+  session.stopWatching = null;
+  session.stopWaitingForLock?.();
+  session.stopWaitingForLock = null;
+  session.releaseLock?.();
+  session.releaseLock = null;
+
+  if (session.idleVersionTimer) clearTimeout(session.idleVersionTimer);
+
+  session.idleVersionTimer = null;
+}
+
+function dispose(session: Session) {
+  detach(session);
+  session.disposed = true;
+  session.controller.stop();
+}
+
+function createSession({
+  id,
+  isRecord,
+  rev,
+  name,
+  nameSource,
+  templateId,
+  content,
+  pristine,
+  status
+}: {
+  id: string;
+  isRecord: boolean;
+  rev: number;
+  name: string;
+  nameSource: InvoiceNameSource;
+  templateId: string | null;
+  content: Invoice;
+  pristine: Invoice | null;
+  status: DocumentStatus;
+}): Session {
+  const session: Session = {
+    id,
+    isRecord,
+    rev,
+    writingRev: null,
+    name,
+    nameSource,
     templateId,
+    pristine,
+    status,
+    failure: null,
+    failureEpisode: 0,
+    shownContent: content,
+    attached: false,
+    releaseLock: null,
+    stopWaitingForLock: null,
+    stopWatching: null,
+    idleVersionTimer: null,
+    lastVersionAt: 0,
+    deleting: false,
+    disposed: false,
+    controller: createSaveController<Invoice>({
+      write: latest => writeContent(session, latest),
+      onChange: ({ failure }) => {
+        if (failure && !session.failure) {
+          session.failureEpisode = ++failureEpisodes;
+
+          // Make room by dropping logos nothing uses any more.
+          if (isStorageFullError(failure)) void cleanupOrphanedImages();
+        }
+
+        session.failure = failure;
+        publish(session);
+      }
+    })
+  };
+
+  return session;
+}
+
+// Puts a session's content in the editor and makes it the open invoice.
+function show(session: Session, content: Invoice) {
+  current = session;
+  runWithOrigin("load", () => {
+    useInvoiceStore
+      .getState()
+      .setInvoice(ensureItemIds(structuredClone(content)));
+  });
+
+  const normalized = liveContent();
+
+  session.shownContent = normalized;
+  if (session.pristine) session.pristine = normalized;
+
+  clearInvoiceHistory();
+  writeSessionStorage(OPEN_INVOICE_KEY, session.id);
+  publish(session);
+}
+
+function sessionFromDocument(document: InvoiceDocument): Session {
+  return createSession({
+    id: document.id,
+    isRecord: true,
+    rev: document.rev,
+    name: document.name,
+    nameSource: document.nameSource,
+    templateId: document.templateId,
+    content: document.invoiceData,
+    pristine: null,
+    status: storageUnavailable ? "unavailable" : "editing"
+  });
+}
+
+function newSession(
+  content: Invoice,
+  {
+    templateId = null,
+    pristine = true
+  }: { templateId?: string | null; pristine?: boolean } = {}
+): Session {
+  return createSession({
+    id: crypto.randomUUID(),
+    isRecord: false,
+    rev: 0,
+    name: "",
+    nameSource: "auto",
+    templateId,
+    content,
+    pristine: pristine ? content : null,
+    status: storageUnavailable ? "unavailable" : "editing"
+  });
+}
+
+// Leaves the open invoice: writes what's pending, and deletes it when it has
+// an automatic name and was edited back to blank. Resolves false when its
+// edits couldn't be written, in which case it stays open.
+async function leaveCurrent(): Promise<boolean> {
+  const session = current;
+
+  if (!session) return true;
+
+  if (session.status === "reloadRequired") {
+    toast.error("Reload the page to open another invoice", {
+      description: "billsend was updated in another tab."
+    });
+
+    return false;
+  }
+
+  // Nothing here can be written, so moving on would lose this invoice.
+  if (session.status === "unavailable" && hasEdits(session, liveContent())) {
+    toast.error("This invoice can't be saved in this browser", {
+      description: "Download a backup to keep it before starting another."
+    });
+
+    return false;
+  }
+
+  if (session.status === "editing") {
+    const saved = await session.controller.flush();
+
+    if (!saved) {
+      toast.error("This invoice couldn't be saved, so it stays open", {
+        description: "Try again, or download a backup to keep a copy."
+      });
+
+      return false;
+    }
+
+    if (
+      session.isRecord &&
+      session.nameSource === "auto" &&
+      !hasEdits(session, liveContent())
+    ) {
+      session.deleting = true;
+
+      try {
+        await deleteInvoices([session.id]);
+      } catch (error) {
+        console.error(
+          "[DocumentSession] Failed to delete a blank invoice",
+          error
+        );
+      }
+    }
+  }
+
+  clearStash(session.id);
+  dispose(session);
+
+  return true;
+}
+
+async function switchTo(session: Session, content: Invoice) {
+  show(session, content);
+  await attach(session);
+
+  if (session.isRecord) void setLastOpenedInvoiceId(session.id);
+
+  void cleanupOrphanedImages();
+}
+
+function openInvoice(documentId: string): Promise<void> {
+  return enqueue(async () => {
+    if (current?.id === documentId && !current.disposed) return;
+
+    const document = await getInvoice(documentId);
+
+    if (!document) throw new DocumentNotFoundError();
+    if (!(await leaveCurrent())) return;
+
+    // Read again: the invoice may have changed while this one was saved.
+    const latest = (await getInvoice(documentId)) ?? document;
+
+    await switchTo(sessionFromDocument(latest), latest.invoiceData);
+  });
+}
+
+// Starts a new, blank invoice. It joins the library on its first edit.
+function newInvoice(): Promise<void> {
+  return enqueue(async () => {
+    if (!(await leaveCurrent())) return;
+
+    const blank = createBlankInvoice();
+
+    await switchTo(newSession(blank), blank);
+  });
+}
+
+// Starts a new invoice from a template. Like a blank, it joins the library
+// once it's edited.
+function applyTemplate(template: InvoiceTemplate): Promise<void> {
+  return enqueue(async () => {
+    if (!(await leaveCurrent())) return;
+
+    const content = ensureItemIds(structuredClone(template.templateData));
+
+    await switchTo(newSession(content, { templateId: template.id }), content);
+  });
+}
+
+// "Name copy", or "Name copy 2" and so on when that's taken.
+export function nextCopyName(name: string, takenNames: string[]) {
+  const taken = new Set(takenNames.map(takenName => takenName.toLowerCase()));
+  let candidate = `${name} copy`;
+
+  for (let i = 2; taken.has(candidate.toLowerCase()); i++) {
+    candidate = `${name} copy ${i}`;
+  }
+
+  return candidate;
+}
+
+// Copies a library invoice as a new one. A copy of an invoice with an
+// automatic name keeps an automatic name; a named one becomes "Name copy".
+async function copyInvoice(
+  document: InvoiceDocument
+): Promise<InvoiceDocument> {
+  const now = new Date();
+  const name =
+    document.nameSource === "user"
+      ? nextCopyName(
+          document.name,
+          (await getAllInvoices()).map(invoice => invoice.name)
+        )
+      : deriveInvoiceName(document.invoiceData);
+  const copy: InvoiceDocument = {
+    id: crypto.randomUUID(),
+    name,
+    nameSource: document.nameSource,
+    invoiceData: ensureItemIds(structuredClone(document.invoiceData)),
+    templateId: document.templateId,
+    rev: 1,
     createdAt: now,
     updatedAt: now
   };
 
-  const savedId = await saveInvoice(document);
-  useDocumentStore.getState().setDocument({
-    documentId: savedId,
-    documentName: trimmedName,
-    lastSavedInvoice: structuredClone(invoice)
-  });
-  void cleanupOrphanedImages([invoice.image]);
+  await createInvoice(copy);
 
-  return savedId;
+  return copy;
 }
 
-// Saves the live invoice over an existing document. Defaults to the current
-// document; an explicit documentId/name overwrites and switches to that one.
-async function update(options?: {
-  documentId?: string;
-  name?: string;
-}): Promise<void> {
-  const startedFor = useDocumentStore.getState().documentId;
-  const targetId = options?.documentId ?? startedFor;
-
-  if (!targetId) {
-    throw new DocumentNotFoundError();
-  }
-
-  // Snapshot the content before awaiting, so an invoice opened while the
-  // record is being read can't be written into this one.
-  const invoice = structuredClone(
-    selectInvoiceData(useInvoiceStore.getState())
-  );
-  const existingDocument = await getInvoice(targetId);
-
-  if (!existingDocument) {
-    throw new DocumentNotFoundError();
-  }
-
-  const trimmedName = options?.name?.trim();
-  const updatedDocument: InvoiceDocument = {
-    ...existingDocument,
-    // Persist a new name onto the record when overwriting under one, otherwise
-    // keep the existing name. Without this a Save As over an existing document
-    // with a renamed field updated only the header, never the stored record.
-    name: trimmedName ?? existingDocument.name,
-    invoiceData: invoice,
-    updatedAt: new Date()
-  };
-
-  await saveInvoice(updatedDocument);
-
-  // Another invoice was opened while this one saved: it stays the current one.
-  if (useDocumentStore.getState().documentId !== startedFor) return;
-
-  useDocumentStore.getState().setDocument({
-    documentId: targetId,
-    documentName: updatedDocument.name,
-    lastSavedInvoice: structuredClone(invoice)
-  });
-  void cleanupOrphanedImages([invoice.image]);
+function duplicateInvoice(document: InvoiceDocument): Promise<InvoiceDocument> {
+  return enqueue(() => copyInvoice(document));
 }
 
-// Replaces the store with a fresh blank invoice and clears the current
-// document, dropping any now-orphaned image blob. New invoices start fully
-// blank, including a static default number the user edits per invoice. The
-// blank invoice becomes the baseline, so it doesn't immediately read dirty.
-function reset(): void {
-  useInvoiceStore.getState().resetInvoice();
-  const normalized = selectInvoiceData(useInvoiceStore.getState());
-  useDocumentStore.getState().setDocument({
-    documentId: null,
-    documentName: null,
-    lastSavedInvoice: structuredClone(normalized)
-  });
-  void cleanupOrphanedImages([normalized.image]);
-  // Discard the working draft so "New invoice" truly starts fresh, even if the
-  // page is reloaded before the next autosave fires.
-  void clearDraft();
-}
+// Duplicates the open invoice and opens the copy (Apple's autosaving apps do
+// the same; it takes Save As's place and its ⇧⌘S).
+function duplicateCurrent(): Promise<InvoiceDocument | null> {
+  return enqueue(async () => {
+    const session = current;
 
-// Sets the font on a fresh, untouched blank invoice, e.g. one picked in the
-// homepage preview. A restored draft, an open document, or an edited blank is
-// left alone so the hand-off can never change someone's work. The result
-// becomes the blank's baseline, so it doesn't read as unsaved.
-function applyStartingFont(font: InvoiceFont): void {
-  const { documentId, lastSavedInvoice } = useDocumentStore.getState();
-  const current = selectInvoiceData(useInvoiceStore.getState());
+    if (!session || session.status !== "editing") return null;
+    if (!(await session.controller.flush())) {
+      toast.error(
+        "This invoice couldn't be saved, so it can't be duplicated yet"
+      );
 
-  if (documentId !== null || !lastSavedInvoice) return;
-  if (!isEqual(current, lastSavedInvoice)) return;
-  if (current.theme.font === font) return;
-
-  useInvoiceStore.getState().setTheme(theme => ({ ...theme, font }));
-  useDocumentStore
-    .getState()
-    .setLastSavedInvoice(
-      structuredClone(selectInvoiceData(useInvoiceStore.getState()))
-    );
-}
-
-// Writes the live editing session (content + identity) into the working draft.
-// Reads both stores at call time, so it always pairs the current content with
-// the current identity, never a stale closure of either.
-function writeDraft(): void {
-  const invoiceData = selectInvoiceData(useInvoiceStore.getState());
-  const { documentId, documentName, lastSavedInvoice } =
-    useDocumentStore.getState();
-
-  // Never autosave a pristine, unattached blank. This is the only state that
-  // equals the default, and only occurs before hydration or right after a read
-  // failure; skipping it means a transient draft-read error can never overwrite
-  // an intact on-disk draft with an empty one.
-  if (documentId === null && isEqual(invoiceData, invoiceDefault)) {
-    return;
-  }
-
-  void saveDraft({
-    invoiceData: structuredClone(invoiceData),
-    documentId,
-    documentName,
-    lastSavedInvoice: lastSavedInvoice
-      ? structuredClone(lastSavedInvoice)
-      : null,
-    updatedAt: new Date()
-  });
-}
-
-// Module-level draft-persistence controller. Owning the debounce timer and the
-// store subscriptions at module scope (rather than in a component effect) means
-// client-side navigation away from the editor never discards a pending write:
-// the timer and the stores outlive any single mounted provider, so the debounced
-// write still lands. pagehide / visibilitychange remain as belt-and-braces for
-// tab close and backgrounding.
-let persistenceStarted = false;
-let hydrated = false;
-let draftTimeout: ReturnType<typeof setTimeout> | null = null;
-
-function scheduleSave(): void {
-  if (!hydrated) return;
-
-  if (draftTimeout) clearTimeout(draftTimeout);
-
-  draftTimeout = setTimeout(writeDraft, DRAFT_SAVE_DEBOUNCE_MS);
-}
-
-function flushSave(): void {
-  if (!draftTimeout) return;
-
-  clearTimeout(draftTimeout);
-  draftTimeout = null;
-  writeDraft();
-}
-
-function handleVisibilityChange(): void {
-  if (document.visibilityState === "hidden") {
-    flushSave();
-  }
-}
-
-export function startDraftPersistence(): void {
-  if (persistenceStarted) return;
-
-  persistenceStarted = true;
-  useInvoiceStore.subscribe(scheduleSave);
-  useDocumentStore.subscribe(scheduleSave);
-  window.addEventListener("pagehide", flushSave);
-  document.addEventListener("visibilitychange", handleVisibilityChange);
-}
-
-// One-time restore of the autosaved working draft, so an accidental reload never
-// loses unsaved work. Memoised on a module promise: idempotent across provider
-// remounts (navigating back to the editor never re-runs it) and safe under React
-// StrictMode's double-invoked effects. The editor is gated on this promise (the
-// provider renders a fallback until it resolves), so no editable input exists
-// while hydration runs; there is no in-flight edit for the async draft read to
-// race, which is why a single pristine check up front is sufficient. Enables
-// autosave (via `hydrated`) once settled.
-let hydrationPromise: Promise<void> | null = null;
-
-async function runHydration(): Promise<void> {
-  const pristine =
-    useDocumentStore.getState().documentId === null &&
-    isEqual(selectInvoiceData(useInvoiceStore.getState()), invoiceDefault);
-
-  if (!pristine) {
-    hydrated = true;
-
-    return;
-  }
-
-  let draft;
-
-  try {
-    draft = await getDraft();
-  } catch (error) {
-    // A transient read failure must not be mistaken for "no draft": resetting
-    // here would delete an intact draft and blank the editor. Leave the store
-    // untouched (still pristine, so autosave won't overwrite the draft either)
-    // and let the user reload to try again.
-    console.error("[InvoiceDocument] Failed to read working draft", error);
-    hydrated = true;
-
-    return;
-  }
-
-  if (draft) {
-    const invoice = ensureItemIds(structuredClone(draft.invoiceData));
-    const untouchedBlank =
-      draft.documentId === null &&
-      draft.lastSavedInvoice !== null &&
-      isEqual(draft.invoiceData, draft.lastSavedInvoice);
-
-    // A blank nobody has typed into is dated today, as a new one would be,
-    // rather than the day the editor was last open.
-    if (untouchedBlank) {
-      const { invoiceDate, dueDate } = createBlankInvoice();
-      invoice.invoiceDate = invoiceDate;
-      invoice.dueDate = dueDate;
+      return null;
     }
 
-    useInvoiceStore.getState().setInvoice(invoice);
-    const normalized = selectInvoiceData(useInvoiceStore.getState());
-    useDocumentStore.getState().setDocument({
-      documentId: draft.documentId,
-      documentName: draft.documentName,
-      // A null baseline is deliberate (an applied template or a detached
-      // document): it keeps the content dirty. Restore it as-is rather than
-      // promoting the unsaved content to its own baseline.
-      lastSavedInvoice: untouchedBlank
-        ? structuredClone(normalized)
-        : draft.lastSavedInvoice
-          ? structuredClone(draft.lastSavedInvoice)
-          : null
+    if (!session.isRecord) return null;
+
+    const document = await getInvoice(session.id);
+
+    if (!document) return null;
+
+    const copy = await copyInvoice(document);
+
+    if (!(await leaveCurrent())) return copy;
+
+    await switchTo(sessionFromDocument(copy), copy.invoiceData);
+
+    return copy;
+  });
+}
+
+// Names the open invoice. One that isn't in the library yet joins it under
+// that name.
+function renameCurrent(name: string): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+    const trimmed = name.trim();
+
+    if (!session || !trimmed) return;
+
+    if (session.status === "editing") await session.controller.flush();
+
+    if (session.isRecord) {
+      await renameInvoice(session.id, trimmed);
+    } else if (session.status === "editing") {
+      const now = new Date();
+
+      session.writingRev = 1;
+
+      try {
+        await createInvoice({
+          id: session.id,
+          name: trimmed,
+          nameSource: "user",
+          invoiceData: liveContent(),
+          templateId: session.templateId,
+          rev: 1,
+          createdAt: now,
+          updatedAt: now
+        });
+      } finally {
+        session.writingRev = null;
+      }
+
+      session.isRecord = true;
+      session.rev = 1;
+      void setLastOpenedInvoiceId(session.id);
+      void requestPersistentStorage();
+    } else {
+      return;
+    }
+
+    session.name = trimmed;
+    session.nameSource = "user";
+    publish(session);
+  });
+}
+
+// Deletes invoices from the library. Deleting the open one starts a new blank
+// invoice in its place.
+function deleteFromLibrary(ids: string[]): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+    const includesOpen = !!session && ids.includes(session.id);
+
+    if (session && includesOpen) {
+      if (session.status === "editing") await session.controller.flush();
+
+      session.deleting = true;
+    }
+
+    try {
+      await deleteInvoices(ids);
+    } catch (error) {
+      if (session) session.deleting = false;
+
+      throw error;
+    }
+
+    if (!session || !includesOpen) return;
+
+    clearStash(session.id);
+    dispose(session);
+
+    const blank = createBlankInvoice();
+
+    await switchTo(newSession(blank), blank);
+  });
+}
+
+// "Edit here": takes the invoice over from the tab editing it.
+function takeOver(): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+
+    if (!session || session.status !== "readOnly") return;
+
+    if (!locksSupported()) {
+      await startEditing(session);
+
+      return;
+    }
+
+    session.stopWaitingForLock?.();
+    session.stopWaitingForLock = null;
+
+    if (await requestLock(session, { steal: true })) {
+      await startEditing(session);
+    }
+  });
+}
+
+// Keeps what a deleted invoice showed as a new invoice.
+function keepDeletedCopy(): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+
+    if (!session || session.status !== "deleted") return;
+
+    const content = liveContent();
+    const name = session.nameSource === "user" ? session.name : "";
+
+    dispose(session);
+
+    const copy = newSession(content, { pristine: false });
+
+    if (name) {
+      copy.name = name;
+      copy.nameSource = "user";
+    }
+
+    await switchTo(copy, content);
+    copy.controller.schedule(liveContent());
+  });
+}
+
+// ⌘S: writes everything now. Resolves whether it all landed.
+async function flushNow(): Promise<boolean> {
+  const session = current;
+
+  if (!session || session.status !== "editing") return true;
+
+  return session.controller.flush();
+}
+
+function retrySave(): Promise<boolean> {
+  return current ? current.controller.retry() : Promise.resolve(true);
+}
+
+// Puts a version back. The invoice as it is now is kept as a version first,
+// and the restore is one undo step.
+function restoreVersion(version: InvoiceVersion): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+
+    if (
+      !session ||
+      session.status !== "editing" ||
+      session.id !== version.invoiceId
+    ) {
+      return;
+    }
+
+    await keepVersion(session, liveContent(), "beforeRestore");
+    recordHistoryAction("Restore version", "page", () => {
+      useInvoiceStore
+        .getState()
+        .setInvoice(ensureItemIds(structuredClone(version.invoiceData)));
     });
-    void cleanupOrphanedImages([normalized.image]);
+  });
+}
+
+// Saves a file with everything in this browser plus the open invoice as it
+// is in memory, which may be ahead of storage. Works even when storage
+// doesn't, with just the open invoice then.
+async function downloadBackup(): Promise<void> {
+  const session = current;
+  const open = session
+    ? {
+        id: session.id,
+        name: displayName(session),
+        nameSource: session.nameSource,
+        templateId: session.templateId,
+        invoiceData: liveContent()
+      }
+    : null;
+
+  await downloadBackupFile(open);
+}
+
+// Sets the font on a new invoice nobody has edited yet, such as one started
+// from the homepage's font picker. It isn't an edit: the invoice still starts
+// from that font.
+function applyStartingFont(font: InvoiceFont): void {
+  const session = current;
+
+  if (!session || session.isRecord || !session.pristine) return;
+  if (!isEqual(liveContent(), session.pristine)) return;
+  if (session.pristine.theme.font === font) return;
+
+  runWithOrigin("load", () => {
+    useInvoiceStore.getState().setTheme(theme => ({ ...theme, font }));
+  });
+  session.pristine = liveContent();
+  session.shownContent = session.pristine;
+}
+
+function scheduleIdleVersion(session: Session) {
+  if (session.idleVersionTimer) clearTimeout(session.idleVersionTimer);
+
+  session.idleVersionTimer = setTimeout(() => {
+    session.idleVersionTimer = null;
+
+    if (session !== current || session.status !== "editing") return;
+    if (Date.now() - session.lastVersionAt < VERSION_MIN_INTERVAL_MS) return;
+
+    keepVersionQuietly(session, liveContent(), "idle");
+  }, VERSION_IDLE_MS);
+}
+
+function onInvoiceChange(state: InvoiceStore, previous: InvoiceStore) {
+  const session = current;
+
+  if (!session || session.disposed) return;
+  if (getChangeOrigin() === "load") return;
+  if (INVOICE_DATA_KEYS.every(key => state[key] === previous[key])) return;
+
+  // Nothing changes an invoice this tab can't edit: put back what it shows.
+  if (session.status !== "editing" && session.status !== "unavailable") {
+    const shown = session.shownContent;
+
+    queueMicrotask(() =>
+      runWithOrigin("load", () => useInvoiceStore.getState().setInvoice(shown))
+    );
+
+    return;
+  }
+
+  if (session.status === "unavailable") return;
+
+  const content = selectInvoiceData(state);
+
+  if (
+    session.isRecord &&
+    isLargeRemoval(selectInvoiceData(previous), content)
+  ) {
+    keepVersionQuietly(session, selectInvoiceData(previous), "beforeRemoval");
+  }
+
+  session.controller.schedule(content);
+  scheduleIdleVersion(session);
+}
+
+function onPageHidden() {
+  const session = current;
+
+  if (!session) return;
+
+  stashUnsaved(session);
+  void session.controller.flush();
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState === "hidden") onPageHidden();
+}
+
+// The browser asks before closing the page only while an edit is unwritten
+// or failed. Writes started as a page goes away aren't guaranteed to land,
+// which is why saves happen within half a second of an edit anyway.
+function onBeforeUnload(event: BeforeUnloadEvent) {
+  const session = current;
+
+  if (!session) return;
+  if (!session.controller.isPending() && !session.controller.hasFailed()) {
+    return;
+  }
+
+  stashUnsaved(session);
+  void session.controller.flush();
+  event.preventDefault();
+  // Older browsers need returnValue set to ask.
+  event.returnValue = "";
+}
+
+function onUpgradeElsewhere() {
+  const session = current;
+
+  storageUnavailable = true;
+
+  if (!session) return;
+
+  stashUnsaved(session);
+  session.controller.stop();
+  session.status = "reloadRequired";
+  publish(session);
+}
+
+let listenersStarted = false;
+
+function startListeners() {
+  if (listenersStarted || typeof window === "undefined") return;
+
+  listenersStarted = true;
+  window.addEventListener("pagehide", onPageHidden);
+  window.addEventListener("beforeunload", onBeforeUnload);
+  document.addEventListener("visibilitychange", onVisibilityChange);
+}
+
+// Deletes invoices with an automatic name that were left blank, such as one
+// edited back to blank in a tab that then closed. Only ones no tab has open
+// (their lock is free), so nobody's open invoice disappears.
+async function sweepBlankInvoices(openId: string) {
+  if (!locksSupported()) return;
+
+  const invoices = await getAllInvoices();
+  const blanks = invoices.filter(
+    invoice =>
+      invoice.id !== openId &&
+      invoice.nameSource === "auto" &&
+      isBlankInvoice(invoice.invoiceData)
+  );
+
+  for (const blank of blanks) {
+    await navigator.locks.request(
+      `${LOCK_PREFIX}${blank.id}`,
+      { ifAvailable: true },
+      async lock => {
+        if (lock) await deleteInvoices([blank.id]);
+      }
+    );
+  }
+}
+
+// Brings back edits the page didn't get to write before it went away.
+async function recoverStash(session: Session, stash: UnsavedStash) {
+  const stored = session.isRecord ? await getInvoice(session.id) : undefined;
+
+  if (stored && isEqual(stored.invoiceData, stash.invoiceData)) return;
+
+  if (session.status !== "editing" || (stored && stored.rev !== stash.rev)) {
+    if (session.isRecord)
+      keepVersionQuietly(session, stash.invoiceData, "conflict");
+
+    return;
+  }
+
+  runWithOrigin("load", () => {
+    useInvoiceStore
+      .getState()
+      .setInvoice(ensureItemIds(structuredClone(stash.invoiceData)));
+  });
+  session.controller.schedule(liveContent());
+}
+
+async function runHydration(): Promise<void> {
+  startListeners();
+
+  try {
+    await openDatabase();
+  } catch (error) {
+    console.error("[DocumentSession] Storage is unavailable", error);
+    storageUnavailable = true;
+  }
+
+  const pointer = readSessionStorage(OPEN_INVOICE_KEY);
+  let openId = pointer;
+  let document: InvoiceDocument | undefined;
+
+  if (!storageUnavailable) {
+    try {
+      openId ??= await getLastOpenedInvoiceId();
+      document = openId ? await getInvoice(openId) : undefined;
+    } catch (error) {
+      console.error("[DocumentSession] Failed to open the last invoice", error);
+    }
+  }
+
+  const stash = pointer ? takeStash(pointer) : null;
+  let session: Session;
+  let content: Invoice;
+
+  if (document) {
+    session = sessionFromDocument(document);
+    content = document.invoiceData;
+  } else if (stash) {
+    // A new invoice whose first edit didn't get written, or one deleted
+    // elsewhere while this tab still had edits on the way: either way, a new
+    // invoice with those edits.
+    session = newSession(stash.invoiceData, {
+      templateId: stash.templateId,
+      pristine: false
+    });
+    session.name = stash.name;
+    session.nameSource = stash.nameSource;
+    content = stash.invoiceData;
   } else {
-    reset();
+    content = createBlankInvoice();
+    session = newSession(content);
+  }
+
+  show(session, content);
+  useInvoiceStore.subscribe(onInvoiceChange);
+  startInvoiceHistory();
+  registerImageKeeper(() => [liveContent().image, ...getHistoryImageIds()]);
+
+  if (!storageUnavailable) {
+    onDatabaseUpgradeElsewhere(onUpgradeElsewhere);
   }
 
   hydrated = true;
+
+  if (stash) pendingRecovery = { session, stash: document ? stash : null };
+
+  if (!storageUnavailable) {
+    sweepBlankInvoices(session.id).catch((error: unknown) =>
+      console.error("[DocumentSession] Failed to sweep blank invoices", error)
+    );
+  }
 }
 
+// Edits recovered at hydration are applied once the editor attaches and this
+// tab knows whether it edits the invoice.
+let pendingRecovery: { session: Session; stash: UnsavedStash | null } | null =
+  null;
+
 export function hydrateDocument(): Promise<void> {
-  if (!hydrationPromise) {
-    hydrationPromise = runHydration();
-  }
+  hydrationPromise ??= runHydration();
 
   return hydrationPromise;
 }
 
-// Whether hydration has already completed. Lets the provider seed its gate state
-// synchronously on remount (after a client-side navigation back to the editor),
-// so a return visit shows the editor immediately instead of flashing the
-// fallback while the resolved hydration promise settles a microtask later.
+// Whether hydration has already completed. Lets the provider seed its gate
+// state synchronously on remount, so a return visit shows the editor at once.
 export function isDocumentHydrated(): boolean {
   return hydrated;
 }
 
+// The editor mounted: edit the open invoice here (or follow it read-only).
+export function attachEditor(): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+
+    if (!session || session.disposed) return;
+
+    await attach(session);
+
+    // Coming back to the editor: pick up what other tabs wrote meanwhile.
+    if (
+      session.isRecord &&
+      session.status === "editing" &&
+      !session.controller.isPending()
+    ) {
+      const document = await getInvoice(session.id).catch(() => undefined);
+
+      if (document && document.rev > session.rev) adopt(session, document);
+    }
+
+    const recovery = pendingRecovery;
+
+    pendingRecovery = null;
+
+    if (recovery?.session === session) {
+      if (recovery.stash) {
+        await recoverStash(session, recovery.stash);
+      } else if (session.status === "editing") {
+        session.controller.schedule(liveContent());
+      }
+    }
+  });
+}
+
+// The editor unmounted (leaving for another page): write what's pending,
+// drop an untouched invoice, and let other tabs edit this one.
+export function detachEditor(): Promise<void> {
+  return enqueue(async () => {
+    const session = current;
+
+    if (!session || session.disposed || !session.attached) return;
+
+    if (session.status === "editing") {
+      await session.controller.flush();
+
+      if (
+        session.isRecord &&
+        session.nameSource === "auto" &&
+        !hasEdits(session, liveContent())
+      ) {
+        session.deleting = true;
+
+        try {
+          await deleteInvoices([session.id]);
+          session.isRecord = false;
+          session.rev = 0;
+        } catch (error) {
+          console.error(
+            "[DocumentSession] Failed to delete a blank invoice",
+            error
+          );
+        } finally {
+          session.deleting = false;
+        }
+      }
+    }
+
+    detach(session);
+  });
+}
+
 export const documentActions = {
-  setCurrentDocumentId: useDocumentStore.getState().setDocumentId,
-  setCurrentDocumentName: useDocumentStore.getState().setDocumentName,
-  setLastSavedInvoice: useDocumentStore.getState().setLastSavedInvoice,
-  load,
-  saveAs,
-  update,
-  reset,
+  openInvoice,
+  newInvoice,
+  applyTemplate,
+  duplicateInvoice,
+  duplicateCurrent,
+  renameCurrent,
+  deleteFromLibrary,
+  takeOver,
+  keepDeletedCopy,
+  flushNow,
+  retrySave,
+  restoreVersion,
+  downloadBackup,
   applyStartingFont
 } as const;
