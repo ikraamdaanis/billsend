@@ -1,24 +1,49 @@
 import {
   IconArrowDown,
   IconArrowUp,
+  IconCopy,
   IconFileText,
+  IconFolderOpen,
   IconPencil,
   IconTrash
 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { RowActionsCell } from "~/components/tables/row-actions-cell";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger
 } from "~/components/ui/context-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from "~/components/ui/dropdown-menu";
+import { formatCurrency } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
-import type { InvoiceDocument } from "~/types";
+import type {
+  InvoiceDocument,
+  InvoiceLibrarySort,
+  SortDirection
+} from "~/types";
 import { formatListDate } from "~/utils/format-list-date";
+import {
+  getClientName,
+  getInvoiceTotal,
+  LIBRARY_SORTS,
+  sortInvoices
+} from "~/utils/invoice-library";
 
-type SortKey = "name" | "updatedAt";
-type SortDirection = "asc" | "desc";
+// The columns that sort, mapped to the library's sort orders.
+const COLUMN_SORTS = {
+  name: "name",
+  client: "client",
+  amount: "amount",
+  updatedAt: "updated"
+} as const satisfies Record<string, InvoiceLibrarySort>;
+
+type SortKey = keyof typeof COLUMN_SORTS;
 
 const STRIPE_ROW_HEIGHT = 40;
 const STRIPE_COLOR = "color-mix(in oklab, var(--muted) 50%, transparent)";
@@ -45,6 +70,7 @@ export function InvoiceListTable({
   onSelectionChange,
   onOpenInvoice,
   onRenameInvoice,
+  onDuplicateInvoice,
   onDeleteInvoices
 }: {
   invoices: InvoiceDocument[];
@@ -54,6 +80,7 @@ export function InvoiceListTable({
   onSelectionChange: (ids: string[]) => void;
   onOpenInvoice: (invoice: InvoiceDocument) => void;
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
+  onDuplicateInvoice: (invoice: InvoiceDocument) => void;
   onDeleteInvoices: (invoices: InvoiceDocument[]) => void;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
@@ -85,8 +112,13 @@ export function InvoiceListTable({
       return;
     }
 
+    // A newly picked column starts the natural way round: names A to Z, the
+    // biggest amounts and the latest edits first.
     setSortKey(key);
-    setSortDirection("asc");
+    setSortDirection(
+      LIBRARY_SORTS.find(sort => sort.value === COLUMN_SORTS[key])
+        ?.defaultDirection ?? "asc"
+    );
   }
 
   function startRename(invoice: InvoiceDocument) {
@@ -129,18 +161,11 @@ export function InvoiceListTable({
     }
   }
 
-  const sortedInvoices = [...invoices].sort((a, b) => {
-    const direction = sortDirection === "asc" ? 1 : -1;
-
-    if (sortKey === "name") {
-      return a.name.localeCompare(b.name) * direction;
-    }
-
-    return (
-      (new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()) *
-      direction
-    );
-  });
+  const sortedInvoices = sortInvoices(
+    invoices,
+    COLUMN_SORTS[sortKey],
+    sortDirection
+  );
 
   const selectedSet = new Set(selectedIds);
   const deletingSet = new Set(deletingIds);
@@ -212,6 +237,9 @@ export function InvoiceListTable({
 
   function handleListKeyDown(event: KeyboardEvent<HTMLTableSectionElement>) {
     if (editingId) return;
+    // The row's ⋯ menu handles its own keys.
+    if ((event.target as HTMLElement).closest("[data-slot='row-actions']"))
+      return;
 
     const rowElement = (event.target as HTMLElement).closest<HTMLElement>(
       "tr[data-index]"
@@ -308,7 +336,10 @@ export function InvoiceListTable({
     >
       <colgroup>
         <col />
+        <col className="w-40 max-sm:hidden" />
+        <col className="w-28 max-sm:hidden" />
         <col className="w-43" />
+        <col className="w-11" />
       </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-sm">
@@ -320,6 +351,23 @@ export function InvoiceListTable({
               onClick={() => toggleSort("name")}
             />
           </th>
+          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)] max-sm:hidden">
+            <SortHeader
+              label="Client"
+              active={sortKey === "client"}
+              direction={sortDirection}
+              onClick={() => toggleSort("client")}
+            />
+          </th>
+          <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)] max-sm:hidden">
+            <SortHeader
+              label="Amount"
+              align="end"
+              active={sortKey === "amount"}
+              direction={sortDirection}
+              onClick={() => toggleSort("amount")}
+            />
+          </th>
           <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
             <SortHeader
               label="Date modified"
@@ -327,6 +375,9 @@ export function InvoiceListTable({
               direction={sortDirection}
               onClick={() => toggleSort("updatedAt")}
             />
+          </th>
+          <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)]">
+            <span className="sr-only">Actions</span>
           </th>
         </tr>
       </thead>
@@ -341,6 +392,11 @@ export function InvoiceListTable({
           const showBulkDelete = isSelected && selectedIds.length > 1;
           const isTabbable =
             activeId === invoice.id || (activeId === null && index === 0);
+          const secondaryTextClass = isDeleting
+            ? "text-destructive/70"
+            : isSelected
+              ? "text-primary-foreground/80"
+              : "text-muted-foreground";
 
           return (
             <ContextMenu
@@ -440,16 +496,72 @@ export function InvoiceListTable({
                 <td
                   role="gridcell"
                   className={cn(
+                    "truncate py-2.5 pr-4 max-sm:hidden",
+                    secondaryTextClass
+                  )}
+                >
+                  {getClientName(invoice)}
+                </td>
+                <td
+                  role="gridcell"
+                  className={cn(
+                    "py-2.5 pr-4 text-right whitespace-nowrap tabular-nums max-sm:hidden",
+                    secondaryTextClass
+                  )}
+                >
+                  {formatCurrency(
+                    getInvoiceTotal(invoice),
+                    invoice.invoiceData.currency
+                  )}
+                </td>
+                <td
+                  role="gridcell"
+                  className={cn(
                     "py-2.5 pr-4 whitespace-nowrap tabular-nums",
-                    isDeleting
-                      ? "text-destructive/70"
-                      : isSelected
-                        ? "text-primary-foreground/80"
-                        : "text-muted-foreground"
+                    secondaryTextClass
                   )}
                 >
                   {formatListDate(invoice.updatedAt)}
                 </td>
+                <RowActionsCell
+                  label={`Actions for ${invoice.name}`}
+                  selected={isSelected && !isDeleting}
+                >
+                  {showBulkDelete ? (
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => onDeleteInvoices(selectedInvoices)}
+                    >
+                      <IconTrash aria-hidden="true" />
+                      Delete {selectedIds.length} invoices
+                    </DropdownMenuItem>
+                  ) : (
+                    <>
+                      <DropdownMenuItem onClick={() => onOpenInvoice(invoice)}>
+                        <IconFolderOpen aria-hidden="true" />
+                        Open
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => startRename(invoice)}>
+                        <IconPencil aria-hidden="true" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onDuplicateInvoice(invoice)}
+                      >
+                        <IconCopy aria-hidden="true" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => onDeleteInvoices([invoice])}
+                      >
+                        <IconTrash aria-hidden="true" />
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </RowActionsCell>
               </ContextMenuTrigger>
               <ContextMenuContent>
                 {showBulkDelete ? (
@@ -462,9 +574,19 @@ export function InvoiceListTable({
                   </ContextMenuItem>
                 ) : (
                   <>
+                    <ContextMenuItem onClick={() => onOpenInvoice(invoice)}>
+                      <IconFolderOpen className="size-3 shrink-0" />
+                      Open
+                    </ContextMenuItem>
                     <ContextMenuItem onClick={() => startRename(invoice)}>
                       <IconPencil className="size-3 shrink-0" />
                       Rename
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => onDuplicateInvoice(invoice)}
+                    >
+                      <IconCopy className="size-3 shrink-0" />
+                      Duplicate
                     </ContextMenuItem>
                     <ContextMenuItem
                       variant="destructive"
@@ -488,19 +610,24 @@ function SortHeader({
   label,
   active,
   direction,
-  onClick
+  onClick,
+  align = "start"
 }: {
   label: string;
   active: boolean;
   direction: SortDirection;
   onClick: () => void;
+  align?: "start" | "end";
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       data-active={active}
-      className="hover:text-foreground data-[active=true]:text-foreground flex w-full items-center gap-1 font-medium"
+      className={cn(
+        "hover:text-foreground data-[active=true]:text-foreground flex w-full items-center gap-1 font-medium",
+        align === "end" && "justify-end"
+      )}
     >
       {label}
       {active &&

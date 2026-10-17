@@ -10,9 +10,11 @@ import {
   useTransition
 } from "react";
 import { toast } from "sonner";
+import { ConfirmDeleteDialog } from "~/components/dialogs/confirm-delete-dialog";
 import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
 import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
 import { OpenTemplateDialog } from "~/components/dialogs/open-template-dialog";
+import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
 import { SaveInvoiceDialog } from "~/components/dialogs/save-invoice-dialog";
 import { SaveTemplateModal } from "~/components/dialogs/save-template-modal";
 import type { UnsavedChangesAction } from "~/components/dialogs/unsaved-changes-dialog";
@@ -23,7 +25,14 @@ import {
   useHasUnsavedChanges,
   useInvoiceDocument
 } from "~/context/invoice-document-context";
-import { getAllInvoices, getAllTemplates } from "~/db";
+import {
+  deleteInvoice,
+  deleteTemplate,
+  getAllInvoices,
+  getAllTemplates,
+  saveInvoice,
+  saveTemplate
+} from "~/db";
 import { useInvoiceDataAndActions } from "~/stores/invoice-selectors";
 import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { ensureItemIds } from "~/utils/ensure-item-ids";
@@ -45,7 +54,35 @@ const FileActionsContext = createContext<{
   saveAsTemplate: () => void;
   exportData: () => void;
   importData: () => void;
+  renameInvoice: (document: InvoiceDocument) => void;
+  duplicateInvoice: (document: InvoiceDocument) => void;
+  deleteInvoice: (document: InvoiceDocument) => void;
+  renameTemplate: (template: InvoiceTemplate) => void;
+  deleteTemplate: (template: InvoiceTemplate) => void;
 } | null>(null);
+
+// A saved invoice or template that a row's menu is acting on.
+type LibraryTarget =
+  | { kind: "invoice"; document: InvoiceDocument }
+  | { kind: "template"; template: InvoiceTemplate };
+
+function targetName(target: LibraryTarget) {
+  return target.kind === "invoice"
+    ? target.document.name
+    : target.template.name;
+}
+
+// "Name copy", or "Name copy 2" and so on when that's taken.
+function nextCopyName(name: string, takenNames: string[]) {
+  const taken = new Set(takenNames.map(takenName => takenName.toLowerCase()));
+  let candidate = `${name} copy`;
+
+  for (let i = 2; taken.has(candidate.toLowerCase()); i++) {
+    candidate = `${name} copy ${i}`;
+  }
+
+  return candidate;
+}
 
 export function FileActionsProvider({ children }: { children: ReactNode }) {
   const { invoice, setInvoice } = useInvoiceDataAndActions();
@@ -80,6 +117,8 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
   );
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [pending, startTransition] = useTransition();
+  const [renameTarget, setRenameTarget] = useState<LibraryTarget | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<LibraryTarget | null>(null);
 
   function runWithUnsavedGuard(action: () => void) {
     if (hasUnsavedChanges) {
@@ -90,10 +129,26 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Opening reads the saved invoices first, so the suggested name and the
+  // overwrite check reflect every save so far, including one that has only
+  // just landed.
   function setSaveAsDialogOpen(open: boolean) {
-    if (!open) setPendingAction(null);
+    if (!open) {
+      setPendingAction(null);
+      setSaveAsDialogOpenState(false);
 
-    setSaveAsDialogOpenState(open);
+      return;
+    }
+
+    getAllInvoices()
+      .then(invoices => {
+        setExistingInvoices(invoices);
+        setDefaultName(generateDefaultInvoiceName(invoices));
+      })
+      .catch(() => {
+        // The fallback name is used.
+      })
+      .finally(() => setSaveAsDialogOpenState(true));
   }
 
   function handleNewInvoice() {
@@ -294,22 +349,6 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const invoices = await getAllInvoices();
-
-        setExistingInvoices(invoices);
-        setDefaultName(generateDefaultInvoiceName(invoices));
-      } catch {
-        // Silently fail - default name will be used
-      }
-    }
-    loadData();
-    // Also after a save lands (the document id changes), so the next Save As
-    // suggests the next free name rather than the one just taken.
-  }, [saveAsDialogOpen, currentDocumentId]);
-
-  useEffect(() => {
     async function loadTemplates() {
       try {
         setTemplates(await getAllTemplates());
@@ -362,6 +401,74 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleOpenInvoice, handleSave, handleSaveAs]);
 
+  async function handleLibraryRename(newName: string) {
+    if (!renameTarget) return;
+
+    if (renameTarget.kind === "invoice") {
+      const { document } = renameTarget;
+
+      await saveInvoice({ ...document, name: newName, updatedAt: new Date() });
+
+      if (document.id === currentDocumentId) setCurrentDocumentName(newName);
+      toast.success("Invoice renamed");
+    } else {
+      await saveTemplate({
+        ...renameTarget.template,
+        name: newName,
+        updatedAt: new Date()
+      });
+      toast.success("Template renamed");
+    }
+  }
+
+  async function handleLibraryDelete() {
+    if (!deleteTarget) return;
+
+    try {
+      if (deleteTarget.kind === "invoice") {
+        await deleteInvoice(deleteTarget.document.id);
+
+        if (deleteTarget.document.id === currentDocumentId) {
+          detachCurrentDocument();
+        }
+
+        toast.success("Invoice deleted");
+      } else {
+        await deleteTemplate(deleteTarget.template.id);
+        toast.success("Template deleted");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete");
+    }
+  }
+
+  function handleDuplicateInvoice(document: InvoiceDocument) {
+    startTransition(async () => {
+      try {
+        const saved = await getAllInvoices();
+        const now = new Date();
+        const name = nextCopyName(
+          document.name,
+          saved.map(savedInvoice => savedInvoice.name)
+        );
+
+        await saveInvoice({
+          ...document,
+          id: crypto.randomUUID(),
+          name,
+          invoiceData: structuredClone(document.invoiceData),
+          createdAt: now,
+          updatedAt: now
+        });
+        toast.success(`Duplicated as “${name}”`);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to duplicate invoice"
+        );
+      }
+    });
+  }
+
   const value = {
     pending,
     newInvoice: handleNewInvoice,
@@ -377,7 +484,16 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
       runWithUnsavedGuard(() => handleSelectTemplate(template)),
     saveAsTemplate: () => setSaveTemplateDialogOpen(true),
     exportData: handleExport,
-    importData: () => setImportDialogOpen(true)
+    importData: () => setImportDialogOpen(true),
+    renameInvoice: (document: InvoiceDocument) =>
+      setRenameTarget({ kind: "invoice", document }),
+    duplicateInvoice: handleDuplicateInvoice,
+    deleteInvoice: (document: InvoiceDocument) =>
+      setDeleteTarget({ kind: "invoice", document }),
+    renameTemplate: (template: InvoiceTemplate) =>
+      setRenameTarget({ kind: "template", template }),
+    deleteTemplate: (template: InvoiceTemplate) =>
+      setDeleteTarget({ kind: "template", template })
   };
 
   return (
@@ -390,6 +506,7 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
         currentInvoiceId={currentDocumentId}
         onCurrentInvoiceDeleted={detachCurrentDocument}
         onCurrentInvoiceRenamed={setCurrentDocumentName}
+        onDuplicateInvoice={handleDuplicateInvoice}
       />
       <SaveInvoiceDialog
         open={saveAsDialogOpen}
@@ -413,6 +530,24 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
         onOpenChange={setSaveTemplateDialogOpen}
         currentInvoiceData={invoice}
         templates={templates}
+      />
+      <RenameInvoiceDialog
+        open={renameTarget !== null}
+        onOpenChange={open => {
+          if (!open) setRenameTarget(null);
+        }}
+        currentName={renameTarget ? targetName(renameTarget) : ""}
+        subject={renameTarget?.kind === "template" ? "Template" : "Invoice"}
+        onRename={handleLibraryRename}
+      />
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={open => {
+          if (!open) setDeleteTarget(null);
+        }}
+        subject={deleteTarget?.kind ?? "invoice"}
+        name={deleteTarget ? targetName(deleteTarget) : ""}
+        onConfirm={handleLibraryDelete}
       />
       <ImportDataDialog
         open={importDialogOpen}
