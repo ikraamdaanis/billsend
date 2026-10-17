@@ -348,6 +348,39 @@ export async function deleteTemplate(id: string): Promise<void> {
   }
 }
 
+// Deletes several templates in one transaction, so a failure part way leaves
+// them all in place.
+export async function deleteTemplates(ids: string[]): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.templates.bulkDelete(ids);
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to delete templates from local storage."
+    );
+  }
+}
+
+// Changes only a template's name (and when it was edited), so content saved
+// from another tab since the list was read is kept.
+export async function renameTemplate(id: string, name: string): Promise<void> {
+  try {
+    await ensureDbReady();
+    const updated = await db.templates.update(id, {
+      name,
+      updatedAt: new Date()
+    });
+
+    if (updated === 0) throw new Error("That template no longer exists.");
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to rename template in local storage."
+    );
+  }
+}
+
 // Keeps a listener in step with a table: called with the current rows, then
 // again whenever they change, in this tab or another (Dexie's live queries).
 // The database is opened first, outside the live query, which may only await
@@ -462,6 +495,39 @@ export async function deleteInvoice(id: string): Promise<void> {
     throw createStorageError(
       error,
       "Failed to delete invoice from local storage."
+    );
+  }
+}
+
+// Deletes several invoices in one transaction, so a failure part way leaves
+// them all in place.
+export async function deleteInvoices(ids: string[]): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.invoices.bulkDelete(ids);
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to delete invoices from local storage."
+    );
+  }
+}
+
+// Changes only an invoice's name (and when it was edited), so content saved
+// from another tab since the list was read is kept.
+export async function renameInvoice(id: string, name: string): Promise<void> {
+  try {
+    await ensureDbReady();
+    const updated = await db.invoices.update(id, {
+      name,
+      updatedAt: new Date()
+    });
+
+    if (updated === 0) throw new Error("That invoice no longer exists.");
+  } catch (error) {
+    throw createStorageError(
+      error,
+      "Failed to rename invoice in local storage."
     );
   }
 }

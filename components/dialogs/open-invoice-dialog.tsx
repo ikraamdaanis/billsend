@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "~/components/ui/dialog";
-import { deleteInvoice, saveInvoice, watchInvoices } from "~/db";
+import { deleteInvoices, renameInvoice, watchInvoices } from "~/db";
 import { usePersistentState } from "~/hooks/use-persistent-state";
 import type { InvoiceDocument, InvoiceLibraryView } from "~/types";
 import {
@@ -234,7 +234,7 @@ export function OpenInvoiceDialog({
 
     startTransition(async () => {
       try {
-        await Promise.all(targets.map(invoice => deleteInvoice(invoice.id)));
+        await deleteInvoices([...targetIds]);
 
         if (currentInvoiceId !== null && targetIds.has(currentInvoiceId)) {
           onCurrentInvoiceDeleted();
@@ -260,7 +260,7 @@ export function OpenInvoiceDialog({
     newName: string
   ) {
     try {
-      await saveInvoice({ ...invoice, name: newName, updatedAt: new Date() });
+      await renameInvoice(invoice.id, newName);
 
       if (invoice.id === currentInvoiceId) {
         onCurrentInvoiceRenamed(newName);
