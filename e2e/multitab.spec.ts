@@ -46,7 +46,9 @@ test("Edit here takes the invoice over and the first tab follows", async ({
   await second.goto("/create");
   await second.getByRole("button", { name: "Edit here" }).click();
 
-  await expect(second.getByRole("status")).toHaveCount(0);
+  await expect(second.getByRole("button", { name: "Edit here" })).toHaveCount(
+    0
+  );
   await expect(
     page.getByText("This invoice is open in another tab.")
   ).toBeVisible();

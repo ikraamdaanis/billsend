@@ -42,7 +42,10 @@ test("nothing shows while saving works", async ({ page }) => {
 
   await expect(page.getByText(/saving|unsaved|saved/i)).toHaveCount(0);
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByRole("status")).toHaveCount(0);
+  // Safari's one-off backup suggestion is the only message allowed.
+  await expect(
+    page.getByRole("status").filter({ hasNotText: "Keep a backup" })
+  ).toHaveCount(0);
   await expect.poll(() => savedContains(page, "Quote")).toBe(true);
 });
 
@@ -410,4 +413,58 @@ test("a failed save is announced once, kept, backed up and retried", async ({
 
   await expect(page.getByRole("alert")).toHaveCount(0);
   await expect.poll(() => savedContains(page, "Written while full")).toBe(true);
+});
+
+test.describe("in Safari, when the browser won't keep storage", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "vendor", {
+        get: () => "Apple Computer, Inc."
+      });
+      Object.assign(navigator.storage, {
+        persisted: () => Promise.resolve(false),
+        persist: () => Promise.resolve(false)
+      });
+    });
+  });
+
+  test("a backup is suggested once, in the banner, until dismissed", async ({
+    page
+  }) => {
+    await gotoEditorReady(page, "Kept in Safari");
+
+    const reminder = page
+      .getByRole("status")
+      .filter({ hasText: "Keep a backup of your invoices." });
+
+    await expect(reminder).toBeVisible();
+
+    await reminder.getByRole("button", { name: "Dismiss" }).click();
+    await expect(reminder).toHaveCount(0);
+
+    await page.reload();
+    await expect(page.getByLabel("Invoice title")).toHaveValue(
+      "Kept in Safari"
+    );
+    await page.waitForTimeout(500);
+    await expect(reminder).toHaveCount(0);
+  });
+
+  test("downloading the suggested backup puts the suggestion away", async ({
+    page
+  }) => {
+    await gotoEditorReady(page, "Backed up");
+
+    const reminder = page
+      .getByRole("status")
+      .filter({ hasText: "Keep a backup of your invoices." });
+    const downloadPromise = page.waitForEvent("download");
+
+    await reminder.getByRole("button", { name: "Download backup" }).click();
+
+    expect((await downloadPromise).suggestedFilename()).toMatch(
+      /^billsend-backup-/
+    );
+    await expect(reminder).toHaveCount(0);
+  });
 });
