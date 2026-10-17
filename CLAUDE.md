@@ -101,14 +101,16 @@ lib/                 # Helper utilities (cn() classname merger)
 
 ### Context (UI state)
 
-- `InvoiceDocumentProvider`: current document ID/name, save/load operations
+- `InvoiceDocumentProvider`: hydrates the editor session and attaches the editor to the open invoice; `useInvoiceDocument` exposes its identity, status and actions
 - `EditorUiProvider`: edit/preview mode, which side panels are open, the command palette
-- `FileActionsProvider`: new/open/save/templates/import/export with the unsaved-changes guard and their dialogs, shared by the project menu, invoices panel and command palette
+- `FileActionsProvider`: new/open/duplicate/version history/templates/import/export and their dialogs, shared by the project menu, invoices panel and command palette
 - `CanvasViewProvider`: zoom (a level or fit)
 
 ## Key Architecture Decisions
 
 - **No backend**; all persistence is IndexedDB via Dexie
+- **Autosave, no Save step** (issue #86): `context/document-session.ts` gives each open invoice a save controller (`context/save-controller.ts`: 500ms debounce, 2s max wait, one write at a time). Content writes are a compare-and-swap on the invoice's `rev`; a new invoice joins the library on its first real edit; one tab edits an invoice at a time (a Web Lock per invoice, the other tab follows read-only with "Edit here"). Edits unwritten at page exit are stashed in localStorage and recovered. Each invoice keeps a `versions` history (`utils/version-thinning.ts`)
+- **Undo and redo** (`stores/invoice-history.ts`): snapshots of the invoice data, grouped by the focused field's `data-field` path within 500ms, every discrete action its own step. Store changes carry an origin (`stores/change-origin.ts`): `edit` is recorded and saved, `history` is saved, `load` is neither. Image cleanup keeps blobs the history or versions reference
 - **Content-Security-Policy** on every page (`consts/content-security-policy.ts`, sent from `app/server.ts`) only allows billsend's own origin; it is what keeps billsend's no-data-leaves-the-device promise true, so never loosen it to add a third-party request. Zod runs jitless (`lib/configure-zod.ts`, imported wherever zod is) because the policy forbids eval
 - **React Compiler enabled**: automatic memoization; avoid manual useMemo/useCallback unless necessary
 - **PDF generation** (`@react-pdf/renderer`) lives in the `components/pdf/invoice-pdf-*` modules and is built on demand by `hooks/use-invoice-pdf.ts`, which loads the builder lazily
