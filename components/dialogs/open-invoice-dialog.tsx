@@ -1,4 +1,9 @@
-import { IconFolderOpen, IconLoader2 } from "@tabler/icons-react";
+import {
+  IconFolderOpen,
+  IconLoader2,
+  IconSearch,
+  IconX
+} from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -15,8 +20,14 @@ import {
   DialogHeader,
   DialogTitle
 } from "~/components/ui/dialog";
-import { deleteInvoice, getAllInvoices, saveInvoice } from "~/db";
+import { NativeSelect } from "~/components/ui/select";
+import { deleteInvoice, saveInvoice, watchInvoices } from "~/db";
 import type { InvoiceDocument } from "~/types";
+import {
+  DEFAULT_LIBRARY_VIEW,
+  filterInvoices,
+  listClients
+} from "~/utils/invoice-library";
 import { seedDummyInvoice } from "~/utils/seed-dummy-invoice";
 
 function truncate(value: string, max: number): string {
@@ -29,7 +40,8 @@ export function OpenInvoiceDialog({
   onSelectInvoice,
   currentInvoiceId,
   onCurrentInvoiceDeleted,
-  onCurrentInvoiceRenamed
+  onCurrentInvoiceRenamed,
+  onDuplicateInvoice
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,7 +49,10 @@ export function OpenInvoiceDialog({
   currentInvoiceId: string | null;
   onCurrentInvoiceDeleted: () => void;
   onCurrentInvoiceRenamed: (newName: string) => void;
+  onDuplicateInvoice: (invoice: InvoiceDocument) => void;
 }) {
+  const [query, setQuery] = useState("");
+  const [clientFilter, setClientFilter] = useState<string | null>(null);
   const [invoices, setInvoices] = useState<InvoiceDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
@@ -48,12 +63,34 @@ export function OpenInvoiceDialog({
   >(null);
 
   useEffect(() => {
-    if (open) {
-      setSelectedIds([]);
-      setDeleteTarget(null);
-      loadInvoices();
-    }
+    if (!open) return;
+
+    setSelectedIds([]);
+    setDeleteTarget(null);
+    setQuery("");
+    setClientFilter(null);
+    setLoading(true);
+
+    // Live while open, so a rename, duplicate or delete (here, from the
+    // invoices panel or in another tab) shows straight away.
+    return watchInvoices(
+      next => {
+        setInvoices(next);
+        setLoading(false);
+      },
+      error => {
+        toast.error(error.message);
+        setLoading(false);
+      }
+    );
   }, [open]);
+
+  const visibleInvoices = filterInvoices(invoices, {
+    query,
+    view: { ...DEFAULT_LIBRARY_VIEW, client: clientFilter },
+    now: new Date()
+  });
+  const clients = listClients(invoices);
 
   useEffect(() => {
     if (deleteTarget?.mode === "selection" && selectedIds.length === 0) {
@@ -77,22 +114,6 @@ export function OpenInvoiceDialog({
     pendingDeleteInvoices.length > 0 || selectedIds.length === 0
       ? `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`
       : `${selectedIds.length} selected`;
-
-  async function loadInvoices() {
-    try {
-      setLoading(true);
-      const loadedInvoices = await getAllInvoices();
-      setInvoices(loadedInvoices);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to load invoices from storage."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function handleOpenInvoice(invoice: InvoiceDocument) {
     onSelectInvoice(invoice);
@@ -153,7 +174,6 @@ export function OpenInvoiceDialog({
     startSeedTransition(async () => {
       try {
         await seedDummyInvoice();
-        await loadInvoices();
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -191,7 +211,6 @@ export function OpenInvoiceDialog({
     startTransition(async () => {
       try {
         await Promise.all(targets.map(invoice => deleteInvoice(invoice.id)));
-        await loadInvoices();
 
         if (currentInvoiceId !== null && targetIds.has(currentInvoiceId)) {
           onCurrentInvoiceDeleted();
@@ -218,7 +237,6 @@ export function OpenInvoiceDialog({
   ) {
     try {
       await saveInvoice({ ...invoice, name: newName, updatedAt: new Date() });
-      await loadInvoices();
 
       if (invoice.id === currentInvoiceId) {
         onCurrentInvoiceRenamed(newName);
@@ -242,9 +260,51 @@ export function OpenInvoiceDialog({
         <DialogHeader className="border-border border-b">
           <DialogTitle>Open Invoice</DialogTitle>
           <DialogDescription>
-            Select an invoice to open. You can also delete invoices from here.
+            Select an invoice to open, or use its ⋯ menu to rename, duplicate or
+            delete it.
           </DialogDescription>
         </DialogHeader>
+        {invoices.length > 0 && (
+          <div className="border-border flex items-center gap-2 border-b px-4 py-2.5">
+            <label className="bg-muted text-muted-foreground focus-within:border-ring flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-transparent px-2">
+              <IconSearch aria-hidden="true" className="size-3.5 shrink-0" />
+              <span className="sr-only">Search invoices</span>
+              <input
+                type="search"
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Search by name, client, number or item"
+                className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none [&::-webkit-search-cancel-button]:hidden"
+              />
+              {query && (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => setQuery("")}
+                  className="hover:text-foreground rounded-sm"
+                >
+                  <IconX aria-hidden="true" className="size-3.5" />
+                </button>
+              )}
+            </label>
+            <label htmlFor="open-invoice-client" className="sr-only">
+              Client
+            </label>
+            <NativeSelect
+              id="open-invoice-client"
+              value={clientFilter ?? ""}
+              onChange={event => setClientFilter(event.target.value || null)}
+              className="bg-muted dark:bg-muted dark:hover:bg-muted hover:border-input h-8 w-44 shrink-0 rounded-md border-transparent text-sm max-sm:w-32"
+            >
+              <option value="">All clients</option>
+              {clients.map(client => (
+                <option key={client} value={client}>
+                  {client}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
+        )}
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             {loading ? (
@@ -268,16 +328,22 @@ export function OpenInvoiceDialog({
             ) : (
               <>
                 <InvoiceListTable
-                  invoices={invoices}
+                  invoices={visibleInvoices}
                   currentInvoiceId={currentInvoiceId}
                   selectedIds={selectedIds}
                   deletingIds={pendingDeleteInvoices.map(invoice => invoice.id)}
                   onSelectionChange={setSelectedIds}
                   onOpenInvoice={handleOpenInvoice}
                   onRenameInvoice={handleRenameInvoice}
+                  onDuplicateInvoice={onDuplicateInvoice}
                   onDeleteInvoices={handleRequestDelete}
                 />
-                <InvoiceListStripeFiller rowCount={invoices.length} />
+                {visibleInvoices.length === 0 && (
+                  <p className="text-muted-foreground px-4 py-6 text-center text-sm">
+                    No invoices match. Try another search or client.
+                  </p>
+                )}
+                <InvoiceListStripeFiller rowCount={visibleInvoices.length} />
               </>
             )}
           </div>
