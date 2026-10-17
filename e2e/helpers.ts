@@ -161,6 +161,18 @@ export async function nameInvoice(page: Page, name: string) {
   await expect.poll(() => savedContains(page, name)).toBe(true);
 }
 
+// Presses one of billsend's own shortcuts, written with "Mod" for ⌘ or Ctrl.
+// billsend picks the key from the platform the page reports, not the machine
+// running the test: WebKit runs as Mac Safari even on Linux, so it listens for
+// ⌘ there while Playwright's ControlOrMeta would send Ctrl.
+export async function pressShortcut(page: Page, keys: string) {
+  const apple = await page.evaluate(() =>
+    /Mac|iPhone|iPad/i.test(`${navigator.platform} ${navigator.userAgent}`)
+  );
+
+  await page.keyboard.press(keys.replace("Mod", apple ? "Meta" : "Control"));
+}
+
 // Makes the page believe it was hidden (backgrounded, or the app switched
 // away from), firing visibilitychange as the browser would.
 export async function hidePage(page: Page) {
