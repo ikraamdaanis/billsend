@@ -84,12 +84,14 @@ function PricingRowToggle({
 }
 
 // A currency amount typed straight onto the page. At rest it reads like every
-// other total ("$1,200.00"); focused it shows the raw number being typed, so
-// thousands separators and padded decimals never get in the way of editing.
+// other total ("$1,200.00"), or as `display` when the PDF prints something
+// else there (a deduction as "-$50.00"); focused it shows the raw number being
+// typed, so thousands separators and padded decimals never get in the way.
 function MoneyInput({
   label,
   input,
   amount,
+  display,
   currency,
   currencySymbol,
   style,
@@ -99,6 +101,7 @@ function MoneyInput({
   label: string;
   input: string;
   amount: number;
+  display?: string;
   currency: string;
   currencySymbol: string;
   style: CSSProperties;
@@ -111,7 +114,9 @@ function MoneyInput({
     <InvoiceInput
       aria-label={label}
       value={
-        focused ? `${currencySymbol}${input}` : formatCurrency(amount, currency)
+        focused
+          ? `${currencySymbol}${input}`
+          : (display ?? formatCurrency(amount, currency))
       }
       className="field-sizing-content min-w-20 text-right"
       style={style}
@@ -176,6 +181,7 @@ function SubtotalRow() {
 function TaxRow() {
   const { tax, currency, setTax, labels, setLabels } = usePricingSlice();
   const { taxAmount } = useInvoiceTotals();
+  const isPreview = useIsPreview();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
   const valueSettings = getRoleSettings(theme, "totalsValue");
@@ -232,7 +238,7 @@ function TaxRow() {
       {tax.exempt ? (
         <InvoiceInput
           aria-label="Tax exempt note"
-          value={tax.note}
+          value={isPreview ? tax.note.trim() || "Exempt" : tax.note}
           onChange={value => setTax(prev => ({ ...prev, note: value }))}
           className="ml-auto min-w-40 text-right"
           style={getTextStyles({ settings: valueSettings })}
@@ -371,6 +377,11 @@ function DiscountsRow() {
             label="Discounts amount"
             input={discountsInput}
             amount={discounts}
+            display={
+              discountAmount > 0
+                ? `-${formatCurrency(discountAmount, currency)}`
+                : undefined
+            }
             currency={currency}
             currencySymbol={currencySymbol}
             style={getTextStyles({ settings: valueSettings })}
@@ -389,13 +400,15 @@ function DiscountsRow() {
 }
 
 // The grand total suppresses its emphasis when a payment has been recorded, so
-// the balance-due row below reads as the figure to pay instead.
+// the balance-due row below reads as the figure to pay instead. A payment only
+// counts while its row is switched on, as in the PDF.
 function TotalRow() {
   const { currency, currencyCode, amountPaid, labels, setLabels } =
     usePricingSlice();
   const { total } = useInvoiceTotals();
   const theme = useTheme();
-  const hasPayment = amountPaid > 0;
+  const sections = useShownSections();
+  const hasPayment = sections.amountPaid && amountPaid > 0;
   const role = hasPayment ? "totalsLabel" : "grandTotalLabel";
   const labelSettings = getRoleSettings(theme, role);
   const valueSettings = getRoleSettings(
@@ -455,6 +468,11 @@ function AmountPaidRow() {
           label="Amount paid"
           input={amountPaidInput}
           amount={amountPaid}
+          display={
+            amountPaid > 0
+              ? `-${formatCurrency(amountPaid, currency)}`
+              : undefined
+          }
           currency={currency}
           currencySymbol={currencySymbol}
           style={getTextStyles({ settings: valueSettings })}
