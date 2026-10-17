@@ -14,7 +14,7 @@ import { isBlankInvoice } from "~/utils/invoice-content";
 import { deriveInvoiceName } from "~/utils/invoice-name";
 
 // The one working draft every tab shared before autosave.
-export const LEGACY_DRAFT_ID = "current-draft";
+const LEGACY_DRAFT_ID = "current-draft";
 
 // The meta row naming the invoice a new tab opens.
 export const LAST_OPENED_INVOICE_KEY = "lastOpenedInvoiceId";
@@ -97,6 +97,7 @@ export async function migrateToAutosave(
         invoiceId: record.id,
         name: record.name,
         invoiceData: saved,
+        imageId: saved.image,
         reason: "beforeAutosave",
         schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
         createdAt: now
