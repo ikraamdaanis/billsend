@@ -7,6 +7,7 @@ import {
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { LibraryViewOptions } from "~/components/editor/shell/library-view-options";
 import {
   InvoiceListStripeFiller,
   InvoiceListTable
@@ -20,13 +21,13 @@ import {
   DialogHeader,
   DialogTitle
 } from "~/components/ui/dialog";
-import { NativeSelect } from "~/components/ui/select";
 import { deleteInvoice, saveInvoice, watchInvoices } from "~/db";
-import type { InvoiceDocument } from "~/types";
+import { usePersistentState } from "~/hooks/use-persistent-state";
+import type { InvoiceDocument, InvoiceLibraryView } from "~/types";
 import {
   DEFAULT_LIBRARY_VIEW,
   filterInvoices,
-  listClients
+  parseLibraryView
 } from "~/utils/invoice-library";
 import { seedDummyInvoice } from "~/utils/seed-dummy-invoice";
 
@@ -52,7 +53,13 @@ export function OpenInvoiceDialog({
   onDuplicateInvoice: (invoice: InvoiceDocument) => void;
 }) {
   const [query, setQuery] = useState("");
-  const [clientFilter, setClientFilter] = useState<string | null>(null);
+  // Sort and filters are remembered across opens and reloads, like the
+  // invoices panel's (but separately, since this list has no grouping).
+  const [view, setView] = usePersistentState<InvoiceLibraryView>(
+    "billsend-editor-open-invoice-view",
+    DEFAULT_LIBRARY_VIEW,
+    parseLibraryView
+  );
   const [invoices, setInvoices] = useState<InvoiceDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
@@ -68,7 +75,6 @@ export function OpenInvoiceDialog({
     setSelectedIds([]);
     setDeleteTarget(null);
     setQuery("");
-    setClientFilter(null);
     setLoading(true);
 
     // Live while open, so a rename, duplicate or delete (here, from the
@@ -87,10 +93,16 @@ export function OpenInvoiceDialog({
 
   const visibleInvoices = filterInvoices(invoices, {
     query,
-    view: { ...DEFAULT_LIBRARY_VIEW, client: clientFilter },
+    view,
     now: new Date()
   });
-  const clients = listClients(invoices);
+  const isNarrowed =
+    invoices.length > 0 && visibleInvoices.length < invoices.length;
+
+  function clearFilters() {
+    setQuery("");
+    setView({ ...view, dateRange: "all", client: null, currency: null });
+  }
 
   useEffect(() => {
     if (deleteTarget?.mode === "selection" && selectedIds.length === 0) {
@@ -141,7 +153,11 @@ export function OpenInvoiceDialog({
 
     if (selectedIds.length === 0) return;
 
-    if (target.closest("tr, button, a, input, textarea, [role='menuitem']")) {
+    if (
+      target.closest(
+        "tr, button, a, input, textarea, select, label, [role='menuitem'], [data-slot='popover-content']"
+      )
+    ) {
       return;
     }
 
@@ -287,22 +303,13 @@ export function OpenInvoiceDialog({
                 </button>
               )}
             </label>
-            <label htmlFor="open-invoice-client" className="sr-only">
-              Client
-            </label>
-            <NativeSelect
-              id="open-invoice-client"
-              value={clientFilter ?? ""}
-              onChange={event => setClientFilter(event.target.value || null)}
-              className="bg-muted dark:bg-muted dark:hover:bg-muted hover:border-input h-8 w-44 shrink-0 rounded-md border-transparent text-sm max-sm:w-32"
-            >
-              <option value="">All clients</option>
-              {clients.map(client => (
-                <option key={client} value={client}>
-                  {client}
-                </option>
-              ))}
-            </NativeSelect>
+            <LibraryViewOptions
+              view={view}
+              onViewChange={setView}
+              invoices={invoices}
+              showGroup={false}
+              align="end"
+            />
           </div>
         )}
         <div className="relative flex min-h-0 flex-1 flex-col">
@@ -336,11 +343,16 @@ export function OpenInvoiceDialog({
                   onOpenInvoice={handleOpenInvoice}
                   onRenameInvoice={handleRenameInvoice}
                   onDuplicateInvoice={onDuplicateInvoice}
+                  sort={view.sort}
+                  direction={view.direction}
+                  onSortChange={(sort, direction) =>
+                    setView({ ...view, sort, direction })
+                  }
                   onDeleteInvoices={handleRequestDelete}
                 />
                 {visibleInvoices.length === 0 && (
                   <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-                    No invoices match. Try another search or client.
+                    No invoices match. Try another search or filter.
                   </p>
                 )}
                 <InvoiceListStripeFiller rowCount={visibleInvoices.length} />
@@ -380,7 +392,22 @@ export function OpenInvoiceDialog({
           )}
         </div>
         <DialogFooter className="flex-row items-center justify-between sm:justify-between">
-          <span className="text-muted-foreground text-sm">{footerLabel}</span>
+          {isNarrowed && selectedIds.length === 0 ? (
+            <span className="text-muted-foreground flex items-center gap-2 text-sm">
+              <span className="tabular-nums">
+                {visibleInvoices.length} of {invoices.length} invoices
+              </span>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="hover:text-foreground focus-visible:ring-ring rounded-sm font-medium underline-offset-2 outline-none hover:underline focus-visible:ring-1"
+              >
+                Clear filters
+              </button>
+            </span>
+          ) : (
+            <span className="text-muted-foreground text-sm">{footerLabel}</span>
+          )}
           <div className="flex items-center gap-2">
             {import.meta.env.DEV && (
               <Button
