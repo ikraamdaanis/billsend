@@ -46,7 +46,8 @@ export function EditorTopBar({
           variant="ghost"
           size="icon-sm"
           aria-label={mode === "preview" ? "Back to editing" : "Preview"}
-          aria-pressed={mode === "preview"}
+          aria-pressed={mode === "preview" || !canEdit}
+          disabled={!canEdit}
           title="Preview (P)"
           onClick={toggleMode}
           className="text-muted-foreground aria-pressed:bg-accent aria-pressed:text-foreground mr-1 max-md:hidden pointer-coarse:size-11"
