@@ -356,21 +356,15 @@ async function requestPersistentStorage() {
   }
 
   if (!navigator.vendor.startsWith("Apple")) return;
+  if (readStorage("localStorage", BACKUP_REMINDER_KEY)) return;
 
-  try {
-    if (localStorage.getItem(BACKUP_REMINDER_KEY)) return;
+  useDocumentStore.setState({ backupReminder: true });
+}
 
-    localStorage.setItem(BACKUP_REMINDER_KEY, new Date().toISOString());
-  } catch {
-    return;
-  }
-
-  toast("Your invoices are saved in this browser", {
-    description:
-      "The browser can clear them if it runs short of space or the site goes unused for a while. Download a backup to keep a copy.",
-    duration: 15_000,
-    action: { label: "Download backup", onClick: () => void downloadBackup() }
-  });
+// The backup suggestion was dismissed or acted on: it doesn't come back.
+function dismissBackupReminder() {
+  writeStorage("localStorage", BACKUP_REMINDER_KEY, new Date().toISOString());
+  useDocumentStore.setState({ backupReminder: false });
 }
 
 // Writes the content to the library: creating the invoice on its first real
@@ -629,7 +623,10 @@ async function startEditing(session: Session) {
   clearInvoiceHistory();
   publish(session);
 
-  if (session.isRecord) keepVersionQuietly(session, liveContent(), "opened");
+  if (session.isRecord) {
+    keepVersionQuietly(session, liveContent(), "opened");
+    void requestPersistentStorage();
+  }
 
   try {
     await recoverUnsaved(session);
@@ -1600,5 +1597,6 @@ export const documentActions = {
   retrySave,
   restoreVersion,
   downloadBackup,
+  dismissBackupReminder,
   applyStartingFont
 } as const;
