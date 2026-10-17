@@ -70,6 +70,7 @@ function makeInvoice(overrides: Partial<Invoice> = {}): Invoice {
       accent: "#1a1a1a"
     },
     sections: { ...DEFAULT_INVOICE_SECTIONS },
+    dateFormat: "yyyy-MM-dd",
     ...overrides
   };
 }

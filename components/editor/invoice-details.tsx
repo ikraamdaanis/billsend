@@ -1,4 +1,5 @@
 import { endOfMonth, format, subMonths } from "date-fns";
+import { InvoiceDateField } from "~/components/editor/invoice-date-field";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { useShownSections } from "~/hooks/use-shown-sections";
 import { useDetailsSlice, useTheme } from "~/stores/invoice-selectors";
@@ -24,8 +25,8 @@ function buildDetailPlaceholders(): Record<
   return {
     number: { label: "Invoice No.", value: "########" },
     poNumber: { label: "PO number", value: "Add a PO / reference" },
-    invoiceDate: { label: "Date", value: "Enter invoice date" },
-    dueDate: { label: "Due date", value: "Enter payment due date" },
+    invoiceDate: { label: "Date", value: "Pick a date" },
+    dueDate: { label: "Due date", value: "Pick a due date" },
     servicePeriod: {
       label: "Service period",
       value: getServicePeriodExample()
@@ -34,8 +35,15 @@ function buildDetailPlaceholders(): Record<
 }
 
 export function InvoiceDetails() {
-  const { number, poNumber, invoiceDate, dueDate, servicePeriod, labels } =
-    useDetailsSlice();
+  const {
+    number,
+    poNumber,
+    invoiceDate,
+    dueDate,
+    servicePeriod,
+    dateFormat,
+    labels
+  } = useDetailsSlice();
   const sections = useShownSections();
   const placeholders = buildDetailPlaceholders();
   const rows = buildDetailRows({
@@ -45,7 +53,8 @@ export function InvoiceDetails() {
     invoiceDate,
     dueDate,
     servicePeriod,
-    sections
+    sections,
+    dateFormat
   });
 
   return (
@@ -104,15 +113,24 @@ function DetailRow({
           placeholder={placeholders.label}
         />
       </div>
-      <InvoiceInput
-        id={row.id === "number" ? "invoice-field-details" : undefined}
-        aria-label={row.label || placeholders.label}
-        value={row.value}
-        onChange={setValue}
-        className="leading-paper-row h-[unset]! w-full py-0"
-        style={valueStyle}
-        placeholder={placeholders.value}
-      />
+      {row.id === "invoiceDate" || row.id === "dueDate" ? (
+        <InvoiceDateField
+          field={row.id}
+          label={row.label || placeholders.label}
+          placeholder={placeholders.value}
+          style={valueStyle}
+        />
+      ) : (
+        <InvoiceInput
+          id={row.id === "number" ? "invoice-field-details" : undefined}
+          aria-label={row.label || placeholders.label}
+          value={row.value}
+          onChange={setValue}
+          className="leading-paper-row h-[unset]! w-full py-0"
+          style={valueStyle}
+          placeholder={placeholders.value}
+        />
+      )}
     </div>
   );
 }

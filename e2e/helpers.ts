@@ -116,7 +116,10 @@ export async function gotoEditorReady(page: Page, title = "Test invoice") {
 // must not dirty the editor (e.g. empty-state and menu-only flows).
 export async function gotoEditorSettled(page: Page) {
   await page.goto("/create");
-  await expect(page.getByLabel("Date", { exact: true })).not.toHaveValue("");
+  await expect(page.getByLabel("Date", { exact: true })).toHaveAttribute(
+    "data-date",
+    /\d{4}-\d{2}-\d{2}/
+  );
 }
 
 // Opens the project menu (the logo, which holds the file commands), retrying
