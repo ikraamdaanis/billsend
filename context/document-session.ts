@@ -325,8 +325,9 @@ function keepVersionQuietly(
 // Asks the browser to keep billsend's storage when it runs short, once an
 // invoice exists to keep. Chrome decides from how much the site is used,
 // Firefox asks, and Safari mostly says no in a browser tab, where it also
-// clears storage after seven days without a visit. When the answer is no,
-// suggest a backup, once.
+// clears storage after seven days without a visit. Safari is the one that
+// clears storage on its own, so a no there suggests a backup, once; Chrome
+// and Firefox only clear storage when the disk runs out.
 async function requestPersistentStorage() {
   if (persistenceRequested) return;
 
@@ -340,6 +341,8 @@ async function requestPersistentStorage() {
   } catch {
     return;
   }
+
+  if (!navigator.vendor.startsWith("Apple")) return;
 
   try {
     if (localStorage.getItem(BACKUP_REMINDER_KEY)) return;
