@@ -1,5 +1,4 @@
 import {
-  IconAdjustmentsHorizontal,
   IconCopy,
   IconDots,
   IconFolderOpen,
@@ -7,8 +6,6 @@ import {
   IconPencil,
   IconPlus,
   IconSearch,
-  IconSortAscending,
-  IconSortDescending,
   IconTrash,
   IconX
 } from "@tabler/icons-react";
@@ -16,6 +13,7 @@ import { format, isValid, parseISO } from "date-fns";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { SegmentedControl } from "~/components/editor/shell/inspector/inspector-controls";
+import { LibraryViewOptions } from "~/components/editor/shell/library-view-options";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -24,12 +22,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "~/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "~/components/ui/popover";
-import { NativeSelect } from "~/components/ui/select";
 import { formatCurrency } from "~/consts/currencies";
 import { useFileActions } from "~/context/file-actions-context";
 import { useInvoiceDocument } from "~/context/invoice-document-context";
@@ -42,25 +34,16 @@ import type {
   InvoiceTemplate
 } from "~/types";
 import {
-  countActiveFilters,
   DEFAULT_LIBRARY_VIEW,
   filterInvoices,
   getInvoiceDate,
   getInvoiceTotal,
   groupInvoices,
-  LIBRARY_DATE_RANGES,
-  LIBRARY_GROUPS,
-  LIBRARY_SORTS,
-  listClients,
-  listCurrencies,
   parseLibraryView,
   sortInvoices
 } from "~/utils/invoice-library";
 
 type LibraryTab = "invoices" | "templates";
-
-const fieldClassName =
-  "bg-muted dark:bg-muted dark:hover:bg-muted hover:border-input focus-visible:border-ring text-foreground h-8 w-full min-w-0 rounded-md border border-transparent pr-7 pl-2 text-[13px] outline-none";
 
 // Keeps a list in step with a Dexie table while the panel is open.
 function useWatchedList<TRow>(
@@ -127,7 +110,7 @@ export function InvoicesPanel() {
           onChange={setQuery}
         >
           {tab === "invoices" && (
-            <ViewOptions
+            <LibraryViewOptions
               view={view}
               onViewChange={setView}
               invoices={invoices.rows ?? []}
@@ -205,192 +188,6 @@ function SearchField({
             <IconX aria-hidden="true" className="size-3.5" />
           </button>
         )}
-      </label>
-      {children}
-    </div>
-  );
-}
-
-function ViewOptions({
-  view,
-  onViewChange,
-  invoices
-}: {
-  view: InvoiceLibraryView;
-  onViewChange: (view: InvoiceLibraryView) => void;
-  invoices: InvoiceDocument[];
-}) {
-  const activeFilters = countActiveFilters(view);
-  const clients = listClients(invoices);
-  const currencies = listCurrencies(invoices);
-  const isDefault =
-    JSON.stringify(view) === JSON.stringify(DEFAULT_LIBRARY_VIEW);
-
-  function update(changes: Partial<InvoiceLibraryView>) {
-    onViewChange({ ...view, ...changes });
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger
-        aria-label={
-          activeFilters > 0
-            ? `View options, ${activeFilters} filter${activeFilters === 1 ? "" : "s"} on`
-            : "View options"
-        }
-        title="Sort, group and filter"
-        className="bg-muted text-muted-foreground hover:text-foreground aria-expanded:text-foreground focus-visible:ring-ring relative flex size-8 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-1"
-      >
-        <IconAdjustmentsHorizontal aria-hidden="true" className="size-4" />
-        {activeFilters > 0 && (
-          <span
-            aria-hidden="true"
-            className="bg-ring absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full text-[10px] font-semibold text-white tabular-nums"
-          >
-            {activeFilters}
-          </span>
-        )}
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-64 gap-3 p-3">
-        <OptionGroup label="Sort by" htmlFor="library-sort">
-          <div className="flex items-center gap-1.5">
-            <NativeSelect
-              id="library-sort"
-              value={view.sort}
-              onChange={event => {
-                const sort = LIBRARY_SORTS.find(
-                  option => option.value === event.target.value
-                );
-
-                if (sort) {
-                  update({
-                    sort: sort.value,
-                    direction: sort.defaultDirection
-                  });
-                }
-              }}
-              className={fieldClassName}
-            >
-              {LIBRARY_SORTS.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </NativeSelect>
-            <button
-              type="button"
-              aria-label={
-                view.direction === "asc"
-                  ? "Ascending, switch to descending"
-                  : "Descending, switch to ascending"
-              }
-              title={view.direction === "asc" ? "Ascending" : "Descending"}
-              onClick={() =>
-                update({ direction: view.direction === "asc" ? "desc" : "asc" })
-              }
-              className="bg-muted text-muted-foreground hover:text-foreground focus-visible:ring-ring flex size-8 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-1"
-            >
-              {view.direction === "asc" ? (
-                <IconSortAscending aria-hidden="true" className="size-4" />
-              ) : (
-                <IconSortDescending aria-hidden="true" className="size-4" />
-              )}
-            </button>
-          </div>
-        </OptionGroup>
-        <OptionGroup label="Group by">
-          <SegmentedControl
-            label="Group by"
-            value={view.group}
-            options={LIBRARY_GROUPS}
-            onChange={group => update({ group })}
-          />
-        </OptionGroup>
-        <div className="border-border -mx-3 border-t" />
-        <OptionGroup label="Invoice date" htmlFor="library-date">
-          <NativeSelect
-            id="library-date"
-            value={view.dateRange}
-            onChange={event => {
-              const range = LIBRARY_DATE_RANGES.find(
-                option => option.value === event.target.value
-              );
-
-              if (range) update({ dateRange: range.value });
-            }}
-            className={fieldClassName}
-          >
-            {LIBRARY_DATE_RANGES.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </NativeSelect>
-        </OptionGroup>
-        <OptionGroup label="Client" htmlFor="library-client">
-          <NativeSelect
-            id="library-client"
-            value={view.client ?? ""}
-            onChange={event => update({ client: event.target.value || null })}
-            className={fieldClassName}
-          >
-            <option value="">Any client</option>
-            {clients.map(client => (
-              <option key={client} value={client}>
-                {client}
-              </option>
-            ))}
-          </NativeSelect>
-        </OptionGroup>
-        {(currencies.length > 1 || view.currency !== null) && (
-          <OptionGroup label="Currency" htmlFor="library-currency">
-            <NativeSelect
-              id="library-currency"
-              value={view.currency ?? ""}
-              onChange={event =>
-                update({ currency: event.target.value || null })
-              }
-              className={fieldClassName}
-            >
-              <option value="">Any currency</option>
-              {currencies.map(currency => (
-                <option key={currency} value={currency}>
-                  {currency}
-                </option>
-              ))}
-            </NativeSelect>
-          </OptionGroup>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={isDefault}
-          onClick={() => onViewChange(DEFAULT_LIBRARY_VIEW)}
-          className="text-muted-foreground -mx-1 w-fit"
-        >
-          Reset to default
-        </Button>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function OptionGroup({
-  label,
-  htmlFor,
-  children
-}: {
-  label: string;
-  htmlFor?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label
-        htmlFor={htmlFor}
-        className="text-muted-foreground text-xs font-medium"
-      >
-        {label}
       </label>
       {children}
     </div>
