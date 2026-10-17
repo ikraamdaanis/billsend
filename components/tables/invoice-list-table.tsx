@@ -71,7 +71,10 @@ export function InvoiceListTable({
   onOpenInvoice,
   onRenameInvoice,
   onDuplicateInvoice,
-  onDeleteInvoices
+  onDeleteInvoices,
+  sort,
+  direction,
+  onSortChange
 }: {
   invoices: InvoiceDocument[];
   currentInvoiceId: string | null;
@@ -82,9 +85,12 @@ export function InvoiceListTable({
   onRenameInvoice: (invoice: InvoiceDocument, newName: string) => void;
   onDuplicateInvoice: (invoice: InvoiceDocument) => void;
   onDeleteInvoices: (invoices: InvoiceDocument[]) => void;
+  // The order is the caller's, so the column headers and any other sort
+  // control (the dialog's View options) stay in step.
+  sort: InvoiceLibrarySort;
+  direction: SortDirection;
+  onSortChange: (sort: InvoiceLibrarySort, direction: SortDirection) => void;
 }) {
-  const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState("");
   const [contextMenuRowId, setContextMenuRowId] = useState<string | null>(null);
@@ -106,17 +112,19 @@ export function InvoiceListTable({
   }, [editingId]);
 
   function toggleSort(key: SortKey) {
-    if (key === sortKey) {
-      setSortDirection(prev => (prev === "asc" ? "desc" : "asc"));
+    const columnSort = COLUMN_SORTS[key];
+
+    if (columnSort === sort) {
+      onSortChange(sort, direction === "asc" ? "desc" : "asc");
 
       return;
     }
 
     // A newly picked column starts the natural way round: names A to Z, the
     // biggest amounts and the latest edits first.
-    setSortKey(key);
-    setSortDirection(
-      LIBRARY_SORTS.find(sort => sort.value === COLUMN_SORTS[key])
+    onSortChange(
+      columnSort,
+      LIBRARY_SORTS.find(option => option.value === columnSort)
         ?.defaultDirection ?? "asc"
     );
   }
@@ -161,11 +169,7 @@ export function InvoiceListTable({
     }
   }
 
-  const sortedInvoices = sortInvoices(
-    invoices,
-    COLUMN_SORTS[sortKey],
-    sortDirection
-  );
+  const sortedInvoices = sortInvoices(invoices, sort, direction);
 
   const selectedSet = new Set(selectedIds);
   const deletingSet = new Set(deletingIds);
@@ -346,16 +350,16 @@ export function InvoiceListTable({
           <th className="bg-popover sticky top-0 py-2 pr-4 pl-4 shadow-[inset_0_-1px_0_0_var(--border)]">
             <SortHeader
               label="Name"
-              active={sortKey === "name"}
-              direction={sortDirection}
+              active={sort === COLUMN_SORTS.name}
+              direction={direction}
               onClick={() => toggleSort("name")}
             />
           </th>
           <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)] max-sm:hidden">
             <SortHeader
               label="Client"
-              active={sortKey === "client"}
-              direction={sortDirection}
+              active={sort === COLUMN_SORTS.client}
+              direction={direction}
               onClick={() => toggleSort("client")}
             />
           </th>
@@ -363,16 +367,16 @@ export function InvoiceListTable({
             <SortHeader
               label="Amount"
               align="end"
-              active={sortKey === "amount"}
-              direction={sortDirection}
+              active={sort === COLUMN_SORTS.amount}
+              direction={direction}
               onClick={() => toggleSort("amount")}
             />
           </th>
           <th className="bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]">
             <SortHeader
               label="Date modified"
-              active={sortKey === "updatedAt"}
-              direction={sortDirection}
+              active={sort === COLUMN_SORTS.updatedAt}
+              direction={direction}
               onClick={() => toggleSort("updatedAt")}
             />
           </th>
