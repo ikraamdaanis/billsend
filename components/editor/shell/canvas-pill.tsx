@@ -21,6 +21,7 @@ import {
 import { useCanvasView } from "~/context/canvas-view-context";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { cn } from "~/lib/utils";
+import { shortcutLabel } from "~/utils/shortcut-label";
 
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -52,7 +53,7 @@ function QuickActionsButton() {
       variant="ghost"
       size="icon-sm"
       aria-label="Quick actions"
-      title="Quick actions (⌘K)"
+      title={`Quick actions (${shortcutLabel("⌘K")})`}
       onClick={() => setPaletteOpen(true)}
       className="max-md:hidden"
     >
@@ -137,7 +138,7 @@ function ZoomControls() {
             {isFit ? (
               <IconCheck aria-hidden="true" className="ml-auto" />
             ) : (
-              <DropdownMenuShortcut>⇧1</DropdownMenuShortcut>
+              <DropdownMenuShortcut>{shortcutLabel("⇧1")}</DropdownMenuShortcut>
             )}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -147,7 +148,11 @@ function ZoomControls() {
               {view === step ? (
                 <IconCheck aria-hidden="true" className="ml-auto" />
               ) : (
-                step === 1 && <DropdownMenuShortcut>⇧0</DropdownMenuShortcut>
+                step === 1 && (
+                  <DropdownMenuShortcut>
+                    {shortcutLabel("⇧0")}
+                  </DropdownMenuShortcut>
+                )
               )}
             </DropdownMenuItem>
           ))}

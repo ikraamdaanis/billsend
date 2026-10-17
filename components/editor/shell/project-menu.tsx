@@ -20,6 +20,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { useFileActions } from "~/context/file-actions-context";
+import { shortcutLabel } from "~/utils/shortcut-label";
 
 // The logo opens one menu with everything the old File menu had, plus the way
 // back to the homepage, like the project menu in Framer.
@@ -54,18 +55,18 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
         >
           <IconFolderOpen aria-hidden="true" />
           Open Invoice
-          <DropdownMenuShortcut>⌘O</DropdownMenuShortcut>
+          <DropdownMenuShortcut>{shortcutLabel("⌘O")}</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={actions.save} disabled={actions.pending}>
           <IconDeviceFloppy aria-hidden="true" />
           Save
-          <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+          <DropdownMenuShortcut>{shortcutLabel("⌘S")}</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={actions.saveAs} disabled={actions.pending}>
           <IconFile aria-hidden="true" />
           Save As...
-          <DropdownMenuShortcut>⇧⌘S</DropdownMenuShortcut>
+          <DropdownMenuShortcut>{shortcutLabel("⇧⌘S")}</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -101,7 +102,7 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
         <DropdownMenuItem onClick={() => setPaletteOpen(true)}>
           <IconCommand aria-hidden="true" />
           Quick actions
-          <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+          <DropdownMenuShortcut>{shortcutLabel("⌘K")}</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onLeave}>
           <IconArrowLeft aria-hidden="true" />
