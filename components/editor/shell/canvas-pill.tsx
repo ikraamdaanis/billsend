@@ -27,12 +27,13 @@ const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 // The floating toolbar under the page, as in Framer: edit or preview, zoom,
 // and the light/dark switch. Extra controls (quick actions) slot in at the end.
+// Phones use the tab bar along the bottom instead.
 export function CanvasPill({ children }: { children?: ReactNode }) {
   return (
     <div
       role="toolbar"
       aria-label="Canvas"
-      className="bg-popover ring-foreground/10 shadow-menu absolute bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-xl p-1 ring-1"
+      className="bg-popover ring-foreground/10 shadow-menu absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1 rounded-xl p-1 ring-1 max-md:hidden"
     >
       <ModeSwitch />
       <PillDivider />
@@ -40,35 +41,8 @@ export function CanvasPill({ children }: { children?: ReactNode }) {
       <PillDivider />
       <EditorThemeToggle size="icon-sm" className="pointer-coarse:size-11" />
       <QuickActionsButton />
-      <DoneEditingButton />
       {children}
     </div>
-  );
-}
-
-// Shown on a phone after tapping a field zoomed the page in: puts the keyboard
-// away and fits the whole page again.
-function DoneEditingButton() {
-  const { isZoomedToField, setView } = useCanvasView();
-  const { isNarrow } = useEditorUi();
-
-  if (!isNarrow || !isZoomedToField) return null;
-
-  return (
-    <Button
-      variant="primary"
-      size="sm"
-      onClick={() => {
-        if (document.activeElement instanceof HTMLElement) {
-          document.activeElement.blur();
-        }
-
-        setView("fit");
-      }}
-      className="ml-1 rounded-lg px-3 pointer-coarse:h-10"
-    >
-      Done
-    </Button>
   );
 }
 
@@ -144,7 +118,7 @@ function ZoomControls() {
         onClick={() => {
           if (zoomOutStep !== undefined) setView(zoomOutStep);
         }}
-        className="max-sm:hidden pointer-coarse:size-11"
+        className="pointer-coarse:size-11"
       >
         <IconMinus aria-hidden="true" />
       </Button>
@@ -193,7 +167,7 @@ function ZoomControls() {
         onClick={() => {
           if (zoomInStep !== undefined) setView(zoomInStep);
         }}
-        className="max-sm:hidden pointer-coarse:size-11"
+        className="pointer-coarse:size-11"
       >
         <IconPlus aria-hidden="true" />
       </Button>

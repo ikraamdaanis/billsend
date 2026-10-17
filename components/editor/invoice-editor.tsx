@@ -17,6 +17,7 @@ import { EditorShortcuts } from "~/components/editor/shell/editor-shortcuts";
 import { EditorTopBar } from "~/components/editor/shell/editor-top-bar";
 import { InspectorPanel } from "~/components/editor/shell/inspector/inspector-panel";
 import { InvoicesPanel } from "~/components/editor/shell/invoices-panel";
+import { PhoneTabBar } from "~/components/editor/shell/phone-tab-bar";
 import {
   PanelBackdrop,
   PanelToggle,
@@ -63,6 +64,7 @@ export function InvoiceEditor() {
                 <InspectorPanel />
               </SidePanel>
             </div>
+            <PhoneTabBar />
           </div>
           <LeavePageDialog
             isModalOpen={isLeaveDialogOpen}

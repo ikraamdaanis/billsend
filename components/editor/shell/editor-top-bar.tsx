@@ -14,8 +14,8 @@ import { getInvoice, saveInvoice } from "~/db";
 
 // Framer's three-part bar: the project menu on the left, the invoice's name and
 // save state in the middle, and the panel toggles, Preview and Download on the
-// right. `start` and `end` take the panel toggles. Phones leave Preview to the
-// canvas pill, to give the name room.
+// right. `start` and `end` take the panel toggles. Phones keep only the menu,
+// the name and Download; the panel toggles and Preview move to the tab bar.
 export function EditorTopBar({
   onLeave,
   start,
@@ -28,14 +28,14 @@ export function EditorTopBar({
   const { mode, toggleMode } = useEditorUi();
 
   return (
-    <header className="bg-background border-border relative z-30 grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] max-sm:flex max-sm:gap-2 pointer-coarse:h-14">
-      <div className="flex min-w-0 items-center gap-1 max-sm:shrink-0">
+    <header className="bg-background border-border relative z-30 grid h-12 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] max-md:flex max-md:gap-2 pointer-coarse:h-14">
+      <div className="flex min-w-0 items-center gap-1 max-md:shrink-0">
         <ProjectMenu onLeave={onLeave} />
-        {start}
+        <div className="contents max-md:hidden">{start}</div>
       </div>
       <InvoiceName />
-      <div className="flex min-w-0 items-center justify-end gap-1 max-sm:shrink-0">
-        {end}
+      <div className="flex min-w-0 items-center justify-end gap-1 max-md:shrink-0">
+        <div className="contents max-md:hidden">{end}</div>
         <Button
           variant="ghost"
           size="icon-sm"
@@ -43,7 +43,7 @@ export function EditorTopBar({
           aria-pressed={mode === "preview"}
           title="Preview (P)"
           onClick={toggleMode}
-          className="text-muted-foreground aria-pressed:bg-accent aria-pressed:text-foreground mr-1 max-sm:hidden pointer-coarse:size-11"
+          className="text-muted-foreground aria-pressed:bg-accent aria-pressed:text-foreground mr-1 max-md:hidden pointer-coarse:size-11"
         >
           <IconPlayerPlay aria-hidden="true" />
         </Button>
@@ -84,7 +84,7 @@ function InvoiceName() {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-2 max-sm:flex-1 max-sm:justify-center">
+    <div className="flex min-w-0 items-center gap-2 max-md:flex-1 max-md:justify-center">
       <h1 className="flex min-w-0">
         <button
           type="button"
@@ -95,7 +95,7 @@ function InvoiceName() {
           }}
           className="hover:bg-muted focus-visible:ring-ring flex h-7 min-w-0 items-center rounded-md px-2 outline-none focus-visible:ring-1 pointer-coarse:h-10"
         >
-          <span className="text-foreground max-w-[min(18rem,36vw)] truncate text-sm font-medium max-sm:max-w-none">
+          <span className="text-foreground max-w-[min(18rem,36vw)] truncate text-sm font-medium max-md:max-w-none">
             {displayName}
           </span>
         </button>
