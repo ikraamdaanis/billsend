@@ -586,7 +586,10 @@ homepage route and appears only there. The editor and dialogs never use it.
   events cancelled), so they never scale the top bar or tab bar. Pinching the
   desk zooms the page (25% to 300%) around the fingers, a trackpad pinch
   (Ctrl/⌘ wheel) does the same on a laptop, and double-tapping bare paper or
-  desk flips between Fit and 100%. On a phone, tapping a field on the fitted
+  desk flips between Fit and 100% (animated). While a gesture runs, only a
+  GPU transform on the page's wrapper changes (`hooks/use-canvas-gestures.ts`);
+  the real zoom is committed in one render when it ends, so pinching keeps up
+  with the display's refresh rate. On a phone, tapping a field on the fitted
   page zooms to 100% with the field high on the screen, clear of the
   keyboard. The viewport sets `maximum-scale=1` so iOS never zooms into a
   focused field, and `interactive-widget=resizes-content` so Android's

@@ -1,0 +1,379 @@
+import type { RefObject } from "react";
+import { useEffect } from "react";
+import { FIELD_ZOOM } from "~/context/canvas-view-context";
+
+type Point = { x: number; y: number };
+
+// What the canvas tells the gestures each render: the applied zoom, the zoom
+// that fits the page, and how to hand over a finished gesture.
+type CanvasGestureState = {
+  zoom: number;
+  fitZoom: number;
+  commit: (view: "fit" | number, origin: Point) => void;
+};
+
+// A zoom in progress. The page is not re-rendered while it runs: the wrapper
+// around it is moved and scaled with a GPU transform, and the real zoom is
+// committed once, when the gesture ends.
+type LiveZoom = {
+  startZoom: number;
+  scale: number;
+  focus: Point;
+  anchor: Point;
+  base: Point;
+  scroll: Point;
+  size: { width: number; height: number };
+  bounds: { left: number; top: number; right: number; bottom: number };
+  frame: number | null;
+};
+
+const MIN_ZOOM = 0.25;
+
+const MAX_ZOOM = 3;
+
+const DOUBLE_TAP_MS = 350;
+
+const DOUBLE_TAP_ANIMATION_MS = 240;
+
+// The editor owns zoom gestures, as in Figma and tldraw: the browser's own
+// pinch would scale the whole editor, top bar and all, so it is cancelled
+// (Safari's gesture events here, `touch-action` in globals.css). Pinching the
+// desk, a trackpad pinch (a wheel event with Ctrl held) and double-tapping
+// bare paper zoom the page instead. Each frame of a gesture only changes a
+// transform, so it runs on the compositor at the display's refresh rate.
+export function useCanvasGestures({
+  sectionRef,
+  sizerRef,
+  stateRef
+}: {
+  sectionRef: RefObject<HTMLElement | null>;
+  sizerRef: RefObject<HTMLDivElement | null>;
+  stateRef: RefObject<CanvasGestureState>;
+}) {
+  useEffect(() => {
+    const section = sectionRef.current;
+    const sizer = sizerRef.current;
+
+    if (!section || !sizer) return;
+
+    let live: LiveZoom | null = null;
+    let pinchDistance = 0;
+    let wheelTimer: ReturnType<typeof setTimeout> | undefined;
+    let animation: number | null = null;
+    let tapStart: { time: number; point: Point } | null = null;
+    let lastTap: { time: number; point: Point } | null = null;
+
+    function begin(focus: Point): LiveZoom | null {
+      if (!section || !sizer) return null;
+
+      const sizerRect = sizer.getBoundingClientRect();
+      const sectionRect = section.getBoundingClientRect();
+      const styles = getComputedStyle(section);
+      const zoom = stateRef.current.zoom;
+
+      sizer.style.willChange = "transform";
+
+      return {
+        startZoom: zoom,
+        scale: 1,
+        focus,
+        anchor: { x: focus.x - sizerRect.left, y: focus.y - sizerRect.top },
+        base: { x: sizerRect.left, y: sizerRect.top },
+        scroll: { x: section.scrollLeft, y: section.scrollTop },
+        size: { width: sizerRect.width, height: sizerRect.height },
+        bounds: {
+          left: sectionRect.left + parseFloat(styles.paddingLeft),
+          top: sectionRect.top + parseFloat(styles.paddingTop),
+          right:
+            sectionRect.left +
+            section.clientWidth -
+            parseFloat(styles.paddingRight),
+          bottom:
+            sectionRect.top +
+            section.clientHeight -
+            parseFloat(styles.paddingBottom)
+        },
+        frame: null
+      };
+    }
+
+    function update(zoom: LiveZoom, scale: number, focus: Point) {
+      zoom.scale = Math.min(
+        MAX_ZOOM / zoom.startZoom,
+        Math.max(MIN_ZOOM / zoom.startZoom, scale)
+      );
+      zoom.focus = focus;
+      zoom.frame ??= requestAnimationFrame(() => paint(zoom));
+    }
+
+    function paint(zoom: LiveZoom) {
+      zoom.frame = null;
+
+      if (!section || !sizer) return;
+
+      const origin = originFor(zoom);
+      // Where the untransformed wrapper sits now, allowing for any scrolling
+      // since the gesture began.
+      const baseX = zoom.base.x - (section.scrollLeft - zoom.scroll.x);
+      const baseY = zoom.base.y - (section.scrollTop - zoom.scroll.y);
+
+      sizer.style.transform = `translate3d(${origin.x - baseX}px, ${origin.y - baseY}px, 0) scale(${zoom.scale})`;
+    }
+
+    function end(view?: "fit") {
+      if (!live) return;
+
+      const zoom = live;
+      live = null;
+
+      if (zoom.frame !== null) cancelAnimationFrame(zoom.frame);
+      stateRef.current.commit(
+        view ?? zoom.startZoom * zoom.scale,
+        originFor(zoom)
+      );
+    }
+
+    // Animates a double-tap zoom to `targetZoom` around `focus`, through the
+    // same transform as a pinch.
+    function animateTo(targetZoom: number, focus: Point, view?: "fit") {
+      const started = begin(focus);
+
+      if (!started) return;
+
+      const zoom: LiveZoom = started;
+      live = zoom;
+      const targetScale = targetZoom / zoom.startZoom;
+      const startTime = performance.now();
+
+      function step(now: number) {
+        const progress = Math.min(
+          1,
+          (now - startTime) / DOUBLE_TAP_ANIMATION_MS
+        );
+        const eased = 1 - (1 - progress) ** 3;
+
+        zoom.scale = targetScale ** eased;
+        paint(zoom);
+
+        if (progress < 1) {
+          animation = requestAnimationFrame(step);
+
+          return;
+        }
+
+        animation = null;
+        end(view);
+      }
+
+      animation = requestAnimationFrame(step);
+    }
+
+    function preventBrowserZoom(event: Event) {
+      event.preventDefault();
+    }
+
+    function handleTouchStart(event: TouchEvent) {
+      if (animation !== null) return;
+
+      if (event.touches.length === 2) {
+        tapStart = null;
+        clearTimeout(wheelTimer);
+        end();
+        pinchDistance = touchDistance(event.touches);
+        live = begin(touchMidpoint(event.touches));
+
+        return;
+      }
+
+      const touch = event.touches[0];
+
+      tapStart =
+        event.touches.length === 1
+          ? {
+              time: event.timeStamp,
+              point: { x: touch.clientX, y: touch.clientY }
+            }
+          : null;
+    }
+
+    function handleTouchMove(event: TouchEvent) {
+      if (event.touches.length === 2 && live) {
+        event.preventDefault();
+        update(
+          live,
+          touchDistance(event.touches) / pinchDistance,
+          touchMidpoint(event.touches)
+        );
+
+        return;
+      }
+
+      const touch = event.touches[0];
+
+      if (
+        tapStart &&
+        Math.hypot(
+          touch.clientX - tapStart.point.x,
+          touch.clientY - tapStart.point.y
+        ) > 10
+      ) {
+        tapStart = null;
+      }
+    }
+
+    function handleTouchEnd(event: TouchEvent) {
+      if (live && event.touches.length < 2 && animation === null) end();
+      if (!tapStart || event.touches.length > 0) return;
+
+      const tap = tapStart;
+      tapStart = null;
+
+      if (event.timeStamp - tap.time > 300 || isInteractive(event.target)) {
+        lastTap = null;
+
+        return;
+      }
+
+      const isDoubleTap =
+        lastTap !== null &&
+        tap.time - lastTap.time < DOUBLE_TAP_MS &&
+        Math.hypot(
+          tap.point.x - lastTap.point.x,
+          tap.point.y - lastTap.point.y
+        ) < 30;
+
+      lastTap = isDoubleTap ? null : tap;
+
+      if (!isDoubleTap || animation !== null) return;
+
+      event.preventDefault();
+      const { zoom, fitZoom } = stateRef.current;
+
+      if (zoom < FIELD_ZOOM - 0.01) {
+        animateTo(FIELD_ZOOM, tap.point);
+      } else {
+        animateTo(fitZoom, tap.point, "fit");
+      }
+    }
+
+    function handleWheel(event: WheelEvent) {
+      if (!event.ctrlKey && !event.metaKey) return;
+
+      event.preventDefault();
+
+      if (animation !== null) return;
+
+      const focus = { x: event.clientX, y: event.clientY };
+
+      live ??= begin(focus);
+
+      if (!live) return;
+
+      update(live, live.scale * Math.exp(-event.deltaY * 0.01), focus);
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => end(), 150);
+    }
+
+    for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+      document.addEventListener(type, preventBrowserZoom);
+    }
+
+    // Only a two-finger move is cancelled, so one-finger scrolling stays
+    // native.
+    section.addEventListener("touchstart", handleTouchStart, { passive: true });
+    section.addEventListener("touchmove", handleTouchMove, { passive: false });
+    section.addEventListener("touchend", handleTouchEnd, { passive: false });
+    section.addEventListener("touchcancel", handleTouchEnd);
+    section.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      for (const type of ["gesturestart", "gesturechange", "gestureend"]) {
+        document.removeEventListener(type, preventBrowserZoom);
+      }
+
+      clearTimeout(wheelTimer);
+
+      if (animation !== null) cancelAnimationFrame(animation);
+      if (live?.frame) cancelAnimationFrame(live.frame);
+      section.removeEventListener("touchstart", handleTouchStart);
+      section.removeEventListener("touchmove", handleTouchMove);
+      section.removeEventListener("touchend", handleTouchEnd);
+      section.removeEventListener("touchcancel", handleTouchEnd);
+      section.removeEventListener("wheel", handleWheel);
+    };
+  }, [sectionRef, sizerRef, stateRef]);
+}
+
+// Clears a finished gesture's transform and scrolls so the page sits exactly
+// where the gesture left it, now at its committed zoom.
+export function settleGesture(
+  section: HTMLElement,
+  sizer: HTMLElement,
+  origin: Point
+) {
+  sizer.style.transform = "";
+  sizer.style.willChange = "";
+  const sizerRect = sizer.getBoundingClientRect();
+
+  section.scrollLeft += sizerRect.left - origin.x;
+  section.scrollTop += sizerRect.top - origin.y;
+}
+
+// Where the page's top-left corner lands on screen for a gesture. It follows
+// the fingers, but only as far as the desk can scroll, and an axis where the
+// page is smaller than the desk is centred, as the desk lays it out; so the
+// committed zoom lands the page exactly where the gesture showed it.
+function originFor(zoom: LiveZoom): Point {
+  const width = zoom.size.width * zoom.scale;
+  const height = zoom.size.height * zoom.scale;
+
+  return {
+    x: axisOrigin(
+      zoom.focus.x - zoom.anchor.x * zoom.scale,
+      width,
+      zoom.bounds.left,
+      zoom.bounds.right
+    ),
+    y: axisOrigin(
+      zoom.focus.y - zoom.anchor.y * zoom.scale,
+      height,
+      zoom.bounds.top,
+      zoom.bounds.bottom
+    )
+  };
+}
+
+function axisOrigin(wanted: number, size: number, start: number, end: number) {
+  const room = end - start;
+
+  if (size <= room) return start + (room - size) / 2;
+
+  return Math.min(start, Math.max(end - size, wanted));
+}
+
+function touchDistance(touches: TouchList) {
+  const [first, second] = [touches[0], touches[1]];
+
+  return Math.hypot(
+    first.clientX - second.clientX,
+    first.clientY - second.clientY
+  );
+}
+
+function touchMidpoint(touches: TouchList) {
+  const [first, second] = [touches[0], touches[1]];
+
+  return {
+    x: (first.clientX + second.clientX) / 2,
+    y: (first.clientY + second.clientY) / 2
+  };
+}
+
+// Taps on fields and buttons keep their own meaning; only taps on the page's
+// bare paper or the desk count towards a double-tap zoom.
+function isInteractive(target: EventTarget | null) {
+  return (
+    target instanceof Element &&
+    target.closest("input, textarea, button, a, label, [role=button]") !== null
+  );
+}
