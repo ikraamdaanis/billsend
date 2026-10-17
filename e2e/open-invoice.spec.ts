@@ -5,7 +5,7 @@ import {
   clickFileMenuItem,
   gotoEditorReady,
   gotoEditorSettled,
-  saveInvoiceAs
+  nameInvoice
 } from "./helpers";
 
 // Group H: the Open Invoice dialog.
@@ -24,7 +24,7 @@ test("shows an empty state when there are no saved invoices", async ({
 
 test("lists a saved invoice and opens it into the editor", async ({ page }) => {
   await gotoEditorReady(page, "Alpha title");
-  await saveInvoiceAs(page, "Alpha");
+  await nameInvoice(page, "Alpha");
   await clickFileMenuItem(page, "New Invoice");
 
   await clickFileMenuItem(page, "Open Invoice");
@@ -38,11 +38,9 @@ test("lists a saved invoice and opens it into the editor", async ({ page }) => {
   await expect(page.getByLabel("Invoice title")).toHaveValue("Alpha title");
 });
 
-test("deleting the current invoice detaches the editor [R]", async ({
-  page
-}) => {
+test("deleting the current invoice starts a new one [R]", async ({ page }) => {
   await gotoEditorReady(page, "Solo title");
-  await saveInvoiceAs(page, "Solo doc");
+  await nameInvoice(page, "Solo doc");
 
   await clickFileMenuItem(page, "Open Invoice");
 
@@ -57,9 +55,8 @@ test("deleting the current invoice detaches the editor [R]", async ({
 
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await expect(
-    page.getByRole("heading", { name: "Untitled invoice" })
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "INV-0001" })).toBeVisible();
+  await expect(page.getByLabel("Invoice title")).toHaveValue("Invoice");
 });
 
 test("a record with an invalid date does not crash the list [R]", async ({
@@ -70,7 +67,7 @@ test("a record with an invalid date does not crash the list [R]", async ({
   page.on("pageerror", error => pageErrors.push(error.message));
 
   await gotoEditorReady(page, "Datey title");
-  await saveInvoiceAs(page, "Datey");
+  await nameInvoice(page, "Datey");
 
   // Force an Invalid Date into storage, bypassing the import coercion. The list
   // render must tolerate it (format() would otherwise throw and blank the list).
@@ -114,7 +111,7 @@ test("a record with an invalid date does not crash the list [R]", async ({
 
 test("renaming from the dialog updates the toolbar title", async ({ page }) => {
   await gotoEditorReady(page, "Renamable");
-  await saveInvoiceAs(page, "Old name");
+  await nameInvoice(page, "Old name");
 
   await clickFileMenuItem(page, "Open Invoice");
 
@@ -136,7 +133,7 @@ async function openDialogWithThreeInvoices(page: Page) {
   await gotoEditorReady(page, "Library");
 
   for (const name of ["Alpha", "Bravo", "Charlie"]) {
-    await saveInvoiceAs(page, name);
+    await nameInvoice(page, name);
     await clickFileMenuItem(page, "New Invoice");
   }
 
