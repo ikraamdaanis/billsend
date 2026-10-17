@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -53,22 +53,25 @@ export function RenameInvoiceDialog({
 
   const form = useForm<RenameInvoiceFormData>({
     resolver: zodResolver(renameSchema(subject)),
-    defaultValues: { name: currentName },
-    values: { name: currentName }
+    defaultValues: { name: currentName }
   });
+
+  // Start every open from the name being renamed. Done on open rather than
+  // after close, so the closing dialog keeps its text while it fades and a
+  // quick reopen is never overwritten by a late reset.
+  useEffect(() => {
+    if (!open) return;
+
+    form.reset({ name: currentName });
+    setPending(false);
+  }, [open, currentName, form]);
 
   async function handleSubmit(data: RenameInvoiceFormData) {
     setPending(true);
 
     try {
       await onRename(data.name.trim());
-
       onOpenChange(false);
-
-      setTimeout(() => {
-        form.reset({ name: data.name.trim() });
-        setPending(false);
-      }, 500);
     } catch (error) {
       setPending(false);
       toast.error(
@@ -81,10 +84,6 @@ export function RenameInvoiceDialog({
 
   function handleCancel() {
     onOpenChange(false);
-
-    setTimeout(() => {
-      form.reset({ name: currentName });
-    }, 500);
   }
 
   return (

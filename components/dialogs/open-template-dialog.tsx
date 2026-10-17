@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "~/components/ui/dialog";
-import { deleteTemplate, saveTemplate, watchTemplates } from "~/db";
+import { deleteTemplates, renameTemplate, watchTemplates } from "~/db";
 import type { InvoiceTemplate } from "~/types";
 
 function truncate(value: string, max: number): string {
@@ -187,7 +187,7 @@ export function OpenTemplateDialog({
 
     startTransition(async () => {
       try {
-        await Promise.all(targets.map(template => deleteTemplate(template.id)));
+        await deleteTemplates([...targetIds]);
 
         setSelectedIds(prev => prev.filter(id => !targetIds.has(id)));
         setDeleteTarget(null);
@@ -209,7 +209,7 @@ export function OpenTemplateDialog({
     newName: string
   ) {
     try {
-      await saveTemplate({ ...template, name: newName, updatedAt: new Date() });
+      await renameTemplate(template.id, newName);
 
       toast.success("Template renamed successfully");
     } catch (error) {
