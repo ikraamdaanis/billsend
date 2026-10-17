@@ -271,7 +271,7 @@ function InvoiceList({
               <LibraryItem
                 key={document.id}
                 current={document.id === currentDocumentId}
-                title={document.name}
+                title={document.name || "Untitled invoice"}
                 aside={formatCurrency(
                   getInvoiceTotal(document),
                   document.invoiceData.currency
@@ -402,7 +402,7 @@ function TemplateList({
           <LibraryItem
             key={template.id}
             current={false}
-            title={template.name}
+            title={template.name || "Untitled template"}
             meta={templateMeta(template)}
             onSelect={() => actions.applyTemplate(template)}
             menu={
@@ -444,7 +444,7 @@ function ListScroller({ children }: { children?: ReactNode }) {
   );
 }
 
-// A row: the row itself opens the item, and the ⋯ button on it (shown on
+// A row, under a title that is never blank: the row itself opens the item, and the ⋯ button on it (shown on
 // hover, on focus and while its menu is open; always on touch) holds the rest.
 function LibraryItem({
   current,
@@ -475,7 +475,7 @@ function LibraryItem({
         className="focus-visible:ring-ring grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] gap-x-2 rounded-md py-1.5 pr-9 pl-2 text-left outline-none focus-visible:ring-1 pointer-coarse:py-2.5 pointer-coarse:pr-11"
       >
         <span className="text-foreground truncate text-[13px] font-medium">
-          {title || "Untitled invoice"}
+          {title}
         </span>
         {aside && (
           <span className="text-muted-foreground text-xs leading-5 tabular-nums">
@@ -490,7 +490,7 @@ function LibraryItem({
       </button>
       <DropdownMenu>
         <DropdownMenuTrigger
-          aria-label={`Actions for ${title || "Untitled invoice"}`}
+          aria-label={`Actions for ${title}`}
           className="text-muted-foreground hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground focus-visible:ring-ring absolute top-1/2 right-1 flex size-7 -translate-y-1/2 items-center justify-center rounded-md opacity-0 outline-none group-focus-within/item:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 aria-expanded:opacity-100 pointer-coarse:size-9 pointer-coarse:opacity-100"
         >
           <IconDots aria-hidden="true" className="size-4" />
