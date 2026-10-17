@@ -22,12 +22,20 @@ import { canonicalLink, siteMeta } from "~/utils/site-meta";
 export const Route = createFileRoute("/create")({
   component: RouteComponent,
   head: () => ({
-    meta: siteMeta({
-      path: "/create",
-      title: "billsend editor: Create a Free Invoice PDF",
-      description:
-        "Fill in your details, your client and the line items, then download the invoice as a PDF. Free, with no account, and it all stays in this browser."
-    }),
+    meta: [
+      // The editor zooms the page itself (tapping a field, pinching the
+      // canvas), so iOS mustn't also zoom the whole editor into a focused field.
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1, maximum-scale=1"
+      },
+      ...siteMeta({
+        path: "/create",
+        title: "billsend editor: Create a Free Invoice PDF",
+        description:
+          "Fill in your details, your client and the line items, then download the invoice as a PDF. Free, with no account, and it all stays in this browser."
+      })
+    ],
     links: [canonicalLink("/create")],
     scripts: [{ children: EDITOR_THEME_SCRIPT }]
   }),

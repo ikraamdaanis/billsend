@@ -13,6 +13,10 @@ const NARROW_VIEWPORT_QUERY = "(max-width: 767px)";
 
 const VIEW_STORAGE_KEY = "billsend-editor-zoom";
 
+// The zoom a phone jumps to when a field on the fitted page is tapped, so the
+// text being typed is full size.
+export const FIELD_ZOOM = 1;
+
 function parseView(stored: unknown): CanvasView | undefined {
   if (stored === "fit") return "fit";
 
@@ -26,6 +30,8 @@ const CanvasViewContext = createContext<{
   setView: (view: CanvasView) => void;
   zoom: number;
   setZoom: (zoom: number) => void;
+  isZoomedToField: boolean;
+  zoomToField: () => void;
 } | null>(null);
 
 export function CanvasViewProvider({ children }: { children: ReactNode }) {
@@ -37,8 +43,13 @@ export function CanvasViewProvider({ children }: { children: ReactNode }) {
       : (readStoredValue(VIEW_STORAGE_KEY, parseView) ?? 1)
   );
 
+  // Set while a phone is zoomed in on a field it was fitted out from; Done, or
+  // any other zoom change, ends it.
+  const [isZoomedToField, setIsZoomedToField] = useState(false);
+
   function setView(next: CanvasView) {
     setViewState(next);
+    setIsZoomedToField(false);
 
     if (!window.matchMedia(NARROW_VIEWPORT_QUERY).matches) {
       writeStoredValue(VIEW_STORAGE_KEY, next);
@@ -48,7 +59,17 @@ export function CanvasViewProvider({ children }: { children: ReactNode }) {
   // The scale actually applied to the page; equals `view` unless fitting.
   const [zoom, setZoom] = useState(1);
 
-  const value = { view, setView, zoom, setZoom };
+  const value = {
+    view,
+    setView,
+    zoom,
+    setZoom,
+    isZoomedToField,
+    zoomToField: () => {
+      setViewState(FIELD_ZOOM);
+      setIsZoomedToField(true);
+    }
+  };
 
   return (
     <CanvasViewContext.Provider value={value}>
