@@ -5,7 +5,9 @@ import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
 import { getCurrencyMarker } from "~/consts/currencies";
 import { useIsPreview } from "~/hooks/use-shown-sections";
+import { cn } from "~/lib/utils";
 import { useLineItemsSlice, useTheme } from "~/stores/invoice-selectors";
+import { useInvoiceStore } from "~/stores/invoice-store";
 import type {
   InvoiceItem,
   InvoiceLineItemRow,
@@ -160,6 +162,25 @@ const LINE_ITEM_COLUMNS: LineItemColumnConfig[] = [
  * once here and passes each cell only the value and handlers it needs, so a
  * single item edit does not fan out store subscriptions across every cell.
  */
+// The PDF leaves out the Unit column when no line has a unit, so Preview does
+// too. While editing it always shows, so there's somewhere to type one.
+function useVisibleColumns() {
+  const isPreview = useIsPreview();
+  const hasUnits = useInvoiceStore(state =>
+    state.items.some(item => item.unit.trim())
+  );
+  const hideUnit = isPreview && !hasUnits;
+
+  return {
+    columns: hideUnit
+      ? LINE_ITEM_COLUMNS.filter(column => column.id !== "unit")
+      : LINE_ITEM_COLUMNS,
+    gridClassName: hideUnit
+      ? "grid-cols-[1fr_80px_120px_150px]"
+      : "grid-cols-[1fr_80px_80px_120px_150px]"
+  };
+}
+
 export function InvoiceLineItems() {
   const {
     items,
@@ -201,7 +222,11 @@ export function InvoiceLineItems() {
           />
         </div>
       </div>
-      {!isPreview && <AddItemButton addItem={addItem} />}
+      {isPreview ? (
+        <div aria-hidden="true" className="my-1.5 h-8" />
+      ) : (
+        <AddItemButton addItem={addItem} />
+      )}
     </div>
   );
 }
@@ -215,16 +240,18 @@ function TableHeader({
   theme: InvoiceTheme;
   setTableSettings: SetTableSettings;
 }) {
+  const { columns, gridClassName } = useVisibleColumns();
+
   return (
     <div
       role="row"
-      className="grid grid-cols-[1fr_80px_80px_120px_150px] gap-2 rounded-t-sm font-medium"
+      className={cn("grid gap-2 rounded-t-sm font-medium", gridClassName)}
       style={{
         backgroundColor: tableSettings.backgroundColor,
         borderColor: tableSettings.borderColor
       }}
     >
-      {LINE_ITEM_COLUMNS.map(column => (
+      {columns.map(column => (
         <TableHeaderCell
           key={column.id}
           column={column}
@@ -337,14 +364,18 @@ function LineItem({
 }) {
   const viewRow = buildLineItemRow(item, currency);
   const isPreview = useIsPreview();
+  const { columns, gridClassName } = useVisibleColumns();
 
   return (
     <div
       role="row"
-      className="group/row relative grid grid-cols-[1fr_80px_80px_120px_150px] items-center gap-2 border-t"
+      className={cn(
+        "group/row relative grid items-center gap-2 border-t",
+        gridClassName
+      )}
       style={{ borderColor: tableSettings.borderColor }}
     >
-      {LINE_ITEM_COLUMNS.map(column => (
+      {columns.map(column => (
         <TableCell
           key={`${item.id}-${column.id}`}
           column={column}
