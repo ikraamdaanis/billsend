@@ -24,10 +24,13 @@ export const Route = createFileRoute("/create")({
   head: () => ({
     meta: [
       // The editor zooms the page itself (tapping a field, pinching the
-      // canvas), so iOS mustn't also zoom the whole editor into a focused field.
+      // canvas), so iOS mustn't also zoom the whole editor into a focused
+      // field. On Android the keyboard shrinks the editor rather than covering
+      // its bottom, so the tab bar and the field being typed stay in view.
       {
         name: "viewport",
-        content: "width=device-width, initial-scale=1, maximum-scale=1"
+        content:
+          "width=device-width, initial-scale=1, maximum-scale=1, interactive-widget=resizes-content"
       },
       ...siteMeta({
         path: "/create",
