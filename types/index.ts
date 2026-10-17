@@ -250,6 +250,9 @@ export type InvoiceVersion = {
   invoiceId: string;
   name: string;
   invoiceData: Invoice;
+  // The logo it names (invoiceData.image), indexed so the image sweep can
+  // read which logos versions keep without loading every snapshot.
+  imageId: string;
   reason: InvoiceVersionReason;
   schemaVersion?: number;
   createdAt: Date;
