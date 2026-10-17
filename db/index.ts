@@ -1,11 +1,24 @@
 import type { Table } from "dexie";
 import Dexie, { liveQuery } from "dexie";
+import { isEqual } from "lodash-es";
+import {
+  LAST_OPENED_INVOICE_KEY,
+  migrateToAutosave
+} from "~/db/autosave-migration";
 import {
   CURRENT_INVOICE_SCHEMA_VERSION,
   migrateInvoiceData
 } from "~/schema/migrations";
-import type { InvoiceDocument, InvoiceDraft, InvoiceTemplate } from "~/types";
+import type {
+  Invoice,
+  InvoiceDocument,
+  InvoiceDraft,
+  InvoiceTemplate,
+  InvoiceVersion
+} from "~/types";
+import { deriveInvoiceName } from "~/utils/invoice-name";
 import { selectOrphanedImageIds } from "~/utils/select-orphaned-images";
+import { selectVersionsToDelete } from "~/utils/version-thinning";
 
 // The business profile was removed in schema version 6. Its fixed id is
 // retained only so the v5 migration can provision (and v6 can drop) the row.
@@ -13,12 +26,30 @@ const LEGACY_BUSINESS_PROFILE_ID = "business-profile";
 
 // Validate + migrate stored data on the way out, stamping the current schema
 // version. Old records (no version) are treated as v0 and brought fully current.
-function migrateStoredInvoice(document: InvoiceDocument): InvoiceDocument {
+// An invoice as stored. Records from before autosave have no revision or name
+// source until the version 8 upgrade has run over them.
+type StoredInvoice = Omit<InvoiceDocument, "rev" | "nameSource"> &
+  Partial<Pick<InvoiceDocument, "rev" | "nameSource">>;
+
+function migrateStoredInvoice(document: StoredInvoice): InvoiceDocument {
   return {
     ...document,
+    nameSource: document.nameSource ?? "user",
+    rev: document.rev ?? 1,
     invoiceData: migrateInvoiceData(
       document.invoiceData,
       document.schemaVersion ?? 0
+    ),
+    schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+  };
+}
+
+function migrateStoredVersion(version: InvoiceVersion): InvoiceVersion {
+  return {
+    ...version,
+    invoiceData: migrateInvoiceData(
+      version.invoiceData,
+      version.schemaVersion ?? 0
     ),
     schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
   };
@@ -105,6 +136,24 @@ function createStorageError(error: unknown, fallbackMessage: string): Error {
   });
 }
 
+// Whether a storage failure, or anything it was caused by, is the browser
+// running out of room for this site.
+export function isStorageFullError(error: unknown): boolean {
+  let current: unknown = error;
+
+  for (let depth = 0; current && depth < 5; depth++) {
+    const name = getErrorName(current);
+
+    if (name === "QuotaExceededError") return true;
+
+    current =
+      (current as { cause?: unknown; inner?: unknown }).cause ??
+      (current as { inner?: unknown }).inner;
+  }
+
+  return false;
+}
+
 /**
  * InvoiceDatabase - IndexedDB database for storing invoices, templates, and images.
  *
@@ -125,14 +174,13 @@ function createStorageError(error: unknown, fallbackMessage: string): Error {
  *       });
  *     });
  */
-// Fixed id for the singleton autosaved working draft.
-const DRAFT_ID = "current-draft";
-
 class InvoiceDatabase extends Dexie {
   templates!: Table<InvoiceTemplate, string>;
   invoices!: Table<InvoiceDocument, string>;
   images!: Table<StoredImage, string>;
   drafts!: Table<InvoiceDraft, string>;
+  versions!: Table<InvoiceVersion, string>;
+  meta!: Table<{ key: string; value: unknown }, string>;
 
   constructor() {
     super("InvoiceDatabase");
@@ -260,10 +308,24 @@ class InvoiceDatabase extends Dexie {
       images: "id",
       drafts: "id"
     });
+    // Version 8: Autosave. Invoices gain a content revision and a name source,
+    // each invoice keeps a version history, and the shared working draft is
+    // moved into the library (see migrateToAutosave). The drafts table stays
+    // for one release so a rollback still finds it.
+    this.version(8)
+      .stores({
+        templates: "id, name, createdAt, updatedAt",
+        invoices: "id, name, createdAt, updatedAt",
+        images: "id",
+        drafts: "id",
+        versions: "id, invoiceId, [invoiceId+createdAt]",
+        meta: "key"
+      })
+      .upgrade(tx => migrateToAutosave(tx));
   }
 }
 
-const db = new InvoiceDatabase();
+export const db = new InvoiceDatabase();
 
 let dbOpenPromise: Promise<void> | null = null;
 
@@ -459,6 +521,8 @@ export async function countInvoices(): Promise<number> {
   }
 }
 
+// Writes a whole invoice record as given, for seeding and tests. The editor
+// writes through createInvoice and writeInvoiceContent instead.
 export async function saveInvoice(invoice: InvoiceDocument): Promise<string> {
   try {
     await ensureDbReady();
@@ -469,6 +533,106 @@ export async function saveInvoice(invoice: InvoiceDocument): Promise<string> {
   } catch (error) {
     throw createStorageError(error, "Failed to save invoice to local storage.");
   }
+}
+
+// Adds a new invoice to the library. Fails rather than replacing one that
+// already has its id.
+export async function createInvoice(invoice: InvoiceDocument): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.invoices.add({
+      ...invoice,
+      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+    });
+  } catch (error) {
+    throw createStorageError(error, "Failed to save invoice to local storage.");
+  }
+}
+
+// Writes an invoice's content as a compare-and-swap on its revision, in one
+// read-write transaction: when the stored revision isn't the one the content
+// was edited from, someone else wrote it in the meantime and nothing is
+// overwritten. Only the content, the revision and when it was edited change;
+// the name moves too only while it's still the automatic one, read inside the
+// same transaction so a rename made elsewhere always wins.
+export async function writeInvoiceContent({
+  id,
+  expectedRev,
+  invoiceData
+}: {
+  id: string;
+  expectedRev: number;
+  invoiceData: Invoice;
+}): Promise<
+  | { outcome: "saved"; rev: number }
+  | { outcome: "conflict"; document: InvoiceDocument }
+  | { outcome: "missing" }
+> {
+  try {
+    await ensureDbReady();
+
+    return await db.transaction("rw", db.invoices, async () => {
+      const stored: StoredInvoice | undefined = await db.invoices.get(id);
+
+      if (!stored) return { outcome: "missing" } as const;
+
+      const storedRev = stored.rev ?? 1;
+
+      if (storedRev !== expectedRev) {
+        return {
+          outcome: "conflict",
+          document: migrateStoredInvoice(stored)
+        } as const;
+      }
+
+      const rev = storedRev + 1;
+
+      await db.invoices.update(id, {
+        invoiceData,
+        rev,
+        updatedAt: new Date(),
+        schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
+        ...(stored.nameSource === "auto"
+          ? { name: deriveInvoiceName(invoiceData) }
+          : {})
+      });
+
+      return { outcome: "saved", rev } as const;
+    });
+  } catch (error) {
+    throw createStorageError(error, "Failed to save invoice to local storage.");
+  }
+}
+
+// Calls back with an invoice whenever it changes, in this tab or another, and
+// with undefined once it no longer exists. Returns the unsubscribe.
+export function watchInvoice(
+  id: string,
+  onChange: (invoice: InvoiceDocument | undefined) => void,
+  onError: (error: Error) => void
+): () => void {
+  let subscription: { unsubscribe: () => void } | null = null;
+  let stopped = false;
+
+  ensureDbReady()
+    .then(() => {
+      if (stopped) return;
+
+      subscription = liveQuery(() => db.invoices.get(id)).subscribe({
+        next: invoice =>
+          onChange(invoice ? migrateStoredInvoice(invoice) : undefined),
+        error: (error: unknown) =>
+          onError(createStorageError(error, "Failed to load from storage."))
+      });
+    })
+    .catch((error: unknown) =>
+      onError(error instanceof Error ? error : new Error(String(error)))
+    );
+
+  return () => {
+    stopped = true;
+    subscription?.unsubscribe();
+  };
 }
 
 export async function getInvoice(
@@ -488,23 +652,18 @@ export async function getInvoice(
 }
 
 export async function deleteInvoice(id: string): Promise<void> {
-  try {
-    await ensureDbReady();
-    await db.invoices.delete(id);
-  } catch (error) {
-    throw createStorageError(
-      error,
-      "Failed to delete invoice from local storage."
-    );
-  }
+  await deleteInvoices([id]);
 }
 
-// Deletes several invoices in one transaction, so a failure part way leaves
-// them all in place.
+// Deletes several invoices and their version histories in one transaction, so
+// a failure part way leaves them all in place.
 export async function deleteInvoices(ids: string[]): Promise<void> {
   try {
     await ensureDbReady();
-    await db.invoices.bulkDelete(ids);
+    await db.transaction("rw", db.invoices, db.versions, async () => {
+      await db.invoices.bulkDelete(ids);
+      await db.versions.where("invoiceId").anyOf(ids).delete();
+    });
   } catch (error) {
     throw createStorageError(
       error,
@@ -514,12 +673,14 @@ export async function deleteInvoices(ids: string[]): Promise<void> {
 }
 
 // Changes only an invoice's name (and when it was edited), so content saved
-// from another tab since the list was read is kept.
+// from another tab since the list was read is kept. A name given this way is
+// the invoice's own from then on: it no longer follows the content.
 export async function renameInvoice(id: string, name: string): Promise<void> {
   try {
     await ensureDbReady();
     const updated = await db.invoices.update(id, {
       name,
+      nameSource: "user",
       updatedAt: new Date()
     });
 
@@ -532,55 +693,119 @@ export async function renameInvoice(id: string, name: string): Promise<void> {
   }
 }
 
-// Reads the autosaved working draft, migrating its stored invoice shapes to the
-// current schema. A missing draft resolves to undefined; a genuine read failure
-// (e.g. the database is mid-upgrade in another tab) throws, so the caller can
-// tell "no draft" apart from "couldn't read" and avoid destroying intact work.
-// Migration never throws, so a corrupt draft shape can't block the editor.
-export async function getDraft(): Promise<InvoiceDraft | undefined> {
-  await ensureDbReady();
-
-  const draft = await db.drafts.get(DRAFT_ID);
-
-  if (!draft) return undefined;
-
-  const version = draft.schemaVersion ?? 0;
-
-  return {
-    ...draft,
-    invoiceData: migrateInvoiceData(draft.invoiceData, version),
-    lastSavedInvoice: draft.lastSavedInvoice
-      ? migrateInvoiceData(draft.lastSavedInvoice, version)
-      : null
-  };
-}
-
-// Best-effort autosave of the working draft. Runs on every edit, so a storage
-// hiccup must never surface to the user or interrupt editing; failures are
-// logged and swallowed.
-export async function saveDraft(
-  draft: Omit<InvoiceDraft, "id" | "schemaVersion">
-): Promise<void> {
+// Keeps a copy of an invoice in its version history, unless it's the same as
+// the newest one there, then lets old versions go (see selectVersionsToDelete).
+// Resolves whether a version was added.
+export async function addInvoiceVersion(
+  version: Omit<InvoiceVersion, "id" | "createdAt" | "schemaVersion">
+): Promise<boolean> {
   try {
     await ensureDbReady();
-    await db.drafts.put({
-      ...draft,
-      id: DRAFT_ID,
-      schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION
+
+    return await db.transaction("rw", db.versions, async () => {
+      const existing = await db.versions
+        .where("invoiceId")
+        .equals(version.invoiceId)
+        .toArray();
+      const newest = existing.reduce<InvoiceVersion | null>(
+        (latest, candidate) =>
+          !latest || candidate.createdAt > latest.createdAt
+            ? candidate
+            : latest,
+        null
+      );
+
+      if (
+        newest &&
+        isEqual(migrateStoredVersion(newest).invoiceData, version.invoiceData)
+      ) {
+        return false;
+      }
+
+      const now = new Date();
+      const added: InvoiceVersion = {
+        ...version,
+        id: crypto.randomUUID(),
+        schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
+        createdAt: now
+      };
+
+      await db.versions.add(added);
+
+      const toDelete = selectVersionsToDelete([...existing, added], now);
+
+      if (toDelete.length > 0) await db.versions.bulkDelete(toDelete);
+
+      return true;
     });
   } catch (error) {
-    console.error("[InvoiceDatabase] Failed to save working draft", error);
+    throw createStorageError(
+      error,
+      "Failed to keep a version in local storage."
+    );
   }
 }
 
-// Discards the working draft (e.g. on an explicit "New invoice"). Best-effort.
-export async function clearDraft(): Promise<void> {
+// An invoice's version history, newest first.
+export async function getInvoiceVersions(
+  invoiceId: string
+): Promise<InvoiceVersion[]> {
   try {
     await ensureDbReady();
-    await db.drafts.delete(DRAFT_ID);
+    const versions = await db.versions
+      .where("invoiceId")
+      .equals(invoiceId)
+      .toArray();
+
+    return versions
+      .map(migrateStoredVersion)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } catch (error) {
-    console.error("[InvoiceDatabase] Failed to clear working draft", error);
+    throw createStorageError(
+      error,
+      "Failed to load version history from local storage."
+    );
   }
+}
+
+// The invoice a new tab opens: the one opened or created most recently in any
+// tab. Resolves null when there isn't one or it can't be read.
+export async function getLastOpenedInvoiceId(): Promise<string | null> {
+  await ensureDbReady();
+  const row = await db.meta.get(LAST_OPENED_INVOICE_KEY);
+
+  return typeof row?.value === "string" ? row.value : null;
+}
+
+export async function setLastOpenedInvoiceId(id: string): Promise<void> {
+  try {
+    await ensureDbReady();
+    await db.meta.put({ key: LAST_OPENED_INVOICE_KEY, value: id });
+  } catch (error) {
+    console.error(
+      "[InvoiceDatabase] Failed to remember the open invoice",
+      error
+    );
+  }
+}
+
+// Runs when a newer billsend in another tab needs to upgrade the database.
+// Dexie closes this tab's connection so the upgrade can go ahead, after which
+// nothing here can be written until the page reloads. Returns the unsubscribe.
+export function onDatabaseUpgradeElsewhere(listener: () => void): () => void {
+  function handler() {
+    listener();
+  }
+
+  db.on("versionchange", handler);
+
+  return () => db.on("versionchange").unsubscribe(handler);
+}
+
+// Whether storage opens at all in this browser, for telling a broken or
+// blocked IndexedDB apart from an empty one.
+export async function openDatabase(): Promise<void> {
+  await ensureDbReady();
 }
 
 export async function saveImage(
@@ -669,11 +894,32 @@ export async function getAllImages(): Promise<StoredImage[]> {
   }
 }
 
+// A blob this new is never swept. Another tab's undo history may still point
+// at a logo it uploaded and then removed, and no tab can see another's
+// history; logos older than this are kept by the version taken when their
+// invoice was opened.
+const ORPHAN_GRACE_MS = 24 * 60 * 60 * 1000;
+
+// Image ids in use outside the database, such as this tab's undo history and
+// the invoice being edited before its next save.
+const imageKeepers = new Set<() => Iterable<string>>();
+
+export function registerImageKeeper(
+  keeper: () => Iterable<string>
+): () => void {
+  imageKeepers.add(keeper);
+
+  return () => {
+    imageKeepers.delete(keeper);
+  };
+}
+
 /**
- * Delete image blobs that no saved invoice or template references.
+ * Delete image blobs that nothing references: no saved invoice, template or
+ * version, nothing a registered keeper names (this tab's undo history and the
+ * invoice being edited), and nothing in `keepImageIds`. Blobs from the last
+ * day are always kept, since another tab's undo history may need them.
  *
- * Pass any image ids that are in use but not yet persisted (e.g. the logo on
- * the active in-memory invoice) via `keepImageIds` so they survive the sweep.
  * Best-effort: failures are logged but never thrown, since this is background
  * garbage collection that must not disrupt the upload/load/reset it follows.
  */
@@ -696,24 +942,26 @@ async function runOrphanCleanup(keepImageIds: string[]): Promise<void> {
   try {
     await ensureDbReady();
 
-    const [invoices, templates, images, draft] = await Promise.all([
+    const [invoices, templates, versions, images] = await Promise.all([
       db.invoices.toArray(),
       db.templates.toArray(),
-      db.images.toArray(),
-      db.drafts.get(DRAFT_ID)
+      db.versions.toArray(),
+      db.images.toArray()
     ]);
-
     const referencedImageIds = [
       ...invoices.map(invoice => invoice.invoiceData.image),
       ...templates.map(template => template.templateData.image),
-      draft?.invoiceData.image ?? "",
-      draft?.lastSavedInvoice?.image ?? ""
+      ...versions.map(version => version.invoiceData.image)
     ];
-
+    const keptByTabs = [...imageKeepers].flatMap(keeper => [...keeper()]);
+    const graceStart = Date.now() - ORPHAN_GRACE_MS;
+    const recentImageIds = images
+      .filter(image => new Date(image.createdAt).getTime() > graceStart)
+      .map(image => image.id);
     const orphanedImageIds = selectOrphanedImageIds(
       images.map(image => image.id),
       referencedImageIds,
-      keepImageIds
+      [...keepImageIds, ...keptByTabs, ...recentImageIds]
     );
 
     if (orphanedImageIds.length === 0) return;

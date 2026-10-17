@@ -216,20 +216,48 @@ export type InvoiceTotals = {
   balanceDue: number;
 };
 
+// Where an invoice's name comes from: "auto" follows its number and client as
+// they're edited, "user" is a name someone gave it and stays put.
+export type InvoiceNameSource = "auto" | "user";
+
 export type InvoiceDocument = {
   id: string;
   name: string;
+  nameSource: InvoiceNameSource;
   invoiceData: Invoice;
   templateId: string | null;
+  // The content revision. Every content write is a compare-and-swap on it, so
+  // two writers can never overwrite each other.
+  rev: number;
   schemaVersion?: number;
   createdAt: Date;
   updatedAt: Date;
 };
 
-// The autosaved working draft: a single record capturing the live editing
-// session (the in-progress invoice, which saved document it belongs to, and the
-// baseline it is diffed against) so an accidental reload never loses unsaved
-// work. Restored on editor mount; rewritten on every edit; cleared on reset.
+// Why a version of an invoice was kept.
+export type InvoiceVersionReason =
+  | "opened"
+  | "idle"
+  | "beforeRestore"
+  | "beforeRemoval"
+  | "conflict"
+  | "beforeAutosave";
+
+// A snapshot of an invoice in its version history. Images are kept by id, so
+// a version never copies a logo.
+export type InvoiceVersion = {
+  id: string;
+  invoiceId: string;
+  name: string;
+  invoiceData: Invoice;
+  reason: InvoiceVersionReason;
+  schemaVersion?: number;
+  createdAt: Date;
+};
+
+// The working draft from before autosave: one record holding the live editing
+// session. Only read by the upgrade that turns it into library invoices; the
+// table goes after one release.
 export type InvoiceDraft = {
   id: string;
   invoiceData: Invoice;
@@ -260,6 +288,7 @@ export type BillsendExportFile = {
   invoices: Array<{
     id: string;
     name: string;
+    nameSource?: InvoiceNameSource;
     invoiceData: Invoice;
     templateId: string | null;
     schemaVersion?: number;

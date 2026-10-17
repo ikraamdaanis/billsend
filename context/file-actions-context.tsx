@@ -5,7 +5,6 @@ import {
   useContext,
   useEffect,
   useEffectEvent,
-  useRef,
   useState,
   useTransition
 } from "react";
@@ -15,43 +14,40 @@ import { ImportDataDialog } from "~/components/dialogs/import-data-dialog";
 import { OpenInvoiceDialog } from "~/components/dialogs/open-invoice-dialog";
 import { OpenTemplateDialog } from "~/components/dialogs/open-template-dialog";
 import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
-import { SaveInvoiceDialog } from "~/components/dialogs/save-invoice-dialog";
 import { SaveTemplateModal } from "~/components/dialogs/save-template-modal";
-import type { UnsavedChangesAction } from "~/components/dialogs/unsaved-changes-dialog";
-import { UnsavedChangesDialog } from "~/components/dialogs/unsaved-changes-dialog";
+import { VersionHistoryDialog } from "~/components/dialogs/version-history-dialog";
 import {
   DocumentNotFoundError,
-  generateDefaultInvoiceName,
-  useHasUnsavedChanges,
   useInvoiceDocument
 } from "~/context/invoice-document-context";
 import {
-  deleteInvoice,
   deleteTemplate,
-  getAllInvoices,
   getAllTemplates,
   renameInvoice,
-  renameTemplate,
-  saveInvoice
+  renameTemplate
 } from "~/db";
+import { useDocumentStore } from "~/stores/document-store";
 import { useInvoiceDataAndActions } from "~/stores/invoice-selectors";
 import type { InvoiceDocument, InvoiceTemplate } from "~/types";
-import { ensureItemIds } from "~/utils/ensure-item-ids";
 import { exportAllData } from "~/utils/export-data";
 import { hasOpenModal } from "~/utils/open-overlay";
 import { hasPrimaryModifier } from "~/utils/shortcut-label";
 
-// Everything the editor can do with files: new, open, save, templates, import
-// and export. The project menu, the invoices panel and the command palette all
-// call these, so the unsaved-changes guard and the dialogs behave the same
-// whichever one started the action.
+// Everything the editor can do with files: new, open, duplicate, templates,
+// version history, import and export. The project menu, the invoices panel
+// and the command palette all call these, so the dialogs behave the same
+// whichever one started the action. Every invoice saves itself, so nothing
+// here asks about unsaved changes: switching invoice writes the open one
+// first.
 const FileActionsContext = createContext<{
   pending: boolean;
   newInvoice: () => void;
   showOpenInvoice: () => void;
   openInvoice: (documentId: string) => void;
-  save: () => void;
-  saveAs: () => void;
+  // ⌘S: writes the open invoice now and says it's saved.
+  saveNow: () => void;
+  duplicateCurrent: () => void;
+  showVersionHistory: () => void;
   showOpenTemplate: () => void;
   applyTemplate: (template: InvoiceTemplate) => void;
   saveAsTemplate: () => void;
@@ -75,49 +71,32 @@ function targetName(target: LibraryTarget) {
     : target.template.name;
 }
 
-// "Name copy", or "Name copy 2" and so on when that's taken.
-function nextCopyName(name: string, takenNames: string[]) {
-  const taken = new Set(takenNames.map(takenName => takenName.toLowerCase()));
-  let candidate = `${name} copy`;
-
-  for (let i = 2; taken.has(candidate.toLowerCase()); i++) {
-    candidate = `${name} copy ${i}`;
-  }
-
-  return candidate;
+function errorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function FileActionsProvider({ children }: { children: ReactNode }) {
-  const { invoice, setInvoice } = useInvoiceDataAndActions();
+  const { invoice } = useInvoiceDataAndActions();
   const {
     currentDocumentId,
-    setCurrentDocumentId,
-    setCurrentDocumentName,
-    setLastSavedInvoice,
-    load,
-    saveAs,
-    update,
-    reset
+    libraryDocumentId,
+    isRecord,
+    status,
+    openInvoice,
+    newInvoice,
+    applyTemplate,
+    duplicateInvoice,
+    duplicateCurrent,
+    deleteFromLibrary,
+    flushNow
   } = useInvoiceDocument();
-  const hasUnsavedChanges = useHasUnsavedChanges();
   const { open: openRequest } = useSearch({ from: "/create" });
   const navigate = useNavigate();
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
-  const [saveAsDialogOpen, setSaveAsDialogOpenState] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [unsavedDialogOpen, setUnsavedDialogOpen] = useState(false);
-  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
-  // The unsaved-changes dialog fires onOpenChange(false) both when the user picks an
-  // action (Save/Discard) and when they dismiss it (Cancel/Escape/overlay). Only a
-  // dismissal should drop the pending action; this ref marks the action-driven closes
-  // so they skip that cleanup.
-  const continueAfterUnsavedRef = useRef(false);
-  const [defaultName, setDefaultName] = useState<string>("Invoice 001");
-  const [existingInvoices, setExistingInvoices] = useState<InvoiceDocument[]>(
-    []
-  );
+  const [versionsOpen, setVersionsOpen] = useState(false);
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [pending, startTransition] = useTransition();
   // The rename and delete dialogs keep their target after closing, so their
@@ -133,54 +112,38 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
   const renameTarget = renameDialog.target;
   const deleteTarget = deleteDialog.target;
 
-  function runWithUnsavedGuard(action: () => void) {
-    if (hasUnsavedChanges) {
-      setPendingAction(() => action);
-      setUnsavedDialogOpen(true);
-    } else {
-      action();
-    }
-  }
-
-  // Opening reads the saved invoices first, so the suggested name and the
-  // overwrite check reflect every save so far, including one that has only
-  // just landed.
-  function setSaveAsDialogOpen(open: boolean) {
-    if (!open) {
-      setPendingAction(null);
-      setSaveAsDialogOpenState(false);
-
-      return;
-    }
-
-    getAllInvoices()
-      .then(invoices => {
-        setExistingInvoices(invoices);
-        setDefaultName(generateDefaultInvoiceName(invoices));
-      })
-      .catch(() => {
-        // The fallback name is used.
-      })
-      .finally(() => setSaveAsDialogOpenState(true));
-  }
-
-  function handleNewInvoice() {
-    runWithUnsavedGuard(() => {
-      reset();
+  function run(action: () => Promise<unknown>, failure: string) {
+    startTransition(async () => {
+      try {
+        await action();
+      } catch (error) {
+        toast.error(errorMessage(error, failure));
+      }
     });
   }
 
-  function handleOpenInvoice() {
-    runWithUnsavedGuard(() => {
-      setOpenDialogOpen(true);
-    });
+  function handleOpenInvoice(documentId: string) {
+    if (documentId === currentDocumentId) return;
+
+    run(async () => {
+      try {
+        await openInvoice(documentId);
+      } catch (error) {
+        if (error instanceof DocumentNotFoundError) {
+          toast.error("That invoice was deleted");
+
+          return;
+        }
+
+        throw error;
+      }
+    }, "Failed to open invoice");
   }
 
-  // A link to `/create?open=invoices` lands here. It goes through the same
-  // unsaved-changes guard as the menu item, then the param is cleared so a
+  // A link to `/create?open=invoices` lands here. The param is cleared so a
   // reload doesn't reopen the list.
   const onOpenRequested = useEffectEvent(() => {
-    handleOpenInvoice();
+    setOpenDialogOpen(true);
     void navigate({
       to: "/create",
       search: previous => ({ ...previous, open: undefined }),
@@ -192,181 +155,40 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     if (openRequest === "invoices") onOpenRequested();
   }, [openRequest]);
 
-  function handleOpenTemplate() {
-    runWithUnsavedGuard(() => {
-      setTemplateDialogOpen(true);
-    });
-  }
+  // ⌘S has nothing to save, since everything already saves itself; it writes
+  // whatever is waiting and confirms. A failure shows in the save banner.
+  async function handleSaveNow() {
+    const { status: currentStatus } = useDocumentStore.getState();
 
-  // Detaches the editor from its saved document without touching the invoice
-  // data, so the content lives on as an unsaved document. Used when the current
-  // document is deleted or has otherwise vanished from storage.
-  function detachCurrentDocument() {
-    setCurrentDocumentId(null);
-    setCurrentDocumentName(null);
-    setLastSavedInvoice(null);
-  }
-
-  // Resolves with "saved" when the document was written, or "deferred" when the
-  // save was routed to the Save As dialog instead (no current document, or the
-  // current one has vanished from storage). Rejects only on a genuine failure.
-  // Callers must not treat "deferred" as saved: the pending action is left for
-  // the Save As dialog to run on completion, so nothing destructive runs before
-  // the edits are actually persisted.
-  function handleSave(): Promise<"saved" | "deferred"> {
-    if (!currentDocumentId) {
-      setSaveAsDialogOpen(true);
-
-      return Promise.resolve("deferred");
-    }
-
-    // Nothing to write: saving again would only move the invoice up the
-    // "last edited" order.
-    if (!hasUnsavedChanges) {
-      toast.success("Invoice saved");
-
-      return Promise.resolve("saved");
-    }
-
-    return new Promise<"saved" | "deferred">((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          await update();
-          toast.success("Invoice saved successfully");
-          resolve("saved");
-        } catch (error) {
-          if (error instanceof DocumentNotFoundError) {
-            detachCurrentDocument();
-            setSaveAsDialogOpen(true);
-            resolve("deferred");
-
-            return;
-          }
-
-          toast.error(
-            error instanceof Error ? error.message : "Failed to save invoice"
-          );
-          reject(error instanceof Error ? error : new Error(String(error)));
-        }
+    if (currentStatus === "readOnly") {
+      toast("This invoice is being edited in another tab", {
+        id: "save-now"
       });
-    });
+
+      return;
+    }
+
+    if (currentStatus !== "editing") return;
+
+    if (await flushNow())
+      toast.success("Saved", { id: "save-now", duration: 1500 });
   }
 
-  function handleSaveAs() {
-    setSaveAsDialogOpen(true);
+  function handleDuplicateCurrent() {
+    if (!isRecord || status !== "editing") return;
+
+    run(async () => {
+      const copy = await duplicateCurrent();
+
+      if (copy) toast.success(`Duplicated as “${copy.name}”`);
+    }, "Failed to duplicate invoice");
   }
 
   function handleExport() {
-    startTransition(async () => {
-      try {
-        await exportAllData();
-        toast.success("Data exported successfully");
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to export data"
-        );
-      }
-    });
-  }
-
-  function handleSelectTemplate(template: InvoiceTemplate) {
-    startTransition(() => {
-      try {
-        setInvoice(ensureItemIds(template.templateData));
-        setCurrentDocumentId(null);
-        setCurrentDocumentName(null);
-        setLastSavedInvoice(null);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to apply template"
-        );
-      }
-    });
-  }
-
-  function runPendingAction() {
-    if (!pendingAction) return;
-
-    pendingAction();
-    setPendingAction(null);
-  }
-
-  async function handleSaveInvoice(name: string, overwriteId?: string) {
-    return new Promise<void>((resolve, reject) => {
-      startTransition(async () => {
-        try {
-          if (overwriteId) {
-            await update({ documentId: overwriteId, name });
-
-            toast.success("Invoice saved successfully");
-          } else {
-            await saveAs(name);
-
-            toast.success("Invoice saved successfully");
-          }
-
-          runPendingAction();
-          resolve();
-        } catch (error) {
-          toast.error(
-            error instanceof Error ? error.message : "Failed to save invoice"
-          );
-
-          reject(error);
-        }
-      });
-    });
-  }
-
-  function loadInvoice(documentId: string) {
-    startTransition(async () => {
-      try {
-        await load(documentId);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to open invoice"
-        );
-      }
-    });
-  }
-
-  function handleUnsavedDialogOpenChange(open: boolean) {
-    if (!open && !continueAfterUnsavedRef.current) setPendingAction(null);
-
-    continueAfterUnsavedRef.current = false;
-    setUnsavedDialogOpen(open);
-  }
-
-  async function handleUnsavedAction(action: UnsavedChangesAction) {
-    continueAfterUnsavedRef.current = action !== "cancel";
-
-    if (action === "discard") {
-      runPendingAction();
-
-      return;
-    }
-
-    if (action !== "save") return;
-
-    if (!currentDocumentId) {
-      setSaveAsDialogOpen(true);
-
-      return;
-    }
-
-    try {
-      const result = await handleSave();
-
-      // Only run the pending (often destructive) action once the save actually
-      // landed. When the save was deferred to the Save As dialog, that dialog
-      // runs the pending action itself after it persists, so running it here
-      // would wipe the edits before they were saved.
-      if (result === "saved") {
-        runPendingAction();
-      }
-    } catch {
-      setPendingAction(null);
-    }
+    run(async () => {
+      await exportAllData();
+      toast.success("Data exported successfully");
+    }, "Failed to export data");
   }
 
   useEffect(() => {
@@ -374,7 +196,7 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
       try {
         setTemplates(await getAllTemplates());
       } catch {
-        // Silently fail
+        // The template list stays as it was.
       }
     }
     loadTemplates();
@@ -391,21 +213,19 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
 
     if (key !== "o" && key !== "s") return;
 
+    // ⌘S never opens the browser's Save Page, even under a dialog.
     event.preventDefault();
 
-    // A modal dialog owns keyboard focus; swallow file shortcuts underneath it
-    // rather than firing them (which could stack a second dialog and silently
-    // replace the pending action). Popovers are dialogs too, but not modal, so
-    // they don't block a save. A held key repeats the save; once is enough,
-    // and nothing waits while a save or an open is under way.
-    if (hasOpenModal() || event.repeat || pending) return;
+    // A modal dialog owns keyboard focus; file shortcuts stand down under it.
+    // A held key repeats; once is enough.
+    if (hasOpenModal() || event.repeat) return;
 
     if (key === "o" && !event.shiftKey) {
-      handleOpenInvoice();
+      setOpenDialogOpen(true);
     } else if (key === "s" && !event.shiftKey) {
-      void handleSave().catch(() => {});
-    } else if (key === "s" && event.shiftKey) {
-      handleSaveAs();
+      void handleSaveNow();
+    } else if (key === "s" && event.shiftKey && !pending) {
+      handleDuplicateCurrent();
     }
   });
 
@@ -423,11 +243,7 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     if (!renameTarget) return;
 
     if (renameTarget.kind === "invoice") {
-      const { document } = renameTarget;
-
-      await renameInvoice(document.id, newName);
-
-      if (document.id === currentDocumentId) setCurrentDocumentName(newName);
+      await renameInvoice(renameTarget.document.id, newName);
       toast.success("Invoice renamed");
     } else {
       await renameTemplate(renameTarget.template.id, newName);
@@ -440,62 +256,36 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
 
     try {
       if (deleteTarget.kind === "invoice") {
-        await deleteInvoice(deleteTarget.document.id);
-
-        if (deleteTarget.document.id === currentDocumentId) {
-          detachCurrentDocument();
-        }
-
+        await deleteFromLibrary([deleteTarget.document.id]);
         toast.success("Invoice deleted");
       } else {
         await deleteTemplate(deleteTarget.template.id);
         toast.success("Template deleted");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to delete");
+      toast.error(errorMessage(error, "Failed to delete"));
     }
   }
 
   function handleDuplicateInvoice(document: InvoiceDocument) {
-    startTransition(async () => {
-      try {
-        const saved = await getAllInvoices();
-        const now = new Date();
-        const name = nextCopyName(
-          document.name,
-          saved.map(savedInvoice => savedInvoice.name)
-        );
+    run(async () => {
+      const copy = await duplicateInvoice(document);
 
-        await saveInvoice({
-          ...document,
-          id: crypto.randomUUID(),
-          name,
-          invoiceData: structuredClone(document.invoiceData),
-          createdAt: now,
-          updatedAt: now
-        });
-        toast.success(`Duplicated as “${name}”`);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to duplicate invoice"
-        );
-      }
-    });
+      toast.success(`Duplicated as “${copy.name}”`);
+    }, "Failed to duplicate invoice");
   }
 
   const value = {
     pending,
-    newInvoice: handleNewInvoice,
-    showOpenInvoice: handleOpenInvoice,
-    openInvoice: (documentId: string) => {
-      if (documentId === currentDocumentId) return;
-      runWithUnsavedGuard(() => loadInvoice(documentId));
-    },
-    save: () => void handleSave().catch(() => {}),
-    saveAs: handleSaveAs,
-    showOpenTemplate: handleOpenTemplate,
+    newInvoice: () => run(newInvoice, "Failed to start a new invoice"),
+    showOpenInvoice: () => setOpenDialogOpen(true),
+    openInvoice: handleOpenInvoice,
+    saveNow: () => void handleSaveNow(),
+    duplicateCurrent: handleDuplicateCurrent,
+    showVersionHistory: () => setVersionsOpen(true),
+    showOpenTemplate: () => setTemplateDialogOpen(true),
     applyTemplate: (template: InvoiceTemplate) =>
-      runWithUnsavedGuard(() => handleSelectTemplate(template)),
+      run(() => applyTemplate(template), "Failed to apply template"),
     saveAsTemplate: () => setSaveTemplateDialogOpen(true),
     exportData: handleExport,
     importData: () => setImportDialogOpen(true),
@@ -516,34 +306,25 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
       <OpenInvoiceDialog
         open={openDialogOpen}
         onOpenChange={setOpenDialogOpen}
-        onSelectInvoice={invoiceDoc => loadInvoice(invoiceDoc.id)}
-        currentInvoiceId={currentDocumentId}
-        onCurrentInvoiceDeleted={detachCurrentDocument}
-        onCurrentInvoiceRenamed={setCurrentDocumentName}
+        onSelectInvoice={invoiceDoc => handleOpenInvoice(invoiceDoc.id)}
+        currentInvoiceId={libraryDocumentId}
+        onDeleteInvoices={deleteFromLibrary}
         onDuplicateInvoice={handleDuplicateInvoice}
-      />
-      <SaveInvoiceDialog
-        open={saveAsDialogOpen}
-        onOpenChange={setSaveAsDialogOpen}
-        defaultName={defaultName}
-        existingInvoices={existingInvoices}
-        onSave={handleSaveInvoice}
-      />
-      <UnsavedChangesDialog
-        open={unsavedDialogOpen}
-        onOpenChange={handleUnsavedDialogOpenChange}
-        onAction={handleUnsavedAction}
       />
       <OpenTemplateDialog
         open={templateDialogOpen}
         onOpenChange={setTemplateDialogOpen}
-        onSelectTemplate={handleSelectTemplate}
+        onSelectTemplate={value.applyTemplate}
       />
       <SaveTemplateModal
         open={saveTemplateDialogOpen}
         onOpenChange={setSaveTemplateDialogOpen}
         currentInvoiceData={invoice}
         templates={templates}
+      />
+      <VersionHistoryDialog
+        open={versionsOpen}
+        onOpenChange={setVersionsOpen}
       />
       <RenameInvoiceDialog
         open={renameDialog.open}

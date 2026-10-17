@@ -10,7 +10,7 @@ import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceTerms({ onRemove }: { onRemove: () => void }) {
   return (
-    <OptionalSection>
+    <OptionalSection data-field-area="terms">
       <div className="mb-2 flex items-center gap-1">
         <TermsLabel />
         <RemoveSectionButton label="Hide terms" onClick={onRemove} />
@@ -27,6 +27,7 @@ function TermsLabel() {
   return (
     <InvoiceInput
       aria-label="Terms section label"
+      data-field="terms.label"
       value={terms.label}
       className="font-medium"
       onChange={value => setTerms(prev => ({ ...prev, label: value }))}
@@ -46,6 +47,7 @@ function TermsContent() {
     <InvoiceTextArea
       id="invoice-field-terms"
       aria-label={`${terms.label || "Terms and conditions"} content`}
+      data-field="terms.content"
       value={terms.content}
       onChange={value => setTerms(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[4lh] w-full"

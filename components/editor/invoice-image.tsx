@@ -84,6 +84,7 @@ export function InvoiceImage() {
   if (isPreview) {
     return imageUrl ? (
       <img
+        data-field-area="logo"
         src={imageUrl}
         alt="Invoice logo"
         width={128}
@@ -104,7 +105,7 @@ export function InvoiceImage() {
       maxSize={MAX_IMAGE_SIZE_BYTES}
     >
       {({ getRootProps, getInputProps }) => (
-        <div className="group relative shrink-0">
+        <div data-field-area="logo" className="group relative shrink-0">
           <div
             {...getRootProps()}
             role="button"

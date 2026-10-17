@@ -6,7 +6,7 @@ import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceSellerDetails() {
   return (
-    <section className="flex flex-col">
+    <section data-field-area="seller" className="flex flex-col">
       <SellerLabel />
       <SellerContent />
     </section>
@@ -20,6 +20,7 @@ function SellerLabel() {
   return (
     <InvoiceInput
       aria-label="Seller section label"
+      data-field="seller.label"
       value={seller.label}
       className="leading-paper-row font-medium"
       onChange={value => setSeller(prev => ({ ...prev, label: value }))}
@@ -39,6 +40,7 @@ function SellerContent() {
     <InvoiceTextArea
       id="invoice-field-seller"
       aria-label={`${seller.label || "Seller"} details`}
+      data-field="seller.content"
       value={seller.content}
       onChange={value => setSeller(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[5lh] w-full max-w-[500px]"

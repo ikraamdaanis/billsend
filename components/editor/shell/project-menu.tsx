@@ -1,17 +1,25 @@
 import {
+  IconArrowBackUp,
+  IconArrowForwardUp,
   IconArrowLeft,
   IconBookmark,
   IconChevronDown,
   IconCommand,
+  IconCopy,
   IconDeviceFloppy,
   IconDownload,
-  IconFile,
   IconFilePlus,
   IconFolderOpen,
+  IconHistory,
   IconMoon,
   IconSun,
   IconUpload
 } from "@tabler/icons-react";
+import { useNavigate } from "@tanstack/react-router";
+import {
+  redoLabel,
+  undoLabel
+} from "~/components/editor/shell/history-buttons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,16 +30,27 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { useFileActions } from "~/context/file-actions-context";
+import { useInvoiceDocument } from "~/context/invoice-document-context";
 import { useEditorTheme } from "~/hooks/use-editor-theme";
+import {
+  redoInvoiceChange,
+  undoInvoiceChange,
+  useInvoiceHistory
+} from "~/stores/invoice-history";
 import { shortcutLabel } from "~/utils/shortcut-label";
 
-// The logo opens one menu with everything the old File menu had, plus the way
-// back to the homepage, like the project menu in Framer. It also carries the
-// light/dark switch, which phones have no canvas pill for.
-export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
+// The logo opens one menu with everything the old File menu had, plus undo
+// and redo and the way back to the homepage, like the project menu in Framer.
+// It also carries the light/dark switch, which phones have no canvas pill for.
+// Invoices save themselves, so there's no Save: Duplicate takes Save As's
+// place, as in Apple's autosaving apps.
+export function ProjectMenu() {
   const actions = useFileActions();
   const { setPaletteOpen } = useEditorUi();
   const { theme, toggleTheme } = useEditorTheme();
+  const { isRecord, status } = useInvoiceDocument();
+  const history = useInvoiceHistory();
+  const navigate = useNavigate();
   const isDark = theme === "dark";
 
   return (
@@ -47,7 +66,7 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
         />
         <IconChevronDown aria-hidden="true" className="size-3.5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56">
+      <DropdownMenuContent className="w-64">
         <DropdownMenuItem
           onClick={actions.newInvoice}
           disabled={actions.pending}
@@ -63,16 +82,37 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
           Open Invoice
           <DropdownMenuShortcut>{shortcutLabel("⌘O")}</DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={actions.save} disabled={actions.pending}>
-          <IconDeviceFloppy aria-hidden="true" />
-          Save
-          <DropdownMenuShortcut>{shortcutLabel("⌘S")}</DropdownMenuShortcut>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={actions.saveAs} disabled={actions.pending}>
-          <IconFile aria-hidden="true" />
-          Save As...
+        <DropdownMenuItem
+          onClick={actions.duplicateCurrent}
+          disabled={actions.pending || !isRecord || status !== "editing"}
+        >
+          <IconCopy aria-hidden="true" />
+          Duplicate
           <DropdownMenuShortcut>{shortcutLabel("⇧⌘S")}</DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={actions.showVersionHistory}
+          disabled={!isRecord}
+        >
+          <IconHistory aria-hidden="true" />
+          Version History
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => undoInvoiceChange()}
+          disabled={!history.canUndo}
+        >
+          <IconArrowBackUp aria-hidden="true" />
+          <span className="truncate">{undoLabel(history.undoLabel)}</span>
+          <DropdownMenuShortcut>{shortcutLabel("⌘Z")}</DropdownMenuShortcut>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => redoInvoiceChange()}
+          disabled={!history.canRedo}
+        >
+          <IconArrowForwardUp aria-hidden="true" />
+          <span className="truncate">{redoLabel(history.redoLabel)}</span>
+          <DropdownMenuShortcut>{shortcutLabel("⇧⌘Z")}</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -118,7 +158,7 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
           Quick actions
           <DropdownMenuShortcut>{shortcutLabel("⌘K")}</DropdownMenuShortcut>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onLeave}>
+        <DropdownMenuItem onClick={() => void navigate({ to: "/" })}>
           <IconArrowLeft aria-hidden="true" />
           Back to homepage
         </DropdownMenuItem>

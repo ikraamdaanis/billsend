@@ -51,6 +51,8 @@ describe("data backup/restore", () => {
     await saveInvoice({
       id: "inv-1",
       name: "My invoice",
+      nameSource: "user",
+      rev: 1,
       invoiceData: { ...structuredClone(invoiceDefault), number: "INV-0007" },
       templateId: null,
       createdAt: now,
@@ -68,6 +70,33 @@ describe("data backup/restore", () => {
     expect(invoices).toHaveLength(1);
     expect(invoices[0].name).toBe("My invoice");
     expect(invoices[0].invoiceData.number).toBe("INV-0007");
+  });
+
+  it("keeps an automatic name automatic through export and import", async () => {
+    const now = new Date();
+    await saveInvoice({
+      id: "inv-auto",
+      name: "INV-0008",
+      nameSource: "auto",
+      rev: 3,
+      invoiceData: { ...structuredClone(invoiceDefault), number: "INV-0008" },
+      templateId: null,
+      createdAt: now,
+      updatedAt: now
+    });
+
+    const exported = await buildExportData();
+
+    await resetDb();
+    await executeImport(exported);
+
+    const [imported] = await getAllInvoices();
+
+    expect(imported).toMatchObject({
+      name: "INV-0008",
+      nameSource: "auto",
+      rev: 1
+    });
   });
 
   it("imports an older profile-bearing export, ignoring the profile", async () => {
@@ -106,6 +135,8 @@ describe("data backup/restore", () => {
     await saveInvoice({
       id: "inv-logo",
       name: "Logo invoice",
+      nameSource: "user",
+      rev: 1,
       invoiceData: { ...structuredClone(invoiceDefault), image: "logo-1" },
       templateId: null,
       createdAt: now,

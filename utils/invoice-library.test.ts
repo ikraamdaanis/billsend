@@ -37,6 +37,8 @@ function makeDocument({
   return {
     id,
     name: `${client} ${number}`,
+    nameSource: "user",
+    rev: 1,
     templateId: null,
     createdAt: new Date(updatedAt),
     updatedAt: new Date(updatedAt),
