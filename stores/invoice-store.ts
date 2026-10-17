@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import {
+  DEFAULT_INVOICE_DATE_FORMAT,
   DEFAULT_INVOICE_SECTIONS,
   DEFAULT_INVOICE_THEME
 } from "~/schema/invoice";
@@ -123,7 +124,8 @@ export const invoiceDefault: Invoice = {
   currency: "$",
   currencyCode: "USD",
   theme: DEFAULT_INVOICE_THEME,
-  sections: DEFAULT_INVOICE_SECTIONS
+  sections: DEFAULT_INVOICE_SECTIONS,
+  dateFormat: DEFAULT_INVOICE_DATE_FORMAT
 };
 
 /**
@@ -169,6 +171,9 @@ interface InvoiceActions {
   // Sections
   setSection: (section: InvoiceSectionKey, on: boolean) => void;
 
+  // Dates
+  setDateFormat: (dateFormat: Invoice["dateFormat"]) => void;
+
   // Title
   setTitle: (title: string) => void;
 
@@ -192,8 +197,7 @@ interface InvoiceActions {
   // Shipping
   setShipping: (
     shipping:
-      | Invoice["shipping"]
-      | ((prev: Invoice["shipping"]) => Invoice["shipping"])
+      Invoice["shipping"] | ((prev: Invoice["shipping"]) => Invoice["shipping"])
   ) => void;
 
   // Details
@@ -289,6 +293,12 @@ export const useInvoiceStore = create<InvoiceStore>()(
       setSection: (section, on) =>
         set(state => {
           state.sections[section] = on;
+        }),
+
+      // Dates
+      setDateFormat: dateFormat =>
+        set(state => {
+          state.dateFormat = dateFormat;
         }),
 
       // Title

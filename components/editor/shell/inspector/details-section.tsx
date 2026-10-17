@@ -1,3 +1,4 @@
+import { format } from "date-fns";
 import { useState } from "react";
 import { CustomCurrencyDialog } from "~/components/dialogs/custom-currency-dialog";
 import {
@@ -13,9 +14,11 @@ import {
   normalizeCurrency
 } from "~/consts/currencies";
 import { cn } from "~/lib/utils";
+import { INVOICE_DATE_FORMATS } from "~/schema/invoice";
 import { useCurrencySlice, useDetailsSlice } from "~/stores/invoice-selectors";
 import {
   addDaysToIsoDate,
+  dueDateForNewInvoiceDate,
   getPaymentTermsDays,
   PAYMENT_TERMS
 } from "~/utils/payment-terms";
@@ -28,6 +31,7 @@ export function DetailsSection() {
     <InspectorSection id="details" title="Details">
       <CurrencyRow />
       <DatesRows />
+      <DateFormatRow />
     </InspectorSection>
   );
 }
@@ -85,6 +89,36 @@ function CurrencyRow() {
   );
 }
 
+// Each format is shown as today's date written that way, so the choice is
+// obvious without reading a pattern.
+function DateFormatRow() {
+  const { dateFormat, setDateFormat } = useDetailsSlice();
+  const today = new Date();
+
+  return (
+    <InspectorRow label="Date format" htmlFor="inspector-date-format">
+      <NativeSelect
+        id="inspector-date-format"
+        value={dateFormat}
+        onChange={event => {
+          const next = INVOICE_DATE_FORMATS.find(
+            option => option === event.target.value
+          );
+
+          if (next) setDateFormat(next);
+        }}
+        className={cn(inspectorFieldClassName, "pr-7")}
+      >
+        {INVOICE_DATE_FORMATS.map(option => (
+          <option key={option} value={option}>
+            {format(today, option)}
+          </option>
+        ))}
+      </NativeSelect>
+    </InspectorRow>
+  );
+}
+
 function DatesRows() {
   const { invoiceDate, dueDate, setInvoiceDate, setDueDate } =
     useDetailsSlice();
@@ -92,12 +126,13 @@ function DatesRows() {
 
   // Moving the invoice date keeps a preset's gap, so Net 30 stays Net 30.
   function handleInvoiceDateChange(value: string) {
+    const nextDueDate = dueDateForNewInvoiceDate({
+      invoiceDate,
+      dueDate,
+      nextInvoiceDate: value
+    });
+
     setInvoiceDate(value);
-
-    if (termsDays === null) return;
-
-    const nextDueDate = addDaysToIsoDate(value, termsDays);
-
     if (nextDueDate) setDueDate(nextDueDate);
   }
 

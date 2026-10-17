@@ -41,6 +41,24 @@ export function getPaymentTermsDays(
   return PAYMENT_TERMS.some(term => term.days === days) ? days : null;
 }
 
+// The due date to go with a new invoice date: a preset gap (Net 30 and so on)
+// moves with it; a custom due date stays put (null means leave it).
+export function dueDateForNewInvoiceDate({
+  invoiceDate,
+  dueDate,
+  nextInvoiceDate
+}: {
+  invoiceDate: string;
+  dueDate: string;
+  nextInvoiceDate: string;
+}): string | null {
+  const termsDays = getPaymentTermsDays(invoiceDate, dueDate);
+
+  return termsDays === null
+    ? null
+    : addDaysToIsoDate(nextInvoiceDate, termsDays);
+}
+
 // The yyyy-MM-dd date `days` after `isoDate`, or null if it isn't a date.
 export function addDaysToIsoDate(isoDate: string, days: number): string | null {
   const date = parseIsoDate(isoDate);

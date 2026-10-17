@@ -13,6 +13,7 @@ import {
   calculateInvoiceTotals,
   calculateLineAmount
 } from "~/utils/calculate-invoice-totals";
+import { formatInvoiceDate } from "~/utils/format-invoice-date";
 
 // Maps an invoice to an ordered, fully-formatted view-model so the HTML canvas
 // and the PDF render from one source instead of duplicating ordering,
@@ -31,6 +32,7 @@ export function buildDetailRows(input: {
   dueDate: string;
   servicePeriod: string;
   sections: Pick<InvoiceSections, "poNumber" | "servicePeriod">;
+  dateFormat: Invoice["dateFormat"];
 }): InvoiceDetailRow[] {
   const rows: InvoiceDetailRow[] = [
     {
@@ -51,14 +53,14 @@ export function buildDetailRows(input: {
       id: "invoiceDate",
       labelKey: "invoiceDate",
       label: input.labels.invoiceDate,
-      value: input.invoiceDate,
+      value: formatInvoiceDate(input.invoiceDate, input.dateFormat),
       isOptional: false
     },
     {
       id: "dueDate",
       labelKey: "paymentDue",
       label: input.labels.paymentDue,
-      value: input.dueDate,
+      value: formatInvoiceDate(input.dueDate, input.dateFormat),
       isOptional: false
     },
     {
