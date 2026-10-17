@@ -290,9 +290,11 @@ code {
    because menus and popovers portal to <body>. Dark also adds .dark, for the
    primitives' dark: variants; these blocks out-rank its tokens. The invoice
    page ([data-paper]) takes the light tokens back in both themes, so the
-   inputs on it stay white with dark ink like the PDF. */
+   inputs on it stay white with dark ink like the PDF. The homepage's pictures
+   of the editor ([data-editor-chrome]) use the light palette too. */
 html[data-editor-theme],
-html[data-editor-theme] [data-paper] {
+html[data-editor-theme] [data-paper],
+[data-editor-chrome] {
   --background: #fcfcfc;
   --foreground: #1c1c1c;
   --card: #ffffff;
