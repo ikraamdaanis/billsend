@@ -33,7 +33,7 @@ export function InvoicePaymentDetails() {
   if (!sections.paymentDetails) return null;
 
   return (
-    <OptionalSection className="mt-6">
+    <OptionalSection data-field-area="paymentDetails" className="mt-6">
       <div className="flex items-center gap-1">
         <PaymentDetailsLabel />
         <RemoveSectionButton
@@ -63,6 +63,7 @@ function PaymentDetailsLabel() {
   return (
     <InvoiceInput
       aria-label="Payment details section label"
+      data-field="paymentDetails.label"
       value={paymentDetails.label}
       className="font-medium"
       onChange={value => setPaymentDetails(prev => ({ ...prev, label: value }))}
@@ -103,6 +104,7 @@ function PaymentDetailsField({
       </label>
       <InvoiceInput
         id={fieldId}
+        data-field={`paymentDetails.${fieldKey}`}
         value={paymentDetails[fieldKey]}
         onChange={value =>
           setPaymentDetails(prev => ({ ...prev, [fieldKey]: value }))
@@ -127,6 +129,7 @@ function PaymentDetailsTerms() {
     <InvoiceTextArea
       id="invoice-field-payment-terms"
       aria-label="Payment instructions"
+      data-field="paymentDetails.terms"
       value={paymentDetails.terms}
       onChange={value => setPaymentDetails(prev => ({ ...prev, terms: value }))}
       className="mt-2 field-sizing-content w-full"

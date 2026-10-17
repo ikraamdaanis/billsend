@@ -19,6 +19,7 @@ import type {
   InvoiceDocument,
   InvoiceTemplate
 } from "~/types";
+import { deriveInvoiceName } from "~/utils/invoice-name";
 
 const metaSchema = z.object({
   version: z.number().int().positive(),
@@ -45,6 +46,7 @@ const billsendExportSchema = z.object({
     z.object({
       id: z.string(),
       name: z.string(),
+      nameSource: z.enum(["auto", "user"]).optional().catch(undefined),
       invoiceData: z.record(z.string(), z.unknown()),
       templateId: z.string().nullable(),
       schemaVersion: z.number().int().catch(0),
@@ -257,9 +259,15 @@ export async function executeImport(
         invoiceExport.templateId)
       : invoiceExport.templateId;
 
+    // A name that follows the content can't clash, so it isn't renamed.
+    const nameSource = invoiceExport.nameSource ?? "user";
+
     invoicesToStore.push({
       id: newId,
-      name: resolvedName,
+      name:
+        nameSource === "auto" ? deriveInvoiceName(invoiceData) : resolvedName,
+      nameSource,
+      rev: 1,
       invoiceData,
       templateId: newTemplateId,
       schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,

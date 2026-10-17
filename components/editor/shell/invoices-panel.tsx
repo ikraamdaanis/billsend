@@ -43,7 +43,6 @@ import {
   sortInvoices
 } from "~/utils/invoice-library";
 import { parseIsoDate } from "~/utils/parse-iso-date";
-import { shortcutLabel } from "~/utils/shortcut-label";
 
 type LibraryTab = "invoices" | "templates";
 
@@ -74,9 +73,9 @@ function useWatchedList<TRow>(
 
 // The saved invoices and templates in this browser, one click away, like the
 // pages list in Framer: searchable, sortable, filterable and grouped, with a
-// menu on each row for the rest. Opening one goes through the same
-// unsaved-changes check as the project menu. The tab, sort, grouping and
-// filters are remembered across reloads; the search is not.
+// menu on each row for the rest. Opening one saves the open invoice first,
+// as the project menu does. The tab, sort, grouping and filters are
+// remembered across reloads; the search is not.
 export function InvoicesPanel() {
   const [tab, setTab] = usePersistentState<LibraryTab>(
     "billsend-editor-library-tab",
@@ -209,7 +208,7 @@ function InvoiceList({
   view: InvoiceLibraryView;
   onClearFilters: () => void;
 }) {
-  const { currentDocumentId } = useInvoiceDocument();
+  const { libraryDocumentId } = useInvoiceDocument();
   const actions = useFileActions();
 
   if (error)
@@ -224,8 +223,8 @@ function InvoiceList({
     return (
       <ListScroller>
         <ListMessage>
-          No saved invoices yet. Save this one with {shortcutLabel("⌘S")} and it
-          will show here.
+          No invoices yet. Every invoice saves itself as you edit, and shows
+          here once you start on it.
         </ListMessage>
       </ListScroller>
     );
@@ -270,7 +269,7 @@ function InvoiceList({
             {group.documents.map(document => (
               <LibraryItem
                 key={document.id}
-                current={document.id === currentDocumentId}
+                current={document.id === libraryDocumentId}
                 title={document.name || "Untitled invoice"}
                 aside={formatCurrency(
                   getInvoiceTotal(document),

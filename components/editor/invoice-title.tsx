@@ -11,6 +11,7 @@ export function InvoiceTitle() {
     <InvoiceInput
       id="invoice-field-title"
       aria-label="Invoice title"
+      data-field="title"
       value={title}
       onChange={setTitle}
       className="w-full text-5xl font-semibold"

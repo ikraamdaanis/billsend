@@ -10,7 +10,7 @@ import { getTextStyles } from "~/utils/get-text-styles";
 
 export function InvoiceLatePayment({ onRemove }: { onRemove: () => void }) {
   return (
-    <OptionalSection>
+    <OptionalSection data-field-area="latePayment">
       <div className="mb-2 flex items-center gap-1">
         <LatePaymentLabel />
         <RemoveSectionButton label="Hide late payment" onClick={onRemove} />
@@ -27,6 +27,7 @@ function LatePaymentLabel() {
   return (
     <InvoiceInput
       aria-label="Late payment section label"
+      data-field="latePayment.label"
       value={latePayment.label}
       className="font-medium"
       onChange={value => setLatePayment(prev => ({ ...prev, label: value }))}
@@ -46,6 +47,7 @@ function LatePaymentContent() {
     <InvoiceTextArea
       id="invoice-field-late-payment"
       aria-label={`${latePayment.label || "Late payment"} content`}
+      data-field="latePayment.content"
       value={latePayment.content}
       onChange={value => setLatePayment(prev => ({ ...prev, content: value }))}
       className="field-sizing-content min-h-[2lh] w-full"

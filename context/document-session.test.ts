@@ -1,243 +1,676 @@
 import Dexie from "dexie";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  DocumentNotFoundError,
-  documentActions,
-  hydrateDocument
-} from "~/context/document-session";
-import {
-  deleteInvoice,
-  getDraft,
-  getInvoice,
-  saveDraft,
-  saveInvoice
-} from "~/db";
-import { documentDefault, useDocumentStore } from "~/stores/document-store";
-import { selectInvoiceData } from "~/stores/invoice-selectors";
-import { invoiceDefault, useInvoiceStore } from "~/stores/invoice-store";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { invoiceDefault } from "~/stores/invoice-store";
 import type { InvoiceDocument } from "~/types";
-import { deriveHasUnsavedChanges } from "~/utils/derive-has-unsaved-changes";
 
-// Clears every table through an independent connection so each test starts from
-// an empty database, matching a fresh device. Declared at the current schema
-// version (7) so the drafts table is included and actually cleared between tests.
-async function resetDb() {
-  const connection = new Dexie("InvoiceDatabase");
-  connection.version(7).stores({
-    templates: "id, name, createdAt, updatedAt",
-    invoices: "id, name, createdAt, updatedAt",
-    images: "id",
-    drafts: "id"
-  });
-  await connection.open();
-  await Promise.all([
-    connection.table("templates").clear(),
-    connection.table("invoices").clear(),
-    connection.table("images").clear(),
-    connection.table("drafts").clear()
-  ]);
-  connection.close();
+// Every page, closed after each test so a page from an earlier test (its
+// timers, its live queries, the Web Locks it holds) can't reach the next.
+const openPages: {
+  detachEditor: () => Promise<void>;
+  db: { close: (options?: { disableAutoOpen: boolean }) => void };
+}[] = [];
+
+async function closePages() {
+  for (const page of openPages.splice(0)) {
+    await page.detachEditor();
+    page.db.close({ disableAutoOpen: true });
+  }
 }
 
-// Returns both module-global stores to their defaults, standing in for a fresh
-// editor session. setInvoice routes through migrate/normalize just like the app.
-function resetStores() {
-  useInvoiceStore.getState().setInvoice(structuredClone(invoiceDefault));
-  useDocumentStore.getState().setDocument({ ...documentDefault });
+// The session is module state (one open invoice per page), so every test
+// loads a fresh copy of it, as a page load would, over a fresh database.
+async function loadPage({
+  failWrites
+}: { failWrites?: { current: Error | null } } = {}) {
+  vi.resetModules();
+
+  const database = await import("~/db");
+
+  if (failWrites) {
+    // Fails every write to the invoices table while `current` is set, as a
+    // full disk or a closing database would.
+    database.db.use({
+      stack: "dbcore",
+      name: "fail-writes",
+      create: down => ({
+        ...down,
+        table: name => {
+          const table = down.table(name);
+
+          return {
+            ...table,
+            mutate: request =>
+              failWrites.current && name === "invoices"
+                ? Promise.reject(failWrites.current)
+                : table.mutate(request)
+          };
+        }
+      })
+    });
+  }
+
+  const session = await import("~/context/document-session");
+  const { useInvoiceStore } = await import("~/stores/invoice-store");
+  const { useDocumentStore } = await import("~/stores/document-store");
+  const history = await import("~/stores/invoice-history");
+
+  await session.hydrateDocument();
+  await session.attachEditor();
+  openPages.push({ detachEditor: session.detachEditor, db: database.db });
+
+  return {
+    ...session,
+    ...session.documentActions,
+    ...database,
+    history,
+    edit: useInvoiceStore.getState,
+    invoice: () => useInvoiceStore.getState(),
+    documentState: () => useDocumentStore.getState()
+  };
 }
 
-function makeStoredInvoice(
-  overrides: Partial<InvoiceDocument> = {}
-): InvoiceDocument {
+// Lets the debounce run out, then waits for real IndexedDB work (writes,
+// versions, live queries) to finish, which runs outside the fake clock.
+async function settle(ms = 600) {
+  await vi.advanceTimersByTimeAsync(ms);
+
+  for (let i = 0; i < 50; i++) {
+    await new Promise(resolve => globalThis.setImmediate(resolve));
+  }
+}
+
+function storedInvoice(overrides: Partial<InvoiceDocument>): InvoiceDocument {
   const now = new Date();
 
   return {
-    id: "seed-invoice",
-    name: "Seed",
+    id: "stored",
+    name: "Stored invoice",
+    nameSource: "user",
     invoiceData: structuredClone(invoiceDefault),
     templateId: null,
+    rev: 1,
     createdAt: now,
     updatedAt: now,
     ...overrides
   };
 }
 
-describe("document session", () => {
+describe("autosave", () => {
   beforeEach(async () => {
-    await resetDb();
-    resetStores();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    await Dexie.delete("InvoiceDatabase");
   });
 
-  it("saveAs persists the invoice and marks it as the current document", async () => {
-    useInvoiceStore.getState().setNumber("INV-9000");
-
-    const id = await documentActions.saveAs("Client A");
-
-    expect(useDocumentStore.getState().documentId).toBe(id);
-    expect(useDocumentStore.getState().documentName).toBe("Client A");
-
-    const stored = await getInvoice(id);
-    expect(stored?.name).toBe("Client A");
-    expect(stored?.invoiceData.number).toBe("INV-9000");
+  afterEach(async () => {
+    await closePages();
+    vi.useRealTimers();
   });
 
-  it("saveAs trims the document name", async () => {
-    const id = await documentActions.saveAs("   Spaced Name   ");
+  it("adds a new invoice to the library on its first edit, not before", async () => {
+    const page = await loadPage();
 
-    expect(useDocumentStore.getState().documentName).toBe("Spaced Name");
+    await settle(5000);
 
-    const stored = await getInvoice(id);
-    expect(stored?.name).toBe("Spaced Name");
-  });
+    expect(await page.getAllInvoices()).toEqual([]);
+    expect(page.documentState()).toMatchObject({ isRecord: false });
 
-  // The regression guard for the detach bug: identity lives in its own store, so
-  // replacing the entire invoice-content state (what setInvoice does on load /
-  // template apply / navigation restore) must not disturb the current document.
-  it("keeps the document association when the invoice content is replaced", async () => {
-    const id = await documentActions.saveAs("Client A");
+    page.edit().setTitle("Quote");
+    await settle();
 
-    useInvoiceStore.getState().setInvoice(structuredClone(invoiceDefault));
+    const [created] = await page.getAllInvoices();
 
-    expect(useDocumentStore.getState().documentId).toBe(id);
-    expect(useDocumentStore.getState().documentName).toBe("Client A");
-  });
-
-  it("load restores a saved document and marks it current", async () => {
-    await saveInvoice(
-      makeStoredInvoice({
-        id: "inv-load",
-        name: "Loaded",
-        invoiceData: { ...structuredClone(invoiceDefault), number: "INV-77" }
-      })
-    );
-
-    await documentActions.load("inv-load");
-
-    expect(useDocumentStore.getState().documentId).toBe("inv-load");
-    expect(useDocumentStore.getState().documentName).toBe("Loaded");
-    expect(useInvoiceStore.getState().number).toBe("INV-77");
-  });
-
-  it("load throws DocumentNotFoundError for a missing document", async () => {
-    await expect(documentActions.load("does-not-exist")).rejects.toBeInstanceOf(
-      DocumentNotFoundError
-    );
-  });
-
-  it("update overwrites the current document and persists a new name", async () => {
-    const id = await documentActions.saveAs("Original");
-    useInvoiceStore.getState().setNumber("INV-1");
-
-    await documentActions.update({ documentId: id, name: "Renamed" });
-
-    const stored = await getInvoice(id);
-    expect(stored?.name).toBe("Renamed");
-    expect(stored?.invoiceData.number).toBe("INV-1");
-    expect(useDocumentStore.getState().documentName).toBe("Renamed");
-  });
-
-  it("update keeps the existing name when none is given", async () => {
-    const id = await documentActions.saveAs("Keep This");
-
-    await documentActions.update();
-
-    const stored = await getInvoice(id);
-    expect(stored?.name).toBe("Keep This");
-  });
-
-  it("update throws DocumentNotFoundError when the document was deleted elsewhere", async () => {
-    const id = await documentActions.saveAs("Doomed");
-    await deleteInvoice(id);
-
-    await expect(documentActions.update()).rejects.toBeInstanceOf(
-      DocumentNotFoundError
-    );
-  });
-
-  it("update throws DocumentNotFoundError with no current document", async () => {
-    await expect(documentActions.update()).rejects.toBeInstanceOf(
-      DocumentNotFoundError
-    );
-  });
-
-  it("reset clears the current document and discards the working draft", async () => {
-    const id = await documentActions.saveAs("Temp");
-    await saveDraft({
-      invoiceData: structuredClone(invoiceDefault),
-      documentId: id,
-      documentName: "Temp",
-      lastSavedInvoice: null,
-      updatedAt: new Date()
+    expect(created).toMatchObject({
+      id: page.documentState().documentId,
+      name: "INV-0001",
+      nameSource: "auto",
+      rev: 1
     });
+    expect(created.invoiceData.title).toBe("Quote");
+    expect(page.documentState().isRecord).toBe(true);
+  });
 
-    documentActions.reset();
+  it("reopens the last invoice after a reload", async () => {
+    const first = await loadPage();
 
-    expect(useDocumentStore.getState().documentId).toBeNull();
-    expect(useDocumentStore.getState().documentName).toBeNull();
+    first.edit().setTitle("Survives a reload");
+    await settle();
 
-    await vi.waitFor(async () => {
-      expect(await getDraft()).toBeUndefined();
+    const second = await loadPage();
+
+    expect(second.invoice().title).toBe("Survives a reload");
+    expect(second.documentState().documentId).toBe(
+      first.documentState().documentId
+    );
+  });
+
+  it("writes an edit made just before switching to the invoice it was made in", async () => {
+    const page = await loadPage();
+
+    await page.saveInvoice(
+      storedInvoice({ id: "other", name: "Other invoice" })
+    );
+    page.edit().setTitle("Edited");
+    await settle();
+
+    const firstId = page.documentState().documentId;
+
+    page.edit().setTitle("Edited again, mid-debounce");
+    await page.openInvoice("other");
+
+    const first = await page.getInvoice(firstId ?? "");
+    const other = await page.getInvoice("other");
+
+    expect(first?.invoiceData.title).toBe("Edited again, mid-debounce");
+    expect(other?.invoiceData.title).toBe("Invoice");
+    expect(page.invoice().title).toBe("Invoice");
+    expect(page.documentState().documentId).toBe("other");
+
+    await settle(3000);
+
+    expect((await page.getInvoice("other"))?.rev).toBe(1);
+  });
+
+  it("never overwrites a revision someone else wrote", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Mine");
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+    const stored = await page.getInvoice(id);
+
+    page.edit().setTitle("Mine, edited");
+    // Another writer gets in before this tab's debounce runs out.
+    await page.saveInvoice({
+      ...(stored as InvoiceDocument),
+      invoiceData: {
+        ...(stored as InvoiceDocument).invoiceData,
+        title: "Theirs"
+      },
+      rev: 2
     });
+    await settle();
+
+    const after = await page.getInvoice(id);
+    const versions = await page.getInvoiceVersions(id);
+
+    expect(after?.invoiceData.title).toBe("Theirs");
+    expect(after?.rev).toBe(2);
+    expect(
+      versions.find(version => version.reason === "conflict")?.invoiceData.title
+    ).toBe("Mine, edited");
+    expect(page.invoice().title).toBe("Theirs");
+    expect(page.history.useInvoiceHistory.getState().canUndo).toBe(false);
+  });
+
+  it("shows another tab's write when nothing is pending here", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Mine");
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+    const stored = await page.getInvoice(id);
+
+    await page.saveInvoice({
+      ...(stored as InvoiceDocument),
+      invoiceData: {
+        ...(stored as InvoiceDocument).invoiceData,
+        title: "From another tab"
+      },
+      rev: 5
+    });
+    await settle(50);
+
+    expect(page.invoice().title).toBe("From another tab");
+    expect(page.history.useInvoiceHistory.getState().canUndo).toBe(false);
+
+    page.edit().setTitle("Mine again");
+    await settle();
+
+    expect((await page.getInvoice(id))?.rev).toBe(6);
+  });
+
+  it("deletes an invoice edited back to blank when it's left", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Briefly edited");
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+
+    expect(await page.getInvoice(id)).toBeDefined();
+
+    page.edit().setTitle("Invoice");
+    await page.newInvoice();
+
+    expect(await page.getInvoice(id)).toBeUndefined();
+  });
+
+  it("keeps a named invoice even when it's blank", async () => {
+    const page = await loadPage();
+
+    await page.renameCurrent("Keep me");
+
+    const id = page.documentState().documentId ?? "";
+
+    await page.newInvoice();
+
+    expect(await page.getInvoice(id)).toMatchObject({
+      name: "Keep me",
+      nameSource: "user"
+    });
+  });
+
+  it("names an invoice from its number and client until it's renamed", async () => {
+    const page = await loadPage();
+
+    page.edit().setNumber("INV-7");
+    page
+      .edit()
+      .setClient(client => ({ ...client, content: "Acme Ltd\nLondon" }));
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+
+    expect((await page.getInvoice(id))?.name).toBe("INV-7 · Acme Ltd");
+
+    await page.renameCurrent("Acme retainer");
+    page.edit().setNumber("INV-8");
+    await settle();
+
+    expect(await page.getInvoice(id)).toMatchObject({
+      name: "Acme retainer",
+      nameSource: "user"
+    });
+    expect((await page.getInvoice(id))?.invoiceData.number).toBe("INV-8");
+  });
+
+  it("starts a new blank when the open invoice is deleted", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Doomed");
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+
+    await page.deleteFromLibrary([id]);
+
+    expect(await page.getInvoice(id)).toBeUndefined();
+    expect(page.documentState().documentId).not.toBe(id);
+    expect(page.documentState().isRecord).toBe(false);
+    expect(page.invoice().title).toBe("Invoice");
+  });
+
+  it("stops writing an invoice deleted elsewhere instead of re-creating it", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Here");
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+
+    await page.deleteInvoices([id]);
+    await settle(50);
+
+    expect(page.documentState().status).toBe("deleted");
+
+    page.edit().setTitle("Typed after the delete");
+    await settle(3000);
+
+    expect(await page.getInvoice(id)).toBeUndefined();
+    expect(page.invoice().title).toBe("Here");
+
+    await page.keepDeletedCopy();
+    await settle();
+
+    const [copy] = await page.getAllInvoices();
+
+    expect(copy.id).not.toBe(id);
+    expect(copy.invoiceData.title).toBe("Here");
+  });
+
+  it("starts a template's invoice that joins the library once edited", async () => {
+    const page = await loadPage();
+    const now = new Date();
+
+    await page.applyTemplate({
+      id: "template",
+      name: "Retainer",
+      description: null,
+      isDefault: false,
+      templateData: { ...structuredClone(invoiceDefault), title: "Retainer" },
+      screenshotUrl: null,
+      createdAt: now,
+      updatedAt: now
+    });
+    await settle(3000);
+
+    expect(page.invoice().title).toBe("Retainer");
+    expect(await page.getAllInvoices()).toEqual([]);
+
+    page.edit().setNumber("RET-1");
+    await settle();
+
+    expect(await page.getAllInvoices()).toHaveLength(1);
+    expect((await page.getAllInvoices())[0].templateId).toBe("template");
+  });
+
+  it("duplicates the open invoice and opens the copy", async () => {
+    const page = await loadPage();
+
+    await page.renameCurrent("Original");
+    page.edit().setTitle("Copied content");
+
+    const copy = await page.duplicateCurrent();
+
+    expect(copy).toMatchObject({ name: "Original copy", nameSource: "user" });
+    expect(page.documentState().documentId).toBe(copy?.id);
+    expect(page.invoice().title).toBe("Copied content");
+    expect(await page.getAllInvoices()).toHaveLength(2);
   });
 });
 
-describe("working draft persistence", () => {
+describe("save failures", () => {
   beforeEach(async () => {
-    await resetDb();
-    resetStores();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    await Dexie.delete("InvoiceDatabase");
   });
 
-  it("returns undefined when there is no draft", async () => {
-    expect(await getDraft()).toBeUndefined();
+  afterEach(async () => {
+    await closePages();
+    vi.useRealTimers();
   });
 
-  // A draft is what a reload restores from, so it must carry the document
-  // identity, not just the content. This is the mechanism that keeps a reload
-  // attached to its saved document.
-  it("round-trips the document association through the draft", async () => {
-    const invoice = { ...structuredClone(invoiceDefault), number: "INV-DRAFT" };
+  it("announces a full disk once, keeps retrying and recovers", async () => {
+    const failWrites: { current: Error | null } = { current: null };
+    const page = await loadPage({ failWrites });
 
-    await saveDraft({
-      invoiceData: invoice,
-      documentId: "doc-9",
-      documentName: "Client B",
-      lastSavedInvoice: invoice,
-      updatedAt: new Date()
+    page.edit().setTitle("First");
+    await settle();
+
+    failWrites.current = new DOMException("Full", "QuotaExceededError");
+    page.edit().setTitle("Not saved yet");
+    await settle();
+
+    const failure = page.documentState().saveFailure;
+
+    expect(failure).toMatchObject({ storageFull: true });
+    expect(page.invoice().title).toBe("Not saved yet");
+
+    // Retries don't start a new episode, so it's announced once.
+    await settle(4000);
+
+    expect(page.documentState().saveFailure?.episode).toBe(failure?.episode);
+
+    failWrites.current = null;
+    await expect(page.retrySave()).resolves.toBe(true);
+
+    const id = page.documentState().documentId ?? "";
+
+    expect(page.documentState().saveFailure).toBeNull();
+    expect((await page.getInvoice(id))?.invoiceData.title).toBe(
+      "Not saved yet"
+    );
+
+    failWrites.current = new DOMException("Closing", "InvalidStateError");
+    page.edit().setTitle("Fails differently");
+    await settle();
+
+    expect(page.documentState().saveFailure).toMatchObject({
+      storageFull: false
+    });
+    expect(page.documentState().saveFailure?.episode).not.toBe(
+      failure?.episode
+    );
+  });
+
+  it("keeps the invoice open when its edits can't be written", async () => {
+    const failWrites: { current: Error | null } = { current: null };
+    const page = await loadPage({ failWrites });
+
+    page.edit().setTitle("First");
+    await settle();
+
+    const id = page.documentState().documentId;
+
+    failWrites.current = new DOMException("Full", "QuotaExceededError");
+    page.edit().setTitle("Unsaved");
+    await page.newInvoice();
+
+    expect(page.documentState().documentId).toBe(id);
+    expect(page.invoice().title).toBe("Unsaved");
+  });
+});
+
+describe("version history", () => {
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    await Dexie.delete("InvoiceDatabase");
+  });
+
+  afterEach(async () => {
+    await closePages();
+    vi.useRealTimers();
+  });
+
+  it("keeps a version when an invoice is opened", async () => {
+    const page = await loadPage();
+
+    await page.saveInvoice(
+      storedInvoice({
+        id: "kept",
+        invoiceData: { ...structuredClone(invoiceDefault), title: "As opened" }
+      })
+    );
+    await page.openInvoice("kept");
+
+    const versions = await vi.waitFor(async () => {
+      const kept = await page.getInvoiceVersions("kept");
+
+      expect(kept).toHaveLength(1);
+
+      return kept;
     });
 
-    const draft = await getDraft();
-
-    expect(draft?.documentId).toBe("doc-9");
-    expect(draft?.documentName).toBe("Client B");
-    expect(draft?.invoiceData.number).toBe("INV-DRAFT");
-    expect(draft?.lastSavedInvoice?.number).toBe("INV-DRAFT");
+    expect(versions[0]).toMatchObject({ reason: "opened" });
+    expect(versions[0].invoiceData.title).toBe("As opened");
   });
 
-  // An applied template has no saved baseline, so it must still read dirty
-  // after a reload, otherwise New Invoice discards it without a prompt.
-  it("restores an unsaved template draft as dirty", async () => {
-    const invoice = { ...structuredClone(invoiceDefault), number: "INV-TPL" };
+  it("restores a version as one undoable step, keeping the current state first", async () => {
+    const page = await loadPage();
 
-    await saveDraft({
-      invoiceData: invoice,
-      documentId: null,
-      documentName: null,
-      lastSavedInvoice: null,
-      updatedAt: new Date()
+    await page.saveInvoice(
+      storedInvoice({
+        id: "kept",
+        invoiceData: {
+          ...structuredClone(invoiceDefault),
+          title: "Version one"
+        }
+      })
+    );
+    await page.openInvoice("kept");
+
+    const opened = await vi.waitFor(async () => {
+      const [version] = await page.getInvoiceVersions("kept");
+
+      expect(version).toBeDefined();
+
+      return version;
     });
 
-    await hydrateDocument();
+    page.edit().setTitle("Version two");
+    await settle();
 
-    const { documentId, lastSavedInvoice } = useDocumentStore.getState();
+    await page.restoreVersion(opened);
 
-    expect(useInvoiceStore.getState().number).toBe("INV-TPL");
-    expect(lastSavedInvoice).toBeNull();
+    expect(page.invoice().title).toBe("Version one");
     expect(
-      deriveHasUnsavedChanges(
-        selectInvoiceData(useInvoiceStore.getState()),
-        documentId,
-        lastSavedInvoice
+      (await page.getInvoiceVersions("kept")).find(
+        version => version.reason === "beforeRestore"
+      )?.invoiceData.title
+    ).toBe("Version two");
+
+    await settle();
+
+    expect((await page.getInvoice("kept"))?.invoiceData.title).toBe(
+      "Version one"
+    );
+
+    page.history.undoInvoiceChange();
+
+    expect(page.invoice().title).toBe("Version two");
+  });
+
+  it("keeps a version before a change that removes most of the invoice", async () => {
+    const page = await loadPage();
+
+    page.edit().setClient(client => ({
+      ...client,
+      content: "Acme Ltd\n1 High Street\nLondon\nUnited Kingdom\nVAT GB123"
+    }));
+    await settle();
+    page.edit().setClient(client => ({ ...client, content: "" }));
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+    const removal = (await page.getInvoiceVersions(id)).find(
+      version => version.reason === "beforeRemoval"
+    );
+
+    expect(removal?.invoiceData.client.content).toContain("Acme Ltd");
+  });
+
+  it("keeps a version after a pause in editing, at most every 10 minutes", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Typed");
+    await settle();
+    await settle(31_000);
+
+    const id = page.documentState().documentId ?? "";
+
+    expect(
+      (await page.getInvoiceVersions(id)).filter(
+        version => version.reason === "idle"
       )
-    ).toBe(true);
+    ).toHaveLength(1);
+
+    page.edit().setTitle("Typed more");
+    await settle();
+    await settle(31_000);
+
+    expect(
+      (await page.getInvoiceVersions(id)).filter(
+        version => version.reason === "idle"
+      )
+    ).toHaveLength(1);
+
+    await settle(10 * 60_000);
+    page.edit().setTitle("Typed later");
+    await settle();
+    await settle(31_000);
+
+    expect(
+      (await page.getInvoiceVersions(id)).filter(
+        version => version.reason === "idle"
+      )
+    ).toHaveLength(2);
+  });
+});
+
+// Two pages in one process share IndexedDB and Web Locks, as two tabs do.
+describe("two tabs on one invoice", () => {
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    await Dexie.delete("InvoiceDatabase");
+  });
+
+  afterEach(async () => {
+    await closePages();
+    vi.useRealTimers();
+  });
+
+  it("lets one tab edit while the other follows it read-only", async () => {
+    const first = await loadPage();
+
+    first.edit().setTitle("Started in the first tab");
+    await settle();
+
+    const second = await loadPage();
+
+    expect(second.documentState()).toMatchObject({
+      documentId: first.documentState().documentId,
+      status: "readOnly"
+    });
+    expect(second.invoice().title).toBe("Started in the first tab");
+
+    first.edit().setTitle("Still typing in the first tab");
+    await settle();
+
+    await vi.waitFor(() =>
+      expect(second.invoice().title).toBe("Still typing in the first tab")
+    );
+
+    // Anything that changes the read-only copy is put back.
+    second.edit().setTitle("Typed into the read-only tab");
+    await settle(0);
+
+    expect(second.invoice().title).toBe("Still typing in the first tab");
+  });
+
+  it("hands editing over with Edit here, writing the first tab's pending edit", async () => {
+    const first = await loadPage();
+
+    first.edit().setTitle("One");
+    await settle();
+
+    const second = await loadPage();
+    const id = first.documentState().documentId ?? "";
+
+    first.edit().setTitle("Typed just before the hand-over");
+    await second.takeOver();
+
+    await vi.waitFor(() =>
+      expect(first.documentState().status).toBe("readOnly")
+    );
+    await vi.waitFor(() =>
+      expect(second.invoice().title).toBe("Typed just before the hand-over")
+    );
+
+    expect(second.documentState().status).toBe("editing");
+
+    second.edit().setTitle("Now edited in the second tab");
+    await settle();
+
+    await vi.waitFor(() =>
+      expect(first.invoice().title).toBe("Now edited in the second tab")
+    );
+
+    const stored = await first.getInvoice(id);
+
+    expect(stored?.invoiceData.title).toBe("Now edited in the second tab");
+    expect(
+      (await first.getInvoiceVersions(id)).filter(
+        version => version.reason === "conflict"
+      )
+    ).toEqual([]);
+  });
+
+  it("lets the read-only tab edit once the editing tab moves on", async () => {
+    const first = await loadPage();
+
+    first.edit().setTitle("One");
+    await settle();
+
+    const second = await loadPage();
+
+    expect(second.documentState().status).toBe("readOnly");
+
+    await first.newInvoice();
+
+    await vi.waitFor(() =>
+      expect(second.documentState().status).toBe("editing")
+    );
   });
 });
