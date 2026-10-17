@@ -30,6 +30,10 @@ type DocumentState = {
     storageFull: boolean;
     episode: number;
   } | null;
+  // Suggest a backup: this is Safari, which clears a site's storage after a
+  // week unused, it refused to keep billsend's storage, and nobody has
+  // dismissed the suggestion yet.
+  backupReminder: boolean;
 };
 
 const documentDefault: DocumentState = {
@@ -38,7 +42,8 @@ const documentDefault: DocumentState = {
   documentName: "",
   nameSource: "auto",
   status: "editing",
-  saveFailure: null
+  saveFailure: null,
+  backupReminder: false
 };
 
 export const useDocumentStore = create<DocumentState>()(

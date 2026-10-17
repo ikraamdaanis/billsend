@@ -73,14 +73,16 @@ export function useInvoiceDocument() {
     );
   }
 
-  const { documentId, isRecord, status, saveFailure } = useDocumentStore(
-    useShallow(state => ({
-      documentId: state.documentId,
-      isRecord: state.isRecord,
-      status: state.status,
-      saveFailure: state.saveFailure
-    }))
-  );
+  const { documentId, isRecord, status, saveFailure, backupReminder } =
+    useDocumentStore(
+      useShallow(state => ({
+        documentId: state.documentId,
+        isRecord: state.isRecord,
+        status: state.status,
+        saveFailure: state.saveFailure,
+        backupReminder: state.backupReminder
+      }))
+    );
 
   return {
     currentDocumentId: documentId,
@@ -90,6 +92,7 @@ export function useInvoiceDocument() {
     isRecord,
     status,
     saveFailure,
+    backupReminder,
     ...documentActions
   };
 }
