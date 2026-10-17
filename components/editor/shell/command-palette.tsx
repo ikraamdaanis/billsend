@@ -46,6 +46,7 @@ import {
   useThemeSlice
 } from "~/stores/invoice-selectors";
 import type { InvoiceDocument, InvoiceSectionKey, InvoiceSize } from "~/types";
+import { shortcutLabel } from "~/utils/shortcut-label";
 
 const SECTION_LABELS: Record<InvoiceSectionKey, string> = {
   logo: "logo",
@@ -325,7 +326,7 @@ function PaletteItem({
         </span>
       )}
       <span className="truncate">{children}</span>
-      {shortcut && <CommandShortcut>{shortcut}</CommandShortcut>}
+      {shortcut && <CommandShortcut>{shortcutLabel(shortcut)}</CommandShortcut>}
     </CommandItem>
   );
 }

@@ -42,6 +42,7 @@ import {
   parseLibraryView,
   sortInvoices
 } from "~/utils/invoice-library";
+import { shortcutLabel } from "~/utils/shortcut-label";
 
 type LibraryTab = "invoices" | "templates";
 
@@ -222,7 +223,8 @@ function InvoiceList({
     return (
       <ListScroller>
         <ListMessage>
-          No saved invoices yet. Save this one with ⌘S and it will show here.
+          No saved invoices yet. Save this one with {shortcutLabel("⌘S")} and it
+          will show here.
         </ListMessage>
       </ListScroller>
     );
