@@ -7,8 +7,11 @@ import {
 import { cn } from "~/lib/utils";
 import { shortcutLabel } from "~/utils/shortcut-label";
 
+// On a phone only the dot shows (the words stay for screen readers), without
+// the pill and ahead of the name, so it doesn't read as part of the buttons
+// to its right.
 const chipClassName =
-  "bg-muted text-muted-foreground flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap";
+  "bg-muted text-muted-foreground flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap max-sm:order-first max-sm:bg-transparent max-sm:px-0";
 
 // Says where the invoice stands. The working draft is always written to this
 // browser as you type, so a draft reads as kept; a saved invoice with edits
