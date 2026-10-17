@@ -203,6 +203,34 @@ describe("autosave", () => {
     expect(page.history.useInvoiceHistory.getState().canUndo).toBe(false);
   });
 
+  it("never writes edits queued during a conflicting write over theirs", async () => {
+    const page = await loadPage();
+
+    page.edit().setTitle("Mine");
+    await settle();
+
+    const id = page.documentState().documentId ?? "";
+    const stored = (await page.getInvoice(id)) as InvoiceDocument;
+
+    await page.saveInvoice({
+      ...stored,
+      invoiceData: { ...stored.invoiceData, title: "Theirs" },
+      rev: 2
+    });
+    page.edit().setTitle("Mine, edited");
+    // The write starts and hits the conflict while this edit is queued.
+    await vi.advanceTimersByTimeAsync(500);
+    page.edit().setTitle("Mine, edited more");
+    await settle(3000);
+
+    expect((await page.getInvoice(id))?.invoiceData.title).toBe("Theirs");
+    expect(
+      (await page.getInvoiceVersions(id)).find(
+        version => version.reason === "conflict"
+      )?.invoiceData.title
+    ).toBe("Mine, edited more");
+  });
+
   it("shows another tab's write when nothing is pending here", async () => {
     const page = await loadPage();
 
