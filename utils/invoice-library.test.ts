@@ -151,12 +151,68 @@ describe("invoice library", () => {
     ]);
   });
 
-  it("lists each client once, alphabetically", () => {
+  it("lists each client once, alphabetically, with no client last", () => {
     expect(listClients(documents)).toEqual([
-      "No client yet",
       "Notus GmbH",
-      "Pembee Ltd"
+      "Pembee Ltd",
+      NO_CLIENT
     ]);
+  });
+
+  it("sorts invoices with nothing to sort by last in either direction", () => {
+    const undated = makeDocument({
+      id: "undated",
+      client: "Pembee Ltd",
+      invoiceDate: "2026-10-05",
+      price: 10,
+      overrides: { dueDate: "" }
+    });
+    const ids = (list: InvoiceDocument[]) => list.map(entry => entry.id);
+
+    for (const direction of ["asc", "desc"] as const) {
+      expect(
+        ids(sortInvoices([undated, ...documents], "dueDate", direction)).at(-1)
+      ).toBe("undated");
+      expect(ids(sortInvoices(documents, "client", direction)).at(-1)).toBe(
+        "d"
+      );
+    }
+  });
+
+  it("files a damaged record with no readable date under No date", () => {
+    const damaged = {
+      ...makeDocument({
+        id: "damaged",
+        client: "Pembee Ltd",
+        invoiceDate: "not a date",
+        price: 10
+      }),
+      updatedAt: new Date(Number.NaN)
+    };
+
+    expect(groupInvoices([damaged], "month")).toEqual([
+      { key: "no-date", label: "No date", documents: [damaged] }
+    ]);
+    expect(() =>
+      sortInvoices([damaged, ...documents], "updated", "desc")
+    ).not.toThrow();
+  });
+
+  it("counts a later date this month as this month", () => {
+    const later = makeDocument({
+      id: "later",
+      client: "Pembee Ltd",
+      invoiceDate: "2026-10-25",
+      price: 10
+    });
+
+    expect(
+      filterInvoices([later], {
+        query: "",
+        view: { ...DEFAULT_LIBRARY_VIEW, dateRange: "thisMonth" },
+        now: NOW
+      })
+    ).toEqual([later]);
   });
 
   it("repairs a stored view field by field", () => {

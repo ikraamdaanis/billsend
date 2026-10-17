@@ -38,7 +38,7 @@ export function OpenTemplateDialog({
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [pending, startTransition] = useTransition();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selection, setSelectedIds] = useState<string[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<
     { mode: "selection" } | { mode: "single"; template: InvoiceTemplate } | null
   >(null);
@@ -72,6 +72,10 @@ export function OpenTemplateDialog({
         .includes(word)
     )
   );
+  // Only what's on screen counts as selected: a template hidden by the search
+  // or deleted elsewhere is never opened or deleted with the rest.
+  const visibleIds = new Set(visibleTemplates.map(template => template.id));
+  const selectedIds = selection.filter(id => visibleIds.has(id));
 
   useEffect(() => {
     if (deleteTarget?.mode === "selection" && selectedIds.length === 0) {
@@ -84,7 +88,9 @@ export function OpenTemplateDialog({
       ? []
       : deleteTarget.mode === "single"
         ? [deleteTarget.template]
-        : templates.filter(template => selectedIds.includes(template.id));
+        : visibleTemplates.filter(template =>
+            selectedIds.includes(template.id)
+          );
 
   const deletePrompt =
     pendingDeleteTemplates.length === 1
@@ -103,6 +109,10 @@ export function OpenTemplateDialog({
 
   function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
+
+    // A row menu's items are portaled, but their clicks still bubble here
+    // through React; they act on their own row.
+    if (target.closest("[role='menu'], [role='menuitem']")) return;
 
     if (pendingDeleteTemplates.length > 0) {
       if (target.closest("[data-slot='delete-confirm']")) return;
