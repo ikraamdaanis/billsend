@@ -318,7 +318,7 @@ class InvoiceDatabase extends Dexie {
         invoices: "id, name, createdAt, updatedAt",
         images: "id",
         drafts: "id",
-        versions: "id, invoiceId, [invoiceId+createdAt]",
+        versions: "id, invoiceId, imageId",
         meta: "key"
       })
       .upgrade(tx => migrateToAutosave(tx));
@@ -697,7 +697,10 @@ export async function renameInvoice(id: string, name: string): Promise<void> {
 // the newest one there, then lets old versions go (see selectVersionsToDelete).
 // Resolves whether a version was added.
 export async function addInvoiceVersion(
-  version: Omit<InvoiceVersion, "id" | "createdAt" | "schemaVersion">
+  version: Omit<
+    InvoiceVersion,
+    "id" | "createdAt" | "schemaVersion" | "imageId"
+  >
 ): Promise<boolean> {
   try {
     await ensureDbReady();
@@ -725,6 +728,7 @@ export async function addInvoiceVersion(
       const now = new Date();
       const added: InvoiceVersion = {
         ...version,
+        imageId: version.invoiceData.image,
         id: crypto.randomUUID(),
         schemaVersion: CURRENT_INVOICE_SCHEMA_VERSION,
         createdAt: now
@@ -942,16 +946,16 @@ async function runOrphanCleanup(keepImageIds: string[]): Promise<void> {
   try {
     await ensureDbReady();
 
-    const [invoices, templates, versions, images] = await Promise.all([
+    const [invoices, templates, versionImageIds, images] = await Promise.all([
       db.invoices.toArray(),
       db.templates.toArray(),
-      db.versions.toArray(),
+      db.versions.orderBy("imageId").uniqueKeys(),
       db.images.toArray()
     ]);
     const referencedImageIds = [
       ...invoices.map(invoice => invoice.invoiceData.image),
       ...templates.map(template => template.templateData.image),
-      ...versions.map(version => version.invoiceData.image)
+      ...versionImageIds.map(String)
     ];
     const keptByTabs = [...imageKeepers].flatMap(keeper => [...keeper()]);
     const graceStart = Date.now() - ORPHAN_GRACE_MS;
