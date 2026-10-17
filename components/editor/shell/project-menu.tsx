@@ -40,7 +40,7 @@ export function ProjectMenu({ onLeave }: { onLeave: () => void }) {
         />
         <IconChevronDown aria-hidden="true" className="size-3.5" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-60">
+      <DropdownMenuContent className="w-56">
         <DropdownMenuItem
           onClick={actions.newInvoice}
           disabled={actions.pending}
