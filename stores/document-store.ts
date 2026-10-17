@@ -32,7 +32,7 @@ type DocumentState = {
   } | null;
 };
 
-export const documentDefault: DocumentState = {
+const documentDefault: DocumentState = {
   documentId: null,
   isRecord: false,
   documentName: "",

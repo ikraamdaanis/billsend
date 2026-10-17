@@ -20,7 +20,7 @@ import type { Invoice, InvoiceSectionKey } from "~/types";
 // only reaches back through this invoice in this tab: opening another invoice,
 // or another tab writing this one, starts the history afresh.
 
-export const HISTORY_GROUP_MS = 500;
+const HISTORY_GROUP_MS = 500;
 
 export const HISTORY_LIMIT = 200;
 
