@@ -772,7 +772,10 @@ the page and in the inspector, and written in the invoice's date format. Rows ar
   saying: a failed save (`destructive` 8% fill, `role="alert"` once per run of
   failures, Retry and Download backup), the invoice open in another tab
   (`muted`, Edit here), deleted elsewhere, storage unavailable or a reload
-  needed (`warning` 12%). 13px text, `xs` buttons.
+  needed (`warning` 12%), and once in Safari a dismissible backup suggestion
+  (`muted`, Download backup, a close button). 16px text on phones, 13px from
+  `sm`, `xs` buttons; on a phone the actions drop below the words, and the
+  icon lines up with the first line.
 - **Homepage skip link:** the first focusable element, "Skip to content", a
   white `rounded-control` tab with `shadow-menu` fixed 12px from the top-left,
   held 64px above the viewport and slid into place on focus (transform
