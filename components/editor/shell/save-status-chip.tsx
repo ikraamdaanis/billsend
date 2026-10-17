@@ -1,3 +1,8 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "~/components/ui/tooltip";
 import { useEditorUi } from "~/context/editor-ui-context";
 import { useFileActions } from "~/context/file-actions-context";
 import {
@@ -7,53 +12,55 @@ import {
 import { cn } from "~/lib/utils";
 import { shortcutLabel } from "~/utils/shortcut-label";
 
-// On a phone only the dot shows (the words stay for screen readers), without
-// the pill and ahead of the name, so it doesn't read as part of the buttons
-// to its right.
-const chipClassName =
-  "bg-muted text-muted-foreground flex h-6 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap max-sm:order-first max-sm:bg-transparent max-sm:px-0";
-
-// Says where the invoice stands. The working draft is always written to this
-// browser as you type, so a draft reads as kept; a saved invoice with edits
-// since its last save offers to save them.
+// Says where the invoice stands as a coloured dot beside the name, with the
+// words in a tooltip (and for screen readers). The working draft is always
+// written to this browser as you type, so a draft reads as kept; a saved
+// invoice with edits since its last save offers to save them. On a phone the
+// dot sits ahead of the name, so it doesn't read as part of the buttons to its
+// right.
 export function SaveStatusChip() {
   const { mode } = useEditorUi();
   const { currentDocumentId } = useInvoiceDocument();
   const hasUnsavedChanges = useHasUnsavedChanges();
   const { save } = useFileActions();
+  const canSave =
+    mode !== "preview" && !!currentDocumentId && hasUnsavedChanges;
+  const status =
+    mode === "preview"
+      ? { label: "Previewing the PDF", dotClassName: "bg-ring" }
+      : canSave
+        ? { label: "Unsaved changes", dotClassName: "bg-warning" }
+        : {
+            label: currentDocumentId
+              ? "Saved on this device"
+              : "Draft on this device",
+            dotClassName: "bg-success"
+          };
 
-  if (mode === "preview") {
-    return (
-      <span className={chipClassName}>
-        <span aria-hidden="true" className="bg-ring size-1.5 rounded-full" />
-        <span className="max-sm:sr-only">Previewing the PDF</span>
-      </span>
-    );
-  }
-
-  if (currentDocumentId && hasUnsavedChanges) {
-    return (
-      <button
-        type="button"
-        onClick={save}
-        title={`Save (${shortcutLabel("⌘S")})`}
+  // Keyed so the tooltip remounts when the trigger swaps between a plain dot
+  // and the save button; otherwise it keeps listening on the old element.
+  return (
+    <Tooltip key={canSave ? "save" : "status"}>
+      <TooltipTrigger
+        delay={200}
+        render={canSave ? <button type="button" onClick={save} /> : <span />}
         className={cn(
-          chipClassName,
-          "hover:text-foreground focus-visible:ring-ring outline-none focus-visible:ring-1"
+          "focus-visible:ring-ring flex size-6 shrink-0 items-center justify-center rounded-full outline-none focus-visible:ring-1 max-sm:order-first",
+          canSave && "hover:bg-muted"
         )}
       >
-        <span aria-hidden="true" className="bg-warning size-1.5 rounded-full" />
-        <span className="max-sm:sr-only">Unsaved changes</span>
-      </button>
-    );
-  }
-
-  return (
-    <span className={chipClassName}>
-      <span aria-hidden="true" className="bg-success size-1.5 rounded-full" />
-      <span className="max-sm:sr-only">
-        {currentDocumentId ? "Saved on this device" : "Draft on this device"}
-      </span>
-    </span>
+        <span
+          aria-hidden="true"
+          className={cn("size-2 rounded-full", status.dotClassName)}
+        />
+        <span className="sr-only">{status.label}</span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {status.label}
+        {canSave && (
+          <span className="opacity-60">{`Save ${shortcutLabel("⌘S")}`}</span>
+        )}
+      </TooltipContent>
+    </Tooltip>
   );
 }

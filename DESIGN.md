@@ -750,7 +750,8 @@ the page and in the inspector, and written in the invoice's date format. Rows ar
   three parts. Left: the logo opens the project menu (the file commands, quick
   actions, back to the homepage), then the invoices panel toggle. Centre: the
   document name (a heading button that renames or saves) and a save-status
-  chip. Right: the inspector toggle, Preview, and Download, which opens a
+  dot (green saved or draft, amber unsaved, blue previewing) whose words show
+  in a tooltip; the amber dot saves when clicked. Right: the inspector toggle, Preview, and Download, which opens a
   popover with the file name, total and last-saved time.
 - **Homepage skip link:** the first focusable element, "Skip to content", a
   white `rounded-control` tab with `shadow-menu` fixed 12px from the top-left,

@@ -172,12 +172,9 @@ function EditorTopBar({ documentName }: { documentName: string }) {
         <span className="text-foreground flex h-7 items-center px-2 text-sm font-medium">
           {documentName}
         </span>
-        <span className="bg-muted text-muted-foreground flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs whitespace-nowrap">
-          <span
-            aria-hidden="true"
-            className="bg-success size-1.5 rounded-full"
-          />
-          Draft on this device
+        <span className="flex size-6 items-center justify-center">
+          <span aria-hidden="true" className="bg-success size-2 rounded-full" />
+          <span className="sr-only">Draft on this device</span>
         </span>
       </div>
       <div className="flex min-w-0 items-center justify-end gap-1">
