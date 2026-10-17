@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { formatCurrency, formatCurrencyWithCode } from "~/consts/currencies";
@@ -80,6 +80,49 @@ function PricingRowToggle({
     >
       {children}
     </button>
+  );
+}
+
+// A currency amount typed straight onto the page. At rest it reads like every
+// other total ("$1,200.00"); focused it shows the raw number being typed, so
+// thousands separators and padded decimals never get in the way of editing.
+function MoneyInput({
+  label,
+  input,
+  amount,
+  currency,
+  currencySymbol,
+  style,
+  onInput,
+  onCommit
+}: {
+  label: string;
+  input: string;
+  amount: number;
+  currency: string;
+  currencySymbol: string;
+  style: CSSProperties;
+  onInput: (numericValue: string) => void;
+  onCommit: () => void;
+}) {
+  const [focused, setFocused] = useState(false);
+
+  return (
+    <InvoiceInput
+      aria-label={label}
+      value={
+        focused ? `${currencySymbol}${input}` : formatCurrency(amount, currency)
+      }
+      className="field-sizing-content min-w-20 text-right"
+      style={style}
+      placeholder={currencySymbol}
+      onFocus={() => setFocused(true)}
+      onChange={value => onInput(handleCurrencyInput(value, currencySymbol))}
+      onBlur={() => {
+        setFocused(false);
+        onCommit();
+      }}
+    />
   );
 }
 
@@ -209,7 +252,7 @@ function TaxRow() {
 }
 
 function FeesRow() {
-  const { fees, setFees, labels, setLabels } = usePricingSlice();
+  const { fees, setFees, currency, labels, setLabels } = usePricingSlice();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
@@ -231,18 +274,18 @@ function FeesRow() {
         className="ml-auto flex min-w-40 items-center"
         style={{ justifyContent: valueSettings.align }}
       >
-        <InvoiceInput
-          aria-label="Fees amount"
-          value={`${currencySymbol}${feesInput}`}
-          className="w-20 text-right"
+        <MoneyInput
+          label="Fees amount"
+          input={feesInput}
+          amount={fees}
+          currency={currency}
+          currencySymbol={currencySymbol}
           style={getTextStyles({ settings: valueSettings })}
-          placeholder={currencySymbol}
-          onChange={value => {
-            const numericValue = handleCurrencyInput(value, currencySymbol);
+          onInput={numericValue => {
             setFeesInput(numericValue);
             setFees(Number(numericValue));
           }}
-          onBlur={() => handleInputBlur(feesInput, setFeesInput, setFees)}
+          onCommit={() => handleInputBlur(feesInput, setFeesInput, setFees)}
         />
       </span>
     </div>
@@ -324,19 +367,20 @@ function DiscountsRow() {
           className="ml-auto flex min-w-40 items-center"
           style={{ justifyContent: valueSettings.align }}
         >
-          <InvoiceInput
-            aria-label="Discounts amount"
-            value={`${currencySymbol}${discountsInput}`}
+          <MoneyInput
+            label="Discounts amount"
+            input={discountsInput}
+            amount={discounts}
+            currency={currency}
+            currencySymbol={currencySymbol}
             style={getTextStyles({ settings: valueSettings })}
-            onChange={value => {
-              const numericValue = handleCurrencyInput(value, currencySymbol);
+            onInput={numericValue => {
               setDiscountsInput(numericValue);
               setDiscounts(Number(numericValue));
             }}
-            onBlur={() =>
+            onCommit={() =>
               handleInputBlur(discountsInput, setDiscountsInput, setDiscounts)
             }
-            className="w-20 text-right"
           />
         </span>
       )}
@@ -384,7 +428,8 @@ function TotalRow() {
 }
 
 function AmountPaidRow() {
-  const { amountPaid, setAmountPaid, labels, setLabels } = usePricingSlice();
+  const { amountPaid, setAmountPaid, currency, labels, setLabels } =
+    usePricingSlice();
   const currencySymbol = useCurrencySymbol();
   const theme = useTheme();
   const labelSettings = getRoleSettings(theme, "totalsLabel");
@@ -406,18 +451,18 @@ function AmountPaidRow() {
         className="ml-auto flex min-w-40 items-center"
         style={{ justifyContent: valueSettings.align }}
       >
-        <InvoiceInput
-          aria-label="Amount paid"
-          value={`${currencySymbol}${amountPaidInput}`}
-          className="w-24 text-right"
+        <MoneyInput
+          label="Amount paid"
+          input={amountPaidInput}
+          amount={amountPaid}
+          currency={currency}
+          currencySymbol={currencySymbol}
           style={getTextStyles({ settings: valueSettings })}
-          placeholder={currencySymbol}
-          onChange={value => {
-            const numericValue = handleCurrencyInput(value, currencySymbol);
+          onInput={numericValue => {
             setAmountPaidInput(numericValue);
             setAmountPaid(Number(numericValue));
           }}
-          onBlur={() =>
+          onCommit={() =>
             handleInputBlur(amountPaidInput, setAmountPaidInput, setAmountPaid)
           }
         />
