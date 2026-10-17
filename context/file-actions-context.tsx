@@ -30,8 +30,9 @@ import {
   deleteTemplate,
   getAllInvoices,
   getAllTemplates,
-  saveInvoice,
-  saveTemplate
+  renameInvoice,
+  renameTemplate,
+  saveInvoice
 } from "~/db";
 import { useInvoiceDataAndActions } from "~/stores/invoice-selectors";
 import type { InvoiceDocument, InvoiceTemplate } from "~/types";
@@ -119,8 +120,18 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
   );
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [pending, startTransition] = useTransition();
-  const [renameTarget, setRenameTarget] = useState<LibraryTarget | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<LibraryTarget | null>(null);
+  // The rename and delete dialogs keep their target after closing, so their
+  // text doesn't blank out while they fade; opening one replaces it.
+  const [renameDialog, setRenameDialog] = useState<{
+    target: LibraryTarget | null;
+    open: boolean;
+  }>({ target: null, open: false });
+  const [deleteDialog, setDeleteDialog] = useState<{
+    target: LibraryTarget | null;
+    open: boolean;
+  }>({ target: null, open: false });
+  const renameTarget = renameDialog.target;
+  const deleteTarget = deleteDialog.target;
 
   function runWithUnsavedGuard(action: () => void) {
     if (hasUnsavedChanges) {
@@ -414,16 +425,12 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     if (renameTarget.kind === "invoice") {
       const { document } = renameTarget;
 
-      await saveInvoice({ ...document, name: newName, updatedAt: new Date() });
+      await renameInvoice(document.id, newName);
 
       if (document.id === currentDocumentId) setCurrentDocumentName(newName);
       toast.success("Invoice renamed");
     } else {
-      await saveTemplate({
-        ...renameTarget.template,
-        name: newName,
-        updatedAt: new Date()
-      });
+      await renameTemplate(renameTarget.template.id, newName);
       toast.success("Template renamed");
     }
   }
@@ -493,14 +500,14 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     exportData: handleExport,
     importData: () => setImportDialogOpen(true),
     renameInvoice: (document: InvoiceDocument) =>
-      setRenameTarget({ kind: "invoice", document }),
+      setRenameDialog({ target: { kind: "invoice", document }, open: true }),
     duplicateInvoice: handleDuplicateInvoice,
     deleteInvoice: (document: InvoiceDocument) =>
-      setDeleteTarget({ kind: "invoice", document }),
+      setDeleteDialog({ target: { kind: "invoice", document }, open: true }),
     renameTemplate: (template: InvoiceTemplate) =>
-      setRenameTarget({ kind: "template", template }),
+      setRenameDialog({ target: { kind: "template", template }, open: true }),
     deleteTemplate: (template: InvoiceTemplate) =>
-      setDeleteTarget({ kind: "template", template })
+      setDeleteDialog({ target: { kind: "template", template }, open: true })
   };
 
   return (
@@ -539,18 +546,18 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
         templates={templates}
       />
       <RenameInvoiceDialog
-        open={renameTarget !== null}
+        open={renameDialog.open}
         onOpenChange={open => {
-          if (!open) setRenameTarget(null);
+          if (!open) setRenameDialog(prev => ({ ...prev, open: false }));
         }}
         currentName={renameTarget ? targetName(renameTarget) : ""}
         subject={renameTarget?.kind === "template" ? "Template" : "Invoice"}
         onRename={handleLibraryRename}
       />
       <ConfirmDeleteDialog
-        open={deleteTarget !== null}
+        open={deleteDialog.open}
         onOpenChange={open => {
-          if (!open) setDeleteTarget(null);
+          if (!open) setDeleteDialog(prev => ({ ...prev, open: false }));
         }}
         subject={deleteTarget?.kind ?? "invoice"}
         name={deleteTarget ? targetName(deleteTarget) : ""}
