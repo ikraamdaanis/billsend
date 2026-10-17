@@ -1,6 +1,6 @@
 import { IconCalendar } from "@tabler/icons-react";
-import { format, isValid, parseISO } from "date-fns";
-import { useState } from "react";
+import { format } from "date-fns";
+import { useId, useState } from "react";
 import { CustomCurrencyDialog } from "~/components/dialogs/custom-currency-dialog";
 import {
   inspectorFieldClassName,
@@ -24,6 +24,7 @@ import { cn } from "~/lib/utils";
 import { INVOICE_DATE_FORMATS } from "~/schema/invoice";
 import { useCurrencySlice, useDetailsSlice } from "~/stores/invoice-selectors";
 import { formatInvoiceDate } from "~/utils/format-invoice-date";
+import { parseIsoDate } from "~/utils/parse-iso-date";
 import {
   addDaysToIsoDate,
   dueDateForNewInvoiceDate,
@@ -138,20 +139,22 @@ function IssueDatePicker({
 }) {
   const { dateFormat } = useDetailsSlice();
   const [open, setOpen] = useState(false);
-  const parsed = parseISO(value);
-  const selected = isValid(parsed) ? parsed : undefined;
+  const selected = parseIsoDate(value) ?? undefined;
+  const text = value ? formatInvoiceDate(value, dateFormat) : "";
+  const textId = useId();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         id="inspector-issue-date"
+        aria-describedby={textId}
         className={cn(
           inspectorFieldClassName,
           "flex items-center justify-between gap-2 text-left tabular-nums"
         )}
       >
-        <span className="truncate">
-          {value ? formatInvoiceDate(value, dateFormat) : "Pick a date"}
+        <span id={textId} className="truncate">
+          {text || "Pick a date"}
         </span>
         <IconCalendar
           aria-hidden="true"
@@ -161,15 +164,15 @@ function IssueDatePicker({
       <PopoverContent align="end" className="w-auto p-0">
         <Calendar
           mode="single"
+          required
           selected={selected}
           defaultMonth={selected}
           onSelect={date => {
-            if (!date) return;
-
             onChange(format(date, "yyyy-MM-dd"));
             setOpen(false);
           }}
           autoFocus
+          className="pointer-coarse:[--cell-size:--spacing(10)]"
         />
       </PopoverContent>
     </Popover>
@@ -180,6 +183,8 @@ function DatesRows() {
   const { invoiceDate, dueDate, setInvoiceDate, setDueDate } =
     useDetailsSlice();
   const termsDays = getPaymentTermsDays(invoiceDate, dueDate);
+  // Terms count from the issue date, so they wait until there is one.
+  const hasIssueDate = parseIsoDate(invoiceDate) !== null;
 
   // Moving the invoice date keeps a preset's gap, so Net 30 stays Net 30.
   function handleInvoiceDateChange(value: string) {
@@ -212,6 +217,8 @@ function DatesRows() {
       <InspectorRow label="Payment terms" htmlFor="inspector-terms">
         <NativeSelect
           id="inspector-terms"
+          disabled={!hasIssueDate}
+          title={hasIssueDate ? undefined : "Pick an issue date first"}
           value={termsDays === null ? CUSTOM_TERMS : String(termsDays)}
           onChange={event => handleTermsChange(event.target.value)}
           className={cn(inspectorFieldClassName, "pr-7")}

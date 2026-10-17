@@ -1,5 +1,5 @@
 import { IconMinus, IconPlus } from "@tabler/icons-react";
-import type { ChangeEvent } from "react";
+import type { FocusEvent } from "react";
 import { useState } from "react";
 import { InvoiceInput } from "~/components/editor/invoice-input";
 import { Button } from "~/components/ui/button";
@@ -452,7 +452,7 @@ function TableCell({
     }
   }
 
-  function handleBlur({ target }: ChangeEvent<HTMLInputElement>) {
+  function handleBlur({ target }: FocusEvent<HTMLInputElement>) {
     const itemField = column.cell.itemField;
     if (
       (column.cell.kind !== "currency" && column.cell.kind !== "integer") ||

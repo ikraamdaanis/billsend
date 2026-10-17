@@ -392,6 +392,9 @@ export const useInvoiceStore = create<InvoiceStore>()(
 
       updateItem: (index, field, value) =>
         set(state => {
+          // A late blur can name a row that has since been removed.
+          if (index < 0 || index >= state.items.length) return;
+
           const item = state.items[index];
 
           switch (field) {

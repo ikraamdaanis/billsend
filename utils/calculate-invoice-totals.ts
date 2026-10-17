@@ -1,5 +1,12 @@
 import type { Invoice, InvoiceSections, InvoiceTotals } from "~/types";
 
+// Rounds to whole cents, half up. The product is first trimmed to 15
+// significant digits, so binary float noise can't round a half cent the wrong
+// way (1.005 * 100 is 100.49999999999999 in floating point).
+function roundCents(value: number): number {
+  return Math.round(Number((value * 100).toPrecision(15))) / 100;
+}
+
 // Rounds a single line amount to two decimal places, coercing non-numeric
 // quantity/price to zero. Shared by the totals calculator and the view-model so
 // a line's amount is computed one way everywhere.
@@ -10,7 +17,7 @@ export function calculateLineAmount(
   const safeQuantity = Number(quantity) || 0;
   const safeUnitPrice = Number(unitPrice) || 0;
 
-  return Math.round(safeQuantity * safeUnitPrice * 100) / 100;
+  return roundCents(safeQuantity * safeUnitPrice);
 }
 
 // Derives the money totals from an invoice's inputs (items, tax, fees,
@@ -37,8 +44,9 @@ export function calculateInvoiceTotals(
 
   // Sum is rounded explicitly so floating-point drift from summing per-item
   // amounts never leaks into the subtotal.
-  const subtotal =
-    Math.round(items.reduce((sum, item) => sum + item.amount, 0) * 100) / 100;
+  const subtotal = roundCents(
+    items.reduce((sum, item) => sum + item.amount, 0)
+  );
 
   // A percentage discount is taken off the subtotal; a fixed discount is the
   // entered amount. Either way it comes off the goods and services, so it is
@@ -48,7 +56,7 @@ export function calculateInvoiceTotals(
     sections?.discounts === false ? 0 : Number(invoice.discounts) || 0;
   const rawDiscount =
     invoice.discountType === "percentage"
-      ? Math.round(subtotal * discountValue) / 100
+      ? roundCents((subtotal * discountValue) / 100)
       : discountValue;
   const discountAmount = Math.min(Math.max(rawDiscount, 0), subtotal);
 
@@ -56,18 +64,17 @@ export function calculateInvoiceTotals(
   // tax-exempt invoice charges no tax regardless of the stored rate, so a
   // reverse-charge or zero-rated invoice reads zero while keeping the rate the
   // user last entered.
-  const taxableAmount = Math.round((subtotal - discountAmount) * 100) / 100;
+  const taxableAmount = roundCents(subtotal - discountAmount);
   const taxAmount =
     invoice.tax.exempt || sections?.tax === false
       ? 0
-      : Math.round(taxableAmount * (Number(invoice.tax.percentage) || 0)) / 100;
+      : roundCents(
+          (taxableAmount * (Number(invoice.tax.percentage) || 0)) / 100
+        );
 
   const fees = sections?.fees === false ? 0 : Number(invoice.fees) || 0;
 
-  const total = Math.max(
-    0,
-    Math.round((taxableAmount + taxAmount + fees) * 100) / 100
-  );
+  const total = Math.max(0, roundCents(taxableAmount + taxAmount + fees));
 
   // The balance due nets off any recorded payment/deposit. An overpayment
   // reads as a zero balance rather than a negative one.
@@ -75,7 +82,7 @@ export function calculateInvoiceTotals(
     sections?.amountPaid === false
       ? 0
       : Math.max(0, Number(invoice.amountPaid) || 0);
-  const balanceDue = Math.max(0, Math.round((total - amountPaid) * 100) / 100);
+  const balanceDue = Math.max(0, roundCents(total - amountPaid));
 
   return { items, subtotal, taxAmount, discountAmount, total, balanceDue };
 }
