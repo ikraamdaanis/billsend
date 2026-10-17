@@ -3,6 +3,7 @@ import {
   clickFileMenuItem,
   gotoEditorReady,
   nameInvoice,
+  pressShortcut,
   savedContains
 } from "./helpers";
 
@@ -162,7 +163,7 @@ test("Cmd/Ctrl+O opens the Open Invoice dialog and traps focus", async ({
 }) => {
   await gotoEditorReady(page, "Shortcut open");
 
-  await page.keyboard.press("ControlOrMeta+o");
+  await pressShortcut(page, "Mod+o");
 
   const dialog = page.getByRole("dialog", { name: "Open Invoice" });
 

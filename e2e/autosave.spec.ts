@@ -8,6 +8,7 @@ import {
   hidePage,
   invoiceNameButton,
   nameInvoice,
+  pressShortcut,
   savedContains
 } from "./helpers";
 
@@ -197,7 +198,7 @@ test("⌘S writes at once and says Saved, without Save Page", async ({
 }) => {
   await gotoEditorReady(page, "Shortcut");
   await page.getByLabel("From details").fill("Saved by shortcut");
-  await page.keyboard.press("ControlOrMeta+s");
+  await pressShortcut(page, "Mod+s");
 
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
   expect(await savedContains(page, "Saved by shortcut")).toBe(true);
@@ -208,7 +209,7 @@ test("⇧⌘S duplicates the open invoice and opens the copy", async ({ page }) 
   await gotoEditorReady(page, "Original content");
   await nameInvoice(page, "Quarterly retainer");
 
-  await page.keyboard.press("ControlOrMeta+Shift+s");
+  await pressShortcut(page, "Mod+Shift+s");
 
   await expect(
     page.getByRole("heading", { name: "Quarterly retainer copy" })
