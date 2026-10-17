@@ -61,6 +61,32 @@ export type InvoiceSections = Invoice["sections"];
 
 export type InvoiceSectionKey = keyof InvoiceSections;
 
+// How the saved-invoice lists are ordered, grouped and narrowed down.
+export type InvoiceLibrarySort =
+  | "updated"
+  | "invoiceDate"
+  | "dueDate"
+  | "name"
+  | "client"
+  | "amount"
+  | "number";
+
+export type SortDirection = "asc" | "desc";
+
+export type InvoiceLibraryGroup = "client" | "month" | "none";
+
+export type InvoiceLibraryDateRange =
+  "all" | "thisMonth" | "last30" | "thisQuarter" | "thisYear" | "lastYear";
+
+export type InvoiceLibraryView = {
+  sort: InvoiceLibrarySort;
+  direction: SortDirection;
+  group: InvoiceLibraryGroup;
+  dateRange: InvoiceLibraryDateRange;
+  client: string | null;
+  currency: string | null;
+};
+
 // The editor chrome's colour scheme. The preference is what the person chose
 // ("system" follows the operating system); the theme is what it resolves to.
 export type EditorThemePreference = "light" | "dark" | "system";
