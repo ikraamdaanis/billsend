@@ -565,22 +565,32 @@ homepage route and appears only there. The editor and dialogs never use it.
   Fine pointers keep the compact sizes.
 - **Editor frame.** A 48px top bar sits above three columns: the invoices panel
   (256px), the desk, and the inspector (288px). Both panels slide shut to
-  nothing; below 768px they open over the desk with a tap-to-close backdrop.
-  The desk centres the page with 12px padding on phones and 32px from `md` up,
-  plus 80px bottom padding so the canvas pill never covers the page foot.
+  nothing. The desk centres the page with 12px padding on phones and 32px from
+  `md` up, plus 80px bottom padding so the canvas pill never covers the page
+  foot.
+- **Phones (below 768px).** As in Canva and tldraw, the top bar keeps only the
+  project menu, the name with its status dot, and Download. A 56px tab bar
+  along the bottom (`background`, top `border`) holds Invoices, Style,
+  Preview/Edit and a zoom tab (Zoom in at Fit, Fit page when zoomed, Done
+  after a tapped field zoomed in). The panels open as bottom sheets (70dvh,
+  `rounded-t-2xl`) above the tab bar with a tap-to-close backdrop, and the
+  canvas pill is hidden. The light/dark switch is also in the project menu.
 - **The page is viewport-independent.** The A4 sheet is fixed at 210mm by at
   least 297mm with 40pt padding, and nothing inside it uses responsive
   breakpoints, so what you see on screen matches the PDF. Small screens scale
   the whole sheet with zoom; they never reflow it.
 - **Zoom.** Presets run 50% to 200%, plus Fit. Below 768px the editor opens at
-  Fit so the whole invoice is visible; wider screens open at 100%. On a phone,
-  tapping a field on the fitted page zooms to 100% with the field high on the
-  screen (clear of the keyboard), and a Done button in the canvas pill fits the
-  page again. Pinching the desk zooms the page (25% to 200%) around the
-  fingers; the editor's viewport sets `maximum-scale=1` so iOS never zooms the
-  whole editor into a focused field. Phones drop the pill's zoom −/+ (the
-  percentage menu stays) and the top bar's Preview button (the pill has Edit
-  and Preview).
+  Fit so the whole invoice is visible; wider screens open at 100%. The editor
+  owns zoom gestures: the browser's pinch and double-tap zoom are off on
+  /create (`touch-action: pan-x pan-y` on `<html>`, Safari's `gesture*`
+  events cancelled), so they never scale the top bar or tab bar. Pinching the
+  desk zooms the page (25% to 300%) around the fingers, a trackpad pinch
+  (Ctrl/⌘ wheel) does the same on a laptop, and double-tapping bare paper or
+  desk flips between Fit and 100%. On a phone, tapping a field on the fitted
+  page zooms to 100% with the field high on the screen, clear of the
+  keyboard. The viewport sets `maximum-scale=1` so iOS never zooms into a
+  focused field, and `interactive-widget=resizes-content` so Android's
+  keyboard shrinks the editor instead of covering it.
 - **Homepage.** Content sits in a `max-w-6xl` (72rem) column. Order: header,
   hero document, privacy band, tour (`#features`), questions, closing
   counterfoil, footer. Sections breathe at 80px vertical padding (96px from
