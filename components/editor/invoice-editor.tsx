@@ -44,13 +44,13 @@ export function InvoiceEditor() {
               start={<PanelToggle side="left" />}
               end={<PanelToggle side="right" />}
             />
-            <DocumentStatusBanner />
             <div className="relative flex min-h-0 flex-1">
               <SidePanel side="left" label="Invoices">
                 <InvoicesPanel />
               </SidePanel>
               <Desk>
                 <CanvasArea />
+                <DocumentStatusBanner />
                 <CanvasPill />
               </Desk>
               <PanelBackdrop />
