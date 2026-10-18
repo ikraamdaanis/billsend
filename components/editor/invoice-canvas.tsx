@@ -61,6 +61,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
   const fieldToRevealRef = useRef<HTMLElement | null>(null);
   const gestureOriginRef = useRef<{ x: number; y: number } | null>(null);
   const previousZoomRef = useRef(zoom);
+  const previousViewRef = useRef(view);
   // Filled in by the layout effect below before any gesture can start.
   const gestureStateRef = useRef({
     zoom,
@@ -110,7 +111,9 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     const origin = gestureOriginRef.current;
 
     const previousZoom = previousZoomRef.current;
+    const previousView = previousViewRef.current;
     previousZoomRef.current = zoom;
+    previousViewRef.current = view;
 
     if (!section || !sizer) return;
 
@@ -125,9 +128,15 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     }
 
     // A zoom from the buttons, the menu or a shortcut keeps the middle of
-    // what was in view in the middle.
+    // what was in view in the middle. A fitted page that rescales because the
+    // canvas changed size (the window, a status alert) keeps its top in place
+    // instead, so a page fitted from the top doesn't open halfway down.
     if (!origin && !field && previousZoom !== zoom) {
-      keepCentre(section, zoom / previousZoom);
+      if (view === previousView) {
+        keepTopLeft(section, zoom / previousZoom);
+      } else {
+        keepCentre(section, zoom / previousZoom);
+      }
     }
   });
 
@@ -205,6 +214,11 @@ function keepCentre(section: HTMLElement, ratio: number) {
 
   section.scrollLeft = centreX * ratio - section.clientWidth / 2;
   section.scrollTop = centreY * ratio - section.clientHeight / 2;
+}
+
+function keepTopLeft(section: HTMLElement, ratio: number) {
+  section.scrollLeft *= ratio;
+  section.scrollTop *= ratio;
 }
 
 // Brings a field into view high on the canvas, clear of the keyboard that is

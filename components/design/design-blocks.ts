@@ -33,7 +33,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Open in another tab",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -43,7 +42,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Deleted in another tab",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -53,7 +51,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Save failed",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -63,7 +60,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Storage full",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -73,7 +69,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Updated in another tab",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -83,7 +78,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "No storage in this browser",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -93,7 +87,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Backup suggestion (Safari)",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -103,7 +96,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Success",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -113,7 +105,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Warning",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -123,7 +114,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Error",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
@@ -133,7 +123,6 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     title: "Several at once",
     kind: "editor",
     viewports: ALL,
-    height: 560,
     storage: panels(false, false),
     emptyLibrary: false
   },
