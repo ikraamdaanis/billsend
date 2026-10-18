@@ -251,7 +251,7 @@ export function SaveTemplateModal({
         <DialogFooter>
           <Button
             type="button"
-            variant="outline"
+            variant="secondary"
             onClick={() => handleOpenChange(false)}
             disabled={pending}
           >

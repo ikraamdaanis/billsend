@@ -229,8 +229,7 @@ export function OpenTemplateDialog({
         onKeyDown={handleContentKeyDown}
       >
         <DialogHeader
-          align="start"
-          className="border-border border-b"
+          className="border-border border-b pb-4"
           icon={
             <DialogIcon tone="sky">
               <IconTemplate />
@@ -348,7 +347,7 @@ export function OpenTemplateDialog({
         >
           <span className="text-muted-foreground text-sm">{footerLabel}</span>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Close
             </Button>
             <Button

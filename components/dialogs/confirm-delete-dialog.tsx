@@ -56,7 +56,7 @@ export function ConfirmDeleteDialog({
         </DialogHeader>
         <DialogFooter>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => onOpenChange(false)}
             disabled={pending}
           >
