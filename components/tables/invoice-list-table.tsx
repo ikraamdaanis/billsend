@@ -16,14 +16,13 @@ import {
   ContextMenuTrigger
 } from "~/components/ui/context-menu";
 import { formatCurrency } from "~/consts/currencies";
-import { useMediaQuery } from "~/hooks/use-media-query";
 import { cn } from "~/lib/utils";
 import type {
   InvoiceDocument,
   InvoiceLibrarySort,
   SortDirection
 } from "~/types";
-import { formatListDate } from "~/utils/format-list-date";
+import { formatFullDate, formatListDate } from "~/utils/format-list-date";
 import {
   getClientName,
   getInvoiceTotal,
@@ -41,24 +40,35 @@ const COLUMN_SORTS = {
 
 type SortKey = keyof typeof COLUMN_SORTS;
 
-// The rows' heights (see the row's className), so the stripes that fill the
-// rest of the list line up with them.
-const ROW_HEIGHT = 24;
-const TOUCH_ROW_HEIGHT = 44;
+// Continues the rows' stripes down the rest of the list. The stripe height
+// follows the rows' (see the row's className): 24px, 44px on touch, and 44px
+// where narrow invoice rows go to two lines.
 const STRIPE_COLOR = "color-mix(in oklab, var(--muted) 50%, transparent)";
 
-export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
-  const isTouch = useMediaQuery("(pointer: coarse)");
-  const single = isTouch ? TOUCH_ROW_HEIGHT : ROW_HEIGHT;
-  const double = single * 2;
+export function InvoiceListStripeFiller({
+  rowCount,
+  twoLineWhenNarrow = false
+}: {
+  rowCount: number;
+  twoLineWhenNarrow?: boolean;
+}) {
+  const single = "var(--row-height)";
+  const double = "calc(var(--row-height) * 2)";
   const stops =
     rowCount % 2 === 1
-      ? `${STRIPE_COLOR} 0, ${STRIPE_COLOR} ${single}px, transparent ${single}px, transparent ${double}px`
-      : `transparent 0, transparent ${single}px, ${STRIPE_COLOR} ${single}px, ${STRIPE_COLOR} ${double}px`;
+      ? `${STRIPE_COLOR} 0, ${STRIPE_COLOR} ${single}, transparent ${single}, transparent ${double}`
+      : `transparent 0, transparent ${single}, ${STRIPE_COLOR} ${single}, ${STRIPE_COLOR} ${double}`;
   const backgroundImage = `repeating-linear-gradient(to bottom, ${stops})`;
 
   return (
-    <div aria-hidden className="min-h-14 flex-1" style={{ backgroundImage }} />
+    <div
+      aria-hidden
+      className={cn(
+        "min-h-14 flex-1 [--row-height:24px] pointer-coarse:[--row-height:44px]",
+        twoLineWhenNarrow && "@max-xl:[--row-height:44px]"
+      )}
+      style={{ backgroundImage }}
+    />
   );
 }
 
@@ -345,10 +355,10 @@ export function InvoiceListTable({
     >
       <colgroup>
         <col />
-        <col className="w-40 max-sm:hidden" />
-        <col className="w-28 max-sm:hidden" />
-        <col className="w-43" />
-        <col className="w-11" />
+        <col className="w-40 @max-xl:hidden" />
+        <col className="w-28 @max-xl:hidden" />
+        <col className="w-24 @max-xl:hidden" />
+        <col className="w-7 pointer-coarse:hidden" />
       </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-xs">
@@ -364,7 +374,7 @@ export function InvoiceListTable({
             active={sort === COLUMN_SORTS.client}
             direction={direction}
             onClick={() => toggleSort("client")}
-            className="max-sm:hidden"
+            className="@max-xl:hidden"
           />
           <SortHeaderCell
             label="Amount"
@@ -372,15 +382,16 @@ export function InvoiceListTable({
             active={sort === COLUMN_SORTS.amount}
             direction={direction}
             onClick={() => toggleSort("amount")}
-            className="max-sm:hidden"
+            className="@max-xl:hidden"
           />
           <SortHeaderCell
-            label="Date modified"
+            label="Modified"
             active={sort === COLUMN_SORTS.updatedAt}
             direction={direction}
             onClick={() => toggleSort("updatedAt")}
+            className="@max-xl:hidden"
           />
-          <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)]">
+          <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)] pointer-coarse:hidden">
             <span className="sr-only">Actions</span>
           </th>
         </tr>
@@ -430,9 +441,7 @@ export function InvoiceListTable({
               ];
           const secondaryTextClass = isDeleting
             ? "text-destructive/70"
-            : isSelected
-              ? "text-white/80"
-              : "text-muted-foreground";
+            : "text-muted-foreground";
 
           return (
             <ContextMenu
@@ -458,10 +467,12 @@ export function InvoiceListTable({
                     }}
                     onFocus={() => setActiveId(invoice.id)}
                     className={cn(
-                      "group/row h-6 cursor-pointer scroll-mt-6 outline-none select-none pointer-coarse:h-11",
+                      "group/row h-6 cursor-pointer scroll-mt-6 outline-none select-none @max-xl:h-11 pointer-coarse:h-11",
                       !isSelected && !isDeleting && isStriped && "bg-muted/50",
                       !isSelected && !isDeleting && "hover:bg-accent",
-                      isSelected && !isDeleting && "bg-brand-600 text-white",
+                      isSelected &&
+                        !isDeleting &&
+                        "bg-brand-100 dark:bg-brand-500/20",
                       isDeleting && "bg-destructive/10 text-destructive",
                       isContextFocused &&
                         !isDeleting &&
@@ -489,7 +500,7 @@ export function InvoiceListTable({
                         isDeleting
                           ? "text-destructive"
                           : isSelected
-                            ? "text-white"
+                            ? "text-brand-600 dark:text-brand-400"
                             : "text-muted-foreground"
                       )}
                     />
@@ -517,22 +528,41 @@ export function InvoiceListTable({
                               "shrink-0 text-xs",
                               isDeleting
                                 ? "text-destructive/70"
-                                : isSelected
-                                  ? "text-white/80"
-                                  : "text-muted-foreground"
+                                : "text-muted-foreground"
                             )}
                           >
                             Current
                           </span>
                         )}
+                        <span
+                          title={formatFullDate(invoice.updatedAt)}
+                          className={cn(
+                            "ml-auto shrink-0 text-xs tabular-nums @xl:hidden",
+                            secondaryTextClass
+                          )}
+                        >
+                          {formatListDate(invoice.updatedAt)}
+                        </span>
                       </>
+                    )}
+                  </div>
+                  <div
+                    className={cn(
+                      "truncate pl-5.5 text-xs/5 @xl:hidden",
+                      secondaryTextClass
+                    )}
+                  >
+                    {getClientName(invoice)} ·{" "}
+                    {formatCurrency(
+                      getInvoiceTotal(invoice),
+                      invoice.invoiceData.currency
                     )}
                   </div>
                 </td>
                 <td
                   role="gridcell"
                   className={cn(
-                    "truncate py-0.5 pr-4 max-sm:hidden",
+                    "truncate py-0.5 pr-4 @max-xl:hidden",
                     secondaryTextClass
                   )}
                 >
@@ -541,7 +571,7 @@ export function InvoiceListTable({
                 <td
                   role="gridcell"
                   className={cn(
-                    "py-0.5 pr-4 text-right whitespace-nowrap tabular-nums max-sm:hidden",
+                    "py-0.5 pr-4 text-right whitespace-nowrap tabular-nums @max-xl:hidden",
                     secondaryTextClass
                   )}
                 >
@@ -552,8 +582,9 @@ export function InvoiceListTable({
                 </td>
                 <td
                   role="gridcell"
+                  title={formatFullDate(invoice.updatedAt)}
                   className={cn(
-                    "py-0.5 pr-4 whitespace-nowrap tabular-nums",
+                    "py-0.5 pr-4 whitespace-nowrap tabular-nums @max-xl:hidden",
                     secondaryTextClass
                   )}
                 >

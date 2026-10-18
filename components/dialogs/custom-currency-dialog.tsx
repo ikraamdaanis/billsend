@@ -1,4 +1,3 @@
-import { IconCoins } from "@tabler/icons-react";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -8,7 +7,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
@@ -53,14 +51,8 @@ export function CustomCurrencyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-sm">
-        <DialogHeader
-          icon={
-            <DialogIcon tone="teal">
-              <IconCoins />
-            </DialogIcon>
-          }
-        >
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>Custom currency</DialogTitle>
           <DialogDescription>
             Enter a symbol (up to 4 characters) and an optional ISO code to show
@@ -68,7 +60,7 @@ export function CustomCurrencyDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-3 px-4 pb-2">
+          <div className="flex flex-col gap-3 px-4 py-2">
             <Input
               name="currency-symbol"
               aria-label="Currency symbol"

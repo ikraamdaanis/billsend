@@ -1,13 +1,17 @@
 import {
   IconFolderOpen,
   IconLoader2,
+  IconPencil,
   IconSearch,
   IconTemplate,
+  IconTrash,
   IconX
 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
+import { TouchRowActions } from "~/components/dialogs/touch-row-actions";
 import { InvoiceListStripeFiller } from "~/components/tables/invoice-list-table";
 import { TemplateListTable } from "~/components/tables/template-list-table";
 import { Button } from "~/components/ui/button";
@@ -21,6 +25,7 @@ import {
   DialogTitle
 } from "~/components/ui/dialog";
 import { deleteTemplates, renameTemplate, watchTemplates } from "~/db";
+import { cn } from "~/lib/utils";
 import type { InvoiceTemplate } from "~/types";
 
 function truncate(value: string, max: number): string {
@@ -44,6 +49,9 @@ export function OpenTemplateDialog({
   const [deleteTarget, setDeleteTarget] = useState<
     { mode: "selection" } | { mode: "single"; template: InvoiceTemplate } | null
   >(null);
+  const [renameTarget, setRenameTarget] = useState<InvoiceTemplate | null>(
+    null
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -78,6 +86,10 @@ export function OpenTemplateDialog({
   // or deleted elsewhere is never opened or deleted with the rest.
   const visibleIds = new Set(visibleTemplates.map(template => template.id));
   const selectedIds = selection.filter(id => visibleIds.has(id));
+  const selectedTemplate =
+    selectedIds.length === 1
+      ? visibleTemplates.find(template => template.id === selectedIds[0])
+      : undefined;
 
   useEffect(() => {
     if (deleteTarget?.mode === "selection" && selectedIds.length === 0) {
@@ -99,9 +111,14 @@ export function OpenTemplateDialog({
       ? `Delete “${truncate(pendingDeleteTemplates[0].name, 42)}”?`
       : `Delete ${pendingDeleteTemplates.length} templates?`;
 
+  // On touch the footer holds the selected template's actions, until a delete
+  // asks to be confirmed.
+  const touchActionsTemplate =
+    pendingDeleteTemplates.length === 0 ? selectedTemplate : undefined;
+
   const footerLabel =
     pendingDeleteTemplates.length > 0 || selectedIds.length === 0
-      ? `${templates.length} template${templates.length !== 1 ? "s" : ""} available`
+      ? `${templates.length} template${templates.length !== 1 ? "s" : ""}`
       : `${selectedIds.length} selected`;
 
   function handleOpenTemplate(template: InvoiceTemplate) {
@@ -111,6 +128,10 @@ export function OpenTemplateDialog({
 
   function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
+
+    // The Rename dialog is portaled out of this one, but its clicks still
+    // bubble here through React.
+    if (!event.currentTarget.contains(target)) return;
 
     // A row menu's items are portaled, but their clicks still bubble here
     // through React; they act on their own row.
@@ -150,15 +171,7 @@ export function OpenTemplateDialog({
   }
 
   function handleOpenSelected() {
-    if (selectedIds.length !== 1) return;
-
-    const selectedTemplate = templates.find(
-      template => template.id === selectedIds[0]
-    );
-
-    if (!selectedTemplate) {
-      return;
-    }
+    if (!selectedTemplate) return;
 
     handleOpenTemplate(selectedTemplate);
   }
@@ -224,14 +237,14 @@ export function OpenTemplateDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl"
+        className="flex max-h-[85vh] min-h-112 w-3xl flex-col"
         onClick={handleContentClick}
         onKeyDown={handleContentKeyDown}
       >
         <DialogHeader
           className="border-border border-b pb-4"
           icon={
-            <DialogIcon tone="sky">
+            <DialogIcon tone="neutral">
               <IconTemplate />
             </DialogIcon>
           }
@@ -345,12 +358,41 @@ export function OpenTemplateDialog({
           layout="bar"
           className="flex-row items-center justify-between sm:justify-between"
         >
-          <span className="text-muted-foreground text-sm">{footerLabel}</span>
+          <span
+            className={cn(
+              "text-muted-foreground text-sm",
+              touchActionsTemplate && "pointer-coarse:hidden"
+            )}
+          >
+            {footerLabel}
+          </span>
+          {touchActionsTemplate && (
+            <TouchRowActions
+              actions={[
+                {
+                  label: "Delete",
+                  icon: IconTrash,
+                  onSelect: () => handleRequestDelete([touchActionsTemplate]),
+                  destructive: true
+                },
+                {
+                  label: "Rename",
+                  icon: IconPencil,
+                  onSelect: () => setRenameTarget(touchActionsTemplate)
+                }
+              ]}
+            />
+          )}
           <div className="flex items-center gap-2">
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => onOpenChange(false)}
+              className="pointer-coarse:hidden"
+            >
               Close
             </Button>
             <Button
+              className="pointer-coarse:h-10"
               disabled={selectedIds.length !== 1}
               title={
                 selectedIds.length !== 1
@@ -363,6 +405,17 @@ export function OpenTemplateDialog({
             </Button>
           </div>
         </DialogFooter>
+        <RenameInvoiceDialog
+          subject="Template"
+          open={renameTarget !== null}
+          onOpenChange={isOpen => {
+            if (!isOpen) setRenameTarget(null);
+          }}
+          currentName={renameTarget?.name ?? ""}
+          onRename={async newName => {
+            if (renameTarget) await handleRenameTemplate(renameTarget, newName);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

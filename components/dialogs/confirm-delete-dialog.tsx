@@ -41,7 +41,7 @@ export function ConfirmDeleteDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-md">
+      <DialogContent>
         <DialogHeader
           icon={
             <DialogIcon tone="destructive">
