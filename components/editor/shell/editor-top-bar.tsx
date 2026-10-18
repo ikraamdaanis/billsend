@@ -1,6 +1,6 @@
 import { IconPlayerPlay } from "@tabler/icons-react";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { toast } from "sonner";
 import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
 import { DownloadPopover } from "~/components/editor/shell/download-popover";
@@ -19,6 +19,16 @@ import {
 // undo and redo, and Download; the panel toggles move to the tab bar, and
 // there's no Preview there. Every edit saves itself, so there's no save state to show here while
 // saving works; problems show in the banner under the bar.
+// Development builds get a menu that shows any alert, toast or dialog on
+// demand; production builds drop it, import and all.
+const DevMenu = import.meta.env.DEV
+  ? lazy(() =>
+      import("~/components/editor/shell/dev-menu").then(module => ({
+        default: module.DevMenu
+      }))
+    )
+  : null;
+
 export function EditorTopBar({
   start,
   end
@@ -54,6 +64,11 @@ export function EditorTopBar({
         >
           <IconPlayerPlay aria-hidden="true" />
         </Button>
+        {DevMenu && (
+          <Suspense fallback={null}>
+            <DevMenu />
+          </Suspense>
+        )}
         <DownloadPopover />
       </div>
     </header>
