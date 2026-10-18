@@ -1,3 +1,4 @@
+import { IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -6,6 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 
@@ -41,6 +43,9 @@ export function ConfirmDeleteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-md">
         <DialogHeader>
+          <DialogIcon tone="destructive">
+            <IconTrash />
+          </DialogIcon>
           <DialogTitle>Delete this {subject}?</DialogTitle>
           <DialogDescription className="text-pretty">
             “{name}” will be removed from this browser. This can’t be undone.
@@ -58,6 +63,7 @@ export function ConfirmDeleteDialog({
             variant="destructive"
             onClick={() => void handleConfirm()}
             disabled={pending}
+            className="bg-destructive hover:bg-destructive/90 dark:bg-destructive dark:hover:bg-destructive/90 text-white"
           >
             Delete {subject}
           </Button>

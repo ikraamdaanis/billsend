@@ -110,7 +110,7 @@ export function VersionHistoryDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] w-full flex-col sm:max-w-lg">
-        <DialogHeader>
+        <DialogHeader align="start">
           <DialogTitle>Version history</DialogTitle>
           <DialogDescription className="text-pretty">
             Earlier versions of this invoice, kept in this browser. Restoring
