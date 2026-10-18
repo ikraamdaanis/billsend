@@ -16,7 +16,7 @@ import { useInvoiceDocument } from "~/context/invoice-document-context";
 import { getInvoiceVersions } from "~/db";
 import type { InvoiceVersion, InvoiceVersionReason } from "~/types";
 import { calculateInvoiceTotals } from "~/utils/calculate-invoice-totals";
-import { formatListDate } from "~/utils/format-list-date";
+import { formatFullDate } from "~/utils/format-list-date";
 
 const REASON_LABELS: Record<InvoiceVersionReason, string> = {
   opened: "When it was opened",
@@ -36,7 +36,7 @@ function formatWhen(date: Date) {
   if (isToday(date)) return `Today, ${time}`;
   if (isYesterday(date)) return `Yesterday, ${time}`;
 
-  return formatListDate(date);
+  return formatFullDate(date);
 }
 
 // The open invoice's version history: copies kept when it was opened, after
@@ -110,10 +110,10 @@ export function VersionHistoryDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[85vh] w-full flex-col sm:max-w-lg">
+      <DialogContent className="flex max-h-[85vh] w-lg flex-col">
         <DialogHeader
           icon={
-            <DialogIcon tone="violet">
+            <DialogIcon tone="neutral">
               <IconHistory />
             </DialogIcon>
           }

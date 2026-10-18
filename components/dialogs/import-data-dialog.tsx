@@ -12,7 +12,6 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import type { BillsendExportFile, ImportAnalysis, ImportResult } from "~/types";
@@ -106,21 +105,14 @@ export function ImportDataDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="w-[500px]">
-        <DialogHeader
-          icon={
-            <DialogIcon tone="cyan">
-              <IconUpload />
-            </DialogIcon>
-          }
-        >
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
             Import invoices, templates, and images from a billsend export file.
           </DialogDescription>
         </DialogHeader>
-
-        <div className="px-4 pb-2">
+        <div className="px-4 py-2">
           {state === "idle" && (
             <div className="flex flex-col items-center gap-4">
               {error && (
@@ -130,7 +122,7 @@ export function ImportDataDialog({
               )}
               <label
                 htmlFor="import-file-input"
-                className="border-border hover:bg-accent rounded-surface flex w-full cursor-pointer flex-col items-center gap-2 border-2 border-dashed p-4 transition-colors"
+                className="border-border rounded-surface flex w-full cursor-pointer flex-col items-center gap-2 border-2 border-dashed p-4 transition-colors hover:bg-zinc-100/70"
               >
                 <IconUpload className="text-muted-foreground h-8 w-8" />
                 <span className="text-sm font-medium">

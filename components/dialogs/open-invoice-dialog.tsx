@@ -1,12 +1,17 @@
 import {
+  IconCopy,
   IconFolderOpen,
   IconLoader2,
+  IconPencil,
   IconSearch,
+  IconTrash,
   IconX
 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import { RenameInvoiceDialog } from "~/components/dialogs/rename-invoice-dialog";
+import { TouchRowActions } from "~/components/dialogs/touch-row-actions";
 import { LibraryViewOptions } from "~/components/editor/shell/library-view-options";
 import {
   InvoiceListStripeFiller,
@@ -24,6 +29,7 @@ import {
 } from "~/components/ui/dialog";
 import { renameInvoice, watchInvoices } from "~/db";
 import { usePersistentState } from "~/hooks/use-persistent-state";
+import { cn } from "~/lib/utils";
 import type { InvoiceDocument, InvoiceLibraryView } from "~/types";
 import {
   DEFAULT_LIBRARY_VIEW,
@@ -69,6 +75,9 @@ export function OpenInvoiceDialog({
   const [deleteTarget, setDeleteTarget] = useState<
     { mode: "selection" } | { mode: "single"; invoice: InvoiceDocument } | null
   >(null);
+  const [renameTarget, setRenameTarget] = useState<InvoiceDocument | null>(
+    null
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -103,6 +112,10 @@ export function OpenInvoiceDialog({
   // or deleted elsewhere is never opened or deleted with the rest.
   const visibleIds = new Set(visibleInvoices.map(invoice => invoice.id));
   const selectedIds = selection.filter(id => visibleIds.has(id));
+  const selectedInvoice =
+    selectedIds.length === 1
+      ? visibleInvoices.find(invoice => invoice.id === selectedIds[0])
+      : undefined;
 
   function clearFilters() {
     setQuery("");
@@ -127,9 +140,14 @@ export function OpenInvoiceDialog({
       ? `Delete “${truncate(pendingDeleteInvoices[0].name, 42)}”?`
       : `Delete ${pendingDeleteInvoices.length} invoices?`;
 
+  // On touch the footer holds the selected invoice's actions, until a delete
+  // asks to be confirmed.
+  const touchActionsInvoice =
+    pendingDeleteInvoices.length === 0 ? selectedInvoice : undefined;
+
   const footerLabel =
     pendingDeleteInvoices.length > 0 || selectedIds.length === 0
-      ? `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""} available`
+      ? `${invoices.length} invoice${invoices.length !== 1 ? "s" : ""}`
       : `${selectedIds.length} selected`;
 
   function handleOpenInvoice(invoice: InvoiceDocument) {
@@ -139,6 +157,10 @@ export function OpenInvoiceDialog({
 
   function handleContentClick(event: MouseEvent<HTMLDivElement>) {
     const target = event.target as HTMLElement;
+
+    // The Rename dialog is portaled out of this one, but its clicks still
+    // bubble here through React.
+    if (!event.currentTarget.contains(target)) return;
 
     // A row menu's items are portaled, but their clicks still bubble here
     // through React; they act on their own row.
@@ -182,15 +204,7 @@ export function OpenInvoiceDialog({
   }
 
   function handleOpenSelected() {
-    if (selectedIds.length !== 1) return;
-
-    const selectedInvoice = invoices.find(
-      invoice => invoice.id === selectedIds[0]
-    );
-
-    if (!selectedInvoice) {
-      return;
-    }
+    if (!selectedInvoice) return;
 
     handleOpenInvoice(selectedInvoice);
   }
@@ -268,14 +282,14 @@ export function OpenInvoiceDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="flex max-h-[85vh] min-h-112 w-full flex-col sm:max-w-3xl"
+        className="flex max-h-[85vh] min-h-112 w-3xl flex-col"
         onClick={handleContentClick}
         onKeyDown={handleContentKeyDown}
       >
         <DialogHeader
           className="border-border border-b pb-4"
           icon={
-            <DialogIcon tone="blue">
+            <DialogIcon tone="neutral">
               <IconFolderOpen />
             </DialogIcon>
           }
@@ -317,7 +331,7 @@ export function OpenInvoiceDialog({
           </div>
         )}
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+          <div className="@container flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
             {loading ? (
               <div className="text-muted-foreground flex flex-1 items-center justify-center gap-2 text-sm">
                 <IconLoader2 className="size-4 shrink-0 animate-spin" />
@@ -359,7 +373,10 @@ export function OpenInvoiceDialog({
                     No invoices match. Try another search or filter.
                   </p>
                 )}
-                <InvoiceListStripeFiller rowCount={visibleInvoices.length} />
+                <InvoiceListStripeFiller
+                  rowCount={visibleInvoices.length}
+                  twoLineWhenNarrow
+                />
               </>
             )}
           </div>
@@ -413,7 +430,36 @@ export function OpenInvoiceDialog({
               </button>
             </span>
           ) : (
-            <span className="text-muted-foreground text-sm">{footerLabel}</span>
+            <span
+              className={cn(
+                "text-muted-foreground text-sm",
+                touchActionsInvoice && "pointer-coarse:hidden"
+              )}
+            >
+              {footerLabel}
+            </span>
+          )}
+          {touchActionsInvoice && (
+            <TouchRowActions
+              actions={[
+                {
+                  label: "Delete",
+                  icon: IconTrash,
+                  onSelect: () => handleRequestDelete([touchActionsInvoice]),
+                  destructive: true
+                },
+                {
+                  label: "Duplicate",
+                  icon: IconCopy,
+                  onSelect: () => onDuplicateInvoice(touchActionsInvoice)
+                },
+                {
+                  label: "Rename",
+                  icon: IconPencil,
+                  onSelect: () => setRenameTarget(touchActionsInvoice)
+                }
+              ]}
+            />
           )}
           <div className="flex items-center gap-2">
             {import.meta.env.DEV && (
@@ -421,14 +467,20 @@ export function OpenInvoiceDialog({
                 variant="secondary"
                 onClick={handleSeedDummyInvoice}
                 disabled={seeding}
+                className={cn(touchActionsInvoice && "pointer-coarse:hidden")}
               >
                 Add dummy
               </Button>
             )}
-            <Button variant="secondary" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => onOpenChange(false)}
+              className="pointer-coarse:hidden"
+            >
               Close
             </Button>
             <Button
+              className="pointer-coarse:h-10"
               disabled={selectedIds.length !== 1}
               title={
                 selectedIds.length !== 1
@@ -441,6 +493,16 @@ export function OpenInvoiceDialog({
             </Button>
           </div>
         </DialogFooter>
+        <RenameInvoiceDialog
+          open={renameTarget !== null}
+          onOpenChange={isOpen => {
+            if (!isOpen) setRenameTarget(null);
+          }}
+          currentName={renameTarget?.name ?? ""}
+          onRename={async newName => {
+            if (renameTarget) await handleRenameInvoice(renameTarget, newName);
+          }}
+        />
       </DialogContent>
     </Dialog>
   );
