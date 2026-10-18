@@ -24,7 +24,7 @@ export function RowActionsCell({
     <td
       role="gridcell"
       data-slot="row-actions"
-      className="py-1 pr-2 text-right"
+      className="py-0 pr-2 text-right"
       onClick={event => event.stopPropagation()}
       onDoubleClick={event => event.stopPropagation()}
       onKeyDown={event => event.stopPropagation()}
@@ -33,7 +33,7 @@ export function RowActionsCell({
         <DropdownMenuTrigger
           aria-label={label}
           className={cn(
-            "focus-visible:ring-ring ml-auto flex size-7 items-center justify-center rounded-md opacity-0 outline-none group-focus-within/row:opacity-100 group-hover/row:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 aria-expanded:opacity-100 pointer-coarse:size-9 pointer-coarse:opacity-100",
+            "focus-visible:ring-ring ml-auto flex size-5 items-center justify-center rounded-md opacity-0 outline-none group-focus-within/row:opacity-100 group-hover/row:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 aria-expanded:opacity-100 pointer-coarse:size-9 pointer-coarse:opacity-100",
             selected
               ? "text-white opacity-100 hover:bg-white/15 aria-expanded:bg-white/15"
               : "text-muted-foreground hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground"

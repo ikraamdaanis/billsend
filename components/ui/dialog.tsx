@@ -170,7 +170,7 @@ export function DialogFooter({
       className={cn(
         layout === "stack"
           ? "flex flex-col-reverse gap-2 p-4 pt-2 *:h-10 *:w-full sm:flex-row sm:justify-end sm:*:h-8 sm:*:w-auto"
-          : "bg-muted/50 flex flex-col-reverse gap-2 rounded-b-md border-t p-4 sm:flex-row sm:justify-end",
+          : "bg-muted/50 flex flex-col-reverse gap-2 rounded-b-md border-t px-4 py-2.5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -193,7 +193,7 @@ export function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "font-heading text-base font-semibold text-balance",
+        "font-heading text-base/5 font-semibold text-balance",
         className
       )}
       {...props}
@@ -209,7 +209,7 @@ export function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-muted-foreground *:[a]:hover:text-foreground text-base/6 text-pretty sm:text-sm/6 *:[a]:underline *:[a]:underline-offset-3",
+        "text-muted-foreground *:[a]:hover:text-foreground text-base/6 text-pretty sm:text-sm/5 *:[a]:underline *:[a]:underline-offset-3",
         className
       )}
       {...props}
