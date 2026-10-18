@@ -130,7 +130,7 @@ const TONES = {
     iconColour: "text-blue-500 dark:text-blue-400",
     text: "text-blue-800 dark:text-blue-200/80",
     action:
-      "text-blue-950 decoration-blue-950/30 hover:decoration-blue-950 focus-visible:outline-blue-600 dark:text-blue-50 dark:decoration-blue-50/40 dark:hover:decoration-blue-50 dark:focus-visible:outline-blue-400",
+      "focus-visible:outline-blue-600 dark:focus-visible:outline-blue-400",
     dismiss:
       "text-blue-900 hover:bg-blue-100 dark:text-blue-100 dark:hover:bg-blue-500/15"
   },
@@ -141,7 +141,7 @@ const TONES = {
     iconColour: "text-amber-500 dark:text-amber-400",
     text: "text-amber-800 dark:text-amber-200/80",
     action:
-      "text-amber-950 decoration-amber-950/30 hover:decoration-amber-950 focus-visible:outline-amber-600 dark:text-amber-50 dark:decoration-amber-50/40 dark:hover:decoration-amber-50 dark:focus-visible:outline-amber-400",
+      "focus-visible:outline-amber-600 dark:focus-visible:outline-amber-400",
     dismiss:
       "text-amber-900 hover:bg-amber-100 dark:text-amber-100 dark:hover:bg-amber-500/15"
   },
@@ -151,8 +151,7 @@ const TONES = {
       "bg-red-50 border-red-600/10 dark:bg-[color-mix(in_oklab,var(--color-red-500)_14%,var(--popover))] dark:border-red-400/20",
     iconColour: "text-red-500 dark:text-red-400",
     text: "text-red-800 dark:text-red-200/80",
-    action:
-      "text-red-950 decoration-red-950/30 hover:decoration-red-950 focus-visible:outline-red-600 dark:text-red-50 dark:decoration-red-50/40 dark:hover:decoration-red-50 dark:focus-visible:outline-red-400",
+    action: "focus-visible:outline-red-600 dark:focus-visible:outline-red-400",
     dismiss:
       "text-red-900 hover:bg-red-100 dark:text-red-100 dark:hover:bg-red-500/15"
   }
@@ -221,7 +220,8 @@ function Banner({
   );
 }
 
-// A way out, written into the alert's sentence as an underlined word.
+// A way out, written into the alert's sentence: the sentence's own colour,
+// a step heavier and underlined.
 function Action({
   onClick,
   children
@@ -237,7 +237,7 @@ function Action({
       disabled={busy}
       onClick={onClick}
       className={cn(
-        "rounded-sm font-medium underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50",
+        "rounded-sm font-medium underline decoration-current/40 underline-offset-2 hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50",
         TONES[tone].action
       )}
     >
