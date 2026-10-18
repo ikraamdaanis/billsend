@@ -1,11 +1,13 @@
 import {
   IconAlertTriangleFilled,
   IconCircleXFilled,
-  IconInfoCircleFilled
+  IconInfoCircleFilled,
+  IconX
 } from "@tabler/icons-react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useCanvasView } from "~/context/canvas-view-context";
 import { useFileActions } from "~/context/file-actions-context";
 import { useInvoiceDocument } from "~/context/invoice-document-context";
 import { cn } from "~/lib/utils";
@@ -45,10 +47,10 @@ export function DocumentStatusBanner() {
     return (
       <Banner
         tone="warning"
-        title="billsend was updated in another tab"
         actions={[{ label: "Reload", onClick: () => window.location.reload() }]}
       >
-        Reload to keep editing; your latest changes come back with you.
+        billsend was updated in another tab. Reload to keep editing; your latest
+        changes come back with you.
       </Banner>
     );
   }
@@ -57,14 +59,13 @@ export function DocumentStatusBanner() {
     return (
       <Banner
         tone="warning"
-        title="This invoice can’t be saved"
         busy={busy}
         actions={[
           { label: "Download backup", onClick: () => void act(downloadBackup) }
         ]}
       >
-        This browser isn’t letting billsend store anything. Download a backup to
-        keep it.
+        This browser isn’t letting billsend store anything, so this invoice
+        can’t be saved here.
       </Banner>
     );
   }
@@ -73,11 +74,10 @@ export function DocumentStatusBanner() {
     return (
       <Banner
         tone="info"
-        title="Open in another tab"
         busy={busy}
         actions={[{ label: "Edit here", onClick: () => void act(takeOver) }]}
       >
-        Changes made there show here. Edit here to take it over.
+        This invoice is open in another tab. Changes made there show here.
       </Banner>
     );
   }
@@ -120,8 +120,8 @@ export function DocumentStatusBanner() {
     return (
       <Banner
         tone="info"
-        title="Back up your invoices"
         busy={busy}
+        onDismiss={dismissBackupReminder}
         actions={[
           {
             label: "Download backup",
@@ -130,11 +130,11 @@ export function DocumentStatusBanner() {
                 await downloadBackup();
                 dismissBackupReminder();
               })
-          },
-          { label: "Dismiss", onClick: dismissBackupReminder }
+          }
         ]}
       >
-        Safari clears sites left unopened for a week, invoices and all.
+        Safari clears sites left unopened for a week. Back up your invoices to
+        keep them.
       </Banner>
     );
   }
@@ -178,35 +178,56 @@ const TONES = {
   }
 } as const;
 
-// A tinted alert beside the canvas, never over it, so it can't cover a field:
-// the tone's icon beside a title and sentence, with the actions as text
-// buttons under them, the main one first. It sits above the page on wide
-// screens and below it, over the tab bar, on phones, the same layout at
-// every width.
+// A tinted alert beside the canvas, never over it, so it can't cover a field,
+// and as wide as the page on wide screens. With a title (a problem with more
+// than one way out) the sentence and the actions sit under it, the main
+// action first. Without one it's a single line: the sentence, then the
+// action on the right (under it on a phone), and a dismiss button if it can
+// be put away.
 function Banner({
   tone,
   title,
   alert = false,
   busy = false,
   actions,
+  onDismiss,
   children
 }: {
   tone: keyof typeof TONES;
-  title: string;
+  title?: string;
   alert?: boolean;
   busy?: boolean;
   actions: { label: string; onClick: () => void }[];
+  onDismiss?: () => void;
   children: ReactNode;
 }) {
+  const { zoom } = useCanvasView();
   const colours = TONES[tone];
   const Icon = colours.icon;
+  const buttons = actions.map(action => (
+    <button
+      key={action.label}
+      type="button"
+      disabled={busy}
+      onClick={action.onClick}
+      className={cn(
+        "rounded-md px-2 py-1.5 text-sm/5 font-medium whitespace-nowrap focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 pointer-coarse:py-2.5",
+        colours.action
+      )}
+    >
+      {action.label}
+    </button>
+  ));
 
   return (
-    <div className="flex shrink-0 justify-center px-3 pb-3 md:order-first md:pt-3 md:pb-0">
+    <div
+      style={{ "--page-zoom": zoom } as CSSProperties}
+      className="flex shrink-0 justify-center px-3 pb-3 md:order-first md:px-8 md:pt-3 md:pb-0"
+    >
       <div
         role={alert ? "alert" : "status"}
         className={cn(
-          "animate-in fade-in-0 flex w-full max-w-xl gap-3 rounded-lg p-4 ring-1 duration-200 ease-(--ease-out-strong) ring-inset",
+          "animate-in fade-in-0 flex w-full gap-3 rounded-lg p-4 ring-1 duration-200 ease-(--ease-out-strong) ring-inset md:w-[calc(210mm*var(--page-zoom))] md:max-w-full",
           colours.surface
         )}
       >
@@ -214,32 +235,47 @@ function Banner({
           aria-hidden="true"
           className={cn("size-5 shrink-0", colours.iconColour)}
         />
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <p className={cn("text-sm/5 font-medium", colours.title)}>
-              {title}
-            </p>
+        {title ? (
+          <div className="flex min-w-0 flex-1 flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <p className={cn("text-sm/5 font-medium", colours.title)}>
+                {title}
+              </p>
+              <p className={cn("text-sm/5 text-pretty", colours.text)}>
+                {children}
+              </p>
+            </div>
+            <div className="-my-1.5 -ml-2 flex flex-wrap gap-x-3 gap-y-1">
+              {buttons}
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-w-0 flex-1 flex-col items-start gap-2 md:flex-row md:justify-between md:gap-6">
             <p className={cn("text-sm/5 text-pretty", colours.text)}>
               {children}
             </p>
+            <div className="-my-1.5 -ml-2 flex shrink-0 gap-x-3 md:-mr-2 md:ml-0">
+              {buttons}
+            </div>
           </div>
-          <div className="-ml-2 flex flex-wrap gap-x-3 gap-y-1">
-            {actions.map(action => (
-              <button
-                key={action.label}
-                type="button"
-                disabled={busy}
-                onClick={action.onClick}
-                className={cn(
-                  "rounded-md px-2 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 pointer-coarse:py-2.5",
-                  colours.action
-                )}
-              >
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        )}
+        {onDismiss && (
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={onDismiss}
+            className={cn(
+              "relative -m-1.5 flex size-8 shrink-0 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2",
+              colours.action
+            )}
+          >
+            <IconX aria-hidden="true" className="size-5" />
+            <span
+              aria-hidden="true"
+              className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
+            />
+          </button>
+        )}
       </div>
     </div>
   );
