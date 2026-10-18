@@ -117,7 +117,7 @@ export function VersionHistoryDialog({
             one keeps the invoice as it is now as a version too.
           </DialogDescription>
         </DialogHeader>
-        <div className="-mx-6 flex min-h-32 flex-col overflow-y-auto px-6 pb-1">
+        <div className="flex min-h-32 flex-col overflow-y-auto px-1 pb-3">
           {error ? (
             <p className="text-muted-foreground py-6 text-center text-sm">
               {error}

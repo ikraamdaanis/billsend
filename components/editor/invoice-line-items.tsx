@@ -196,7 +196,7 @@ export function InvoiceLineItems() {
   const currencySymbol = getCurrencyMarker(currency);
 
   return (
-    <div data-field-area="items" className="group/table w-full">
+    <div data-field-area="items" className="w-full">
       <div
         role="table"
         aria-label="Invoice line items"
@@ -596,14 +596,13 @@ function AddItemButton({
     });
   }
 
-  // A quiet row under the table that shows while the table is hovered or
-  // focused (always on touch), so the page reads like the PDF until you reach
-  // for it.
+  // A quiet row under the table, always there while editing; it only fills in
+  // on hover.
   return (
     <button
       type="button"
       onClick={handleAddItem}
-      className="text-paper-muted-foreground hover:bg-paper-muted hover:text-paper-foreground focus-visible:ring-ring rounded-control my-1.5 flex h-8 w-full items-center gap-1.5 px-2 text-sm opacity-0 transition-opacity outline-none group-focus-within/table:opacity-100 group-hover/table:opacity-100 focus-visible:opacity-100 focus-visible:ring-1 pointer-coarse:h-11 pointer-coarse:opacity-100"
+      className="text-paper-muted-foreground hover:bg-paper-muted hover:text-paper-foreground focus-visible:ring-ring rounded-control my-1.5 flex h-8 w-full items-center gap-1.5 px-2 text-sm transition-colors outline-none focus-visible:ring-1 pointer-coarse:h-11"
     >
       <IconPlus aria-hidden="true" className="size-3.5" />
       Add item
