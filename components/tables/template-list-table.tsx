@@ -304,7 +304,7 @@ export function TemplateListTable({
     <table
       role="grid"
       aria-multiselectable
-      className="w-full table-fixed text-sm"
+      className="w-full table-fixed text-[0.8125rem]/5"
     >
       <colgroup>
         <col />
@@ -312,7 +312,7 @@ export function TemplateListTable({
         <col className="w-11" />
       </colgroup>
       <thead>
-        <tr className="text-muted-foreground text-left text-sm">
+        <tr className="text-muted-foreground text-left text-xs">
           <SortHeaderCell
             label="Name"
             active={sortKey === "name"}
@@ -393,7 +393,7 @@ export function TemplateListTable({
                     }}
                     onFocus={() => setActiveId(template.id)}
                     className={cn(
-                      "group/row cursor-pointer scroll-mt-9 outline-none select-none",
+                      "group/row h-6 cursor-pointer scroll-mt-6 outline-none select-none pointer-coarse:h-11",
                       !isSelected && !isDeleting && isStriped && "bg-muted/50",
                       !isSelected && !isDeleting && "hover:bg-accent",
                       isSelected && !isDeleting && "bg-brand-600 text-white",
@@ -411,7 +411,7 @@ export function TemplateListTable({
               >
                 <td
                   role="gridcell"
-                  className="overflow-hidden py-2.5 pr-4 pl-4"
+                  className="overflow-hidden py-0.5 pr-4 pl-4"
                   onClick={
                     isEditing ? event => event.stopPropagation() : undefined
                   }
@@ -420,7 +420,7 @@ export function TemplateListTable({
                     <IconTemplate
                       aria-hidden="true"
                       className={cn(
-                        "size-4 shrink-0",
+                        "size-3.5 shrink-0",
                         isDeleting
                           ? "text-destructive"
                           : isSelected
@@ -439,7 +439,7 @@ export function TemplateListTable({
                         onFocus={event => event.currentTarget.select()}
                         onKeyDown={event => handleEditKeyDown(event, template)}
                         onBlur={() => finishRename(template, true)}
-                        className="bg-background text-foreground outline-brand-500 rounded-surface -my-0.5 -ml-1 h-6 w-full min-w-0 px-1 text-sm font-medium outline-2 -outline-offset-1"
+                        className="bg-background text-foreground outline-brand-500 rounded-surface -my-0.5 -ml-1 h-5 w-full min-w-0 px-1 text-[0.8125rem] font-medium outline-2 -outline-offset-1"
                       />
                     ) : (
                       <span className="min-w-0 truncate font-medium">
@@ -451,7 +451,7 @@ export function TemplateListTable({
                 <td
                   role="gridcell"
                   className={cn(
-                    "py-2.5 pr-4 whitespace-nowrap tabular-nums",
+                    "py-0.5 pr-4 whitespace-nowrap tabular-nums",
                     isDeleting
                       ? "text-destructive/70"
                       : isSelected

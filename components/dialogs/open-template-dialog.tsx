@@ -244,8 +244,8 @@ export function OpenTemplateDialog({
           </DialogDescription>
         </DialogHeader>
         {templates.length > 0 && (
-          <div className="border-border flex items-center gap-2 border-b px-4 py-2.5">
-            <label className="bg-muted text-muted-foreground focus-within:border-ring flex h-8 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-transparent px-2">
+          <div className="border-border flex items-center gap-2 border-b px-4 py-2">
+            <label className="bg-muted text-muted-foreground focus-within:border-ring flex h-7 min-w-0 flex-1 items-center gap-1.5 rounded-md border border-transparent px-2">
               <IconSearch aria-hidden="true" className="size-3.5 shrink-0" />
               <span className="sr-only">Search templates</span>
               <input
@@ -253,7 +253,7 @@ export function OpenTemplateDialog({
                 value={query}
                 onChange={event => setQuery(event.target.value)}
                 placeholder="Search templates"
-                className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-sm outline-none [&::-webkit-search-cancel-button]:hidden"
+                className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent text-[0.8125rem] outline-none [&::-webkit-search-cancel-button]:hidden"
               />
               {query && (
                 <button

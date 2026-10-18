@@ -16,6 +16,7 @@ import {
   ContextMenuTrigger
 } from "~/components/ui/context-menu";
 import { formatCurrency } from "~/consts/currencies";
+import { useMediaQuery } from "~/hooks/use-media-query";
 import { cn } from "~/lib/utils";
 import type {
   InvoiceDocument,
@@ -40,12 +41,16 @@ const COLUMN_SORTS = {
 
 type SortKey = keyof typeof COLUMN_SORTS;
 
-const STRIPE_ROW_HEIGHT = 40;
+// The rows' heights (see the row's className), so the stripes that fill the
+// rest of the list line up with them.
+const ROW_HEIGHT = 24;
+const TOUCH_ROW_HEIGHT = 44;
 const STRIPE_COLOR = "color-mix(in oklab, var(--muted) 50%, transparent)";
 
 export function InvoiceListStripeFiller({ rowCount }: { rowCount: number }) {
-  const single = STRIPE_ROW_HEIGHT;
-  const double = STRIPE_ROW_HEIGHT * 2;
+  const isTouch = useMediaQuery("(pointer: coarse)");
+  const single = isTouch ? TOUCH_ROW_HEIGHT : ROW_HEIGHT;
+  const double = single * 2;
   const stops =
     rowCount % 2 === 1
       ? `${STRIPE_COLOR} 0, ${STRIPE_COLOR} ${single}px, transparent ${single}px, transparent ${double}px`
@@ -336,7 +341,7 @@ export function InvoiceListTable({
     <table
       role="grid"
       aria-multiselectable
-      className="w-full table-fixed text-sm"
+      className="w-full table-fixed text-[0.8125rem]/5"
     >
       <colgroup>
         <col />
@@ -346,7 +351,7 @@ export function InvoiceListTable({
         <col className="w-11" />
       </colgroup>
       <thead>
-        <tr className="text-muted-foreground text-left text-sm">
+        <tr className="text-muted-foreground text-left text-xs">
           <SortHeaderCell
             label="Name"
             active={sort === COLUMN_SORTS.name}
@@ -453,7 +458,7 @@ export function InvoiceListTable({
                     }}
                     onFocus={() => setActiveId(invoice.id)}
                     className={cn(
-                      "group/row cursor-pointer scroll-mt-9 outline-none select-none",
+                      "group/row h-6 cursor-pointer scroll-mt-6 outline-none select-none pointer-coarse:h-11",
                       !isSelected && !isDeleting && isStriped && "bg-muted/50",
                       !isSelected && !isDeleting && "hover:bg-accent",
                       isSelected && !isDeleting && "bg-brand-600 text-white",
@@ -471,7 +476,7 @@ export function InvoiceListTable({
               >
                 <td
                   role="gridcell"
-                  className="overflow-hidden py-2.5 pr-4 pl-4"
+                  className="overflow-hidden py-0.5 pr-4 pl-4"
                   onClick={
                     isEditing ? event => event.stopPropagation() : undefined
                   }
@@ -480,7 +485,7 @@ export function InvoiceListTable({
                     <IconFileText
                       aria-hidden="true"
                       className={cn(
-                        "size-4 shrink-0",
+                        "size-3.5 shrink-0",
                         isDeleting
                           ? "text-destructive"
                           : isSelected
@@ -499,7 +504,7 @@ export function InvoiceListTable({
                         onFocus={event => event.currentTarget.select()}
                         onKeyDown={event => handleEditKeyDown(event, invoice)}
                         onBlur={() => finishRename(invoice, true)}
-                        className="bg-background text-foreground outline-brand-500 rounded-surface -my-0.5 -ml-1 h-6 w-full min-w-0 px-1 text-sm font-medium outline-2 -outline-offset-1"
+                        className="bg-background text-foreground outline-brand-500 rounded-surface -my-0.5 -ml-1 h-5 w-full min-w-0 px-1 text-[0.8125rem] font-medium outline-2 -outline-offset-1"
                       />
                     ) : (
                       <>
@@ -509,7 +514,7 @@ export function InvoiceListTable({
                         {isCurrent && (
                           <span
                             className={cn(
-                              "shrink-0 text-sm",
+                              "shrink-0 text-xs",
                               isDeleting
                                 ? "text-destructive/70"
                                 : isSelected
@@ -527,7 +532,7 @@ export function InvoiceListTable({
                 <td
                   role="gridcell"
                   className={cn(
-                    "truncate py-2.5 pr-4 max-sm:hidden",
+                    "truncate py-0.5 pr-4 max-sm:hidden",
                     secondaryTextClass
                   )}
                 >
@@ -536,7 +541,7 @@ export function InvoiceListTable({
                 <td
                   role="gridcell"
                   className={cn(
-                    "py-2.5 pr-4 text-right whitespace-nowrap tabular-nums max-sm:hidden",
+                    "py-0.5 pr-4 text-right whitespace-nowrap tabular-nums max-sm:hidden",
                     secondaryTextClass
                   )}
                 >
@@ -548,7 +553,7 @@ export function InvoiceListTable({
                 <td
                   role="gridcell"
                   className={cn(
-                    "py-2.5 pr-4 whitespace-nowrap tabular-nums",
+                    "py-0.5 pr-4 whitespace-nowrap tabular-nums",
                     secondaryTextClass
                   )}
                 >
