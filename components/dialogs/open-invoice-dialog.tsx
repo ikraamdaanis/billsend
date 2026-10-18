@@ -281,10 +281,7 @@ export function OpenInvoiceDialog({
           }
         >
           <DialogTitle>Open Invoice</DialogTitle>
-          <DialogDescription>
-            Select an invoice to open, or use its ⋯ menu to rename, duplicate or
-            delete it.
-          </DialogDescription>
+          <DialogDescription>Invoices saved in this browser.</DialogDescription>
         </DialogHeader>
         {invoices.length > 0 && (
           <div className="border-border flex items-center gap-2 border-b px-4 py-2">

@@ -238,8 +238,8 @@ export function OpenTemplateDialog({
         >
           <DialogTitle>Open Template</DialogTitle>
           <DialogDescription>
-            Select a template to start from, or use its ⋯ menu to rename or
-            delete it.
+            Templates saved in this browser. A new invoice starts from the one
+            you open.
           </DialogDescription>
         </DialogHeader>
         {templates.length > 0 && (
