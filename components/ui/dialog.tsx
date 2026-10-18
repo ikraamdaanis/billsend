@@ -52,7 +52,7 @@ export function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "bg-popover text-popover-foreground ring-foreground/10 shadow-menu data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-xl text-sm ring-1 duration-200 ease-(--ease-out-strong) outline-none data-closed:duration-150 sm:max-w-sm dark:shadow-none",
+          "bg-popover text-popover-foreground ring-foreground/10 shadow-menu data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-md text-sm ring-1 duration-200 ease-(--ease-out-strong) outline-none data-closed:duration-150 sm:max-w-sm dark:shadow-none",
           className
         )}
         {...props}
@@ -78,10 +78,10 @@ export function DialogContent({
   );
 }
 
-// On a phone, alerts and short forms centre their heading under the icon,
-// like a phone's own alerts; from `sm` the icon sits at the start with the
-// title and description beside it, as in a desktop dialog. Dialogs that
-// browse a list keep the heading at the start everywhere, over the list.
+// Every dialog leads with its icon. On a phone, alerts and short forms centre
+// their heading under it, like a phone's own alerts; from `sm` the icon sits
+// at the top left with the title and description beside it, as in a desktop
+// dialog. Dialogs that browse a list keep that layout everywhere.
 export function DialogHeader({
   className,
   align = "center",
@@ -99,7 +99,7 @@ export function DialogHeader({
         "flex gap-4 p-4",
         align === "center"
           ? "flex-col items-center pb-2 text-center sm:flex-row sm:items-start sm:text-left"
-          : "flex-col",
+          : "flex-row items-start",
         className
       )}
       {...props}
@@ -156,7 +156,7 @@ export function DialogFooter({
       className={cn(
         layout === "stack"
           ? "flex flex-col-reverse gap-2 p-4 pt-2 *:h-10 *:w-full sm:flex-row sm:justify-end sm:*:h-8 sm:*:w-auto"
-          : "bg-muted/50 flex flex-col-reverse gap-2 rounded-b-xl border-t p-4 sm:flex-row sm:justify-end",
+          : "bg-muted/50 flex flex-col-reverse gap-2 rounded-b-md border-t p-4 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

@@ -2,6 +2,7 @@ import {
   IconFolderOpen,
   IconLoader2,
   IconSearch,
+  IconTemplate,
   IconX
 } from "@tabler/icons-react";
 import type { KeyboardEvent, MouseEvent } from "react";
@@ -16,6 +17,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import { deleteTemplates, renameTemplate, watchTemplates } from "~/db";
@@ -226,7 +228,15 @@ export function OpenTemplateDialog({
         onClick={handleContentClick}
         onKeyDown={handleContentKeyDown}
       >
-        <DialogHeader align="start" className="border-border border-b">
+        <DialogHeader
+          align="start"
+          className="border-border border-b"
+          icon={
+            <DialogIcon>
+              <IconTemplate />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Open Template</DialogTitle>
           <DialogDescription>
             Select a template to start from, or use its ⋯ menu to rename or
