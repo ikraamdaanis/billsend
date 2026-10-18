@@ -276,7 +276,7 @@ export function OpenInvoiceDialog({
           align="start"
           className="border-border border-b"
           icon={
-            <DialogIcon>
+            <DialogIcon tone="blue">
               <IconFolderOpen />
             </DialogIcon>
           }

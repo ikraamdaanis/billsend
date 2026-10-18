@@ -105,30 +105,44 @@ export function DialogHeader({
       {...props}
     >
       {icon}
-      <div className="flex min-w-0 flex-1 flex-col gap-2">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">{children}</div>
     </div>
   );
 }
 
-// The tinted circle beside an alert's heading (above it on a phone),
-// carrying its tone; a little smaller from `sm`.
+// A light wash with a dark icon of the same hue: red for danger, amber for a
+// warning, green for success, and a calm colour of its own for everything
+// else, so each dialog is recognisable at a glance.
+const DIALOG_ICON_TONES = {
+  destructive: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
+  warning:
+    "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
+  success:
+    "bg-green-100 text-green-600 dark:bg-green-500/15 dark:text-green-400",
+  blue: "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400",
+  sky: "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400",
+  cyan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400",
+  teal: "bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-400",
+  violet:
+    "bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400",
+  fuchsia:
+    "bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-500/15 dark:text-fuchsia-400"
+} as const;
+
+// The tinted circle beside a dialog's heading (above it on a phone); a
+// little smaller from `sm`.
 export function DialogIcon({
-  tone = "neutral",
+  tone,
   className,
   ...props
-}: ComponentProps<"div"> & {
-  tone?: "neutral" | "success" | "warning" | "destructive";
-}) {
+}: ComponentProps<"div"> & { tone: keyof typeof DIALOG_ICON_TONES }) {
   return (
     <div
       aria-hidden="true"
       data-slot="dialog-icon"
       className={cn(
         "flex size-12 shrink-0 items-center justify-center rounded-full sm:size-10 [&_svg]:size-6 sm:[&_svg]:size-5",
-        tone === "neutral" && "bg-muted text-muted-foreground",
-        tone === "success" && "bg-success/12 text-success",
-        tone === "warning" && "bg-warning/15 text-warning",
-        tone === "destructive" && "bg-destructive/10 text-destructive",
+        DIALOG_ICON_TONES[tone],
         className
       )}
       {...props}

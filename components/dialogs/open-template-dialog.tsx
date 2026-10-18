@@ -232,7 +232,7 @@ export function OpenTemplateDialog({
           align="start"
           className="border-border border-b"
           icon={
-            <DialogIcon>
+            <DialogIcon tone="sky">
               <IconTemplate />
             </DialogIcon>
           }
