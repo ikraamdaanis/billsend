@@ -292,7 +292,7 @@ export function OpenTemplateDialog({
                   onDeleteTemplates={handleRequestDelete}
                 />
                 {visibleTemplates.length === 0 && (
-                  <p className="text-muted-foreground px-4 py-6 text-center text-sm">
+                  <p className="text-muted-foreground px-4 py-4 text-center text-sm">
                     No templates match “{query.trim()}”.
                   </p>
                 )}
