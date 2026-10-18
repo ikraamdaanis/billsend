@@ -174,17 +174,6 @@ const COLUMN_LABEL_SETS: TableSettings["columnLabels"][] = [
 
 const UNITS = ["", "hrs", "units", "days", "kg", "ea"];
 
-const TABLE_PALETTES = [
-  { backgroundColor: "#f9fafb", borderColor: "#e5e7eb" },
-  { backgroundColor: "#ffffff", borderColor: "#e5e7eb" },
-  { backgroundColor: "#f8fafc", borderColor: "#e2e8f0" },
-  { backgroundColor: "#fef2f2", borderColor: "#fecaca" },
-  { backgroundColor: "#f0fdf4", borderColor: "#bbf7d0" },
-  { backgroundColor: "#eff6ff", borderColor: "#bfdbfe" }
-];
-
-const PDF_BACKGROUNDS = ["#ffffff", "#fffdf8", "#fafafa", "#f8fafc"];
-
 const SIZES: InvoiceSize[] = ["small", "medium", "large"];
 
 const TAX_RATES = [0, 5, 7.5, 10, 20];
@@ -282,8 +271,8 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
     },
     items,
     tableSettings: {
-      columnLabels: pickRandom(COLUMN_LABEL_SETS),
-      ...pickRandom(TABLE_PALETTES)
+      ...invoiceDefault.tableSettings,
+      columnLabels: pickRandom(COLUMN_LABEL_SETS)
     },
     tax: { percentage: pickRandom(TAX_RATES), exempt: false, note: "" },
     fees: Math.random() < 0.3 ? randomInt(1, 20) * 5 : 0,
@@ -293,7 +282,6 @@ export async function seedDummyInvoice(): Promise<InvoiceDocument> {
       content: pickRandom(TERMS_CONTENTS)
     },
     paymentDetails: buildPaymentDetails(sellerName),
-    pdfSettings: { backgroundColor: pickRandom(PDF_BACKGROUNDS) },
     currency: currencyOption.symbol,
     currencyCode: currencyOption.code,
     theme: { ...invoiceDefault.theme, size: pickRandom(SIZES) }
