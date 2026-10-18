@@ -186,7 +186,7 @@ export function SaveTemplateModal({
         </DialogHeader>
         <Form {...form}>
           <form
-            className="flex flex-col gap-4 px-6 pb-4"
+            className="flex flex-col gap-4 px-4 pb-2"
             onSubmit={form.handleSubmit(handleSubmit)}
           >
             <div className="flex flex-col gap-2">

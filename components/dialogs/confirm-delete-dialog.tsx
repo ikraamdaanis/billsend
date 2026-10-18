@@ -42,10 +42,13 @@ export function ConfirmDeleteDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-md">
-        <DialogHeader>
-          <DialogIcon tone="destructive">
-            <IconTrash />
-          </DialogIcon>
+        <DialogHeader
+          icon={
+            <DialogIcon tone="destructive">
+              <IconTrash />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Delete this {subject}?</DialogTitle>
           <DialogDescription className="text-pretty">
             “{name}” will be removed from this browser. This can’t be undone.

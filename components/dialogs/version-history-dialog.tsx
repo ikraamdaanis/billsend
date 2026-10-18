@@ -119,15 +119,15 @@ export function VersionHistoryDialog({
         </DialogHeader>
         <div className="flex min-h-32 flex-col overflow-y-auto px-1 pb-3">
           {error ? (
-            <p className="text-muted-foreground py-6 text-center text-sm">
+            <p className="text-muted-foreground py-4 text-center text-sm">
               {error}
             </p>
           ) : versions === null ? (
-            <p className="text-muted-foreground py-6 text-center text-sm">
+            <p className="text-muted-foreground py-4 text-center text-sm">
               Loading versions…
             </p>
           ) : versions.length === 0 ? (
-            <div className="text-muted-foreground flex flex-col items-center gap-2 py-8 text-center text-sm">
+            <div className="text-muted-foreground flex flex-col items-center gap-2 py-4 text-center text-sm">
               <IconHistory aria-hidden="true" className="size-5 opacity-60" />
               <p className="max-w-xs text-pretty">
                 No versions yet. They’re kept as you edit, starting the next
