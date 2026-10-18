@@ -56,7 +56,7 @@ export function CustomCurrencyDialog({
       <DialogContent className="w-sm">
         <DialogHeader
           icon={
-            <DialogIcon>
+            <DialogIcon tone="teal">
               <IconCoins />
             </DialogIcon>
           }

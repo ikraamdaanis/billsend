@@ -181,7 +181,7 @@ export function SaveTemplateModal({
       <DialogContent className="w-[500px]">
         <DialogHeader
           icon={
-            <DialogIcon>
+            <DialogIcon tone="sky">
               <IconTemplate />
             </DialogIcon>
           }
