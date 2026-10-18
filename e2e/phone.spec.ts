@@ -66,10 +66,27 @@ test("phones get a tab bar instead of the canvas pill and panel toggles", async 
     "false"
   );
 
-  await tabBar.getByRole("button", { name: "Preview" }).tap();
+  // The PDF that Download opens is the preview, so there's no Preview tab.
+  await expect(tabBar.getByRole("button")).toHaveText([
+    "Invoices",
+    "Style",
+    "Zoom in"
+  ]);
+});
 
-  await expect(tabBar.getByRole("button", { name: "Edit" })).toBeVisible();
-  await expect(page.getByLabel("To details")).toHaveAttribute("readonly", "");
+test("a phone opens to editing even when Preview was left on", async ({
+  page
+}) => {
+  await page.addInitScript(() =>
+    localStorage.setItem("billsend-editor-mode", JSON.stringify("preview"))
+  );
+  await page.goto("/create");
+
+  await expect(page.getByLabel("To details")).toBeVisible();
+  await expect(page.getByLabel("To details")).not.toHaveAttribute(
+    "readonly",
+    ""
+  );
 });
 
 // Mean difference per channel (0 to 255) between two screenshots of the same
