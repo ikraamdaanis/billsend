@@ -5,7 +5,6 @@ import {
   LAST_OPENED_INVOICE_KEY,
   migrateToAutosave
 } from "~/db/autosave-migration";
-import { getDesignSandbox } from "~/lib/design-sandbox";
 import {
   CURRENT_INVOICE_SCHEMA_VERSION,
   migrateInvoiceData
@@ -184,8 +183,7 @@ class InvoiceDatabase extends Dexie {
   meta!: Table<{ key: string; value: unknown }, string>;
 
   constructor() {
-    // The design catalogue's frames keep a database of their own.
-    super(getDesignSandbox()?.database ?? "InvoiceDatabase");
+    super("InvoiceDatabase");
     // Version 1: Initial schema with templates and images
     this.version(1).stores({
       templates: "id, name, createdAt, updatedAt",
