@@ -154,11 +154,13 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     zoomToField();
   }
 
+  // The scrollbar's room is kept on both sides, so the page centres on the
+  // same line as the status alert above it, whether or not it scrolls.
   return (
     <section
       ref={sectionRef}
       onFocus={handleFocus}
-      className="relative flex min-h-0 flex-1 touch-pan-x touch-pan-y flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8 md:pb-20"
+      className="relative flex min-h-0 flex-1 touch-pan-x touch-pan-y [scrollbar-gutter:stable_both-edges] flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8 md:pb-20"
     >
       <div
         ref={sizerRef}
