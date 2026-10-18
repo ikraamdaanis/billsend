@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import { formatCurrency } from "~/consts/currencies";
@@ -110,7 +111,14 @@ export function VersionHistoryDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] w-full flex-col sm:max-w-lg">
-        <DialogHeader align="start">
+        <DialogHeader
+          align="start"
+          icon={
+            <DialogIcon>
+              <IconHistory />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Version history</DialogTitle>
           <DialogDescription className="text-pretty">
             Earlier versions of this invoice, kept in this browser. Restoring

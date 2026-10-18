@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconTemplate } from "@tabler/icons-react";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import {
@@ -177,7 +179,13 @@ export function SaveTemplateModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="w-[500px]">
-        <DialogHeader>
+        <DialogHeader
+          icon={
+            <DialogIcon>
+              <IconTemplate />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Save as Template</DialogTitle>
           <DialogDescription>
             Create a new template or overwrite an existing one with the current

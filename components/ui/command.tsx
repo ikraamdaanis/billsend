@@ -18,7 +18,7 @@ export function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "bg-popover text-popover-foreground flex size-full flex-col overflow-hidden rounded-xl! p-1",
+        "bg-popover text-popover-foreground flex size-full flex-col overflow-hidden rounded-md! p-1",
         className
       )}
       {...props}
@@ -45,7 +45,7 @@ export function CommandDialog({
       <DialogContent
         className={cn(
           // Opened from the keyboard many times a day, so it appears at once.
-          "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0 data-closed:animate-none data-open:animate-none",
+          "top-1/3 translate-y-0 overflow-hidden rounded-md! p-0 data-closed:animate-none data-open:animate-none",
           className
         )}
         showCloseButton={showCloseButton}

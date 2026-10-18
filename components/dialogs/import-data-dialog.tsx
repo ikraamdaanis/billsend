@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import type { BillsendExportFile, ImportAnalysis, ImportResult } from "~/types";
@@ -106,7 +107,13 @@ export function ImportDataDialog({
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="w-[500px]">
-        <DialogHeader>
+        <DialogHeader
+          icon={
+            <DialogIcon>
+              <IconUpload />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Import Data</DialogTitle>
           <DialogDescription>
             Import invoices, templates, and images from a billsend export file.
