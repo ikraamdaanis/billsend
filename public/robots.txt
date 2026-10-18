@@ -1,7 +1,6 @@
 # https://www.robotstxt.org/robotstxt.html
 # Every crawler is welcome, search and AI training alike.
 User-agent: *
-# The design catalogue is a working page, not part of the site.
-Disallow: /design
+Disallow:
 
 Sitemap: https://billsend.io/sitemap.xml

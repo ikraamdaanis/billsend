@@ -18,10 +18,3 @@ export const CONTENT_SECURITY_POLICY = [
   "form-action 'none'",
   "frame-ancestors 'none'"
 ].join("; ");
-
-// The design catalogue (/design) shows the editor in frames of its own pages,
-// so those pages alone may frame and be framed by billsend itself.
-export const DESIGN_CONTENT_SECURITY_POLICY = CONTENT_SECURITY_POLICY.replace(
-  "frame-src 'none'",
-  "frame-src 'self'"
-).replace("frame-ancestors 'none'", "frame-ancestors 'self'");
