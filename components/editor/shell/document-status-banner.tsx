@@ -162,8 +162,9 @@ const BannerContext = createContext<{
   busy: boolean;
 }>({ tone: "info", busy: false });
 
-// A tinted strip pinned across the top of the canvas, above the page, which
-// starts below it and scrolls under it. It says its piece in one sentence,
+// A tinted strip across the top of the canvas, above the page, which scrolls
+// away under it. It sits outside the canvas's scrolling, so neither a tall
+// nor a wide (zoomed-in) page can move it. It says its piece in one sentence,
 // with the ways out as words in it (see Action), and a dismiss button at the
 // end if it can be put away.
 function Banner({
@@ -187,7 +188,7 @@ function Banner({
       <div
         role={alert ? "alert" : "status"}
         className={cn(
-          "animate-in fade-in-0 flex items-start gap-3 border-b px-4 py-3 duration-200 ease-(--ease-out-strong) md:px-6",
+          "animate-in fade-in-0 flex shrink-0 items-start gap-3 border-b px-4 py-3 duration-200 ease-(--ease-out-strong) md:px-6",
           colours.surface
         )}
       >
