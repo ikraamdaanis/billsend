@@ -257,6 +257,15 @@ export const DESIGN_BLOCKS: DesignBlock[] = [
     emptyLibrary: true
   },
   {
+    id: "dialog-confirm-delete",
+    group: "Dialogs",
+    title: "Delete confirmation",
+    kind: "editor",
+    viewports: ALL,
+    storage: panels(true, false),
+    emptyLibrary: false
+  },
+  {
     id: "dialog-versions",
     group: "Dialogs",
     title: "Version history",

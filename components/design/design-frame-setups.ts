@@ -29,15 +29,22 @@ function controlName(control: HTMLElement) {
     .trim();
 }
 
-// The first shown control called `name`.
+// The first shown control called `name`, or whose name starts with it when
+// `name` ends in a space (a row's "Actions for …" menu).
 function findControl(name: string) {
   const controls = document.querySelectorAll<HTMLElement>(
     "button, [role='button'], [role='menuitem'], [role='tab'], a"
   );
 
-  return [...controls].find(
-    control => isShown(control) && controlName(control) === name
-  );
+  return [...controls].find(control => {
+    if (!isShown(control)) return false;
+
+    const controlLabel = controlName(control);
+
+    return name.endsWith(" ")
+      ? controlLabel.startsWith(name)
+      : controlLabel === name;
+  });
 }
 
 async function waitFor<TFound>(find: () => TFound | null | undefined) {
@@ -137,6 +144,11 @@ export const DESIGN_FRAME_SETUPS: Partial<
   "menu-project": () => click("Project menu"),
   "popover-download": () => click("Download"),
   palette: () => click("Quick actions"),
+  "dialog-confirm-delete": async () => {
+    await openPanelOnPhone("Invoices");
+    await click("Actions for ");
+    await click("Delete…");
+  },
   "dialog-open-invoice": () => openFromProjectMenu("Open Invoice"),
   "dialog-open-invoice-empty": () => openFromProjectMenu("Open Invoice"),
   "dialog-versions": () => openFromProjectMenu("Version History"),

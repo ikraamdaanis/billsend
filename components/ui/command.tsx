@@ -44,7 +44,8 @@ export function CommandDialog({
     <Dialog {...props}>
       <DialogContent
         className={cn(
-          "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0",
+          // Opened from the keyboard many times a day, so it appears at once.
+          "top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0 data-closed:animate-none data-open:animate-none",
           className
         )}
         showCloseButton={showCloseButton}

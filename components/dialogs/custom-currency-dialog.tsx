@@ -60,7 +60,7 @@ export function CustomCurrencyDialog({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="flex flex-col gap-3 px-4 pb-4">
+          <div className="flex flex-col gap-3 px-6 pb-4">
             <Input
               name="currency-symbol"
               aria-label="Currency symbol"
