@@ -19,9 +19,7 @@ test("a second tab on the same invoice follows it read-only", async ({
 
   await second.goto("/create");
 
-  await expect(
-    second.getByText("This invoice is open in another tab.")
-  ).toBeVisible();
+  await expect(second.getByText("Open in another tab")).toBeVisible();
   await expect(second.getByLabel("Invoice title")).toHaveValue("Shared title");
   await expect(second.getByLabel("Invoice title")).toHaveAttribute(
     "readonly",
@@ -49,9 +47,7 @@ test("Edit here takes the invoice over and the first tab follows", async ({
   await expect(second.getByRole("button", { name: "Edit here" })).toHaveCount(
     0
   );
-  await expect(
-    page.getByText("This invoice is open in another tab.")
-  ).toBeVisible();
+  await expect(page.getByText("Open in another tab")).toBeVisible();
 
   await second.getByLabel("Invoice title").fill("Now the second tab's");
 
@@ -130,9 +126,7 @@ test("deleting the open invoice in another tab stops this tab writing it", async
   await expect(row).toHaveCount(0);
 
   await page.bringToFront();
-  await expect(
-    page.getByText("This invoice was deleted in another tab")
-  ).toBeVisible();
+  await expect(page.getByText("Deleted in another tab")).toBeVisible();
   await page.waitForTimeout(1500);
 
   expect(await savedContains(page, "Doomed invoice")).toBe(false);
