@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { IconPencil } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -8,10 +7,8 @@ import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import {
@@ -58,14 +55,21 @@ export function RenameInvoiceDialog({
     defaultValues: { name: currentName }
   });
 
-  // Start every open from the name being renamed. Done on open rather than
-  // after close, so the closing dialog keeps its text while it fades and a
-  // quick reopen is never overwritten by a late reset.
+  // Start every open from the name being renamed, selected so typing replaces
+  // it: here once the name is in, and on focus for when the dialog's own focus
+  // handling lands after this (as it does opened from another dialog). Done on
+  // open rather than after close, so the closing dialog keeps its text while it
+  // fades and a quick reopen is never overwritten by a late reset.
   useEffect(() => {
     if (!open) return;
 
     form.reset({ name: currentName });
     setPending(false);
+    const frame = requestAnimationFrame(() =>
+      form.setFocus("name", { shouldSelect: true })
+    );
+
+    return () => cancelAnimationFrame(frame);
   }, [open, currentName, form]);
 
   async function handleSubmit(data: RenameInvoiceFormData) {
@@ -90,34 +94,24 @@ export function RenameInvoiceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-lg">
-        <DialogHeader
-          icon={
-            <DialogIcon tone="fuchsia">
-              <IconPencil />
-            </DialogIcon>
-          }
-        >
+      <DialogContent>
+        <DialogHeader>
           <DialogTitle>Rename {subject}</DialogTitle>
-          <DialogDescription>
-            Enter a new name for this {subject.toLowerCase()}.
-          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <div className="flex flex-col gap-4 px-4 pb-2">
+            <div className="flex flex-col gap-4 px-4 py-2">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {subject} Name <span className="text-destructive">*</span>
-                    </FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
                       <Input
                         placeholder={`Enter ${subject.toLowerCase()} name`}
                         autoFocus
+                        onFocus={event => event.currentTarget.select()}
                         data-1p-ignore
                         {...field}
                       />

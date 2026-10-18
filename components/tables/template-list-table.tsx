@@ -16,7 +16,7 @@ import {
 } from "~/components/ui/context-menu";
 import { cn } from "~/lib/utils";
 import type { InvoiceTemplate, SortDirection } from "~/types";
-import { formatListDate } from "~/utils/format-list-date";
+import { formatFullDate, formatListDate } from "~/utils/format-list-date";
 
 type SortKey = "name" | "updatedAt";
 
@@ -308,8 +308,8 @@ export function TemplateListTable({
     >
       <colgroup>
         <col />
-        <col className="w-43" />
-        <col className="w-11" />
+        <col className="w-24" />
+        <col className="w-7 pointer-coarse:hidden" />
       </colgroup>
       <thead>
         <tr className="text-muted-foreground text-left text-xs">
@@ -321,12 +321,12 @@ export function TemplateListTable({
             className="pl-4"
           />
           <SortHeaderCell
-            label="Date modified"
+            label="Modified"
             active={sortKey === "updatedAt"}
             direction={sortDirection}
             onClick={() => toggleSort("updatedAt")}
           />
-          <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)]">
+          <th className="bg-popover sticky top-0 shadow-[inset_0_-1px_0_0_var(--border)] pointer-coarse:hidden">
             <span className="sr-only">Actions</span>
           </th>
         </tr>
@@ -396,7 +396,9 @@ export function TemplateListTable({
                       "group/row h-6 cursor-pointer scroll-mt-6 outline-none select-none pointer-coarse:h-11",
                       !isSelected && !isDeleting && isStriped && "bg-muted/50",
                       !isSelected && !isDeleting && "hover:bg-accent",
-                      isSelected && !isDeleting && "bg-brand-600 text-white",
+                      isSelected &&
+                        !isDeleting &&
+                        "bg-brand-100 dark:bg-brand-500/20",
                       isDeleting && "bg-destructive/10 text-destructive",
                       isContextFocused &&
                         !isDeleting &&
@@ -424,7 +426,7 @@ export function TemplateListTable({
                         isDeleting
                           ? "text-destructive"
                           : isSelected
-                            ? "text-white"
+                            ? "text-brand-600 dark:text-brand-400"
                             : "text-muted-foreground"
                       )}
                     />
@@ -450,13 +452,10 @@ export function TemplateListTable({
                 </td>
                 <td
                   role="gridcell"
+                  title={formatFullDate(template.updatedAt)}
                   className={cn(
                     "py-0.5 pr-4 whitespace-nowrap tabular-nums",
-                    isDeleting
-                      ? "text-destructive/70"
-                      : isSelected
-                        ? "text-white/80"
-                        : "text-muted-foreground"
+                    isDeleting ? "text-destructive/70" : "text-muted-foreground"
                   )}
                 >
                   {formatListDate(template.updatedAt)}

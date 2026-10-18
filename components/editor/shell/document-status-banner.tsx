@@ -188,7 +188,7 @@ function Banner({
       <div
         role={alert ? "alert" : "status"}
         className={cn(
-          "animate-in fade-in-0 flex shrink-0 items-start gap-3 border-b px-4 py-3 duration-200 ease-(--ease-out-strong) md:px-6",
+          "animate-in fade-in-0 flex shrink-0 items-start gap-3 border-b px-4 py-3 duration-200 ease-(--ease-out-strong)",
           colours.surface
         )}
       >

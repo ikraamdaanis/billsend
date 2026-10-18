@@ -183,7 +183,7 @@ test("the sorted column says which way it sorts", async ({ page }) => {
   const nameHeader = dialog.getByRole("columnheader", { name: "Name" });
 
   await expect(
-    dialog.getByRole("columnheader", { name: "Date modified" })
+    dialog.getByRole("columnheader", { name: "Modified" })
   ).toHaveAttribute("aria-sort", "descending");
   await expect(nameHeader).toHaveAttribute("aria-sort", "none");
 

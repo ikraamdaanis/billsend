@@ -38,6 +38,9 @@ export function DialogOverlay({
   );
 }
 
+// 500px wide, or the screen less a 1rem margin each side when that is
+// narrower. A wider dialog sets its own `w-*`, never a `max-w-*`, so the
+// margin still caps it.
 export function DialogContent({
   className,
   children,
@@ -52,7 +55,7 @@ export function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "bg-popover text-popover-foreground ring-foreground/10 shadow-menu data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 flex w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-md text-sm ring-1 duration-200 ease-(--ease-out-strong) outline-none data-closed:duration-150 sm:max-w-sm dark:shadow-none",
+          "bg-popover text-popover-foreground ring-foreground/10 shadow-menu data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 flex w-125 max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-md text-sm ring-1 duration-200 ease-(--ease-out-strong) outline-none data-closed:duration-150 dark:shadow-none",
           className
         )}
         {...props}
@@ -78,8 +81,8 @@ export function DialogContent({
   );
 }
 
-// Every dialog leads with its icon at the top left, the title and
-// description beside it, on a phone as on a desktop.
+// The title and description, led by an icon at the top left when the dialog
+// has one, on a phone as on a desktop.
 export function DialogHeader({
   className,
   icon,
@@ -89,7 +92,7 @@ export function DialogHeader({
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex items-start gap-4 p-4 pb-2", className)}
+      className={cn("flex items-start gap-3 p-4 pb-2", className)}
       {...props}
     >
       {icon}
@@ -98,23 +101,16 @@ export function DialogHeader({
   );
 }
 
-// A light wash with a dark icon of the same hue: red for danger, amber for a
-// warning, green for success, and a calm colour of its own for everything
-// else, so each dialog is recognisable at a glance.
+// A light wash with a dark icon of the same hue. Colour means something here:
+// red for danger, amber for a warning, green for success, and grey for a
+// dialog whose icon only names what it holds.
 const DIALOG_ICON_TONES = {
   destructive: "bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400",
   warning:
     "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400",
   success:
     "bg-green-100 text-green-600 dark:bg-green-500/15 dark:text-green-400",
-  blue: "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400",
-  sky: "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400",
-  cyan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-400",
-  teal: "bg-teal-100 text-teal-700 dark:bg-teal-500/15 dark:text-teal-400",
-  violet:
-    "bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400",
-  fuchsia:
-    "bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-500/15 dark:text-fuchsia-400"
+  neutral: "bg-muted text-muted-foreground"
 } as const;
 
 // The tinted circle beside a dialog's heading.
@@ -196,7 +192,7 @@ export function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-muted-foreground *:[a]:hover:text-foreground text-base/6 text-pretty sm:text-sm/5 *:[a]:underline *:[a]:underline-offset-3",
+        "text-muted-foreground *:[a]:hover:text-foreground text-base/5 text-pretty sm:text-sm/4.5 *:[a]:underline *:[a]:underline-offset-3",
         className
       )}
       {...props}
