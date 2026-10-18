@@ -160,7 +160,7 @@ function displayName(session: Session, content: Invoice = liveContent()) {
     : deriveInvoiceName(content);
 }
 
-function failureMessage(failure: unknown): string {
+export function failureMessage(failure: unknown): string {
   if (isStorageFullError(failure)) {
     return "Browser storage is full, so your latest changes aren't saved. They're kept in this tab while billsend tries again.";
   }

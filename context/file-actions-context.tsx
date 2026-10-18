@@ -90,7 +90,8 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
     deleteFromLibrary,
     flushNow
   } = useInvoiceDocument();
-  const { open: openRequest } = useSearch({ from: "/create" });
+  // Not strict: the design catalogue (/design/frame) mounts the editor too.
+  const { open: openRequest } = useSearch({ strict: false });
   const navigate = useNavigate();
   const [openDialogOpen, setOpenDialogOpen] = useState(false);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
