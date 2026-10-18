@@ -94,10 +94,7 @@ export function useCanvasGestures({
         size: { width: sizerRect.width, height: sizerRect.height },
         bounds: {
           left: sectionRect.left + parseFloat(styles.paddingLeft),
-          top:
-            sectionRect.top +
-            parseFloat(styles.paddingTop) +
-            canvasHeaderRoom(section),
+          top: sectionRect.top + parseFloat(styles.paddingTop),
           right:
             sectionRect.left +
             section.clientWidth -
@@ -459,19 +456,5 @@ function isInteractive(target: EventTarget | null) {
     target.closest(
       "input:not([readonly]), textarea:not([readonly]), button, a, label, [role=button]"
     ) !== null
-  );
-}
-
-// The room the canvas's pinned header (a status alert) and the spacing under
-// it take above the page; see InvoiceCanvas.
-function canvasHeaderRoom(section: HTMLElement) {
-  const header = section.querySelector<HTMLElement>(
-    ":scope > [data-canvas-header]"
-  );
-
-  if (!header) return 0;
-
-  return (
-    header.offsetHeight + parseFloat(getComputedStyle(header).marginBottom)
   );
 }
