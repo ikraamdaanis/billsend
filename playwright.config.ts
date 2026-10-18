@@ -29,17 +29,11 @@ export default defineConfig({
     },
     // Safari is where storage is most fragile (it clears storage after a week
     // unused, and writes during page exit are least reliable), so autosave,
-    // multi-tab and undo also run in WebKit, as does the design catalogue's
-    // storage sandbox.
+    // multi-tab and undo also run in WebKit.
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-      testMatch: [
-        "autosave.spec.ts",
-        "multitab.spec.ts",
-        "undo.spec.ts",
-        "design.spec.ts"
-      ]
+      testMatch: ["autosave.spec.ts", "multitab.spec.ts", "undo.spec.ts"]
     }
   ],
   webServer: {

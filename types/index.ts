@@ -329,27 +329,3 @@ export type InvoiceTemplate = {
   createdAt: Date;
   updatedAt: Date;
 };
-
-// What a frame of the design catalogue (/design) starts with: anything the
-// editor would have remembered (the panels, the mode) and whether its library
-// is empty. See lib/design-sandbox.ts.
-export type DesignFrameSetup = {
-  storage: Record<string, string>;
-  emptyLibrary: boolean;
-};
-
-// The widths the design catalogue shows each block at.
-export type DesignViewport = "phone" | "tablet" | "desktop";
-
-// One entry in the design catalogue: a state of the editor's chrome, shown in
-// a sandboxed frame at each viewport. `controls` blocks show the UI
-// primitives on their own instead of the editor.
-export type DesignBlock = DesignFrameSetup & {
-  id: string;
-  group: string;
-  title: string;
-  note?: string;
-  kind: "editor" | "controls";
-  viewports: DesignViewport[];
-  height?: number;
-};

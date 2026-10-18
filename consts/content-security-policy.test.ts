@@ -1,9 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import {
-  CONTENT_SECURITY_POLICY,
-  DESIGN_CONTENT_SECURITY_POLICY
-} from "~/consts/content-security-policy";
+import { CONTENT_SECURITY_POLICY } from "~/consts/content-security-policy";
 import { SECURITY_HEADERS } from "~/consts/security-headers";
 
 // The pre-rendered pages are static files, so their headers come from
@@ -50,20 +47,4 @@ describe("Content-Security-Policy", () => {
       expect(rules.get("/*")?.get(name.toLowerCase())).toBe(value);
     }
   );
-});
-
-describe("the design catalogue's policy", () => {
-  it("only lets billsend frame its own pages", () => {
-    expect(DESIGN_CONTENT_SECURITY_POLICY).toContain("frame-src 'self'");
-    expect(DESIGN_CONTENT_SECURITY_POLICY).toContain("frame-ancestors 'self'");
-  });
-
-  it("matches the site's policy in everything else", () => {
-    const withoutFraming = (policy: string) =>
-      policy.split("; ").filter(directive => !directive.startsWith("frame-"));
-
-    expect(withoutFraming(DESIGN_CONTENT_SECURITY_POLICY)).toEqual(
-      withoutFraming(CONTENT_SECURITY_POLICY)
-    );
-  });
 });
