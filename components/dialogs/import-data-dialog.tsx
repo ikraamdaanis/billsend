@@ -109,7 +109,7 @@ export function ImportDataDialog({
       <DialogContent className="w-[500px]">
         <DialogHeader
           icon={
-            <DialogIcon>
+            <DialogIcon tone="cyan">
               <IconUpload />
             </DialogIcon>
           }

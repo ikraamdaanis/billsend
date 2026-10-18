@@ -114,7 +114,7 @@ export function VersionHistoryDialog({
         <DialogHeader
           align="start"
           icon={
-            <DialogIcon>
+            <DialogIcon tone="violet">
               <IconHistory />
             </DialogIcon>
           }

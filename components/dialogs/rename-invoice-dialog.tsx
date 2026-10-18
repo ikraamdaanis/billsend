@@ -93,7 +93,7 @@ export function RenameInvoiceDialog({
       <DialogContent className="w-lg">
         <DialogHeader
           icon={
-            <DialogIcon>
+            <DialogIcon tone="fuchsia">
               <IconPencil />
             </DialogIcon>
           }
