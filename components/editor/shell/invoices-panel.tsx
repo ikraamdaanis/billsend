@@ -2,7 +2,6 @@ import {
   IconCopy,
   IconDots,
   IconFolderOpen,
-  IconLock,
   IconPencil,
   IconPlus,
   IconSearch,
@@ -142,15 +141,11 @@ export function InvoicesPanel() {
           query={query}
         />
       )}
-      <div className="border-border flex shrink-0 flex-col gap-2 border-t p-3">
+      <div className="border-border flex shrink-0 flex-col border-t p-3">
         <Button variant="secondary" onClick={newInvoice} className="w-full">
           <IconPlus aria-hidden="true" />
           New invoice
         </Button>
-        <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-          <IconLock aria-hidden="true" className="size-3.5 shrink-0" />
-          Stored only in this browser
-        </p>
       </div>
     </>
   );

@@ -44,7 +44,7 @@ export function RemoveSectionButton({
       variant="ghost"
       aria-label={label}
       onClick={onClick}
-      className="text-paper-muted-foreground hover:text-destructive opacity-0 group-focus-within/optional:opacity-100 group-hover/optional:opacity-100 pointer-coarse:size-11 pointer-coarse:opacity-100"
+      className="text-paper-muted-foreground hover:text-paper-foreground opacity-0 group-focus-within/optional:opacity-100 group-hover/optional:opacity-100 pointer-coarse:size-11 pointer-coarse:opacity-100"
     >
       <IconX aria-hidden="true" />
     </Button>
