@@ -48,7 +48,7 @@ export function DocumentStatusBanner() {
   const backupButton = (
     <Button
       variant="outline"
-      size="xs"
+      size="sm"
       disabled={busy}
       onClick={() => void act(downloadBackup)}
     >
@@ -62,7 +62,7 @@ export function DocumentStatusBanner() {
         tone="warning"
         icon={<IconRefresh />}
         actions={
-          <Button size="xs" onClick={() => window.location.reload()}>
+          <Button size="sm" onClick={() => window.location.reload()}>
             Reload
           </Button>
         }
@@ -92,7 +92,7 @@ export function DocumentStatusBanner() {
         tone="info"
         icon={<IconEye />}
         actions={
-          <Button size="xs" disabled={busy} onClick={() => void act(takeOver)}>
+          <Button size="sm" disabled={busy} onClick={() => void act(takeOver)}>
             Edit here
           </Button>
         }
@@ -110,7 +110,7 @@ export function DocumentStatusBanner() {
         actions={
           <>
             <Button
-              size="xs"
+              size="sm"
               disabled={busy}
               onClick={() => void act(keepDeletedCopy)}
             >
@@ -118,7 +118,7 @@ export function DocumentStatusBanner() {
             </Button>
             <Button
               variant="outline"
-              size="xs"
+              size="sm"
               disabled={busy}
               onClick={newInvoice}
             >
@@ -142,7 +142,7 @@ export function DocumentStatusBanner() {
         actions={
           <>
             <Button
-              size="xs"
+              size="sm"
               disabled={busy}
               onClick={() => void act(retrySave)}
             >
@@ -166,7 +166,7 @@ export function DocumentStatusBanner() {
         actions={
           <Button
             variant="outline"
-            size="xs"
+            size="sm"
             disabled={busy}
             onClick={() =>
               void act(async () => {
@@ -188,9 +188,11 @@ export function DocumentStatusBanner() {
   return null;
 }
 
-// A strip under the top bar. On a phone the words take the full width and
-// the actions sit below them; from `sm` they share one row. The icon lines up
-// with the first line of text.
+// A card floating over the canvas on the canvas pill's surface, so it says its
+// piece without pushing the page down or tinting the chrome; the icon carries
+// the tone. Wide screens show it at the top, on one line where the words fit.
+// Phones show it above the tab bar, where the page is emptiest and the
+// actions are in reach of a thumb, with the actions under the words.
 function Banner({
   tone,
   icon,
@@ -207,45 +209,42 @@ function Banner({
   children: ReactNode;
 }) {
   return (
-    <div
-      role={alert ? "alert" : "status"}
-      className={cn(
-        "border-border flex shrink-0 items-start gap-3 border-b py-2.5 pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] sm:py-2",
-        tone === "error" && "bg-destructive/8",
-        tone === "warning" && "bg-warning/12",
-        tone === "info" && "bg-muted"
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "flex h-6 shrink-0 items-center sm:h-5 [&_svg]:size-4",
-          tone === "error" ? "text-destructive" : "text-muted-foreground"
-        )}
+    <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center px-3 max-md:top-auto max-md:bottom-3">
+      <div
+        role={alert ? "alert" : "status"}
+        className="bg-popover text-popover-foreground ring-foreground/10 shadow-menu animate-in fade-in-0 slide-in-from-top-1 max-md:slide-in-from-bottom-1 pointer-events-auto flex w-full max-w-3xl items-start gap-2.5 rounded-xl py-2 pr-2 pl-3 ring-1 duration-200 motion-reduce:animate-none sm:w-auto"
       >
-        {icon}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="text-foreground min-w-0 flex-1 basis-64 text-base/6 text-pretty sm:text-[0.8125rem]/5">
-          {children}
-        </p>
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
-      </div>
-      {onDismiss && (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label="Dismiss"
-          onClick={onDismiss}
-          className="text-muted-foreground relative -mr-1 shrink-0"
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex h-5 shrink-0 items-center sm:h-7 [&_svg]:size-4",
+            tone === "error" && "text-destructive",
+            tone === "warning" && "text-warning",
+            tone === "info" && "text-muted-foreground"
+          )}
         >
-          <IconX aria-hidden="true" />
-          <span
-            aria-hidden="true"
-            className="absolute top-1/2 left-1/2 size-[max(100%,3rem)] -translate-1/2 pointer-fine:hidden"
-          />
-        </Button>
-      )}
+          {icon}
+        </span>
+        <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-x-3 gap-y-2">
+          <p className="min-w-0 flex-1 basis-56 text-sm/5 text-pretty sm:basis-auto sm:text-[13px]/5">
+            {children}
+          </p>
+          <div className="flex shrink-0 items-center gap-1.5 pointer-coarse:*:h-9">
+            {actions}
+          </div>
+        </div>
+        {onDismiss && (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="Dismiss"
+            onClick={onDismiss}
+            className="text-muted-foreground relative -mt-0.5 shrink-0 sm:mt-0.5 pointer-coarse:size-9"
+          >
+            <IconX aria-hidden="true" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
