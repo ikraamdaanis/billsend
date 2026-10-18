@@ -8,6 +8,7 @@ import {
   PopoverTrigger
 } from "~/components/ui/popover";
 import { formatCurrencyWithCode } from "~/consts/currencies";
+import { useEditorUi } from "~/context/editor-ui-context";
 import { useFileActions } from "~/context/file-actions-context";
 import {
   useDocumentName,
@@ -18,8 +19,10 @@ import { useInvoicePdf } from "~/hooks/use-invoice-pdf";
 import { useCurrencySlice, useInvoiceTotals } from "~/stores/invoice-selectors";
 
 // Download opens a small summary first, like Framer's Publish: what file you
-// get, its total and when it was last saved, then the PDF itself.
+// get, its total and when it was last saved, then the PDF itself. On a phone
+// it's a plain icon beside undo and redo, as Canva and Figma's apps do it.
 export function DownloadPopover() {
+  const { isNarrow } = useEditorUi();
   const [open, setOpen] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const { pending, openPdf, prefetch } = useInvoicePdf();
@@ -50,15 +53,23 @@ export function DownloadPopover() {
       <PopoverTrigger
         onPointerEnter={prefetch}
         render={
-          <Button
-            variant="primary"
-            size="sm"
-            className="h-8 px-3 pointer-coarse:h-11 pointer-coarse:px-4"
-          />
+          isNarrow ? (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Download"
+              className="text-foreground pointer-coarse:size-11"
+            />
+          ) : (
+            <Button
+              variant="primary"
+              size="sm"
+              className="h-8 px-3 pointer-coarse:h-11 pointer-coarse:px-4"
+            />
+          )
         }
       >
-        <IconDownload aria-hidden="true" className="sm:hidden" />
-        <span className="max-sm:sr-only">Download</span>
+        {isNarrow ? <IconDownload aria-hidden="true" /> : "Download"}
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 gap-3 p-3">
         <div className="flex items-center gap-2.5">
