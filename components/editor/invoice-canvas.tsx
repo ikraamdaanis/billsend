@@ -12,13 +12,23 @@ const CANVAS_STATIC_STYLES: CSSProperties = {
   MozOsxFontSmoothing: "grayscale"
 };
 
-export function InvoiceCanvas({ children }: { children: ReactNode }) {
+// `header` sits pinned across the top of the canvas, above the page: the page
+// starts below it and scrolls under it, and fitting the page leaves room for
+// it. When it renders nothing it takes no room.
+export function InvoiceCanvas({
+  header,
+  children
+}: {
+  header?: ReactNode;
+  children: ReactNode;
+}) {
   const { view, setView, setZoom, zoomToField } = useCanvasView();
   const { mode, isNarrow } = useEditorUi();
   const theme = useTheme();
   const baseFont = getInvoiceFontDefinition(theme.font);
   const sectionRef = useRef<HTMLElement>(null);
   const sizerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [pageSize, setPageSize] = useState({ width: 0, height: 0 });
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -26,8 +36,9 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const page = pageRef.current;
     const section = sectionRef.current;
+    const headerSlot = headerRef.current;
 
-    if (!page || !section) return;
+    if (!page || !section || !headerSlot) return;
 
     const pageObserver = new ResizeObserver(() => {
       setPageSize({ width: page.offsetWidth, height: page.offsetHeight });
@@ -39,14 +50,21 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
       const paddingY =
         parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
 
+      // The canvas's top spacing is the header slot's margin, so the header
+      // can sit flush with the top and stay there as the page scrolls.
+      const headerRoom =
+        headerSlot.offsetHeight +
+        parseFloat(getComputedStyle(headerSlot).marginBottom);
+
       setContainerSize({
         width: section.clientWidth - paddingX,
-        height: section.clientHeight - paddingY
+        height: section.clientHeight - paddingY - headerRoom
       });
     });
 
     pageObserver.observe(page);
     sectionObserver.observe(section);
+    sectionObserver.observe(headerSlot);
 
     return () => {
       pageObserver.disconnect();
@@ -154,17 +172,22 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     zoomToField();
   }
 
-  // The scrollbar's room is kept on both sides, so the page centres on the
-  // same line as the status alert above it, whether or not it scrolls.
   return (
     <section
       ref={sectionRef}
       onFocus={handleFocus}
-      className="relative flex min-h-0 flex-1 touch-pan-x touch-pan-y [scrollbar-gutter:stable_both-edges] flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8 md:pb-20"
+      className="relative flex min-h-0 flex-1 touch-pan-x touch-pan-y flex-col items-center-safe overflow-auto overscroll-none px-3 pb-3 md:px-8 md:pb-20"
     >
       <div
+        ref={headerRef}
+        data-canvas-header
+        className="sticky top-0 left-0 z-20 -mx-3 mb-3 self-stretch md:-mx-8 md:mb-8"
+      >
+        {header}
+      </div>
+      <div
         ref={sizerRef}
-        className="shrink-0 origin-top-left"
+        className="my-auto shrink-0 origin-top-left"
         style={
           pageSize.width
             ? { width: pageSize.width * zoom, height: pageSize.height * zoom }

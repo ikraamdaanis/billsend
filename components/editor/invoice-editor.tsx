@@ -50,7 +50,6 @@ export function InvoiceEditor() {
               </SidePanel>
               <Desk>
                 <CanvasArea />
-                <DocumentStatusBanner />
                 <CanvasPill />
               </Desk>
               <PanelBackdrop />
@@ -83,7 +82,7 @@ function Desk({ children }: { children: ReactNode }) {
 
 function CanvasArea() {
   return (
-    <InvoiceCanvas>
+    <InvoiceCanvas header={<DocumentStatusBanner />}>
       <Top />
       <Mid />
       <Bottom />
