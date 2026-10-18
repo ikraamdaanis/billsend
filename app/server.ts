@@ -1,5 +1,8 @@
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
-import { CONTENT_SECURITY_POLICY } from "~/consts/content-security-policy";
+import {
+  CONTENT_SECURITY_POLICY,
+  DESIGN_CONTENT_SECURITY_POLICY
+} from "~/consts/content-security-policy";
 import { SECURITY_HEADERS } from "~/consts/security-headers";
 
 // Every page goes out with a Content-Security-Policy that only lets it talk to
@@ -16,7 +19,12 @@ export default createServerEntry({
     }
 
     if (contentType.includes("text/html")) {
-      headers.set("Content-Security-Policy", CONTENT_SECURITY_POLICY);
+      headers.set(
+        "Content-Security-Policy",
+        isDesignPage(request)
+          ? DESIGN_CONTENT_SECURITY_POLICY
+          : CONTENT_SECURITY_POLICY
+      );
     }
 
     return new Response(response.body, {
@@ -26,3 +34,10 @@ export default createServerEntry({
     });
   }
 });
+
+// The design catalogue and its frames; see DESIGN_CONTENT_SECURITY_POLICY.
+function isDesignPage(request: Request) {
+  const { pathname } = new URL(request.url);
+
+  return pathname === "/design" || pathname.startsWith("/design/");
+}
