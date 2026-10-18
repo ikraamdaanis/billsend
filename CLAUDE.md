@@ -116,6 +116,7 @@ lib/                 # Helper utilities (cn() classname merger)
 - **PDF generation** (`@react-pdf/renderer`) lives in the `components/pdf/invoice-pdf-*` modules and is built on demand by `hooks/use-invoice-pdf.ts`, which loads the builder lazily
 - **Section switches**: `invoice.sections` (schema v2) says which optional parts are on. `utils/section-visibility.ts` (`getPrintedSections`) decides what prints, and both the PDF and the editor's Preview read it; switched-off pricing rows also drop out of `calculateInvoiceTotals`
 - **Editor theme**: the editor alone has light/dark, applied as `data-editor-theme` on `<html>` (`utils/editor-theme.ts`, `hooks/use-editor-theme.ts`); the invoice page (`[data-paper]`) stays light in both
+- **Design catalogue** (`/design`, unlinked and noindexed): every state of the editor's chrome in frames at phone, tablet and desktop widths, light and dark. Blocks are listed in `components/design/design-blocks.ts` (their setups in `design-frame-setups.ts`); add one when you add chrome. Frames (`/design/frame`) run the real editor in a sandbox (`lib/design-sandbox.ts`): in-memory storage and a database of their own, so they never touch the library. Only `/design` pages may frame billsend (`DESIGN_CONTENT_SECURITY_POLICY`)
 - **No barrel exports**; import directly from the source file
 - **date-fns** for dates (not dayjs or moment)
 - **lodash-es** for utilities (tree-shakeable ES module version)

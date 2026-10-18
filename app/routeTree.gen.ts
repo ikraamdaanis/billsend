@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as DesignIndexRouteImport } from './routes/design.index'
+import { Route as DesignFrameRouteImport } from './routes/design.frame'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +30,53 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DesignIndexRoute = DesignIndexRouteImport.update({
+  id: '/design/',
+  path: '/design/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignFrameRoute = DesignFrameRouteImport.update({
+  id: '/design/frame',
+  path: '/design/frame',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/privacy': typeof PrivacyRoute
+  '/design/frame': typeof DesignFrameRoute
+  '/design/': typeof DesignIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/privacy': typeof PrivacyRoute
+  '/design/frame': typeof DesignFrameRoute
+  '/design': typeof DesignIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/create': typeof CreateRoute
   '/privacy': typeof PrivacyRoute
+  '/design/frame': typeof DesignFrameRoute
+  '/design/': typeof DesignIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create' | '/privacy'
+  fullPaths: '/' | '/create' | '/privacy' | '/design/frame' | '/design/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create' | '/privacy'
-  id: '__root__' | '/' | '/create' | '/privacy'
+  to: '/' | '/create' | '/privacy' | '/design/frame' | '/design'
+  id: '__root__' | '/' | '/create' | '/privacy' | '/design/frame' | '/design/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CreateRoute: typeof CreateRoute
   PrivacyRoute: typeof PrivacyRoute
+  DesignFrameRoute: typeof DesignFrameRoute
+  DesignIndexRoute: typeof DesignIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +102,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/design/': {
+      id: '/design/'
+      path: '/design'
+      fullPath: '/design/'
+      preLoaderRoute: typeof DesignIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design/frame': {
+      id: '/design/frame'
+      path: '/design/frame'
+      fullPath: '/design/frame'
+      preLoaderRoute: typeof DesignFrameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +123,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CreateRoute: CreateRoute,
   PrivacyRoute: PrivacyRoute,
+  DesignFrameRoute: DesignFrameRoute,
+  DesignIndexRoute: DesignIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
