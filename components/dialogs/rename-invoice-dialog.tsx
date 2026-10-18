@@ -97,7 +97,7 @@ export function RenameInvoiceDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <div className="flex flex-col gap-4 px-4 pb-4">
+            <div className="flex flex-col gap-4 px-6 pb-4">
               <FormField
                 control={form.control}
                 name="name"

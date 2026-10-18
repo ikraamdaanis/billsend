@@ -226,7 +226,7 @@ export function OpenTemplateDialog({
         onClick={handleContentClick}
         onKeyDown={handleContentKeyDown}
       >
-        <DialogHeader className="border-border border-b">
+        <DialogHeader align="start" className="border-border border-b">
           <DialogTitle>Open Template</DialogTitle>
           <DialogDescription>
             Select a template to start from, or use its ⋯ menu to rename or
@@ -332,7 +332,10 @@ export function OpenTemplateDialog({
             </div>
           )}
         </div>
-        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+        <DialogFooter
+          layout="bar"
+          className="flex-row items-center justify-between sm:justify-between"
+        >
           <span className="text-muted-foreground text-sm">{footerLabel}</span>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>

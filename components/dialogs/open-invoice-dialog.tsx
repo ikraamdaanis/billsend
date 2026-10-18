@@ -271,7 +271,7 @@ export function OpenInvoiceDialog({
         onClick={handleContentClick}
         onKeyDown={handleContentKeyDown}
       >
-        <DialogHeader className="border-border border-b">
+        <DialogHeader align="start" className="border-border border-b">
           <DialogTitle>Open Invoice</DialogTitle>
           <DialogDescription>
             Select an invoice to open, or use its ⋯ menu to rename, duplicate or
@@ -389,7 +389,10 @@ export function OpenInvoiceDialog({
             </div>
           )}
         </div>
-        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
+        <DialogFooter
+          layout="bar"
+          className="flex-row items-center justify-between sm:justify-between"
+        >
           {isNarrowed && selectedIds.length === 0 ? (
             <span className="text-muted-foreground flex items-center gap-2 text-sm">
               <span className="tabular-nums">
