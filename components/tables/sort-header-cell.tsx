@@ -27,7 +27,7 @@ export function SortHeaderCell({
         active ? (direction === "asc" ? "ascending" : "descending") : "none"
       }
       className={cn(
-        "bg-popover sticky top-0 py-2 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]",
+        "bg-popover sticky top-0 py-1 pr-4 whitespace-nowrap shadow-[inset_0_-1px_0_0_var(--border)]",
         className
       )}
     >
@@ -41,7 +41,7 @@ export function SortHeaderCell({
         )}
       >
         {label}
-        {active && <Arrow aria-hidden="true" className="size-3.5" />}
+        {active && <Arrow aria-hidden="true" className="size-3" />}
       </button>
     </th>
   );
