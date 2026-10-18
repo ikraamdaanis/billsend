@@ -16,8 +16,8 @@ import {
 // Framer's three-part bar: the project menu on the left, the invoice's name in
 // the middle, and the panel toggles, Preview and Download on the right.
 // `start` and `end` take the panel toggles. Phones keep the menu, the name,
-// undo and redo, and Download; the panel toggles and Preview move to the tab
-// bar. Every edit saves itself, so there's no save state to show here while
+// undo and redo, and Download; the panel toggles move to the tab bar, and
+// there's no Preview there. Every edit saves itself, so there's no save state to show here while
 // saving works; problems show in the banner under the bar.
 export function EditorTopBar({
   start,

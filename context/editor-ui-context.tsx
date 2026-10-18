@@ -72,7 +72,10 @@ function storePanels(panels: PanelState) {
 
 // The editor shell's own state: whether the page is being edited or previewed,
 // and which side panels are open. Previewing hides both panels and leaving it
-// puts back whichever were open. Both are remembered across reloads.
+// puts back whichever were open. Both are remembered across reloads. Phones
+// have no Preview: the PDF that Download opens shows the page as it prints, so
+// there the page is always being edited, and a wider window's Preview comes
+// back when there is room again.
 const EditorUiContext = createContext<{
   mode: EditorMode;
   setMode: (mode: EditorMode) => void;
@@ -90,7 +93,7 @@ const EditorUiContext = createContext<{
 
 export function EditorUiProvider({ children }: { children: ReactNode }) {
   const [initialLayout] = useState(readInitialLayout);
-  const [mode, setModeValue] = useState<EditorMode>(initialLayout.mode);
+  const [chosenMode, setChosenMode] = useState<EditorMode>(initialLayout.mode);
   const [panels, setPanels] = useState<PanelState>(initialLayout.panels);
   const [panelsBeforePreview, setPanelsBeforePreview] =
     useState<PanelState | null>(initialLayout.panelsBeforePreview);
@@ -101,9 +104,10 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
   // shows only the inspector, and both come back when there is room again.
   const leftPanelOpen = panels.left && !(isCompact && panels.right);
   const rightPanelOpen = panels.right;
+  const mode = isNarrow ? "edit" : chosenMode;
 
   function setModeState(next: EditorMode) {
-    setModeValue(next);
+    setChosenMode(next);
     writeStoredValue(MODE_STORAGE_KEY, next);
   }
 
@@ -113,7 +117,7 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
   }
 
   function setMode(next: EditorMode) {
-    if (next === mode) return;
+    if (isNarrow || next === chosenMode) return;
 
     if (next === "preview") {
       setPanelsBeforePreview(panels);
@@ -130,14 +134,14 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
   // or a compact window only one panel is open at a time.
   function setPanelOpen(side: keyof PanelState, open: boolean) {
     const base =
-      mode === "preview"
+      chosenMode === "preview"
         ? (panelsBeforePreview ?? panels)
         : { left: leftPanelOpen, right: rightPanelOpen };
     const next = { ...base, [side]: open };
 
     if (isCompact && open) next[side === "left" ? "right" : "left"] = false;
 
-    if (mode === "preview") {
+    if (chosenMode === "preview") {
       setModeState("edit");
       setPanelsBeforePreview(null);
     }
@@ -148,7 +152,7 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
   const value = {
     mode,
     setMode,
-    toggleMode: () => setMode(mode === "edit" ? "preview" : "edit"),
+    toggleMode: () => setMode(chosenMode === "edit" ? "preview" : "edit"),
     isNarrow,
     leftPanelOpen,
     rightPanelOpen,
@@ -158,7 +162,7 @@ export function EditorUiProvider({ children }: { children: ReactNode }) {
     toggleAllPanels: () => {
       const anyOpen = leftPanelOpen || rightPanelOpen;
 
-      if (mode === "preview") setModeState("edit");
+      if (chosenMode === "preview") setModeState("edit");
       setPanelsBeforePreview(null);
       applyPanels({ left: !anyOpen, right: !anyOpen && !isCompact });
     },
