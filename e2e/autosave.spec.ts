@@ -44,7 +44,7 @@ test("nothing shows while saving works", async ({ page }) => {
   await expect(page.getByRole("alert")).toHaveCount(0);
   // Safari's one-off backup suggestion is the only message allowed.
   await expect(
-    page.getByRole("status").filter({ hasNotText: "Keep a backup" })
+    page.getByRole("status").filter({ hasNotText: "Back up your invoices" })
   ).toHaveCount(0);
   await expect.poll(() => savedContains(page, "Quote")).toBe(true);
 });
@@ -435,7 +435,7 @@ test.describe("in Safari, when the browser won't keep storage", () => {
 
     const reminder = page
       .getByRole("status")
-      .filter({ hasText: "Keep a backup of your invoices." });
+      .filter({ hasText: "Back up your invoices" });
 
     await expect(reminder).toBeVisible();
 
@@ -457,7 +457,7 @@ test.describe("in Safari, when the browser won't keep storage", () => {
 
     const reminder = page
       .getByRole("status")
-      .filter({ hasText: "Keep a backup of your invoices." });
+      .filter({ hasText: "Back up your invoices" });
     const downloadPromise = page.waitForEvent("download");
 
     await reminder.getByRole("button", { name: "Download backup" }).click();

@@ -149,7 +149,7 @@ export function InvoiceCanvas({ children }: { children: ReactNode }) {
     <section
       ref={sectionRef}
       onFocus={handleFocus}
-      className="relative flex h-full touch-pan-x touch-pan-y flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8 md:pb-20"
+      className="relative flex min-h-0 flex-1 touch-pan-x touch-pan-y flex-col items-center-safe justify-center-safe overflow-auto overscroll-none p-3 md:p-8 md:pb-20"
     >
       <div
         ref={sizerRef}
