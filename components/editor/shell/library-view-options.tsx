@@ -14,6 +14,7 @@ import {
 } from "~/components/ui/popover";
 import { NativeSelect } from "~/components/ui/select";
 import { getCurrencyMarker } from "~/consts/currencies";
+import { cn } from "~/lib/utils";
 import type { InvoiceDocument, InvoiceLibraryView } from "~/types";
 import {
   countActiveFilters,
@@ -36,13 +37,17 @@ export function LibraryViewOptions({
   onViewChange,
   invoices,
   showGroup = true,
-  align = "start"
+  align = "start",
+  size = "default"
 }: {
   view: InvoiceLibraryView;
   onViewChange: (view: InvoiceLibraryView) => void;
   invoices: InvoiceDocument[];
   showGroup?: boolean;
   align?: "start" | "end";
+  // Square, the height of the search field beside it: `sm` in the dialogs'
+  // compact toolbars, `default` in the invoices panel.
+  size?: "sm" | "default";
 }) {
   const activeFilters = countActiveFilters(view);
   // A filter stays listed after its last invoice changes, so it still shows
@@ -67,7 +72,10 @@ export function LibraryViewOptions({
             : "View options"
         }
         title="Sort, group and filter"
-        className="bg-muted text-muted-foreground hover:text-foreground aria-expanded:text-foreground focus-visible:ring-ring relative flex size-8 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-1"
+        className={cn(
+          "bg-muted text-muted-foreground hover:text-foreground aria-expanded:text-foreground focus-visible:ring-ring relative flex shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-1",
+          size === "sm" ? "size-7" : "size-8"
+        )}
       >
         <IconAdjustmentsHorizontal aria-hidden="true" className="size-4" />
         {activeFilters > 0 && (

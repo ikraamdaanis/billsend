@@ -316,6 +316,7 @@ export function OpenInvoiceDialog({
               invoices={invoices}
               showGroup={false}
               align="end"
+              size="sm"
             />
           </div>
         )}
