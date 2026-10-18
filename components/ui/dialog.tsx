@@ -2,7 +2,7 @@
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { IconX } from "@tabler/icons-react";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
@@ -78,31 +78,40 @@ export function DialogContent({
   );
 }
 
-// On a phone, alerts and short forms centre their heading, like a phone's
-// own alerts; from `sm` it sits at the start, as in any desktop dialog.
-// Dialogs that browse a list keep it at the start everywhere, over the list.
+// On a phone, alerts and short forms centre their heading under the icon,
+// like a phone's own alerts; from `sm` the icon sits at the start with the
+// title and description beside it, as in a desktop dialog. Dialogs that
+// browse a list keep the heading at the start everywhere, over the list.
 export function DialogHeader({
   className,
   align = "center",
+  icon,
+  children,
   ...props
-}: ComponentProps<"div"> & { align?: "center" | "start" }) {
+}: ComponentProps<"div"> & {
+  align?: "center" | "start";
+  icon?: ReactNode;
+}) {
   return (
     <div
       data-slot="dialog-header"
       className={cn(
-        "flex flex-col gap-2",
+        "flex gap-4 p-4",
         align === "center"
-          ? "items-center p-6 pb-4 text-center sm:items-start sm:text-left"
-          : "p-4",
+          ? "flex-col items-center pb-2 text-center sm:flex-row sm:items-start sm:text-left"
+          : "flex-col",
         className
       )}
       {...props}
-    />
+    >
+      {icon}
+      <div className="flex min-w-0 flex-1 flex-col gap-2">{children}</div>
+    </div>
   );
 }
 
-// The tinted circle at the top of an alert, carrying its tone; a little
-// smaller from `sm`, where the alert reads like a desktop dialog.
+// The tinted circle beside an alert's heading (above it on a phone),
+// carrying its tone; a little smaller from `sm`.
 export function DialogIcon({
   tone = "neutral",
   className,
@@ -115,7 +124,7 @@ export function DialogIcon({
       aria-hidden="true"
       data-slot="dialog-icon"
       className={cn(
-        "mb-2 flex size-12 shrink-0 items-center justify-center rounded-full sm:mb-1 sm:size-10 [&_svg]:size-6 sm:[&_svg]:size-5",
+        "flex size-12 shrink-0 items-center justify-center rounded-full sm:size-10 [&_svg]:size-6 sm:[&_svg]:size-5",
         tone === "neutral" && "bg-muted text-muted-foreground",
         tone === "success" && "bg-success/12 text-success",
         tone === "warning" && "bg-warning/15 text-warning",
@@ -146,7 +155,7 @@ export function DialogFooter({
       data-slot="dialog-footer"
       className={cn(
         layout === "stack"
-          ? "flex flex-col-reverse gap-2 p-6 pt-2 *:h-10 *:w-full sm:flex-row sm:justify-end sm:*:h-8 sm:*:w-auto"
+          ? "flex flex-col-reverse gap-2 p-4 pt-2 *:h-10 *:w-full sm:flex-row sm:justify-end sm:*:h-8 sm:*:w-auto"
           : "bg-muted/50 flex flex-col-reverse gap-2 rounded-b-xl border-t p-4 sm:flex-row sm:justify-end",
         className
       )}

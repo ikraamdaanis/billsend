@@ -113,7 +113,7 @@ export function ImportDataDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 pb-4">
+        <div className="px-4 pb-2">
           {state === "idle" && (
             <div className="flex flex-col items-center gap-4">
               {error && (
@@ -123,7 +123,7 @@ export function ImportDataDialog({
               )}
               <label
                 htmlFor="import-file-input"
-                className="border-border hover:bg-accent rounded-surface flex w-full cursor-pointer flex-col items-center gap-2 border-2 border-dashed p-8 transition-colors"
+                className="border-border hover:bg-accent rounded-surface flex w-full cursor-pointer flex-col items-center gap-2 border-2 border-dashed p-4 transition-colors"
               >
                 <IconUpload className="text-muted-foreground h-8 w-8" />
                 <span className="text-sm font-medium">
@@ -145,7 +145,7 @@ export function ImportDataDialog({
           )}
 
           {state === "analyzing" && (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-4">
               <p className="text-muted-foreground">Analyzing file...</p>
             </div>
           )}
@@ -194,7 +194,7 @@ export function ImportDataDialog({
           )}
 
           {state === "importing" && (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex items-center justify-center py-4">
               <p className="text-muted-foreground">Importing data...</p>
             </div>
           )}
