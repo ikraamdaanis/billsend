@@ -78,30 +78,18 @@ export function DialogContent({
   );
 }
 
-// Every dialog leads with its icon. On a phone, alerts and short forms centre
-// their heading under it, like a phone's own alerts; from `sm` the icon sits
-// at the top left with the title and description beside it, as in a desktop
-// dialog. Dialogs that browse a list keep that layout everywhere.
+// Every dialog leads with its icon at the top left, the title and
+// description beside it, on a phone as on a desktop.
 export function DialogHeader({
   className,
-  align = "center",
   icon,
   children,
   ...props
-}: ComponentProps<"div"> & {
-  align?: "center" | "start";
-  icon?: ReactNode;
-}) {
+}: ComponentProps<"div"> & { icon?: ReactNode }) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn(
-        "flex gap-4 p-4",
-        align === "center"
-          ? "flex-col items-center pb-2 text-center sm:flex-row sm:items-start sm:text-left"
-          : "flex-row items-start",
-        className
-      )}
+      className={cn("flex items-start gap-4 p-4 pb-2", className)}
       {...props}
     >
       {icon}
@@ -129,8 +117,7 @@ const DIALOG_ICON_TONES = {
     "bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-500/15 dark:text-fuchsia-400"
 } as const;
 
-// The tinted circle beside a dialog's heading (above it on a phone); a
-// little smaller from `sm`.
+// The tinted circle beside a dialog's heading.
 export function DialogIcon({
   tone,
   className,
@@ -141,7 +128,7 @@ export function DialogIcon({
       aria-hidden="true"
       data-slot="dialog-icon"
       className={cn(
-        "flex size-12 shrink-0 items-center justify-center rounded-full sm:size-10 [&_svg]:size-6 sm:[&_svg]:size-5",
+        "flex size-10 shrink-0 items-center justify-center rounded-full [&_svg]:size-5",
         DIALOG_ICON_TONES[tone],
         className
       )}
@@ -170,7 +157,7 @@ export function DialogFooter({
       className={cn(
         layout === "stack"
           ? "flex flex-col-reverse gap-2 p-4 pt-2 *:h-10 *:w-full sm:flex-row sm:justify-end sm:*:h-8 sm:*:w-auto"
-          : "bg-muted/50 flex flex-col-reverse gap-2 rounded-b-md border-t px-4 py-2.5 sm:flex-row sm:justify-end",
+          : "flex flex-col-reverse gap-2 rounded-b-md border-t px-4 py-2.5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}

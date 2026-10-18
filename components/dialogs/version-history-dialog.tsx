@@ -112,7 +112,6 @@ export function VersionHistoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex max-h-[85vh] w-full flex-col sm:max-w-lg">
         <DialogHeader
-          align="start"
           icon={
             <DialogIcon tone="violet">
               <IconHistory />
@@ -162,7 +161,7 @@ export function VersionHistoryDialog({
                       </span>
                     </div>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       disabled={!canRestore || restoringId !== null}
                       onClick={() => void handleRestore(version)}

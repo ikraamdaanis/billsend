@@ -8,11 +8,10 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Brand blue on the site; inside the editor, the editor's neutral
-        // primary (near-black, or near-white in dark), like its other actions.
-        default:
-          "bg-brand-600 text-primary-foreground hover:bg-brand-700 [[data-editor-theme]_&]:bg-primary [[data-editor-theme]_&]:hover:bg-primary/85",
-        primary: "bg-primary text-primary-foreground hover:bg-primary/85",
+        // The main action, in brand blue on the site and in the editor alike,
+        // light or dark, like macOS's default button.
+        default: "bg-brand-600 text-white hover:bg-brand-700",
+        primary: "bg-brand-600 text-white hover:bg-brand-700",
         outline:
           "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
