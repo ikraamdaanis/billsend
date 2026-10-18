@@ -273,8 +273,7 @@ export function OpenInvoiceDialog({
         onKeyDown={handleContentKeyDown}
       >
         <DialogHeader
-          align="start"
-          className="border-border border-b"
+          className="border-border border-b pb-4"
           icon={
             <DialogIcon tone="blue">
               <IconFolderOpen />
@@ -422,14 +421,14 @@ export function OpenInvoiceDialog({
           <div className="flex items-center gap-2">
             {import.meta.env.DEV && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={handleSeedDummyInvoice}
                 disabled={seeding}
               >
                 Add dummy
               </Button>
             )}
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="secondary" onClick={() => onOpenChange(false)}>
               Close
             </Button>
             <Button
