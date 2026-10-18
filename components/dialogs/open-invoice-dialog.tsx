@@ -19,6 +19,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import { renameInvoice, watchInvoices } from "~/db";
@@ -271,7 +272,15 @@ export function OpenInvoiceDialog({
         onClick={handleContentClick}
         onKeyDown={handleContentKeyDown}
       >
-        <DialogHeader align="start" className="border-border border-b">
+        <DialogHeader
+          align="start"
+          className="border-border border-b"
+          icon={
+            <DialogIcon>
+              <IconFolderOpen />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Open Invoice</DialogTitle>
           <DialogDescription>
             Select an invoice to open, or use its ⋯ menu to rename, duplicate or

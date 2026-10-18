@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { IconPencil } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle
 } from "~/components/ui/dialog";
 import {
@@ -89,7 +91,13 @@ export function RenameInvoiceDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-lg">
-        <DialogHeader>
+        <DialogHeader
+          icon={
+            <DialogIcon>
+              <IconPencil />
+            </DialogIcon>
+          }
+        >
           <DialogTitle>Rename {subject}</DialogTitle>
           <DialogDescription>
             Enter a new name for this {subject.toLowerCase()}.
