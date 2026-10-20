@@ -403,29 +403,29 @@ function HomePage() {
   );
 }
 
-// The hero's headline and buttons, which the header watches.
-const HERO_TITLE_ID = "hero-title";
+// The hero's buttons, which the header watches.
 const HERO_ACTIONS_ID = "hero-actions";
+
+// How far the page scrolls before the header turns solid.
+const HEADER_SOLID_SCROLL = 24;
 
 // The header's two states live on <html>, so CSS draws them
 // (`.home-header` in globals.css) without waiting for React:
-// `data-header-solid` once the hero's headline reaches the bar (84px down,
-// the clear header's foot from `lg`), and `data-header-pill` once the hero's
-// buttons have gone under it (64px). HEADER_STATE_SCRIPT sets them as the
+// `data-header-solid` once the page has scrolled 24px, and
+// `data-header-pill` once the hero's buttons have gone under the bar (64px). HEADER_STATE_SCRIPT sets them as the
 // page parses, right after the hero, and on every scroll, including the
 // reload's restore, so a reload mid-page paints the solid header at once.
 function updateHeaderState() {
-  const title = document.getElementById(HERO_TITLE_ID);
   const actions = document.getElementById(HERO_ACTIONS_ID);
 
-  if (!title || !actions) return;
+  if (!actions) return;
 
   const isPastHero = actions.getBoundingClientRect().bottom < 64;
   const root = document.documentElement;
 
   root.toggleAttribute(
     "data-header-solid",
-    isPastHero || title.getBoundingClientRect().top < 84
+    isPastHero || scrollY > HEADER_SOLID_SCROLL
   );
   root.toggleAttribute("data-header-pill", isPastHero);
 }
@@ -434,7 +434,7 @@ function updateHeaderState() {
 // two frames after the page has finished parsing: by then a reload's scroll
 // is restored, so the header paints in its final state with no transition or
 // pill entrance playing.
-const HEADER_STATE_SCRIPT = `(function(){var root=document.documentElement;function update(){var title=document.getElementById(${JSON.stringify(HERO_TITLE_ID)}),actions=document.getElementById(${JSON.stringify(HERO_ACTIONS_ID)});if(!title||!actions)return;var past=actions.getBoundingClientRect().bottom<64;root.toggleAttribute("data-header-solid",past||title.getBoundingClientRect().top<84);root.toggleAttribute("data-header-pill",past)}function ready(){update();requestAnimationFrame(function(){requestAnimationFrame(function(){update();root.setAttribute("data-header-ready","")})})}update();addEventListener("scroll",update,{passive:true});addEventListener("resize",update);if(document.readyState==="loading")addEventListener("DOMContentLoaded",ready);else ready()})()`;
+const HEADER_STATE_SCRIPT = `(function(){var root=document.documentElement;function update(){var actions=document.getElementById(${JSON.stringify(HERO_ACTIONS_ID)});if(!actions)return;var past=actions.getBoundingClientRect().bottom<64;root.toggleAttribute("data-header-solid",past||scrollY>${HEADER_SOLID_SCROLL});root.toggleAttribute("data-header-pill",past)}function ready(){update();requestAnimationFrame(function(){requestAnimationFrame(function(){update();root.setAttribute("data-header-ready","")})})}update();addEventListener("scroll",update,{passive:true});addEventListener("resize",update);if(document.readyState==="loading")addEventListener("DOMContentLoaded",ready);else ready()})()`;
 
 // The same tracking for a client-side visit, where the inline script doesn't
 // run, and the states cleared on the way out so no other page inherits them.
@@ -462,8 +462,8 @@ function useHeaderState() {
 }
 
 // The header sticks to the top. Over the hero it is clear, part of the sky,
-// with the quiet "Open the editor" link. As soon as the headline reaches it,
-// it takes the canvas behind it, so text never runs under a clear bar; from
+// with the quiet "Open the editor" link. Once the page has scrolled 24px, well
+// before the headline reaches it, it takes the canvas behind it; from
 // `lg` it also rises by its top padding, so the bar sits flush with the top
 // of the window. Once the hero's buttons pass under it, the link gives way
 // to the Create invoice pill, so the editor is one tap away anywhere on the
@@ -648,14 +648,14 @@ function SectionHeading({
     );
   }
 
+  // The description sits right under its title at every width, so the two
+  // read as one block rather than drifting to opposite edges of the page.
   return (
-    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between lg:gap-16">
+    <div className="flex flex-col gap-5">
       <h2 className={cn(HEADING, typeClass("title"), "max-w-[35ch]")}>
         {title}
       </h2>
-      <p className={cn(BODY_TEXT, "max-w-[48ch] lg:max-w-[40ch]")}>
-        {description}
-      </p>
+      <p className={cn(BODY_TEXT, "max-w-[48ch]")}>{description}</p>
     </div>
   );
 }
@@ -684,10 +684,7 @@ function Hero() {
           )}
         >
           <div className="flex flex-col items-start gap-5 sm:items-center">
-            <h1
-              id={HERO_TITLE_ID}
-              className={cn(HEADING, typeClass("display"))}
-            >
+            <h1 className={cn(HEADING, typeClass("display"))}>
               <span className="hero-focus block">Make the invoice.</span>
               <span className="hero-focus block [animation-delay:60ms]">
                 Keep your data.
@@ -902,7 +899,8 @@ function StorageBlockedNote() {
 
 // From a blank page to a sent invoice, in the order a visitor does it. Each
 // step plays a short loop of the editor doing it, like the feature cards
-// further down.
+// further down. Three across from `lg`; on tablets each step is a row, its
+// tile beside its words, so the demo stays big enough to read; phones stack.
 const STEPS: {
   title: string;
   description: string;
@@ -918,7 +916,7 @@ const STEPS: {
   {
     title: "Download the PDF",
     description:
-      "Download an A4 PDF or print it, then send it to your client however you like.",
+      "Download an A4 PDF, with no watermark, or print it, then send it to your client however you like.",
     demo: DownloadDemo,
     hues: [TILE_HUES.blush, TILE_HUES.lavender]
   },
@@ -939,9 +937,12 @@ function HowItWorks() {
           title="How it works."
           description={`${APP_NAME} is a private invoice generator: no sign-up and nothing to install. Open the editor and start typing.`}
         />
-        <ol className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 md:grid-cols-3">
+        <ol className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 lg:grid-cols-3">
           {STEPS.map((step, index) => (
-            <li key={step.title} className="flex flex-col gap-6">
+            <li
+              key={step.title}
+              className="flex flex-col gap-6 md:grid md:grid-cols-2 md:items-center md:gap-8 lg:flex lg:items-stretch lg:gap-6"
+            >
               <DemoTile
                 scene={step.demo}
                 hues={step.hues}
@@ -976,6 +977,8 @@ function HowItWorks() {
   );
 }
 
+// Two across from `lg`; below it the cards stack, so each scene draws at its
+// full size rather than shrunk into a half-width tablet column.
 function Features() {
   return (
     <section id="features" className="py-16 sm:py-20">
@@ -984,7 +987,7 @@ function Features() {
           title="What goes on the invoice."
           description="Your logo, your client’s currency, the right tax, and the bank details they need to pay you."
         />
-        <ul className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 md:grid-cols-2">
+        <ul className="mt-12 grid gap-x-6 gap-y-12 sm:mt-16 lg:grid-cols-2">
           {FEATURES.map(feature => (
             <li key={feature.title} className="flex flex-col gap-6">
               <DemoTile
