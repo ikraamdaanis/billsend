@@ -45,7 +45,9 @@ import { RunYourOwnCopy } from "~/components/home/run-your-own-copy";
 import {
   CONTAINER,
   FOCUS_RING,
+  INK_PILL,
   SiteFooter,
+  SOFT_PILL,
   Wordmark
 } from "~/components/home/site-chrome";
 import { APP_NAME } from "~/consts/app";
@@ -111,14 +113,6 @@ const CLOUD_PHASE_SCRIPT = `(function () {
     cloud.style.setProperty("--delay", -(Math.random() * duration) + "s");
   });
 })();`;
-
-// The secondary action beside CreateInvoiceLink: the same pill, frosted white
-// over a coloured panel, so it never outweighs the ink one. Like the ink pill,
-// its hover colour eases in and out over 200ms rather than snapping.
-const SOFT_PILL = cn(
-  "text-ink relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white/60 px-4 py-2.5 text-base font-medium whitespace-nowrap ring-1 ring-white/80 backdrop-blur-sm transition-colors duration-200 ease-in-out hover:bg-white/85 sm:py-2 sm:text-sm",
-  FOCUS_RING
-);
 
 const TEXT_LINK = cn(
   "inline-flex items-center gap-1 rounded-sm font-medium text-ink hover:text-brand-700",
@@ -618,13 +612,7 @@ function PhoneMenu() {
 // over 500 KB and, fetched at load, it held up the hero on phones.
 function CreateInvoiceLink() {
   return (
-    <Link
-      to="/create"
-      className={cn(
-        "bg-ink hover:bg-ink/85 relative inline-flex shrink-0 items-center rounded-full px-4 py-2.5 text-base font-medium whitespace-nowrap text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(0_0_0/0.16)] transition-colors duration-200 ease-in-out sm:py-2 sm:text-sm",
-        FOCUS_RING
-      )}
-    >
+    <Link to="/create" className={INK_PILL}>
       Create invoice
       <span
         aria-hidden="true"
