@@ -40,7 +40,7 @@ const INLINE_LINK = cn(
 // data lives, what leaves, what the app never does, and what the host sees.
 function PrivacyPage() {
   return (
-    <div className="home-type selection:bg-brand-100 bg-canvas text-ink font-geist isolate min-h-svh antialiased">
+    <div className="home-type selection:bg-brand-100 bg-canvas text-ink font-home isolate min-h-svh antialiased">
       <header>
         <div className={cn(CONTAINER, "flex h-16 items-center gap-4")}>
           <div className="flex flex-1 items-center">
