@@ -1,4 +1,4 @@
-import { IconArrowUpRight } from "@tabler/icons-react";
+import { IconArrowRight, IconArrowUpRight } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { APP_NAME } from "~/consts/app";
@@ -13,6 +13,45 @@ export const CONTAINER = "mx-auto max-w-6xl px-6 lg:px-8";
 
 export const FOCUS_RING =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600";
+
+// The pages' primary action: a pill in the homepage ink, larger on touch
+// screens. Its hover colour eases in and out over 200ms rather than snapping.
+export const INK_PILL = cn(
+  "bg-ink hover:bg-ink/85 relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 py-2.5 text-base font-medium whitespace-nowrap text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12),0_1px_2px_rgb(0_0_0/0.16)] transition-colors duration-200 ease-in-out sm:py-2 sm:text-sm",
+  FOCUS_RING
+);
+
+// The secondary action beside an INK_PILL: the same pill, frosted white over
+// a coloured panel, so it never outweighs the ink one.
+export const SOFT_PILL = cn(
+  "text-ink relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full bg-white/60 px-4 py-2.5 text-base font-medium whitespace-nowrap ring-1 ring-white/80 backdrop-blur-sm transition-colors duration-200 ease-in-out hover:bg-white/85 sm:py-2 sm:text-sm",
+  FOCUS_RING
+);
+
+// The bar at the top of the pages other than the homepage: the wordmark, and
+// a quiet way into the editor.
+export function PageHeader() {
+  return (
+    <header>
+      <div className={cn(CONTAINER, "flex h-16 items-center gap-4")}>
+        <div className="flex flex-1 items-center">
+          <Wordmark />
+        </div>
+        <Link
+          to="/create"
+          className={cn(
+            "hover:text-brand-600 text-ink relative inline-flex min-h-11 items-center gap-1 rounded-sm px-1 font-medium whitespace-nowrap",
+            typeClass("body", "compact"),
+            FOCUS_RING
+          )}
+        >
+          Open the editor
+          <IconArrowRight className="size-4 shrink-0" aria-hidden="true" />
+        </Link>
+      </div>
+    </header>
+  );
+}
 
 // The wordmark: the flat-foot r mark in the brand teal (public/logo-mark.svg,
 // as on the share image), then the name in the page's own face and ink, a
