@@ -1,8 +1,8 @@
 import type { BrowserFamily, DeviceType, OperatingSystem } from "~/types";
 
 // Cloudflare's Bot Management fields on `request.cf` need an Enterprise plan,
-// so a User-Agent check is what there is. It only has to keep the obvious crawlers,
-// previews and test browsers out of the counts.
+// so a User-Agent check is what there is. It only has to keep the obvious
+// crawlers, previews and test browsers out of the counts.
 const BOT_PATTERN = /bot|crawl|spider|headless|lighthouse|preview/i;
 
 export function isBotUserAgent(userAgent: string) {

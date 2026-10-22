@@ -17,7 +17,7 @@ export function trackPageView(path: PageViewPath) {
 function sendEvent(body: string) {
   if (import.meta.env.DEV) return;
   if (typeof navigator === "undefined") return;
-  if (prefersNoTracking(navigator)) return;
+  if (prefersNoTracking()) return;
 
   try {
     navigator.sendBeacon("/api/event", body);
@@ -26,8 +26,9 @@ function sendEvent(body: string) {
   }
 }
 
-function prefersNoTracking(browser: Navigator) {
+function prefersNoTracking() {
   return (
-    "globalPrivacyControl" in browser && browser.globalPrivacyControl === true
+    "globalPrivacyControl" in navigator &&
+    navigator.globalPrivacyControl === true
   );
 }
