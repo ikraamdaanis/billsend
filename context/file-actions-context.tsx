@@ -32,6 +32,7 @@ import type { InvoiceDocument, InvoiceTemplate } from "~/types";
 import { exportAllData } from "~/utils/export-data";
 import { hasOpenModal } from "~/utils/open-overlay";
 import { hasPrimaryModifier } from "~/utils/shortcut-label";
+import { track } from "~/utils/track";
 
 // Everything the editor can do with files: new, open, duplicate, templates,
 // version history, import and export. The project menu, the invoices panel
@@ -187,6 +188,7 @@ export function FileActionsProvider({ children }: { children: ReactNode }) {
   function handleExport() {
     run(async () => {
       await exportAllData();
+      track("data_exported");
       toast.success("Data exported successfully");
     }, "Failed to export data");
   }

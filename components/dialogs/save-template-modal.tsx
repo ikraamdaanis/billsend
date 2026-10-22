@@ -26,6 +26,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { saveTemplate } from "~/db";
 import "~/lib/configure-zod";
 import type { Invoice, InvoiceTemplate } from "~/types";
+import { track } from "~/utils/track";
 
 const saveTemplateSchema = z.object({
   name: z
@@ -161,6 +162,7 @@ export function SaveTemplateModal({
           };
 
           await saveTemplate(newTemplate);
+          track("template_saved");
 
           toast.success("Template created successfully!");
         }
