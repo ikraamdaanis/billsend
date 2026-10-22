@@ -35,7 +35,7 @@ export const Route = createFileRoute("/privacy")({
 });
 
 // The date the policy last changed in substance; update it with the copy.
-const LAST_UPDATED = "15 October 2026";
+const LAST_UPDATED = "22 October 2026";
 
 const HEADING = "font-medium tracking-[-0.035em] text-balance";
 
@@ -89,8 +89,9 @@ function PrivacyPage() {
               stored in this browser’s storage (IndexedDB), on this device.
             </p>
             <p className={PROSE}>
-              The PDF is made in your browser too. Nothing you type is uploaded,
-              and billsend has no server that could receive it.
+              The PDF is made in your browser too. Nothing you type is uploaded;
+              besides loading the site, the only thing your browser sends
+              billsend is the anonymous usage count described below.
             </p>
             <p className={PROSE}>
               Other browsers and devices can’t see your invoices. Clearing this
@@ -99,15 +100,41 @@ function PrivacyPage() {
           </PolicySection>
           <PolicySection title="What leaves your device">
             <p className={PROSE}>
-              Only the files you choose to save: the PDF you download, and the
-              backup file from Export Data in the editor’s File menu. The backup
+              The files you choose to save: the PDF you download, and the backup
+              file from Export Data in the editor’s File menu. The backup
               includes your bank details, so keep it somewhere safe.
+            </p>
+            <p className={PROSE}>
+              And the anonymous usage counts below, which never include anything
+              you type.
+            </p>
+          </PolicySection>
+          <PolicySection title="Anonymous usage counts">
+            <p className={PROSE}>
+              To see roughly how billsend is used, your browser tells
+              billsend.io when one of these happens: a page is viewed, the
+              editor opens, a PDF is made, an invoice or template is first
+              saved, or data is exported or imported. With the event, billsend
+              keeps the country the request came from and the browser family,
+              operating system and type of device (such as Safari, iOS, mobile).
+              A page view also says which page.
+            </p>
+            <p className={PROSE}>
+              That is all. The counts never include your invoices, names,
+              amounts, currencies or anything else you type. billsend doesn’t
+              keep your IP address, your city, your full browser details or any
+              identifier, and saves nothing on your device for the counts, so
+              visits can’t be linked together.
+            </p>
+            <p className={PROSE}>
+              If your browser sends Global Privacy Control, nothing is counted.
+              The counts are kept for 3 months.
             </p>
           </PolicySection>
           <PolicySection title="What billsend doesn’t do">
             <p className={PROSE}>
-              billsend has no accounts, no analytics, no ads and no tracking,
-              and sets no cookies.
+              billsend has no accounts, no ads, no third-party analytics and no
+              tracking of individuals, and sets no cookies.
             </p>
             <p className={PROSE}>
               Every page is sent with a Content Security Policy that only lets
@@ -134,8 +161,9 @@ function PrivacyPage() {
               to load the site, such as your IP address and browser type, in
               order to deliver it and protect it from abuse, and it may set a
               strictly necessary security cookie for that purpose. Those
-              requests never contain your invoices. Cloudflare’s handling is
-              covered by its{" "}
+              requests never contain your invoices. The country and browser
+              details of the usage-count requests are also used, in aggregate,
+              for the counts above. Cloudflare’s handling is covered by its{" "}
               <a
                 href="https://www.cloudflare.com/privacypolicy/"
                 target="_blank"
