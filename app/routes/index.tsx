@@ -6,7 +6,7 @@ import {
   IconCheck,
   IconCloudOff,
   IconCode,
-  IconEyeOff,
+  IconCookieOff,
   IconFileTypePdf,
   IconMenu2,
   IconPlus,
@@ -181,8 +181,8 @@ const FACTS: {
     tile: "bg-sage-tint text-sage-ink"
   },
   {
-    label: "No analytics",
-    icon: IconEyeOff,
+    label: "No cookies",
+    icon: IconCookieOff,
     tile: "bg-butter-tint text-butter-ink"
   },
   {
@@ -345,7 +345,7 @@ const QUESTION_GROUPS: {
       {
         question: "Why is it free, and what’s the catch?",
         answer:
-          "There’s very little to pay for. billsend keeps no accounts and stores nothing about you on a server; once a page has loaded, your browser does all the work. There’s no paid plan, no ads and no data collected to sell, and the code is public on GitHub under the MIT licence, so you can check."
+          "There’s very little to pay for. billsend keeps no accounts and stores nothing about you on a server; once a page has loaded, your browser does all the work. There’s no paid plan, no ads and nothing about you to sell: beyond anonymous counts, like how many PDFs are made, the site collects nothing. The code is public on GitHub under the MIT licence, so you can check."
       }
     ]
   }

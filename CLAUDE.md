@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-billsend is a free, local-first invoice generator that runs entirely in the browser. No accounts, no servers, no tracking; all data stays on the user's device in IndexedDB.
+billsend is a free, local-first invoice generator that runs entirely in the browser. No accounts, no tracking of individuals; all invoice data stays on the user's device in IndexedDB. The only thing pages send back is an anonymous event name for the usage counts.
 
 ## Tech Stack
 
@@ -30,6 +30,7 @@ bun run format       # Prettier
 bun run check        # Format + lint fix
 bun run check-types  # TypeScript type check (no emit)
 bun run ts-lint      # Type check with watch mode
+bun run cf-typegen   # Regenerate the Worker's Env types (worker-configuration.d.ts)
 ```
 
 Run tests with `bun run test`, not plain `bun test`. The `test` script runs
@@ -108,10 +109,11 @@ lib/                 # Helper utilities (cn() classname merger)
 
 ## Key Architecture Decisions
 
-- **No backend**; all persistence is IndexedDB via Dexie
+- **No backend for data**; all persistence is IndexedDB via Dexie. The Worker's one endpoint is `POST /api/event` (`app/analytics-event.ts`)
+- **Anonymous usage counts** (issue #85): `track()` / `trackPageView()` (`utils/track.ts`) send an event name from `consts/analytics-events.ts` by `sendBeacon` to `/api/event`, which writes country plus bucketed browser, OS and device (`utils/user-agent.ts`) to Workers Analytics Engine (`ANALYTICS` binding). No-op in dev and under Global Privacy Control; nothing stored on the device. Never add invoice content, names, amounts or identifiers to an event, and never store more of `request.cf` than the country. Queries live in `scripts/usage-report.sql`; count with `SUM(_sample_interval)`
 - **Autosave, no Save step** (issue #86): `context/document-session.ts` gives each open invoice a save controller (`context/save-controller.ts`: 500ms debounce, 2s max wait, one write at a time). Content writes are a compare-and-swap on the invoice's `rev`; a new invoice joins the library on its first real edit; one tab edits an invoice at a time (a Web Lock per invoice, the other tab follows read-only with "Edit here"). Edits unwritten at page exit are stashed in localStorage and recovered. Each invoice keeps a `versions` history (`utils/version-thinning.ts`)
 - **Undo and redo** (`stores/invoice-history.ts`): snapshots of the invoice data, grouped by the focused field's `data-field` path within 500ms, every discrete action its own step. Store changes carry an origin (`stores/change-origin.ts`): `edit` is recorded and saved, `history` is saved, `load` is neither. Image cleanup keeps blobs the history or versions reference
-- **Content-Security-Policy** on every page (`consts/content-security-policy.ts`, sent from `app/server.ts`) only allows billsend's own origin; it is what keeps billsend's no-data-leaves-the-device promise true, so never loosen it to add a third-party request. Zod runs jitless (`lib/configure-zod.ts`, imported wherever zod is) because the policy forbids eval
+- **Content-Security-Policy** on every page (`consts/content-security-policy.ts`, sent from `app/server.ts`) only allows billsend's own origin; it is what keeps billsend's no-data-leaves-the-device promise true, so never loosen it to add a third-party request. billsend's own origin receives the anonymous event names; the policy still blocks every other origin. Zod runs jitless (`lib/configure-zod.ts`, imported wherever zod is) because the policy forbids eval
 - **React Compiler enabled**: automatic memoization; avoid manual useMemo/useCallback unless necessary
 - **PDF generation** (`@react-pdf/renderer`) lives in the `components/pdf/invoice-pdf-*` modules and is built on demand by `hooks/use-invoice-pdf.ts`, which loads the builder lazily
 - **Section switches**: `invoice.sections` (schema v2) says which optional parts are on. `utils/section-visibility.ts` (`getPrintedSections`) decides what prints, and both the PDF and the editor's Preview read it; switched-off pricing rows also drop out of `calculateInvoiceTotals`

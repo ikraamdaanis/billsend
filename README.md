@@ -1,6 +1,6 @@
 # billsend
 
-A free, local-first invoice generator that runs entirely in your browser. Fill in the details, pick a font and download a PDF. No account needed, no servers, no tracking. Your data never leaves your device.
+A free, local-first invoice generator that runs entirely in your browser. Fill in the details, pick a font and download a PDF. No account needed, no tracking cookies, and your invoices never leave your device. The site counts anonymous usage (event names, country, browser family, OS and device type) and nothing else.
 
 **Live app:** [billsend.io](https://billsend.io)
 
@@ -16,7 +16,7 @@ A free, local-first invoice generator that runs entirely in your browser. Fill i
 - Export to PDF in one click
 - Import and export all data (invoices, templates, images) as a backup
 - Works offline: no network needed once the editor has loaded
-- No sign-up, no accounts, no tracking
+- No sign-up, no accounts, no tracking cookies; only anonymous usage counts, off under Global Privacy Control
 
 ## Tech Stack
 
