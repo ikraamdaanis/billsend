@@ -97,7 +97,8 @@ export function useInvoicePdf() {
 
         // Update the window location with the blob URL
         newWindow.location.href = url;
-        track("pdf_opened");
+
+        if (!newWindow.closed) track("pdf_opened");
 
         // Don't revoke the URL - Chrome's PDF viewer needs it to persist
         // The browser will automatically clean it up when the tab is closed
