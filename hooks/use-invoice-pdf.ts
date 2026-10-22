@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { getImageBlob } from "~/db";
 import { useInvoiceData } from "~/stores/invoice-selectors";
 import { isDirectImageUrl } from "~/utils/is-direct-image-url";
+import { track } from "~/utils/track";
 
 // react-pdf can only decode PNG and JPEG. Any other logo format the uploader
 // accepts (WebP, GIF, ...) is silently dropped from the PDF, so re-encode it as
@@ -96,6 +97,7 @@ export function useInvoicePdf() {
 
         // Update the window location with the blob URL
         newWindow.location.href = url;
+        track("pdf_opened");
 
         // Don't revoke the URL - Chrome's PDF viewer needs it to persist
         // The browser will automatically clean it up when the tab is closed

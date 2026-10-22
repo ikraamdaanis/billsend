@@ -3,13 +3,16 @@ import {
   HeadContent,
   ScriptOnce,
   Scripts,
-  createRootRoute
+  createRootRoute,
+  rootRouteId,
+  useRouterState
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { AppToaster } from "~/components/app-toaster";
 import { NotFound } from "~/components/not-found";
 import { RootErrorBoundary } from "~/components/root-error-boundary";
+import { PAGE_VIEW_PATHS } from "~/consts/analytics-events";
 import appCss from "~/styles/globals.css?url";
 import { REGISTER_SERVICE_WORKER_SCRIPT } from "~/utils/register-service-worker";
 import {
@@ -17,6 +20,7 @@ import {
   REVEAL_AFTER_SCROLL_RESTORED_SCRIPT
 } from "~/utils/scroll-restoration-cloak";
 import { siteMeta } from "~/utils/site-meta";
+import { trackPageView } from "~/utils/track";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -86,11 +90,35 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <StrictMode>{children}</StrictMode>
+        <StrictMode>
+          {children}
+          <PageViews />
+        </StrictMode>
         <ScriptOnce>{REVEAL_AFTER_SCROLL_RESTORED_SCRIPT}</ScriptOnce>
         <AppToaster />
         <Scripts />
       </body>
     </html>
   );
+}
+
+// Counts a page view each time the page changes, by its route pattern. A page
+// that isn't found isn't counted.
+function PageViews() {
+  const path = useRouterState({
+    select: state => {
+      const page = state.matches.at(-1);
+
+      if (!page || page.routeId === rootRouteId) return undefined;
+      if (page.status === "notFound") return undefined;
+
+      return PAGE_VIEW_PATHS.find(known => known === page.fullPath);
+    }
+  });
+
+  useEffect(() => {
+    if (path) trackPageView(path);
+  }, [path]);
+
+  return null;
 }
