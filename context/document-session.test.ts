@@ -3,6 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { invoiceDefault } from "~/stores/invoice-store";
 import type { InvoiceDocument } from "~/types";
 
+// The usage counts, as the session reports them (utils/track.ts). The module
+// is reloaded for every page, so the spy lives outside it.
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+
+vi.mock("~/utils/track", () => ({ track, trackPageView: vi.fn() }));
+
 // Every page, closed after each test so a page from an earlier test (its
 // timers, its live queries, the Web Locks it holds) can't reach the next.
 const openPages: {
@@ -716,5 +722,50 @@ describe("two tabs on one invoice", () => {
     await vi.waitFor(() =>
       expect(second.documentState().status).toBe("editing")
     );
+  });
+});
+
+describe("usage counts", () => {
+  beforeEach(async () => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    await Dexie.delete("InvoiceDatabase");
+    track.mockClear();
+  });
+
+  afterEach(async () => {
+    await closePages();
+    vi.useRealTimers();
+  });
+
+  it("counts a new invoice once, when it joins the library", async () => {
+    const page = await loadPage();
+
+    await settle(5000);
+
+    expect(track).not.toHaveBeenCalled();
+
+    page.edit().setTitle("Quote");
+    await settle();
+    page.edit().setTitle("Quote for May");
+    await settle(5000);
+
+    expect(track).toHaveBeenCalledExactlyOnceWith("invoice_saved");
+  });
+
+  it("counts a new invoice named before its first edit", async () => {
+    const page = await loadPage();
+
+    await page.renameCurrent("Named first");
+
+    expect(track).toHaveBeenCalledExactlyOnceWith("invoice_saved");
+  });
+
+  it("counts a duplicate as a new invoice", async () => {
+    const page = await loadPage();
+
+    await page.renameCurrent("Original");
+    await page.duplicateCurrent();
+
+    expect(track.mock.calls).toEqual([["invoice_saved"], ["invoice_saved"]]);
   });
 });

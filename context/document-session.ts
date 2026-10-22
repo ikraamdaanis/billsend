@@ -957,6 +957,7 @@ async function copyInvoice(
   };
 
   await createInvoice(copy);
+  track("invoice_saved");
 
   return copy;
 }
@@ -1442,6 +1443,7 @@ async function recoverOtherStashes(openId: string) {
           createdAt: now,
           updatedAt: now
         });
+        track("invoice_saved");
       }
     );
   }
