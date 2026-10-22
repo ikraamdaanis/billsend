@@ -11,7 +11,7 @@ billsend is a free, local-first invoice generator that runs entirely in the brow
 - **Build:** Vite 8 with React Compiler (Babel plugin)
 - **Styling:** Tailwind CSS 4 + shadcn/ui (new-york style) + Radix UI primitives
 - **State:** Zustand (with Immer + subscribeWithSelector middleware) for invoice data; React Context for UI state
-- **Storage:** Dexie (IndexedDB wrapper); no backend, no HTTP requests
+- **Storage:** Dexie (IndexedDB wrapper); no backend for data. The only request is the anonymous usage beacon to `/api/event`
 - **PDF:** @react-pdf/renderer
 - **Forms:** React Hook Form + Zod validation
 - **Icons:** lucide-react

@@ -4,8 +4,8 @@ import type {
 } from "~/consts/analytics-events";
 import type { Invoice } from "~/schema/invoice";
 
-// The persisted invoice shape is defined and validated by the Zod schema; this
-// import + re-export keeps `~/types` the single import site for the inferred
+// The persisted invoice shape is defined and validated by the Zod schema; its
+// re-export here keeps `~/types` the single import site for the inferred
 // type while making it usable by the document/template types below.
 export type { Invoice };
 

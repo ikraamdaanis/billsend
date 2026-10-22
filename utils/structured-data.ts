@@ -94,7 +94,7 @@ export const HOME_STRUCTURED_DATA = {
         "Payment details: bank name, account and routing numbers, IBAN, BIC / SWIFT and sort code",
         "Templates for repeat clients",
         "Import and export backups",
-        "No account, no uploads, no analytics"
+        "No account, no uploads, no tracking cookies"
       ],
       author: { "@id": `${SITE_URL}/#maker` },
       publisher: { "@id": `${SITE_URL}/#organization` }
