@@ -288,11 +288,11 @@ components:
 **Creative North Star: "The Precise Paper Desk"**
 
 billsend is a local-first invoice generator: no accounts, no tracking of
-individuals, all invoice data in the browser's IndexedDB. The interface should feel like a
-precise, trustworthy document tool, closer to a spreadsheet or a design canvas
-than to a consumer landing page. The invoice being edited is the loudest thing
-on screen: a sheet of white A4 paper lying on a grey desk, surrounded by quiet
-chrome.
+individuals, all invoice data in the browser's IndexedDB. The interface should
+feel like a precise, trustworthy document tool, closer to a spreadsheet or a
+design canvas than to a consumer landing page. The invoice being edited is the
+loudest thing on screen: a sheet of white A4 paper lying on a grey desk,
+surrounded by quiet chrome.
 
 The visual language is deliberately quiet around that sheet. Chrome is
 achromatic, the brand accent is a single blue-violet ramp, radii are small, and

@@ -6,7 +6,7 @@ import {
   IconCheck,
   IconCloudOff,
   IconCode,
-  IconCookieOff,
+  IconEyeOff,
   IconFileTypePdf,
   IconMenu2,
   IconPlus,
@@ -181,8 +181,8 @@ const FACTS: {
     tile: "bg-sage-tint text-sage-ink"
   },
   {
-    label: "No cookies",
-    icon: IconCookieOff,
+    label: "No trackers",
+    icon: IconEyeOff,
     tile: "bg-butter-tint text-butter-ink"
   },
   {
