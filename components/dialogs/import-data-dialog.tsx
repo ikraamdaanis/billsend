@@ -20,6 +20,7 @@ import {
   executeImport,
   parseExportFile
 } from "~/utils/import-data";
+import { track } from "~/utils/track";
 
 type ImportState = "idle" | "analyzing" | "preview" | "importing" | "done";
 
@@ -85,6 +86,8 @@ export function ImportDataDialog({
 
     try {
       const importResult = await executeImport(parsedData);
+
+      track("data_imported");
 
       if (generation !== importGenerationRef.current) return;
 

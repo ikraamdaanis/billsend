@@ -15,6 +15,7 @@ import { useApplyEditorTheme } from "~/hooks/use-editor-theme";
 import type { InvoiceFont } from "~/types";
 import { EDITOR_THEME_SCRIPT } from "~/utils/editor-theme";
 import { canonicalLink, siteMeta } from "~/utils/site-meta";
+import { track } from "~/utils/track";
 
 // Optional hand-offs from the homepage: `font` starts a fresh invoice in the
 // face picked in the preview, and `open=invoices` opens the saved-invoice list.
@@ -59,6 +60,10 @@ export const Route = createFileRoute("/create")({
 // store hydration (the async draft read + blank-invoice seed), so the editor's
 // inputs only mount once their bound state is settled and can't be raced.
 function RouteComponent() {
+  useEffect(() => {
+    track("editor_opened");
+  }, []);
+
   return (
     <section className="mx-auto flex w-full flex-col overflow-hidden">
       <ClientOnly fallback={<EditorLoading />}>
