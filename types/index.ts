@@ -1,8 +1,12 @@
+import type {
+  ANALYTICS_EVENTS,
+  PAGE_VIEW_PATHS
+} from "~/consts/analytics-events";
+import type { Invoice } from "~/schema/invoice";
+
 // The persisted invoice shape is defined and validated by the Zod schema; this
 // import + re-export keeps `~/types` the single import site for the inferred
 // type while making it usable by the document/template types below.
-import type { Invoice } from "~/schema/invoice";
-
 export type { Invoice };
 
 export type TextSettings = {
@@ -329,3 +333,17 @@ export type InvoiceTemplate = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+// The anonymous usage events the site counts (consts/analytics-events.ts).
+export type AnalyticsEvent = (typeof ANALYTICS_EVENTS)[number];
+
+export type PageViewPath = (typeof PAGE_VIEW_PATHS)[number];
+
+// The buckets a User-Agent is reduced to; the User-Agent itself is never kept.
+export type BrowserFamily =
+  "chrome" | "safari" | "firefox" | "edge" | "samsung" | "other";
+
+export type OperatingSystem =
+  "ios" | "android" | "macos" | "windows" | "linux" | "other";
+
+export type DeviceType = "mobile" | "tablet" | "desktop";

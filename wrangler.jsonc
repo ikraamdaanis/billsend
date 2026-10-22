@@ -3,5 +3,8 @@
   "name": "billsend",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "./app/server.ts"
+  "main": "./app/server.ts",
+  "analytics_engine_datasets": [
+    { "binding": "ANALYTICS", "dataset": "usage_events" }
+  ]
 }
