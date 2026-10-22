@@ -61,8 +61,11 @@ mounted at `~/.claude/CLAUDE.md`). Enforce them on the lines the change touches.
 
 ## Architecture
 
-- No backend. All persistence is IndexedDB via Dexie. No network calls, telemetry, or
-  analytics — the app's "local-first, no tracking" promise must hold.
+- No backend for data. All persistence is IndexedDB via Dexie. The only network
+  call is the anonymous usage beacon (`utils/track.ts` to `/api/event`): an event
+  name from `consts/analytics-events.ts`, never invoice content or an identifier.
+  Add no other network calls, telemetry or third-party analytics; the app's
+  "local-first, no tracking" promise must hold.
 - Keep modules focused on a single responsibility; prefer composition.
 
 ## Testing
