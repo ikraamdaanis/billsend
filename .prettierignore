@@ -6,4 +6,4 @@ dist
 build
 .claude
 .cursor
-*.md
+*.mdworker-configuration.d.ts
