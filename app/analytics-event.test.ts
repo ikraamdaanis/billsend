@@ -107,16 +107,13 @@ describe("handleAnalyticsEvent", () => {
     ],
     ["a path on another event", { body: "pdf_opened /create" }],
     ["extra words", { body: "page_view / extra" }],
-    [
-      "a body too long to be an event",
-      { body: `pdf_opened${" ".repeat(200)}` }
-    ],
     ["a cross-site request", { headers: { "Sec-Fetch-Site": "cross-site" } }],
     ["a same-site request", { headers: { "Sec-Fetch-Site": "same-site" } }],
     [
       "a request typed into the address bar",
       { headers: { "Sec-Fetch-Site": "none" } }
     ],
+    ["Global Privacy Control", { headers: { "Sec-GPC": "1" } }],
     [
       "a bot",
       { headers: { "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)" } }
@@ -131,6 +128,17 @@ describe("handleAnalyticsEvent", () => {
     const response = await handleAnalyticsEvent(eventRequest(options), dataset);
 
     expect(response.status).toBe(204);
+    expect(writeDataPoint).not.toHaveBeenCalled();
+  });
+
+  it("drops a body too long to be an event without reading it", async () => {
+    const { dataset, writeDataPoint } = fakeDataset();
+    const request = eventRequest({ body: "x".repeat(200) });
+    const text = vi.spyOn(request, "text");
+
+    await handleAnalyticsEvent(request, dataset);
+
+    expect(text).not.toHaveBeenCalled();
     expect(writeDataPoint).not.toHaveBeenCalled();
   });
 

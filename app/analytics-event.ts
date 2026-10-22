@@ -51,12 +51,14 @@ export async function handleAnalyticsEvent(
 }
 
 // The event the request carries, or null when it isn't one to count: sent
-// from another site, by a bot, or with a body that isn't a known event.
+// from another site, by a bot, under Global Privacy Control, or with a body
+// that isn't a known event.
 async function readEvent(request: Request) {
   const userAgent = request.headers.get("User-Agent") ?? "";
   const length = Number(request.headers.get("Content-Length"));
 
   if (request.headers.get("Sec-Fetch-Site") !== "same-origin") return null;
+  if (request.headers.get("Sec-GPC") === "1") return null;
   if (!userAgent || isBotUserAgent(userAgent)) return null;
   if (!(length > 0 && length <= MAX_BODY_BYTES)) return null;
 
