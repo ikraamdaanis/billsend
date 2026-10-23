@@ -131,15 +131,44 @@ describe("handleAnalyticsEvent", () => {
     expect(writeDataPoint).not.toHaveBeenCalled();
   });
 
-  it("drops a body too long to be an event without reading it", async () => {
+  it("drops a body declared too long to be an event without reading it", async () => {
     const { dataset, writeDataPoint } = fakeDataset();
     const request = eventRequest({ body: "x".repeat(200) });
-    const text = vi.spyOn(request, "text");
+    const getReader = vi.spyOn(ReadableStream.prototype, "getReader");
 
     await handleAnalyticsEvent(request, dataset);
 
-    expect(text).not.toHaveBeenCalled();
+    expect(getReader).not.toHaveBeenCalled();
     expect(writeDataPoint).not.toHaveBeenCalled();
+
+    getReader.mockRestore();
+  });
+
+  it("counts an event sent without a Content-Length", async () => {
+    const { dataset, writeDataPoint } = fakeDataset();
+    const request = eventRequest({ body: "page_view /create" });
+
+    request.headers.delete("Content-Length");
+
+    await handleAnalyticsEvent(request, dataset);
+
+    expect(writeDataPoint.mock.calls[0]?.[0]?.blobs?.[5]).toBe("/create");
+  });
+
+  it("stops reading a long body sent without a Content-Length", async () => {
+    const { dataset, writeDataPoint } = fakeDataset();
+    const request = eventRequest({ body: "x".repeat(200) });
+    const cancel = vi.spyOn(ReadableStreamDefaultReader.prototype, "cancel");
+
+    request.headers.delete("Content-Length");
+
+    const response = await handleAnalyticsEvent(request, dataset);
+
+    expect(response.status).toBe(204);
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(writeDataPoint).not.toHaveBeenCalled();
+
+    cancel.mockRestore();
   });
 
   it("drops a request with no Sec-Fetch-Site header", async () => {

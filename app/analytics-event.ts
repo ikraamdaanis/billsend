@@ -3,7 +3,7 @@ import { ANALYTICS_EVENTS, PAGE_VIEW_PATHS } from "~/consts/analytics-events";
 import { bucketUserAgent, isBotUserAgent } from "~/utils/user-agent";
 
 // The longest body an event can have ("page_view /privacy" and the like). A
-// longer one isn't an event, so it's dropped without being read.
+// longer one isn't an event, so it's dropped without being read in full.
 const MAX_BODY_BYTES = 128;
 
 // POST /api/event: one anonymous count. The body is an event name from
@@ -55,20 +55,20 @@ export async function handleAnalyticsEvent(
 // that isn't a known event.
 async function readEvent(request: Request) {
   const userAgent = request.headers.get("User-Agent") ?? "";
-  const length = Number(request.headers.get("Content-Length"));
 
   if (request.headers.get("Sec-Fetch-Site") !== "same-origin") return null;
   if (request.headers.get("Sec-GPC") === "1") return null;
   if (!userAgent || isBotUserAgent(userAgent)) return null;
-  if (!(length > 0 && length <= MAX_BODY_BYTES)) return null;
 
-  let body: string;
+  let body: string | null;
 
   try {
-    body = await request.text();
+    body = await readBody(request);
   } catch {
     return null;
   }
+
+  if (!body) return null;
 
   const [eventName, ...rest] = body.split(" ");
   const name = ANALYTICS_EVENTS.find(known => known === eventName);
@@ -82,6 +82,37 @@ async function readEvent(request: Request) {
       : undefined;
 
   return path ? { name, path } : null;
+}
+
+// The body as text, or null when it's longer than an event can be. A declared
+// Content-Length turns a long body away unread; without one (the edge doesn't
+// promise to pass it on), reading stops as soon as the body passes the cap.
+async function readBody(request: Request) {
+  const declared = request.headers.get("Content-Length");
+
+  if (declared !== null && !(Number(declared) <= MAX_BODY_BYTES)) return null;
+  if (!request.body) return null;
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0;
+  let body = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+
+    if (done) return body + decoder.decode();
+
+    size += value.byteLength;
+
+    if (size > MAX_BODY_BYTES) {
+      await reader.cancel();
+
+      return null;
+    }
+
+    body += decoder.decode(value, { stream: true });
+  }
 }
 
 // Cloudflare attaches `cf` to the requests a Worker receives (the DOM's
